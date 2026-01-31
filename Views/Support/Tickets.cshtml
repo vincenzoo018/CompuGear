@@ -1,0 +1,711 @@
+@{
+    ViewData["Title"] = "Support Tickets";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Support Tickets</h1>
+        <p class="page-subtitle">Manage customer support requests</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" onclick="exportTickets()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export
+        </button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ticketModal" onclick="openCreateTicketModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            New Ticket
+        </button>
+    </div>
+</div>
+
+<!-- Ticket Stats -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">24</div>
+                <div class="stat-label">Open Tickets</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-info">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">12</div>
+                <div class="stat-label">In Progress</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">8</div>
+                <div class="stat-label">Resolved Today</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">2.4h</div>
+                <div class="stat-label">Avg Response</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter & Search -->
+<div class="card mb-4 fade-in">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Search Tickets</label>
+                <div class="search-input">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" class="form-control" id="searchTickets" placeholder="Search by ticket #, subject...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="filterStatus">
+                    <option value="">All Status</option>
+                    <option value="Open">Open</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Waiting">Waiting for Customer</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Closed">Closed</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Priority</label>
+                <select class="form-select" id="filterPriority">
+                    <option value="">All Priority</option>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Critical">Critical</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Category</label>
+                <select class="form-select" id="filterCategory">
+                    <option value="">All Categories</option>
+                    <option value="Technical">Technical Support</option>
+                    <option value="Billing">Billing</option>
+                    <option value="Returns">Returns & Refunds</option>
+                    <option value="General">General Inquiry</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary flex-fill" onclick="resetFilters()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                        </svg>
+                        Reset
+                    </button>
+                    <button class="btn btn-outline-primary flex-fill" onclick="applyFilters()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                        </svg>
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tickets Table -->
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Support Tickets</h5>
+        <span class="badge bg-primary" id="ticketCount">4 tickets</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table" id="ticketsTable">
+                <thead>
+                    <tr>
+                        <th>Ticket #</th>
+                        <th>Subject</th>
+                        <th>Customer</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th class="text-center" style="width: 140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-id="1">
+                        <td><strong class="text-primary">#TKT-1024</strong></td>
+                        <td>
+                            <div><strong>Laptop not starting after update</strong></div>
+                            <div class="text-muted small">Technical Support</div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-primary">JD</span>
+                                </div>
+                                <div>John Doe</div>
+                            </div>
+                        </td>
+                        <td><span class="badge badge-error"><span class="badge-dot"></span>High</span></td>
+                        <td><span class="badge badge-warning"><span class="badge-dot"></span>Open</span></td>
+                        <td>
+                            <div>Jan 30, 2026</div>
+                            <div class="text-muted small">2 hours ago</div>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewTicket(1)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editTicket(1)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-success" onclick="replyTicket(1)" title="Reply">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="2">
+                        <td><strong class="text-primary">#TKT-1023</strong></td>
+                        <td>
+                            <div><strong>Software license activation issue</strong></div>
+                            <div class="text-muted small">Technical Support</div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-info">AC</span>
+                                </div>
+                                <div>Acme Corporation</div>
+                            </div>
+                        </td>
+                        <td><span class="badge badge-warning"><span class="badge-dot"></span>Medium</span></td>
+                        <td><span class="badge badge-info"><span class="badge-dot"></span>In Progress</span></td>
+                        <td>
+                            <div>Jan 29, 2026</div>
+                            <div class="text-muted small">1 day ago</div>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewTicket(2)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editTicket(2)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-success" onclick="replyTicket(2)" title="Reply">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="3">
+                        <td><strong class="text-primary">#TKT-1022</strong></td>
+                        <td>
+                            <div><strong>Request for product return</strong></div>
+                            <div class="text-muted small">Returns & Refunds</div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-success">JS</span>
+                                </div>
+                                <div>Jane Smith</div>
+                            </div>
+                        </td>
+                        <td><span class="badge badge-info"><span class="badge-dot"></span>Low</span></td>
+                        <td><span class="badge badge-success"><span class="badge-dot"></span>Resolved</span></td>
+                        <td>
+                            <div>Jan 28, 2026</div>
+                            <div class="text-muted small">2 days ago</div>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewTicket(3)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="reopenTicket(3)" title="Reopen">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="4">
+                        <td><strong class="text-primary">#TKT-1021</strong></td>
+                        <td>
+                            <div><strong>Billing discrepancy inquiry</strong></div>
+                            <div class="text-muted small">Billing</div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-warning">TS</span>
+                                </div>
+                                <div>Tech Solutions Inc</div>
+                            </div>
+                        </td>
+                        <td><span class="badge badge-warning"><span class="badge-dot"></span>Medium</span></td>
+                        <td><span class="badge badge-success"><span class="badge-dot"></span>Resolved</span></td>
+                        <td>
+                            <div>Jan 27, 2026</div>
+                            <div class="text-muted small">3 days ago</div>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewTicket(4)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="reopenTicket(4)" title="Reopen">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between align-items-center">
+        <div class="text-muted small">Showing 1 to 4 of 4 tickets</div>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">Next</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Create/Edit Ticket Modal -->
+<div class="modal fade" id="ticketModal" tabindex="-1" aria-labelledby="ticketModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header modal-header-primary">
+                <h5 class="modal-title" id="ticketModalLabel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <span id="modalTitle">Create New Ticket</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="ticketForm" onsubmit="saveTicket(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="ticketId" value="0">
+                    
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            </svg>
+                            Ticket Information
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label required">Subject</label>
+                                <input type="text" class="form-control" id="ticketSubject" placeholder="Brief description of the issue" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label required">Customer</label>
+                                <select class="form-select" id="ticketCustomer" required>
+                                    <option value="">Select Customer</option>
+                                    <option value="1">John Doe</option>
+                                    <option value="2">Acme Corporation</option>
+                                    <option value="3">Jane Smith</option>
+                                    <option value="4">Tech Solutions Inc</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label required">Category</label>
+                                <select class="form-select" id="ticketCategory" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Technical">Technical Support</option>
+                                    <option value="Billing">Billing</option>
+                                    <option value="Returns">Returns & Refunds</option>
+                                    <option value="General">General Inquiry</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label required">Priority</label>
+                                <select class="form-select" id="ticketPriority" required>
+                                    <option value="Low">Low</option>
+                                    <option value="Medium" selected>Medium</option>
+                                    <option value="High">High</option>
+                                    <option value="Critical">Critical</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Assign To</label>
+                                <select class="form-select" id="ticketAssignee">
+                                    <option value="">Unassigned</option>
+                                    <option value="1">Support Agent 1</option>
+                                    <option value="2">Support Agent 2</option>
+                                    <option value="3">Support Agent 3</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label required">Description</label>
+                                <textarea class="form-control" id="ticketDescription" rows="4" placeholder="Detailed description of the issue" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                            </svg>
+                            Attachments
+                        </h6>
+                        <div class="border rounded p-3 text-center">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="text-muted mb-2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            <p class="text-muted mb-2">Drag and drop files here or click to browse</p>
+                            <input type="file" class="form-control" id="ticketAttachments" multiple>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        Save Ticket
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Ticket Modal -->
+<div class="modal fade" id="viewTicketModal" tabindex="-1" aria-labelledby="viewTicketModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header modal-header-info">
+                <h5 class="modal-title" id="viewTicketModalLabel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Ticket Details - <span id="viewTicketNumber">#TKT-1024</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <h4 id="viewTicketSubject">Laptop not starting after update</h4>
+                        <div class="d-flex gap-2 mb-3">
+                            <span class="badge badge-error" id="viewTicketPriority">High</span>
+                            <span class="badge badge-warning" id="viewTicketStatus">Open</span>
+                            <span class="badge bg-secondary" id="viewTicketCategory">Technical Support</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="text-muted small">Created</div>
+                        <div id="viewTicketCreated">Jan 30, 2026</div>
+                    </div>
+                </div>
+
+                <div class="detail-card mb-4">
+                    <h6>Customer</h6>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="avatar avatar-lg">
+                            <span class="avatar-text bg-primary" id="viewCustomerInitials">JD</span>
+                        </div>
+                        <div>
+                            <div class="fw-bold" id="viewCustomerName">John Doe</div>
+                            <div class="text-muted" id="viewCustomerEmail">john.doe@email.com</div>
+                            <div class="text-muted" id="viewCustomerPhone">+63-917-555-0102</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-card mb-4">
+                    <h6>Description</h6>
+                    <p id="viewTicketDescription">After installing the latest Windows update, my laptop won't start. It shows a blue screen error and restarts repeatedly. I need urgent help as this is my work laptop.</p>
+                </div>
+
+                <div class="detail-card">
+                    <h6>Conversation History</h6>
+                    <div class="ticket-messages" id="ticketMessages">
+                        <div class="message message-customer">
+                            <div class="message-header">
+                                <strong>John Doe</strong>
+                                <span class="text-muted small">Jan 30, 2026 10:30 AM</span>
+                            </div>
+                            <div class="message-body">After installing the latest Windows update, my laptop won't start. It shows a blue screen error and restarts repeatedly.</div>
+                        </div>
+                        <div class="message message-agent">
+                            <div class="message-header">
+                                <strong>Support Agent</strong>
+                                <span class="text-muted small">Jan 30, 2026 11:00 AM</span>
+                            </div>
+                            <div class="message-body">Thank you for contacting us. Can you please provide the exact error message on the blue screen?</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-outline-warning" onclick="editTicketFromView()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Edit
+                </button>
+                <button type="button" class="btn btn-primary" onclick="replyTicketFromView()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    Reply
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reply Modal -->
+<div class="modal fade" id="replyModal" tabindex="-1" aria-labelledby="replyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-success">
+                <h5 class="modal-title" id="replyModalLabel">Reply to Ticket <span id="replyTicketNumber">#TKT-1024</span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label required">Message</label>
+                    <textarea class="form-control" id="replyMessage" rows="5" placeholder="Type your response..." required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Update Status</label>
+                    <select class="form-select" id="replyStatus">
+                        <option value="">Keep Current Status</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Waiting">Waiting for Customer</option>
+                        <option value="Resolved">Resolved</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <input type="file" class="form-control" id="replyAttachment">
+                    <div class="form-text">Attach a file (optional)</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="sendReply()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                    Send Reply
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="successMessage">Operation successful!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="errorMessage">An error occurred!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<style>
+.ticket-messages { max-height: 300px; overflow-y: auto; }
+.message { padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+.message-customer { background: #f8f9fa; border-left: 3px solid var(--primary); }
+.message-agent { background: #e8f4f8; border-left: 3px solid var(--info); }
+.message-header { margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+.message-body { color: #555; }
+</style>
+
+@section Scripts {
+<script>
+    let currentTicketId = null;
+    const ticketsData = [
+        { id: 1, number: 'TKT-1024', subject: 'Laptop not starting after update', customerId: 1, customer: 'John Doe', email: 'john.doe@email.com', phone: '+63-917-555-0102', category: 'Technical', priority: 'High', status: 'Open', created: 'Jan 30, 2026', description: 'After installing the latest Windows update, my laptop wont start. It shows a blue screen error and restarts repeatedly. I need urgent help as this is my work laptop.' },
+        { id: 2, number: 'TKT-1023', subject: 'Software license activation issue', customerId: 2, customer: 'Acme Corporation', email: 'contact@acme.com', phone: '+63-917-555-0101', category: 'Technical', priority: 'Medium', status: 'In Progress', created: 'Jan 29, 2026', description: 'We purchased 10 licenses for Office Suite Pro but only 8 are activating properly. Getting error code 0x8004FC12.' },
+        { id: 3, number: 'TKT-1022', subject: 'Request for product return', customerId: 3, customer: 'Jane Smith', email: 'jane.smith@email.com', phone: '+63-917-555-0103', category: 'Returns', priority: 'Low', status: 'Resolved', created: 'Jan 28, 2026', description: 'I would like to return the wireless mouse I purchased. It does not work well with my laptop.' },
+        { id: 4, number: 'TKT-1021', subject: 'Billing discrepancy inquiry', customerId: 4, customer: 'Tech Solutions Inc', email: 'info@techsol.com', phone: '+63-917-555-0104', category: 'Billing', priority: 'Medium', status: 'Resolved', created: 'Jan 27, 2026', description: 'We noticed a discrepancy in our last invoice. The amount charged is different from the quoted price.' }
+    ];
+
+    const priorityBadgeClasses = { 'Low': 'badge-info', 'Medium': 'badge-warning', 'High': 'badge-error', 'Critical': 'badge-error' };
+    const statusBadgeClasses = { 'Open': 'badge-warning', 'In Progress': 'badge-info', 'Waiting': 'badge-pending', 'Resolved': 'badge-success', 'Closed': 'badge-neutral' };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('searchTickets').addEventListener('input', filterTable);
+        document.getElementById('filterStatus').addEventListener('change', filterTable);
+        document.getElementById('filterPriority').addEventListener('change', filterTable);
+        document.getElementById('filterCategory').addEventListener('change', filterTable);
+    });
+
+    function openCreateTicketModal() {
+        currentTicketId = null;
+        document.getElementById('modalTitle').textContent = 'Create New Ticket';
+        document.getElementById('ticketForm').reset();
+        document.getElementById('ticketId').value = '0';
+    }
+
+    function viewTicket(id) {
+        const ticket = ticketsData.find(t => t.id === id);
+        if (!ticket) return;
+        currentTicketId = id;
+        document.getElementById('viewTicketNumber').textContent = '#' + ticket.number;
+        document.getElementById('viewTicketSubject').textContent = ticket.subject;
+        document.getElementById('viewTicketPriority').textContent = ticket.priority;
+        document.getElementById('viewTicketPriority').className = 'badge ' + priorityBadgeClasses[ticket.priority];
+        document.getElementById('viewTicketStatus').textContent = ticket.status;
+        document.getElementById('viewTicketStatus').className = 'badge ' + statusBadgeClasses[ticket.status];
+        document.getElementById('viewTicketCategory').textContent = ticket.category;
+        document.getElementById('viewTicketCreated').textContent = ticket.created;
+        document.getElementById('viewCustomerName').textContent = ticket.customer;
+        document.getElementById('viewCustomerEmail').textContent = ticket.email;
+        document.getElementById('viewCustomerPhone').textContent = ticket.phone;
+        document.getElementById('viewCustomerInitials').textContent = ticket.customer.split(' ').map(n => n[0]).join('');
+        document.getElementById('viewTicketDescription').textContent = ticket.description;
+        new bootstrap.Modal(document.getElementById('viewTicketModal')).show();
+    }
+
+    function editTicket(id) {
+        const ticket = ticketsData.find(t => t.id === id);
+        if (!ticket) return;
+        currentTicketId = id;
+        document.getElementById('modalTitle').textContent = 'Edit Ticket #' + ticket.number;
+        document.getElementById('ticketId').value = id;
+        document.getElementById('ticketSubject').value = ticket.subject;
+        document.getElementById('ticketCustomer').value = ticket.customerId;
+        document.getElementById('ticketCategory').value = ticket.category;
+        document.getElementById('ticketPriority').value = ticket.priority;
+        document.getElementById('ticketDescription').value = ticket.description;
+        new bootstrap.Modal(document.getElementById('ticketModal')).show();
+    }
+
+    function editTicketFromView() {
+        bootstrap.Modal.getInstance(document.getElementById('viewTicketModal')).hide();
+        setTimeout(() => editTicket(currentTicketId), 300);
+    }
+
+    function replyTicket(id) {
+        const ticket = ticketsData.find(t => t.id === id);
+        if (!ticket) return;
+        currentTicketId = id;
+        document.getElementById('replyTicketNumber').textContent = '#' + ticket.number;
+        document.getElementById('replyMessage').value = '';
+        document.getElementById('replyStatus').value = '';
+        new bootstrap.Modal(document.getElementById('replyModal')).show();
+    }
+
+    function replyTicketFromView() {
+        bootstrap.Modal.getInstance(document.getElementById('viewTicketModal')).hide();
+        setTimeout(() => replyTicket(currentTicketId), 300);
+    }
+
+    function reopenTicket(id) {
+        const ticket = ticketsData.find(t => t.id === id);
+        if (!ticket) return;
+        showToast('success', 'Ticket #' + ticket.number + ' has been reopened!');
+    }
+
+    function saveTicket(event) {
+        event.preventDefault();
+        const ticketId = document.getElementById('ticketId').value;
+        const isNew = ticketId === '0';
+        showToast('success', isNew ? 'Ticket created successfully!' : 'Ticket updated successfully!');
+        bootstrap.Modal.getInstance(document.getElementById('ticketModal')).hide();
+    }
+
+    function sendReply() {
+        const message = document.getElementById('replyMessage').value;
+        if (!message.trim()) { showToast('error', 'Please enter a message!'); return; }
+        showToast('success', 'Reply sent successfully!');
+        bootstrap.Modal.getInstance(document.getElementById('replyModal')).hide();
+    }
+
+    function filterTable() {
+        const search = document.getElementById('searchTickets').value.toLowerCase();
+        const statusFilter = document.getElementById('filterStatus').value;
+        const priorityFilter = document.getElementById('filterPriority').value;
+        const categoryFilter = document.getElementById('filterCategory').value;
+        const rows = document.querySelectorAll('#ticketsTable tbody tr');
+        let visibleCount = 0;
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const ticket = ticketsData.find(t => t.id === parseInt(row.dataset.id));
+            let show = true;
+            if (search && !text.includes(search)) show = false;
+            if (statusFilter && ticket && ticket.status !== statusFilter) show = false;
+            if (priorityFilter && ticket && ticket.priority !== priorityFilter) show = false;
+            if (categoryFilter && ticket && ticket.category !== categoryFilter) show = false;
+            row.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+        document.getElementById('ticketCount').textContent = visibleCount + ' tickets';
+    }
+
+    function resetFilters() {
+        document.getElementById('searchTickets').value = '';
+        document.getElementById('filterStatus').value = '';
+        document.getElementById('filterPriority').value = '';
+        document.getElementById('filterCategory').value = '';
+        filterTable();
+    }
+
+    function applyFilters() { filterTable(); showToast('success', 'Filters applied!'); }
+    function exportTickets() { showToast('success', 'Exporting tickets...'); }
+
+    function showToast(type, message) {
+        const toastId = type === 'success' ? 'successToast' : 'errorToast';
+        const messageId = type === 'success' ? 'successMessage' : 'errorMessage';
+        document.getElementById(messageId).textContent = message;
+        new bootstrap.Toast(document.getElementById(toastId)).show();
+    }
+</script>
+}

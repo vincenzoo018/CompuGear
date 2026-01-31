@@ -1,0 +1,104 @@
+@{
+    ViewData["Title"] = "Marketing Analytics";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Marketing Analytics</h1>
+    <p class="page-subtitle">Track campaign performance and ROI</p>
+</div>
+
+<div class="stat-cards">
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Total Spend (Month)</span>
+            <span class="stat-value">$28,500</span>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Revenue Generated</span>
+            <span class="stat-value">$85,200</span>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Overall ROI</span>
+            <span class="stat-value">199%</span>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Conversion Rate</span>
+            <span class="stat-value">3.8%</span>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3 class="card-title">Channel Performance</h3>
+        </div>
+        <div class="card-body">
+            <div class="chart-container" style="height: 250px;">
+                <canvas id="channelChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3 class="card-title">Campaign ROI</h3>
+        </div>
+        <div class="card-body">
+            <div class="chart-container" style="height: 250px;">
+                <canvas id="roiChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Channel Chart
+        const channelCtx = document.getElementById('channelChart').getContext('2d');
+        new Chart(channelCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Email', 'Social Media', 'Direct', 'Paid Ads'],
+                datasets: [{
+                    data: [35, 28, 22, 15],
+                    backgroundColor: ['#008080', '#3B82F6', '#10B981', '#F59E0B'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        // ROI Chart
+        const roiCtx = document.getElementById('roiChart').getContext('2d');
+        new Chart(roiCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Winter Sale', 'B2B Outreach', 'Holiday Promo', 'New Product'],
+                datasets: [{
+                    label: 'ROI %',
+                    data: [245, 178, 312, 0],
+                    backgroundColor: '#008080',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { callback: value => value + '%' } } }
+            }
+        });
+    </script>
+}

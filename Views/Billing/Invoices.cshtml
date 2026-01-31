@@ -1,0 +1,829 @@
+@{
+    ViewData["Title"] = "Invoices";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Invoices</h1>
+        <p class="page-subtitle">Manage customer invoices and payments</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" onclick="exportInvoices()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export
+        </button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#invoiceModal" onclick="openCreateInvoiceModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Create Invoice
+        </button>
+    </div>
+</div>
+
+<!-- Invoice Stats -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">₱2.26M</div>
+                <div class="stat-label">Outstanding</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">₱4.47M</div>
+                <div class="stat-label">Paid This Month</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-danger">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">₱640K</div>
+                <div class="stat-label">Overdue</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">156</div>
+                <div class="stat-label">Total Invoices</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter & Search -->
+<div class="card mb-4 fade-in">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Search Invoices</label>
+                <div class="search-input">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" class="form-control" id="searchInvoices" placeholder="Search by invoice #, customer...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="filterStatus">
+                    <option value="">All Status</option>
+                    <option value="Draft">Draft</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Overdue">Overdue</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Date From</label>
+                <input type="date" class="form-control" id="filterDateFrom">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Date To</label>
+                <input type="date" class="form-control" id="filterDateTo">
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary flex-fill" onclick="resetFilters()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                        </svg>
+                        Reset
+                    </button>
+                    <button class="btn btn-outline-primary flex-fill" onclick="applyFilters()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                        </svg>
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Invoices Table -->
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Invoice List</h5>
+        <span class="badge bg-primary" id="invoiceCount">4 invoices</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table" id="invoicesTable">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Due Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th class="text-center" style="width: 160px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-id="1">
+                        <td><strong class="text-primary">#INV-2024-0156</strong></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-warning">TS</span>
+                                </div>
+                                <div>
+                                    <strong>Tech Solutions Inc</strong>
+                                    <div class="text-muted small">Business</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>Jan 28, 2026</td>
+                        <td>
+                            <div>Feb 27, 2026</div>
+                            <div class="text-muted small">28 days left</div>
+                        </td>
+                        <td><strong>₱260,000.00</strong></td>
+                        <td><span class="badge badge-warning"><span class="badge-dot"></span>Pending</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewInvoice(1)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editInvoice(1)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-success" onclick="recordPayment(1)" title="Record Payment">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="printInvoice(1)" title="Print">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="2">
+                        <td><strong class="text-primary">#INV-2024-0155</strong></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-info">AC</span>
+                                </div>
+                                <div>
+                                    <strong>Acme Corporation</strong>
+                                    <div class="text-muted small">Business</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>Jan 25, 2026</td>
+                        <td>
+                            <div>Feb 24, 2026</div>
+                            <div class="text-success small">Paid on time</div>
+                        </td>
+                        <td><strong>₱122,500.00</strong></td>
+                        <td><span class="badge badge-success"><span class="badge-dot"></span>Paid</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewInvoice(2)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="printInvoice(2)" title="Print">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-info" onclick="sendReceipt(2)" title="Send Receipt">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="3">
+                        <td><strong class="text-primary">#INV-2024-0154</strong></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-danger">GE</span>
+                                </div>
+                                <div>
+                                    <strong>Global Enterprises</strong>
+                                    <div class="text-muted small">VIP</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>Jan 15, 2026</td>
+                        <td>
+                            <div>Jan 25, 2026</div>
+                            <div class="text-danger small">5 days overdue</div>
+                        </td>
+                        <td><strong>₱640,000.00</strong></td>
+                        <td><span class="badge badge-error"><span class="badge-dot"></span>Overdue</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewInvoice(3)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-success" onclick="recordPayment(3)" title="Record Payment">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="sendReminder(3)" title="Send Reminder">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="4">
+                        <td><strong class="text-primary">#INV-2024-0153</strong></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-success">SH</span>
+                                </div>
+                                <div>
+                                    <strong>StartUp Hub</strong>
+                                    <div class="text-muted small">Business</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>Jan 10, 2026</td>
+                        <td>
+                            <div>Feb 9, 2026</div>
+                            <div class="text-success small">Paid early</div>
+                        </td>
+                        <td><strong>₱44,500.00</strong></td>
+                        <td><span class="badge badge-success"><span class="badge-dot"></span>Paid</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewInvoice(4)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="printInvoice(4)" title="Print">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-info" onclick="sendReceipt(4)" title="Send Receipt">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between align-items-center">
+        <div class="text-muted small">Showing 1 to 4 of 4 invoices</div>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">Next</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Create/Edit Invoice Modal -->
+<div class="modal fade" id="invoiceModal" tabindex="-1" aria-labelledby="invoiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header modal-header-primary">
+                <h5 class="modal-title" id="invoiceModalLabel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                    <span id="modalTitle">Create New Invoice</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="invoiceForm" onsubmit="saveInvoice(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="invoiceId" value="0">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-section">
+                                <h6 class="form-section-title">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                    Customer
+                                </h6>
+                                <div class="mb-3">
+                                    <label class="form-label required">Select Customer</label>
+                                    <select class="form-select" id="invoiceCustomer" required>
+                                        <option value="">Choose a customer</option>
+                                        <option value="1">Tech Solutions Inc</option>
+                                        <option value="2">Acme Corporation</option>
+                                        <option value="3">Global Enterprises</option>
+                                        <option value="4">StartUp Hub</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Billing Address</label>
+                                    <textarea class="form-control" id="billingAddress" rows="2" placeholder="Enter billing address"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-section">
+                                <h6 class="form-section-title">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                                    </svg>
+                                    Invoice Details
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <label class="form-label">Invoice Date</label>
+                                        <input type="date" class="form-control" id="invoiceDate" value="">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Due Date</label>
+                                        <input type="date" class="form-control" id="dueDate" value="">
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <label class="form-label">Payment Terms</label>
+                                    <select class="form-select" id="paymentTerms">
+                                        <option value="NET15">Net 15 Days</option>
+                                        <option value="NET30" selected>Net 30 Days</option>
+                                        <option value="NET45">Net 45 Days</option>
+                                        <option value="DUE_ON_RECEIPT">Due on Receipt</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title d-flex justify-content-between align-items-center">
+                            <span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                                </svg>
+                                Line Items
+                            </span>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addInvoiceItem()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                Add Item
+                            </button>
+                        </h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm" id="invoiceItemsTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40%;">Description</th>
+                                        <th style="width: 15%;">Unit Price</th>
+                                        <th style="width: 15%;">Qty</th>
+                                        <th style="width: 20%;">Amount</th>
+                                        <th style="width: 10%;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="invoiceItemsBody">
+                                    <tr>
+                                        <td><input type="text" class="form-control form-control-sm" placeholder="Item description"></td>
+                                        <td><input type="number" class="form-control form-control-sm item-price" value="0" step="0.01" onchange="updateLineAmount(this)"></td>
+                                        <td><input type="number" class="form-control form-control-sm item-qty" value="1" min="1" onchange="updateLineAmount(this)"></td>
+                                        <td><input type="text" class="form-control form-control-sm item-amount" readonly value="₱0.00"></td>
+                                        <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeInvoiceItem(this)">×</button></td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                        <td colspan="2"><strong id="invoiceSubtotal">₱0.00</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="text-end">VAT (12%):</td>
+                                        <td colspan="2" id="invoiceVAT">₱0.00</td>
+                                    </tr>
+                                    <tr class="table-primary">
+                                        <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                        <td colspan="2"><strong id="invoiceTotal">₱0.00</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" id="invoiceNotes" rows="2" placeholder="Notes for the customer (appears on invoice)"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="saveAsDraft()">Save as Draft</button>
+                    <button type="submit" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                        Send Invoice
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Invoice Modal -->
+<div class="modal fade" id="viewInvoiceModal" tabindex="-1" aria-labelledby="viewInvoiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header modal-header-info">
+                <h5 class="modal-title" id="viewInvoiceModalLabel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Invoice <span id="viewInvoiceNumber">#INV-2024-0156</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <h6>Bill To</h6>
+                            <div class="fw-bold" id="viewCustomerName">Tech Solutions Inc</div>
+                            <div class="text-muted" id="viewCustomerAddress">123 Business Street, Makati City</div>
+                            <div class="text-muted" id="viewCustomerEmail">info@techsol.com</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <h6>Invoice Details</h6>
+                            <div class="detail-item">
+                                <span class="detail-label">Invoice Date:</span>
+                                <span class="detail-value" id="viewInvoiceDate">Jan 28, 2026</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Due Date:</span>
+                                <span class="detail-value" id="viewDueDate">Feb 27, 2026</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Status:</span>
+                                <span class="detail-value" id="viewInvoiceStatus"><span class="badge badge-warning">Pending</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h6>Items</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Unit Price</th>
+                                <th>Qty</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="viewInvoiceItems">
+                            <tr>
+                                <td>ProBook 15 Laptop</td>
+                                <td>₱64,950.00</td>
+                                <td>2</td>
+                                <td class="text-end">₱129,900.00</td>
+                            </tr>
+                            <tr>
+                                <td>Wireless Mouse Elite</td>
+                                <td>₱2,499.00</td>
+                                <td>2</td>
+                                <td class="text-end">₱4,998.00</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                <td class="text-end" id="viewSubtotal">₱232,142.86</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end">VAT (12%):</td>
+                                <td class="text-end" id="viewVAT">₱27,857.14</td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                <td class="text-end"><strong id="viewTotal">₱260,000.00</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="detail-card mt-4" id="paymentHistorySection">
+                    <h6>Payment History</h6>
+                    <div class="text-muted" id="paymentHistory">No payments recorded yet.</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="printInvoiceFromView()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                        <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+                    </svg>
+                    Print
+                </button>
+                <button type="button" class="btn btn-primary" onclick="editInvoiceFromView()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Edit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Record Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-success">
+                <h5 class="modal-title" id="paymentModalLabel">Record Payment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Recording payment for invoice <strong id="paymentInvoiceNumber">#INV-2024-0156</strong></p>
+                <div class="mb-3">
+                    <label class="form-label required">Amount Received</label>
+                    <div class="input-group">
+                        <span class="input-group-text">₱</span>
+                        <input type="number" class="form-control" id="paymentAmount" step="0.01" required>
+                    </div>
+                    <div class="form-text">Outstanding: <span id="outstandingAmount">₱260,000.00</span></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label required">Payment Date</label>
+                    <input type="date" class="form-control" id="paymentDate" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label required">Payment Method</label>
+                    <select class="form-select" id="paymentMethod" required>
+                        <option value="">Select Method</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Check">Check</option>
+                        <option value="Credit Card">Credit Card</option>
+                        <option value="GCash">GCash</option>
+                        <option value="PayMaya">PayMaya</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Reference Number</label>
+                    <input type="text" class="form-control" id="paymentReference" placeholder="Transaction/Check number">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Notes</label>
+                    <textarea class="form-control" id="paymentNotes" rows="2" placeholder="Additional notes"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="confirmPayment()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Record Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="successMessage">Operation successful!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="errorMessage">An error occurred!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let currentInvoiceId = null;
+    const invoicesData = [
+        { id: 1, number: 'INV-2024-0156', customerId: 1, customer: 'Tech Solutions Inc', address: '123 Business Street, Makati City', email: 'info@techsol.com', date: 'Jan 28, 2026', dueDate: 'Feb 27, 2026', subtotal: 232142.86, vat: 27857.14, total: 260000, status: 'Pending', paid: 0 },
+        { id: 2, number: 'INV-2024-0155', customerId: 2, customer: 'Acme Corporation', address: '456 Corporate Ave, Makati City', email: 'contact@acme.com', date: 'Jan 25, 2026', dueDate: 'Feb 24, 2026', subtotal: 109375, vat: 13125, total: 122500, status: 'Paid', paid: 122500 },
+        { id: 3, number: 'INV-2024-0154', customerId: 3, customer: 'Global Enterprises', address: '789 Enterprise Blvd, BGC', email: 'sales@globalent.com', date: 'Jan 15, 2026', dueDate: 'Jan 25, 2026', subtotal: 571428.57, vat: 68571.43, total: 640000, status: 'Overdue', paid: 0 },
+        { id: 4, number: 'INV-2024-0153', customerId: 4, customer: 'StartUp Hub', address: '101 Innovation St, Quezon City', email: 'hello@startuphub.com', date: 'Jan 10, 2026', dueDate: 'Feb 9, 2026', subtotal: 39732.14, vat: 4767.86, total: 44500, status: 'Paid', paid: 44500 }
+    ];
+
+    const statusBadgeClasses = { 'Draft': 'badge-neutral', 'Pending': 'badge-warning', 'Paid': 'badge-success', 'Overdue': 'badge-error', 'Cancelled': 'badge-neutral' };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('searchInvoices').addEventListener('input', filterTable);
+        document.getElementById('filterStatus').addEventListener('change', filterTable);
+        document.getElementById('invoiceDate').value = new Date().toISOString().split('T')[0];
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 30);
+        document.getElementById('dueDate').value = dueDate.toISOString().split('T')[0];
+        document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+    });
+
+    function openCreateInvoiceModal() {
+        currentInvoiceId = null;
+        document.getElementById('modalTitle').textContent = 'Create New Invoice';
+        document.getElementById('invoiceForm').reset();
+        document.getElementById('invoiceId').value = '0';
+        document.getElementById('invoiceDate').value = new Date().toISOString().split('T')[0];
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 30);
+        document.getElementById('dueDate').value = dueDate.toISOString().split('T')[0];
+        resetInvoiceItems();
+    }
+
+    function viewInvoice(id) {
+        const invoice = invoicesData.find(i => i.id === id);
+        if (!invoice) return;
+        currentInvoiceId = id;
+        document.getElementById('viewInvoiceNumber').textContent = '#' + invoice.number;
+        document.getElementById('viewCustomerName').textContent = invoice.customer;
+        document.getElementById('viewCustomerAddress').textContent = invoice.address;
+        document.getElementById('viewCustomerEmail').textContent = invoice.email;
+        document.getElementById('viewInvoiceDate').textContent = invoice.date;
+        document.getElementById('viewDueDate').textContent = invoice.dueDate;
+        document.getElementById('viewInvoiceStatus').innerHTML = '<span class="badge ' + statusBadgeClasses[invoice.status] + '">' + invoice.status + '</span>';
+        document.getElementById('viewSubtotal').textContent = '₱' + invoice.subtotal.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        document.getElementById('viewVAT').textContent = '₱' + invoice.vat.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        document.getElementById('viewTotal').textContent = '₱' + invoice.total.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        document.getElementById('paymentHistory').textContent = invoice.status === 'Paid' ? 'Paid in full on ' + invoice.dueDate : 'No payments recorded yet.';
+        new bootstrap.Modal(document.getElementById('viewInvoiceModal')).show();
+    }
+
+    function editInvoice(id) {
+        const invoice = invoicesData.find(i => i.id === id);
+        if (!invoice) return;
+        currentInvoiceId = id;
+        document.getElementById('modalTitle').textContent = 'Edit Invoice #' + invoice.number;
+        document.getElementById('invoiceId').value = id;
+        document.getElementById('invoiceCustomer').value = invoice.customerId;
+        new bootstrap.Modal(document.getElementById('invoiceModal')).show();
+    }
+
+    function editInvoiceFromView() {
+        bootstrap.Modal.getInstance(document.getElementById('viewInvoiceModal')).hide();
+        setTimeout(() => editInvoice(currentInvoiceId), 300);
+    }
+
+    function recordPayment(id) {
+        const invoice = invoicesData.find(i => i.id === id);
+        if (!invoice) return;
+        currentInvoiceId = id;
+        document.getElementById('paymentInvoiceNumber').textContent = '#' + invoice.number;
+        document.getElementById('outstandingAmount').textContent = '₱' + (invoice.total - invoice.paid).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        document.getElementById('paymentAmount').value = invoice.total - invoice.paid;
+        document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+        new bootstrap.Modal(document.getElementById('paymentModal')).show();
+    }
+
+    function confirmPayment() {
+        showToast('success', 'Payment recorded successfully!');
+        bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
+    }
+
+    function saveInvoice(event) {
+        event.preventDefault();
+        const invoiceId = document.getElementById('invoiceId').value;
+        const isNew = invoiceId === '0';
+        showToast('success', isNew ? 'Invoice created and sent!' : 'Invoice updated successfully!');
+        bootstrap.Modal.getInstance(document.getElementById('invoiceModal')).hide();
+    }
+
+    function saveAsDraft() {
+        showToast('success', 'Invoice saved as draft!');
+        bootstrap.Modal.getInstance(document.getElementById('invoiceModal')).hide();
+    }
+
+    function addInvoiceItem() {
+        const tbody = document.getElementById('invoiceItemsBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><input type="text" class="form-control form-control-sm" placeholder="Item description"></td>
+            <td><input type="number" class="form-control form-control-sm item-price" value="0" step="0.01" onchange="updateLineAmount(this)"></td>
+            <td><input type="number" class="form-control form-control-sm item-qty" value="1" min="1" onchange="updateLineAmount(this)"></td>
+            <td><input type="text" class="form-control form-control-sm item-amount" readonly value="₱0.00"></td>
+            <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeInvoiceItem(this)">×</button></td>
+        `;
+        tbody.appendChild(row);
+    }
+
+    function removeInvoiceItem(btn) {
+        const tbody = document.getElementById('invoiceItemsBody');
+        if (tbody.rows.length > 1) {
+            btn.closest('tr').remove();
+            calculateInvoiceTotal();
+        }
+    }
+
+    function updateLineAmount(input) {
+        const row = input.closest('tr');
+        const price = parseFloat(row.querySelector('.item-price').value) || 0;
+        const qty = parseInt(row.querySelector('.item-qty').value) || 1;
+        const amount = price * qty;
+        row.querySelector('.item-amount').value = '₱' + amount.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        calculateInvoiceTotal();
+    }
+
+    function calculateInvoiceTotal() {
+        let subtotal = 0;
+        document.querySelectorAll('.item-amount').forEach(input => {
+            subtotal += parseFloat(input.value.replace('₱', '').replace(/,/g, '')) || 0;
+        });
+        const vat = subtotal * 0.12;
+        const total = subtotal + vat;
+        document.getElementById('invoiceSubtotal').textContent = '₱' + subtotal.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        document.getElementById('invoiceVAT').textContent = '₱' + vat.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        document.getElementById('invoiceTotal').textContent = '₱' + total.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+    }
+
+    function resetInvoiceItems() {
+        const tbody = document.getElementById('invoiceItemsBody');
+        tbody.innerHTML = `
+            <tr>
+                <td><input type="text" class="form-control form-control-sm" placeholder="Item description"></td>
+                <td><input type="number" class="form-control form-control-sm item-price" value="0" step="0.01" onchange="updateLineAmount(this)"></td>
+                <td><input type="number" class="form-control form-control-sm item-qty" value="1" min="1" onchange="updateLineAmount(this)"></td>
+                <td><input type="text" class="form-control form-control-sm item-amount" readonly value="₱0.00"></td>
+                <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeInvoiceItem(this)">×</button></td>
+            </tr>
+        `;
+        calculateInvoiceTotal();
+    }
+
+    function filterTable() {
+        const search = document.getElementById('searchInvoices').value.toLowerCase();
+        const statusFilter = document.getElementById('filterStatus').value;
+        const rows = document.querySelectorAll('#invoicesTable tbody tr');
+        let visibleCount = 0;
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const invoice = invoicesData.find(i => i.id === parseInt(row.dataset.id));
+            let show = true;
+            if (search && !text.includes(search)) show = false;
+            if (statusFilter && invoice && invoice.status !== statusFilter) show = false;
+            row.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+        document.getElementById('invoiceCount').textContent = visibleCount + ' invoices';
+    }
+
+    function resetFilters() {
+        document.getElementById('searchInvoices').value = '';
+        document.getElementById('filterStatus').value = '';
+        document.getElementById('filterDateFrom').value = '';
+        document.getElementById('filterDateTo').value = '';
+        filterTable();
+    }
+
+    function applyFilters() { filterTable(); showToast('success', 'Filters applied!'); }
+    function exportInvoices() { showToast('success', 'Exporting invoices...'); }
+    function printInvoice(id) { showToast('success', 'Preparing invoice for printing...'); }
+    function printInvoiceFromView() { showToast('success', 'Preparing invoice for printing...'); }
+    function sendReceipt(id) { showToast('success', 'Receipt sent to customer!'); }
+    function sendReminder(id) { showToast('success', 'Payment reminder sent!'); }
+
+    function showToast(type, message) {
+        const toastId = type === 'success' ? 'successToast' : 'errorToast';
+        const messageId = type === 'success' ? 'successMessage' : 'errorMessage';
+        document.getElementById(messageId).textContent = message;
+        new bootstrap.Toast(document.getElementById(toastId)).show();
+    }
+</script>
+}

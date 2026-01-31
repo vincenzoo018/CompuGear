@@ -1,0 +1,745 @@
+@{
+    ViewData["Title"] = "Product Management";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Product Management</h1>
+        <p class="page-subtitle">Manage your product catalog and inventory</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" onclick="exportProducts()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export
+        </button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productModal" onclick="openCreateProductModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add Product
+        </button>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">156</div>
+                <div class="stat-label">Total Products</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">142</div>
+                <div class="stat-label">In Stock</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">8</div>
+                <div class="stat-label">Low Stock</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-danger">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">6</div>
+                <div class="stat-label">Out of Stock</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter & Search -->
+<div class="card mb-4 fade-in">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Search Products</label>
+                <div class="search-input">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" class="form-control" id="searchProducts" placeholder="Search by name, SKU...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Category</label>
+                <select class="form-select" id="filterCategory">
+                    <option value="">All Categories</option>
+                    <option value="Laptops">Laptops</option>
+                    <option value="Desktops">Desktops</option>
+                    <option value="Components">Components</option>
+                    <option value="Peripherals">Peripherals</option>
+                    <option value="Accessories">Accessories</option>
+                    <option value="Software">Software</option>
+                    <option value="Gaming">Gaming</option>
+                    <option value="Networking">Networking</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Brand</label>
+                <select class="form-select" id="filterBrand">
+                    <option value="">All Brands</option>
+                    <option value="ASUS">ASUS</option>
+                    <option value="MSI">MSI</option>
+                    <option value="Dell">Dell</option>
+                    <option value="HP">HP</option>
+                    <option value="Lenovo">Lenovo</option>
+                    <option value="Acer">Acer</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Stock Status</label>
+                <select class="form-select" id="filterStock">
+                    <option value="">All Status</option>
+                    <option value="instock">In Stock</option>
+                    <option value="low">Low Stock</option>
+                    <option value="outofstock">Out of Stock</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary flex-fill" onclick="resetFilters()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                        </svg>
+                        Reset
+                    </button>
+                    <button class="btn btn-outline-primary flex-fill" onclick="applyFilters()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                        </svg>
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Product Catalog</h5>
+        <span class="badge bg-primary" id="productCount">5 products</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table" id="productsTable">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>SKU</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th class="text-center" style="width: 120px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-id="1">
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="product-image bg-light rounded p-2">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-primary">
+                                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <strong>ProBook 15 Laptop</strong>
+                                    <div class="text-muted small">Intel Core i7, 16GB RAM</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><code>LAP-001</code></td>
+                        <td><span class="badge badge-info">Laptops</span></td>
+                        <td><strong>₱64,950.00</strong></td>
+                        <td>45 units</td>
+                        <td><span class="badge badge-success"><span class="badge-dot"></span>In Stock</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewProduct(1)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editProduct(1)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(1, 'ProBook 15 Laptop')" title="Delete">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="2">
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="product-image bg-light rounded p-2">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-info">
+                                        <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <strong>WorkStation Pro Desktop</strong>
+                                    <div class="text-muted small">AMD Ryzen 9, 32GB RAM</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><code>DES-002</code></td>
+                        <td><span class="badge badge-neutral">Desktops</span></td>
+                        <td><strong>₱124,950.00</strong></td>
+                        <td>12 units</td>
+                        <td><span class="badge badge-warning"><span class="badge-dot"></span>Low Stock</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewProduct(2)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editProduct(2)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(2, 'WorkStation Pro Desktop')" title="Delete">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="3">
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="product-image bg-light rounded p-2">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-success">
+                                        <path d="M9 3L5 6.99h3V14h2V6.99h3L9 3zm7 14.01V10h-2v7.01h-3L15 21l4-3.99h-3z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <strong>Wireless Mouse Elite</strong>
+                                    <div class="text-muted small">2.4GHz, Ergonomic Design</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><code>ACC-003</code></td>
+                        <td><span class="badge badge-pending">Accessories</span></td>
+                        <td><strong>₱2,499.00</strong></td>
+                        <td>150 units</td>
+                        <td><span class="badge badge-success"><span class="badge-dot"></span>In Stock</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewProduct(3)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editProduct(3)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(3, 'Wireless Mouse Elite')" title="Delete">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="4">
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="product-image bg-light rounded p-2">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-warning">
+                                        <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <strong>Office Suite Pro 2026</strong>
+                                    <div class="text-muted small">Digital License</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><code>SOF-004</code></td>
+                        <td><span class="badge badge-success">Software</span></td>
+                        <td><strong>₱14,950.00</strong></td>
+                        <td>∞ (Digital)</td>
+                        <td><span class="badge badge-success"><span class="badge-dot"></span>Available</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewProduct(4)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editProduct(4)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(4, 'Office Suite Pro 2026')" title="Delete">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="5">
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="product-image bg-light rounded p-2">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-danger">
+                                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <strong>UltraWide Monitor 34"</strong>
+                                    <div class="text-muted small">3440x1440, 144Hz</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><code>MON-005</code></td>
+                        <td><span class="badge badge-pending">Accessories</span></td>
+                        <td><strong>₱29,950.00</strong></td>
+                        <td>0 units</td>
+                        <td><span class="badge badge-error"><span class="badge-dot"></span>Out of Stock</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewProduct(5)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editProduct(5)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(5, 'UltraWide Monitor 34\"')" title="Delete">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between align-items-center">
+        <div class="text-muted small">Showing 1 to 5 of 5 products</div>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">Next</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Create/Edit Product Modal -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header modal-header-primary">
+                <h5 class="modal-title" id="productModalLabel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                    </svg>
+                    <span id="modalTitle">Add New Product</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="productForm" onsubmit="saveProduct(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="productId" value="0">
+                    
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            </svg>
+                            Basic Information
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label required">Product Name</label>
+                                <input type="text" class="form-control" id="productName" name="productName" required placeholder="Enter product name">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label required">Product Code/SKU</label>
+                                <input type="text" class="form-control" id="productCode" name="productCode" required placeholder="e.g., LAP-001">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="3" placeholder="Enter product description"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                            </svg>
+                            Category & Brand
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label required">Category</label>
+                                <select class="form-select" id="categoryId" name="categoryId" required>
+                                    <option value="">Select Category</option>
+                                    <option value="1">Laptops</option>
+                                    <option value="2">Desktops</option>
+                                    <option value="3">Components</option>
+                                    <option value="4">Peripherals</option>
+                                    <option value="5">Accessories</option>
+                                    <option value="6">Software</option>
+                                    <option value="7">Gaming</option>
+                                    <option value="8">Networking</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Brand</label>
+                                <select class="form-select" id="brandId" name="brandId">
+                                    <option value="">Select Brand</option>
+                                    <option value="1">ASUS</option>
+                                    <option value="2">MSI</option>
+                                    <option value="3">Gigabyte</option>
+                                    <option value="4">Dell</option>
+                                    <option value="5">HP</option>
+                                    <option value="6">Lenovo</option>
+                                    <option value="7">Acer</option>
+                                    <option value="8">Samsung</option>
+                                    <option value="9">LG</option>
+                                    <option value="10">Intel</option>
+                                    <option value="11">AMD</option>
+                                    <option value="12">NVIDIA</option>
+                                    <option value="13">Logitech</option>
+                                    <option value="14">Razer</option>
+                                    <option value="15">Corsair</option>
+                                    <option value="16">Microsoft</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
+                            Pricing & Inventory
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label required">Cost Price</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₱</span>
+                                    <input type="number" class="form-control" id="costPrice" name="costPrice" step="0.01" required placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label required">Selling Price</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₱</span>
+                                    <input type="number" class="form-control" id="sellingPrice" name="sellingPrice" step="0.01" required placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Stock Quantity</label>
+                                <input type="number" class="form-control" id="stockQuantity" name="stockQuantity" value="0" min="0" placeholder="0">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Reorder Level</label>
+                                <input type="number" class="form-control" id="reorderLevel" name="reorderLevel" value="10" min="0" placeholder="10">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Unit</label>
+                                <select class="form-select" id="unit" name="unit">
+                                    <option value="piece">Piece</option>
+                                    <option value="box">Box</option>
+                                    <option value="set">Set</option>
+                                    <option value="license">License</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" id="isActive" name="isActive">
+                                    <option value="true">Active</option>
+                                    <option value="false">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        Save Product
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Product Modal -->
+<div class="modal fade" id="viewProductModal" tabindex="-1" aria-labelledby="viewProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-info">
+                <h5 class="modal-title" id="viewProductModalLabel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Product Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-4">
+                        <div class="product-image-large bg-light rounded p-4 mb-3">
+                            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-primary">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                            </svg>
+                        </div>
+                        <span class="badge badge-success" id="viewProductStatus">In Stock</span>
+                    </div>
+                    <div class="col-md-8">
+                        <h4 id="viewProductName">ProBook 15 Laptop</h4>
+                        <p class="text-muted mb-3" id="viewProductDesc">Intel Core i7, 16GB RAM, 512GB SSD</p>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="detail-item mb-3">
+                                    <span class="detail-label">SKU:</span>
+                                    <span class="detail-value" id="viewProductSku">LAP-001</span>
+                                </div>
+                                <div class="detail-item mb-3">
+                                    <span class="detail-label">Category:</span>
+                                    <span class="detail-value" id="viewProductCategory">Laptops</span>
+                                </div>
+                                <div class="detail-item mb-3">
+                                    <span class="detail-label">Brand:</span>
+                                    <span class="detail-value" id="viewProductBrand">Dell</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-item mb-3">
+                                    <span class="detail-label">Price:</span>
+                                    <span class="detail-value fw-bold text-primary" id="viewProductPrice">₱64,950.00</span>
+                                </div>
+                                <div class="detail-item mb-3">
+                                    <span class="detail-label">Stock:</span>
+                                    <span class="detail-value" id="viewProductStock">45 units</span>
+                                </div>
+                                <div class="detail-item mb-3">
+                                    <span class="detail-label">Reorder Level:</span>
+                                    <span class="detail-value" id="viewProductReorder">10 units</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="editProductFromView()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Edit Product
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-danger">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="delete-warning">
+                    <div class="delete-icon mb-3">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-danger">
+                            <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                    </div>
+                    <p class="delete-message">Are you sure you want to delete <strong id="deleteItemName"></strong>?</p>
+                    <p class="text-muted mb-0">This will remove the product from your inventory.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete Product</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="successMessage">Operation successful!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="errorMessage">An error occurred!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let currentProductId = null;
+    const productsData = [
+        { id: 1, name: 'ProBook 15 Laptop', sku: 'LAP-001', description: 'Intel Core i7, 16GB RAM, 512GB SSD', categoryId: 1, category: 'Laptops', brandId: 4, brand: 'Dell', costPrice: 55000, sellingPrice: 64950, stock: 45, reorderLevel: 10, status: 'instock' },
+        { id: 2, name: 'WorkStation Pro Desktop', sku: 'DES-002', description: 'AMD Ryzen 9, 32GB RAM, RTX 4070', categoryId: 2, category: 'Desktops', brandId: 1, brand: 'ASUS', costPrice: 100000, sellingPrice: 124950, stock: 12, reorderLevel: 15, status: 'low' },
+        { id: 3, name: 'Wireless Mouse Elite', sku: 'ACC-003', description: '2.4GHz, Ergonomic Design, RGB', categoryId: 5, category: 'Accessories', brandId: 13, brand: 'Logitech', costPrice: 1500, sellingPrice: 2499, stock: 150, reorderLevel: 20, status: 'instock' },
+        { id: 4, name: 'Office Suite Pro 2026', sku: 'SOF-004', description: 'Digital License, Lifetime', categoryId: 6, category: 'Software', brandId: 16, brand: 'Microsoft', costPrice: 10000, sellingPrice: 14950, stock: 9999, reorderLevel: 0, status: 'instock' },
+        { id: 5, name: 'UltraWide Monitor 34"', sku: 'MON-005', description: '3440x1440, 144Hz, IPS Panel', categoryId: 5, category: 'Accessories', brandId: 9, brand: 'LG', costPrice: 22000, sellingPrice: 29950, stock: 0, reorderLevel: 5, status: 'outofstock' }
+    ];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('searchProducts').addEventListener('input', filterTable);
+        document.getElementById('filterCategory').addEventListener('change', filterTable);
+        document.getElementById('filterBrand').addEventListener('change', filterTable);
+        document.getElementById('filterStock').addEventListener('change', filterTable);
+    });
+
+    function openCreateProductModal() {
+        currentProductId = null;
+        document.getElementById('modalTitle').textContent = 'Add New Product';
+        document.getElementById('productForm').reset();
+        document.getElementById('productId').value = '0';
+    }
+
+    function viewProduct(id) {
+        const product = productsData.find(p => p.id === id);
+        if (!product) return;
+        currentProductId = id;
+        document.getElementById('viewProductName').textContent = product.name;
+        document.getElementById('viewProductDesc').textContent = product.description;
+        document.getElementById('viewProductSku').textContent = product.sku;
+        document.getElementById('viewProductCategory').textContent = product.category;
+        document.getElementById('viewProductBrand').textContent = product.brand;
+        document.getElementById('viewProductPrice').textContent = '₱' + product.sellingPrice.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        document.getElementById('viewProductStock').textContent = product.stock === 9999 ? '∞ (Digital)' : product.stock + ' units';
+        document.getElementById('viewProductReorder').textContent = product.reorderLevel + ' units';
+        const statusBadge = product.status === 'instock' ? 'badge-success' : (product.status === 'low' ? 'badge-warning' : 'badge-error');
+        const statusText = product.status === 'instock' ? 'In Stock' : (product.status === 'low' ? 'Low Stock' : 'Out of Stock');
+        document.getElementById('viewProductStatus').className = 'badge ' + statusBadge;
+        document.getElementById('viewProductStatus').textContent = statusText;
+        new bootstrap.Modal(document.getElementById('viewProductModal')).show();
+    }
+
+    function editProduct(id) {
+        const product = productsData.find(p => p.id === id);
+        if (!product) return;
+        currentProductId = id;
+        document.getElementById('modalTitle').textContent = 'Edit Product';
+        document.getElementById('productId').value = id;
+        document.getElementById('productName').value = product.name;
+        document.getElementById('productCode').value = product.sku;
+        document.getElementById('description').value = product.description;
+        document.getElementById('categoryId').value = product.categoryId;
+        document.getElementById('brandId').value = product.brandId;
+        document.getElementById('costPrice').value = product.costPrice;
+        document.getElementById('sellingPrice').value = product.sellingPrice;
+        document.getElementById('stockQuantity').value = product.stock;
+        document.getElementById('reorderLevel').value = product.reorderLevel;
+        new bootstrap.Modal(document.getElementById('productModal')).show();
+    }
+
+    function editProductFromView() {
+        bootstrap.Modal.getInstance(document.getElementById('viewProductModal')).hide();
+        setTimeout(() => editProduct(currentProductId), 300);
+    }
+
+    function deleteProduct(id, name) {
+        currentProductId = id;
+        document.getElementById('deleteItemName').textContent = name;
+        new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
+        document.getElementById('confirmDeleteBtn').onclick = function() {
+            showToast('success', name + ' has been deleted from inventory!');
+            bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
+            const row = document.querySelector('tr[data-id="' + id + '"]');
+            if (row) { row.style.transition = 'opacity 0.3s'; row.style.opacity = '0'; setTimeout(() => row.remove(), 300); }
+        };
+    }
+
+    function saveProduct(event) {
+        event.preventDefault();
+        const productId = document.getElementById('productId').value;
+        const isNew = productId === '0';
+        showToast('success', isNew ? 'Product added to inventory!' : 'Product updated successfully!');
+        bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+    }
+
+    function filterTable() {
+        const search = document.getElementById('searchProducts').value.toLowerCase();
+        const categoryFilter = document.getElementById('filterCategory').value;
+        const brandFilter = document.getElementById('filterBrand').value;
+        const stockFilter = document.getElementById('filterStock').value;
+        const rows = document.querySelectorAll('#productsTable tbody tr');
+        let visibleCount = 0;
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const product = productsData.find(p => p.id === parseInt(row.dataset.id));
+            let show = true;
+            if (search && !text.includes(search)) show = false;
+            if (categoryFilter && product && product.category !== categoryFilter) show = false;
+            if (brandFilter && product && product.brand !== brandFilter) show = false;
+            if (stockFilter && product && product.status !== stockFilter) show = false;
+            row.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+        document.getElementById('productCount').textContent = visibleCount + ' products';
+    }
+
+    function resetFilters() {
+        document.getElementById('searchProducts').value = '';
+        document.getElementById('filterCategory').value = '';
+        document.getElementById('filterBrand').value = '';
+        document.getElementById('filterStock').value = '';
+        filterTable();
+    }
+
+    function applyFilters() { filterTable(); showToast('success', 'Filters applied!'); }
+    function exportProducts() { showToast('success', 'Exporting products to Excel...'); }
+
+    function showToast(type, message) {
+        const toastId = type === 'success' ? 'successToast' : 'errorToast';
+        const messageId = type === 'success' ? 'successMessage' : 'errorMessage';
+        document.getElementById(messageId).textContent = message;
+        new bootstrap.Toast(document.getElementById(toastId)).show();
+    }
+</script>
+}

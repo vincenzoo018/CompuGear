@@ -1,0 +1,893 @@
+@{
+    ViewData["Title"] = "Orders";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Orders</h1>
+        <p class="page-subtitle">Manage and track customer orders</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" onclick="exportOrders()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export
+        </button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#orderModal" onclick="openCreateOrderModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            New Order
+        </button>
+    </div>
+</div>
+
+<!-- Order Stats -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">1,234</div>
+                <div class="stat-label">Total Orders</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">23</div>
+                <div class="stat-label">Pending</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-info">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">45</div>
+                <div class="stat-label">Processing</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">1,166</div>
+                <div class="stat-label">Completed</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter & Search -->
+<div class="card mb-4 fade-in">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Search Orders</label>
+                <div class="search-input">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" class="form-control" id="searchOrders" placeholder="Search by order #, customer...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="filterStatus">
+                    <option value="">All Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Processing">Processing</option>
+                    <option value="Shipped">Shipped</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Date From</label>
+                <input type="date" class="form-control" id="filterDateFrom">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Date To</label>
+                <input type="date" class="form-control" id="filterDateTo">
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary flex-fill" onclick="resetFilters()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                        </svg>
+                        Reset
+                    </button>
+                    <button class="btn btn-outline-primary flex-fill" onclick="applyFilters()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                        </svg>
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Orders Table -->
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Order List</h5>
+        <span class="badge bg-primary" id="orderCount">5 orders</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table" id="ordersTable">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Items</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th class="text-center" style="width: 140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-id="1">
+                        <td><strong class="text-primary">#ORD-2850</strong></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-info">AC</span>
+                                </div>
+                                <div>
+                                    <strong>Acme Corporation</strong>
+                                    <div class="text-muted small">Business</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>Jan 30, 2026</div>
+                            <div class="text-muted small">10:30 AM</div>
+                        </td>
+                        <td>3 items</td>
+                        <td><strong>₱62,500.00</strong></td>
+                        <td><span class="badge badge-warning"><span class="badge-dot"></span>Pending</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewOrder(1)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editOrder(1)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-success" onclick="updateStatus(1)" title="Update Status">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="cancelOrder(1)" title="Cancel">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="2">
+                        <td><strong class="text-primary">#ORD-2849</strong></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-primary">JD</span>
+                                </div>
+                                <div>
+                                    <strong>John Doe</strong>
+                                    <div class="text-muted small">Individual</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>Jan 30, 2026</div>
+                            <div class="text-muted small">09:15 AM</div>
+                        </td>
+                        <td>1 item</td>
+                        <td><strong>₱14,950.00</strong></td>
+                        <td><span class="badge badge-info"><span class="badge-dot"></span>Processing</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewOrder(2)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editOrder(2)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-success" onclick="updateStatus(2)" title="Update Status">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="cancelOrder(2)" title="Cancel">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="3">
+                        <td><strong class="text-primary">#ORD-2848</strong></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-warning">GE</span>
+                                </div>
+                                <div>
+                                    <strong>Global Enterprises</strong>
+                                    <div class="text-muted small">VIP</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>Jan 29, 2026</div>
+                            <div class="text-muted small">03:45 PM</div>
+                        </td>
+                        <td>12 items</td>
+                        <td><strong>₱445,000.00</strong></td>
+                        <td><span class="badge badge-success"><span class="badge-dot"></span>Completed</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewOrder(3)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="printInvoice(3)" title="Print Invoice">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="4">
+                        <td><strong class="text-primary">#ORD-2847</strong></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-success">TS</span>
+                                </div>
+                                <div>
+                                    <strong>Tech Solutions Inc</strong>
+                                    <div class="text-muted small">Business</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>Jan 28, 2026</div>
+                            <div class="text-muted small">11:20 AM</div>
+                        </td>
+                        <td>5 items</td>
+                        <td><strong>₱122,500.00</strong></td>
+                        <td><span class="badge badge-success"><span class="badge-dot"></span>Completed</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewOrder(4)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="printInvoice(4)" title="Print Invoice">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="5">
+                        <td><strong class="text-primary">#ORD-2846</strong></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-danger">SH</span>
+                                </div>
+                                <div>
+                                    <strong>StartUp Hub</strong>
+                                    <div class="text-muted small">Business</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div>Jan 27, 2026</div>
+                            <div class="text-muted small">02:10 PM</div>
+                        </td>
+                        <td>2 items</td>
+                        <td><strong>₱44,500.00</strong></td>
+                        <td><span class="badge badge-success"><span class="badge-dot"></span>Completed</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewOrder(5)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="printInvoice(5)" title="Print Invoice">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between align-items-center">
+        <div class="text-muted small">Showing 1 to 5 of 5 orders</div>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">Next</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Create/Edit Order Modal -->
+<div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header modal-header-primary">
+                <h5 class="modal-title" id="orderModalLabel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                    </svg>
+                    <span id="modalTitle">Create New Order</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="orderForm" onsubmit="saveOrder(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="orderId" value="0">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-section">
+                                <h6 class="form-section-title">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                    Customer Information
+                                </h6>
+                                <div class="mb-3">
+                                    <label class="form-label required">Select Customer</label>
+                                    <select class="form-select" id="customerId" name="customerId" required>
+                                        <option value="">Choose a customer</option>
+                                        <option value="1">Acme Corporation</option>
+                                        <option value="2">John Doe</option>
+                                        <option value="3">Tech Solutions Inc</option>
+                                        <option value="4">Global Enterprises</option>
+                                        <option value="5">StartUp Hub</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Shipping Address</label>
+                                    <textarea class="form-control" id="shippingAddress" rows="2" placeholder="Enter shipping address"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-section">
+                                <h6 class="form-section-title">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                                    </svg>
+                                    Order Details
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <label class="form-label">Order Date</label>
+                                        <input type="date" class="form-control" id="orderDate" value="">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Payment Terms</label>
+                                        <select class="form-select" id="paymentTerms">
+                                            <option value="COD">Cash on Delivery</option>
+                                            <option value="NET15">Net 15 Days</option>
+                                            <option value="NET30">Net 30 Days</option>
+                                            <option value="PREPAID">Prepaid</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title d-flex justify-content-between align-items-center">
+                            <span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                </svg>
+                                Order Items
+                            </span>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addOrderItem()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                Add Item
+                            </button>
+                        </h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm" id="orderItemsTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 40%;">Product</th>
+                                        <th style="width: 15%;">Price</th>
+                                        <th style="width: 15%;">Qty</th>
+                                        <th style="width: 20%;">Subtotal</th>
+                                        <th style="width: 10%;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orderItemsBody">
+                                    <tr>
+                                        <td>
+                                            <select class="form-select form-select-sm" onchange="updateItemPrice(this)">
+                                                <option value="">Select Product</option>
+                                                <option value="1" data-price="64950">ProBook 15 Laptop</option>
+                                                <option value="2" data-price="124950">WorkStation Pro Desktop</option>
+                                                <option value="3" data-price="2499">Wireless Mouse Elite</option>
+                                                <option value="4" data-price="14950">Office Suite Pro 2026</option>
+                                                <option value="5" data-price="29950">UltraWide Monitor 34"</option>
+                                            </select>
+                                        </td>
+                                        <td><input type="text" class="form-control form-control-sm item-price" readonly value="₱0.00"></td>
+                                        <td><input type="number" class="form-control form-control-sm item-qty" value="1" min="1" onchange="updateSubtotal(this)"></td>
+                                        <td><input type="text" class="form-control form-control-sm item-subtotal" readonly value="₱0.00"></td>
+                                        <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeOrderItem(this)">×</button></td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                        <td colspan="2"><strong id="orderSubtotal">₱0.00</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3" class="text-end">Tax (12%):</td>
+                                        <td colspan="2" id="orderTax">₱0.00</td>
+                                    </tr>
+                                    <tr class="table-primary">
+                                        <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                        <td colspan="2"><strong id="orderTotal">₱0.00</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <label class="form-label">Order Notes</label>
+                        <textarea class="form-control" id="orderNotes" rows="2" placeholder="Additional notes for this order"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        Save Order
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Order Modal -->
+<div class="modal fade" id="viewOrderModal" tabindex="-1" aria-labelledby="viewOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header modal-header-info">
+                <h5 class="modal-title" id="viewOrderModalLabel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Order Details - <span id="viewOrderNumber">#ORD-2850</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <h6>Customer</h6>
+                            <div class="detail-item">
+                                <span class="detail-label">Name:</span>
+                                <span class="detail-value" id="viewCustomerName">Acme Corporation</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Email:</span>
+                                <span class="detail-value" id="viewCustomerEmail">contact@acme.com</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Phone:</span>
+                                <span class="detail-value" id="viewCustomerPhone">+63-917-555-0101</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <h6>Order Info</h6>
+                            <div class="detail-item">
+                                <span class="detail-label">Date:</span>
+                                <span class="detail-value" id="viewOrderDate">Jan 30, 2026</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Status:</span>
+                                <span class="detail-value" id="viewOrderStatus"><span class="badge badge-warning">Pending</span></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Payment:</span>
+                                <span class="detail-value" id="viewPaymentStatus">Awaiting Payment</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h6>Order Items</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Unit Price</th>
+                                <th>Qty</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="viewOrderItems">
+                            <tr>
+                                <td>ProBook 15 Laptop</td>
+                                <td>₱64,950.00</td>
+                                <td>1</td>
+                                <td class="text-end">₱64,950.00</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                                <td class="text-end" id="viewSubtotal">₱55,803.57</td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" class="text-end">Tax (12%):</td>
+                                <td class="text-end" id="viewTax">₱6,696.43</td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                                <td class="text-end"><strong id="viewTotal">₱62,500.00</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-outline-primary" onclick="printInvoiceFromView()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                        <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+                    </svg>
+                    Print Invoice
+                </button>
+                <button type="button" class="btn btn-primary" onclick="editOrderFromView()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Edit Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-success">
+                <h5 class="modal-title" id="updateStatusModalLabel">Update Order Status</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Update status for order <strong id="statusOrderNumber">#ORD-2850</strong></p>
+                <div class="mb-3">
+                    <label class="form-label">New Status</label>
+                    <select class="form-select" id="newStatus">
+                        <option value="Pending">Pending</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Notes (Optional)</label>
+                    <textarea class="form-control" id="statusNotes" rows="2" placeholder="Add notes about this status change"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="confirmStatusUpdate()">Update Status</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Order Modal -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-danger">
+                <h5 class="modal-title" id="cancelOrderModalLabel">Cancel Order</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="delete-warning">
+                    <div class="delete-icon mb-3">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-danger">
+                            <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                        </svg>
+                    </div>
+                    <p class="delete-message">Are you sure you want to cancel order <strong id="cancelOrderNumber">#ORD-2850</strong>?</p>
+                    <p class="text-muted mb-0">This action cannot be undone. The order will be marked as cancelled.</p>
+                </div>
+                <div class="mt-3">
+                    <label class="form-label">Cancellation Reason</label>
+                    <textarea class="form-control" id="cancelReason" rows="2" placeholder="Please provide a reason for cancellation"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Order</button>
+                <button type="button" class="btn btn-danger" onclick="confirmCancelOrder()">Cancel Order</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="successMessage">Operation successful!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="errorMessage">An error occurred!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let currentOrderId = null;
+    const ordersData = [
+        { id: 1, orderNumber: 'ORD-2850', customerId: 1, customer: 'Acme Corporation', customerType: 'Business', email: 'contact@acme.com', phone: '+63-917-555-0101', date: 'Jan 30, 2026', items: 3, subtotal: 55803.57, tax: 6696.43, total: 62500, status: 'Pending', payment: 'Awaiting Payment' },
+        { id: 2, orderNumber: 'ORD-2849', customerId: 2, customer: 'John Doe', customerType: 'Individual', email: 'john.doe@email.com', phone: '+63-917-555-0102', date: 'Jan 30, 2026', items: 1, subtotal: 13348.21, tax: 1601.79, total: 14950, status: 'Processing', payment: 'Paid' },
+        { id: 3, orderNumber: 'ORD-2848', customerId: 4, customer: 'Global Enterprises', customerType: 'VIP', email: 'sales@globalent.com', phone: '+63-917-555-0105', date: 'Jan 29, 2026', items: 12, subtotal: 397321.43, tax: 47678.57, total: 445000, status: 'Completed', payment: 'Paid' },
+        { id: 4, orderNumber: 'ORD-2847', customerId: 3, customer: 'Tech Solutions Inc', customerType: 'Business', email: 'info@techsol.com', phone: '+63-917-555-0103', date: 'Jan 28, 2026', items: 5, subtotal: 109375, tax: 13125, total: 122500, status: 'Completed', payment: 'Paid' },
+        { id: 5, orderNumber: 'ORD-2846', customerId: 5, customer: 'StartUp Hub', customerType: 'Business', email: 'hello@startuphub.com', phone: '+63-917-555-0106', date: 'Jan 27, 2026', items: 2, subtotal: 39732.14, tax: 4767.86, total: 44500, status: 'Completed', payment: 'Paid' }
+    ];
+
+    const statusBadgeClasses = { 'Pending': 'badge-warning', 'Processing': 'badge-info', 'Shipped': 'badge-pending', 'Completed': 'badge-success', 'Cancelled': 'badge-error' };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('searchOrders').addEventListener('input', filterTable);
+        document.getElementById('filterStatus').addEventListener('change', filterTable);
+        document.getElementById('orderDate').value = new Date().toISOString().split('T')[0];
+    });
+
+    function openCreateOrderModal() {
+        currentOrderId = null;
+        document.getElementById('modalTitle').textContent = 'Create New Order';
+        document.getElementById('orderForm').reset();
+        document.getElementById('orderId').value = '0';
+        document.getElementById('orderDate').value = new Date().toISOString().split('T')[0];
+        resetOrderItems();
+    }
+
+    function viewOrder(id) {
+        const order = ordersData.find(o => o.id === id);
+        if (!order) return;
+        currentOrderId = id;
+        document.getElementById('viewOrderNumber').textContent = '#' + order.orderNumber;
+        document.getElementById('viewCustomerName').textContent = order.customer;
+        document.getElementById('viewCustomerEmail').textContent = order.email;
+        document.getElementById('viewCustomerPhone').textContent = order.phone;
+        document.getElementById('viewOrderDate').textContent = order.date;
+        document.getElementById('viewOrderStatus').innerHTML = '<span class="badge ' + statusBadgeClasses[order.status] + '">' + order.status + '</span>';
+        document.getElementById('viewPaymentStatus').textContent = order.payment;
+        document.getElementById('viewSubtotal').textContent = '₱' + order.subtotal.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        document.getElementById('viewTax').textContent = '₱' + order.tax.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        document.getElementById('viewTotal').textContent = '₱' + order.total.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        new bootstrap.Modal(document.getElementById('viewOrderModal')).show();
+    }
+
+    function editOrder(id) {
+        const order = ordersData.find(o => o.id === id);
+        if (!order) return;
+        currentOrderId = id;
+        document.getElementById('modalTitle').textContent = 'Edit Order #' + order.orderNumber;
+        document.getElementById('orderId').value = id;
+        document.getElementById('customerId').value = order.customerId;
+        new bootstrap.Modal(document.getElementById('orderModal')).show();
+    }
+
+    function editOrderFromView() {
+        bootstrap.Modal.getInstance(document.getElementById('viewOrderModal')).hide();
+        setTimeout(() => editOrder(currentOrderId), 300);
+    }
+
+    function updateStatus(id) {
+        const order = ordersData.find(o => o.id === id);
+        if (!order) return;
+        currentOrderId = id;
+        document.getElementById('statusOrderNumber').textContent = '#' + order.orderNumber;
+        document.getElementById('newStatus').value = order.status;
+        new bootstrap.Modal(document.getElementById('updateStatusModal')).show();
+    }
+
+    function confirmStatusUpdate() {
+        const newStatus = document.getElementById('newStatus').value;
+        showToast('success', 'Order status updated to ' + newStatus + '!');
+        bootstrap.Modal.getInstance(document.getElementById('updateStatusModal')).hide();
+    }
+
+    function cancelOrder(id) {
+        const order = ordersData.find(o => o.id === id);
+        if (!order) return;
+        currentOrderId = id;
+        document.getElementById('cancelOrderNumber').textContent = '#' + order.orderNumber;
+        new bootstrap.Modal(document.getElementById('cancelOrderModal')).show();
+    }
+
+    function confirmCancelOrder() {
+        showToast('success', 'Order has been cancelled!');
+        bootstrap.Modal.getInstance(document.getElementById('cancelOrderModal')).hide();
+    }
+
+    function saveOrder(event) {
+        event.preventDefault();
+        const orderId = document.getElementById('orderId').value;
+        const isNew = orderId === '0';
+        showToast('success', isNew ? 'Order created successfully!' : 'Order updated successfully!');
+        bootstrap.Modal.getInstance(document.getElementById('orderModal')).hide();
+    }
+
+    function addOrderItem() {
+        const tbody = document.getElementById('orderItemsBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <select class="form-select form-select-sm" onchange="updateItemPrice(this)">
+                    <option value="">Select Product</option>
+                    <option value="1" data-price="64950">ProBook 15 Laptop</option>
+                    <option value="2" data-price="124950">WorkStation Pro Desktop</option>
+                    <option value="3" data-price="2499">Wireless Mouse Elite</option>
+                    <option value="4" data-price="14950">Office Suite Pro 2026</option>
+                    <option value="5" data-price="29950">UltraWide Monitor 34"</option>
+                </select>
+            </td>
+            <td><input type="text" class="form-control form-control-sm item-price" readonly value="₱0.00"></td>
+            <td><input type="number" class="form-control form-control-sm item-qty" value="1" min="1" onchange="updateSubtotal(this)"></td>
+            <td><input type="text" class="form-control form-control-sm item-subtotal" readonly value="₱0.00"></td>
+            <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeOrderItem(this)">×</button></td>
+        `;
+        tbody.appendChild(row);
+    }
+
+    function removeOrderItem(btn) {
+        const tbody = document.getElementById('orderItemsBody');
+        if (tbody.rows.length > 1) {
+            btn.closest('tr').remove();
+            calculateOrderTotal();
+        }
+    }
+
+    function updateItemPrice(select) {
+        const row = select.closest('tr');
+        const price = select.selectedOptions[0]?.dataset.price || 0;
+        row.querySelector('.item-price').value = '₱' + parseFloat(price).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        updateSubtotal(row.querySelector('.item-qty'));
+    }
+
+    function updateSubtotal(qtyInput) {
+        const row = qtyInput.closest('tr');
+        const priceText = row.querySelector('.item-price').value.replace('₱', '').replace(/,/g, '');
+        const price = parseFloat(priceText) || 0;
+        const qty = parseInt(qtyInput.value) || 1;
+        const subtotal = price * qty;
+        row.querySelector('.item-subtotal').value = '₱' + subtotal.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        calculateOrderTotal();
+    }
+
+    function calculateOrderTotal() {
+        let subtotal = 0;
+        document.querySelectorAll('.item-subtotal').forEach(input => {
+            subtotal += parseFloat(input.value.replace('₱', '').replace(/,/g, '')) || 0;
+        });
+        const tax = subtotal * 0.12;
+        const total = subtotal + tax;
+        document.getElementById('orderSubtotal').textContent = '₱' + subtotal.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        document.getElementById('orderTax').textContent = '₱' + tax.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        document.getElementById('orderTotal').textContent = '₱' + total.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+    }
+
+    function resetOrderItems() {
+        const tbody = document.getElementById('orderItemsBody');
+        tbody.innerHTML = `
+            <tr>
+                <td>
+                    <select class="form-select form-select-sm" onchange="updateItemPrice(this)">
+                        <option value="">Select Product</option>
+                        <option value="1" data-price="64950">ProBook 15 Laptop</option>
+                        <option value="2" data-price="124950">WorkStation Pro Desktop</option>
+                        <option value="3" data-price="2499">Wireless Mouse Elite</option>
+                        <option value="4" data-price="14950">Office Suite Pro 2026</option>
+                        <option value="5" data-price="29950">UltraWide Monitor 34"</option>
+                    </select>
+                </td>
+                <td><input type="text" class="form-control form-control-sm item-price" readonly value="₱0.00"></td>
+                <td><input type="number" class="form-control form-control-sm item-qty" value="1" min="1" onchange="updateSubtotal(this)"></td>
+                <td><input type="text" class="form-control form-control-sm item-subtotal" readonly value="₱0.00"></td>
+                <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="removeOrderItem(this)">×</button></td>
+            </tr>
+        `;
+        calculateOrderTotal();
+    }
+
+    function filterTable() {
+        const search = document.getElementById('searchOrders').value.toLowerCase();
+        const statusFilter = document.getElementById('filterStatus').value;
+        const rows = document.querySelectorAll('#ordersTable tbody tr');
+        let visibleCount = 0;
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const order = ordersData.find(o => o.id === parseInt(row.dataset.id));
+            let show = true;
+            if (search && !text.includes(search)) show = false;
+            if (statusFilter && order && order.status !== statusFilter) show = false;
+            row.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+        document.getElementById('orderCount').textContent = visibleCount + ' orders';
+    }
+
+    function resetFilters() {
+        document.getElementById('searchOrders').value = '';
+        document.getElementById('filterStatus').value = '';
+        document.getElementById('filterDateFrom').value = '';
+        document.getElementById('filterDateTo').value = '';
+        filterTable();
+    }
+
+    function applyFilters() { filterTable(); showToast('success', 'Filters applied!'); }
+    function exportOrders() { showToast('success', 'Exporting orders to Excel...'); }
+    function printInvoice(id) { showToast('success', 'Preparing invoice for printing...'); }
+    function printInvoiceFromView() { showToast('success', 'Preparing invoice for printing...'); }
+
+    function showToast(type, message) {
+        const toastId = type === 'success' ? 'successToast' : 'errorToast';
+        const messageId = type === 'success' ? 'successMessage' : 'errorMessage';
+        document.getElementById(messageId).textContent = message;
+        new bootstrap.Toast(document.getElementById(toastId)).show();
+    }
+</script>
+}

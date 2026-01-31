@@ -1,0 +1,94 @@
+@{
+    ViewData["Title"] = "Sales Reports";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Sales Reports</h1>
+    <p class="page-subtitle">Analyze sales performance and trends</p>
+</div>
+
+<div class="stat-cards">
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">This Month</span>
+            <span class="stat-value">$45,230</span>
+            <div class="stat-trend up">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                </svg>
+                <span>18.5% vs last month</span>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">This Quarter</span>
+            <span class="stat-value">$128,450</span>
+            <div class="stat-trend up">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                </svg>
+                <span>12.3% vs last quarter</span>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">This Year</span>
+            <span class="stat-value">$542,100</span>
+            <div class="stat-trend up">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                </svg>
+                <span>25.7% vs last year</span>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Avg Order Value</span>
+            <span class="stat-value">$1,245</span>
+        </div>
+    </div>
+</div>
+
+<div class="card fade-in">
+    <div class="card-header">
+        <h3 class="card-title">Monthly Sales Performance</h3>
+    </div>
+    <div class="card-body">
+        <div class="chart-container">
+            <canvas id="salesChart"></canvas>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Sales',
+                    data: [32000, 28000, 35000, 42000, 38000, 45000, 52000, 48000, 55000, 58000, 62000, 45230],
+                    backgroundColor: '#008080',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: value => '$' + (value / 1000) + 'k' }
+                    }
+                }
+            }
+        });
+    </script>
+}

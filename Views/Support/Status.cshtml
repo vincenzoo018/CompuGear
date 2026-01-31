@@ -1,0 +1,71 @@
+@{
+    ViewData["Title"] = "Ticket Status";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Ticket Status</h1>
+    <p class="page-subtitle">Overview of ticket status distribution</p>
+</div>
+
+<div class="grid grid-4">
+    <div class="card fade-in">
+        <div class="card-body" style="text-align: center;">
+            <h2 style="font-size: 2.5rem; color: var(--warning); margin-bottom: 0.5rem;">24</h2>
+            <p class="text-muted mb-0">Open</p>
+        </div>
+    </div>
+    <div class="card fade-in">
+        <div class="card-body" style="text-align: center;">
+            <h2 style="font-size: 2.5rem; color: var(--info); margin-bottom: 0.5rem;">12</h2>
+            <p class="text-muted mb-0">In Progress</p>
+        </div>
+    </div>
+    <div class="card fade-in">
+        <div class="card-body" style="text-align: center;">
+            <h2 style="font-size: 2.5rem; color: var(--pending); margin-bottom: 0.5rem;">5</h2>
+            <p class="text-muted mb-0">Pending</p>
+        </div>
+    </div>
+    <div class="card fade-in">
+        <div class="card-body" style="text-align: center;">
+            <h2 style="font-size: 2.5rem; color: var(--success); margin-bottom: 0.5rem;">156</h2>
+            <p class="text-muted mb-0">Resolved</p>
+        </div>
+    </div>
+</div>
+
+<div class="card fade-in mt-3">
+    <div class="card-header">
+        <h3 class="card-title">Status Distribution</h3>
+    </div>
+    <div class="card-body">
+        <div class="chart-container" style="height: 300px;">
+            <canvas id="statusChart"></canvas>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('statusChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Open', 'In Progress', 'Pending', 'Resolved'],
+                datasets: [{
+                    data: [24, 12, 5, 156],
+                    backgroundColor: ['#F59E0B', '#3B82F6', '#F97316', '#10B981'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    </script>
+}

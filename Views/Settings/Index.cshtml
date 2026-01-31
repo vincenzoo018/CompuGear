@@ -1,0 +1,124 @@
+@{
+    ViewData["Title"] = "Settings";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Settings</h1>
+    <p class="page-subtitle">Manage system configuration</p>
+</div>
+
+<div class="grid grid-2">
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3 class="card-title">General Settings</h3>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label class="form-label">Company Name</label>
+                <input type="text" class="form-control" value="CompuGear">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control" value="admin@compugear.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" class="form-control" value="+1 555-0100">
+            </div>
+            <div class="form-group mb-0">
+                <label class="form-label">Address</label>
+                <input type="text" class="form-control" value="123 Tech Street, NY 10001">
+            </div>
+        </div>
+    </div>
+
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3 class="card-title">System Preferences</h3>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label class="form-label">Currency</label>
+                <select class="form-control">
+                    <option selected>USD ($)</option>
+                    <option>EUR (€)</option>
+                    <option>GBP (£)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Date Format</label>
+                <select class="form-control">
+                    <option selected>MM/DD/YYYY</option>
+                    <option>DD/MM/YYYY</option>
+                    <option>YYYY-MM-DD</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Timezone</label>
+                <select class="form-control">
+                    <option selected>Eastern Time (ET)</option>
+                    <option>Pacific Time (PT)</option>
+                    <option>Central Time (CT)</option>
+                </select>
+            </div>
+            <div class="form-group mb-0">
+                <label class="form-label">Language</label>
+                <select class="form-control">
+                    <option selected>English</option>
+                    <option>Spanish</option>
+                    <option>French</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3 class="card-title">Notification Settings</h3>
+        </div>
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>Email Notifications</span>
+                <input type="checkbox" checked>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>Low Stock Alerts</span>
+                <input type="checkbox" checked>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>New Order Notifications</span>
+                <input type="checkbox" checked>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <span>Support Ticket Updates</span>
+                <input type="checkbox" checked>
+            </div>
+        </div>
+    </div>
+
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3 class="card-title">Security</h3>
+        </div>
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>Two-Factor Authentication</span>
+                <input type="checkbox">
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>Session Timeout (30 min)</span>
+                <input type="checkbox" checked>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span>Login Activity Logging</span>
+                <input type="checkbox" checked>
+            </div>
+            <button class="btn btn-secondary btn-sm">Change Password</button>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <button class="btn btn-primary">Save Changes</button>
+    <button class="btn btn-secondary">Cancel</button>
+</div>

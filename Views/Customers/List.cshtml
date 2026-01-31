@@ -1,0 +1,751 @@
+@{
+    ViewData["Title"] = "Customer List";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Customer List</h1>
+        <p class="page-subtitle">Manage your customers and their information</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" onclick="exportCustomers()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export
+        </button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#customerModal" onclick="openCreateCustomerModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add Customer
+        </button>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">248</div>
+                <div class="stat-label">Total Customers</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">215</div>
+                <div class="stat-label">Active Customers</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-info">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">156</div>
+                <div class="stat-label">Business</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">92</div>
+                <div class="stat-label">Individual</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter & Search -->
+<div class="card mb-4 fade-in">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Search Customers</label>
+                <div class="search-input">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" class="form-control" id="searchCustomers" placeholder="Search by name, email, phone...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Customer Type</label>
+                <select class="form-select" id="filterType">
+                    <option value="">All Types</option>
+                    <option value="Business">Business</option>
+                    <option value="Individual">Individual</option>
+                    <option value="VIP">VIP</option>
+                    <option value="Wholesale">Wholesale</option>
+                    <option value="Reseller">Reseller</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="filterStatus">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                    </svg>
+                    Reset
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customers Table -->
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Customer Records</h5>
+        <span class="badge bg-primary" id="customerCount">6 customers</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table" id="customersTable">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Contact</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Orders</th>
+                        <th>Total Spent</th>
+                        <th class="text-center" style="width: 120px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-id="1">
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-info">AC</span>
+                                </div>
+                                <div>
+                                    <strong>Acme Corporation</strong>
+                                    <div class="text-muted small">Since Jan 2024</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small">contact@acme.com</div>
+                            <div class="text-muted small">+63-917-555-0101</div>
+                        </td>
+                        <td><span class="badge badge-info">Business</span></td>
+                        <td><span class="badge badge-success"><span class="badge-dot"></span>Active</span></td>
+                        <td>45</td>
+                        <td><strong>₱6,271,500</strong></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewCustomer(1)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editCustomer(1)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCustomer(1, 'Acme Corporation')" title="Delete">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="2">
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-primary">JD</span>
+                                </div>
+                                <div>
+                                    <strong>John Doe</strong>
+                                    <div class="text-muted small">Since Mar 2024</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small">john.doe@email.com</div>
+                            <div class="text-muted small">+63-917-555-0102</div>
+                        </td>
+                        <td><span class="badge badge-pending">Individual</span></td>
+                        <td><span class="badge badge-success"><span class="badge-dot"></span>Active</span></td>
+                        <td>12</td>
+                        <td><strong>₱162,500</strong></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewCustomer(2)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editCustomer(2)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCustomer(2, 'John Doe')" title="Delete">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="3">
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-success">TS</span>
+                                </div>
+                                <div>
+                                    <strong>Tech Solutions Inc</strong>
+                                    <div class="text-muted small">Since Dec 2023</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small">info@techsol.com</div>
+                            <div class="text-muted small">+63-917-555-0103</div>
+                        </td>
+                        <td><span class="badge badge-info">Business</span></td>
+                        <td><span class="badge badge-success"><span class="badge-dot"></span>Active</span></td>
+                        <td>89</td>
+                        <td><strong>₱14,382,500</strong></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewCustomer(3)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editCustomer(3)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCustomer(3, 'Tech Solutions Inc')" title="Delete">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="4">
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-secondary">JS</span>
+                                </div>
+                                <div>
+                                    <strong>Jane Smith</strong>
+                                    <div class="text-muted small">Since Aug 2024</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small">jane.smith@email.com</div>
+                            <div class="text-muted small">+63-917-555-0104</div>
+                        </td>
+                        <td><span class="badge badge-pending">Individual</span></td>
+                        <td><span class="badge badge-neutral"><span class="badge-dot"></span>Inactive</span></td>
+                        <td>3</td>
+                        <td><strong>₱44,500</strong></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewCustomer(4)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editCustomer(4)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCustomer(4, 'Jane Smith')" title="Delete">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="5">
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-warning">GE</span>
+                                </div>
+                                <div>
+                                    <strong>Global Enterprises</strong>
+                                    <div class="text-muted small">Since Nov 2023</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small">sales@globalent.com</div>
+                            <div class="text-muted small">+63-917-555-0105</div>
+                        </td>
+                        <td><span class="badge badge-error">VIP</span></td>
+                        <td><span class="badge badge-success"><span class="badge-dot"></span>Active</span></td>
+                        <td>156</td>
+                        <td><strong>₱27,105,000</strong></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewCustomer(5)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editCustomer(5)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCustomer(5, 'Global Enterprises')" title="Delete">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="6">
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-text bg-danger">SH</span>
+                                </div>
+                                <div>
+                                    <strong>StartUp Hub</strong>
+                                    <div class="text-muted small">Since May 2024</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="small">hello@startuphub.com</div>
+                            <div class="text-muted small">+63-917-555-0106</div>
+                        </td>
+                        <td><span class="badge badge-info">Business</span></td>
+                        <td><span class="badge badge-success"><span class="badge-dot"></span>Active</span></td>
+                        <td>28</td>
+                        <td><strong>₱3,390,000</strong></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewCustomer(6)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editCustomer(6)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCustomer(6, 'StartUp Hub')" title="Delete">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between align-items-center">
+        <div class="text-muted small">Showing 1 to 6 of 6 customers</div>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">Next</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Create/Edit Customer Modal -->
+<div class="modal fade" id="customerModal" tabindex="-1" aria-labelledby="customerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header modal-header-primary">
+                <h5 class="modal-title" id="customerModalLabel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span id="modalTitle">Add New Customer</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="customerForm" onsubmit="saveCustomer(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="customerId" value="0">
+                    
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            Customer Information
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label required">First Name</label>
+                                <input type="text" class="form-control" id="firstName" name="firstName" required placeholder="Enter first name">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label required">Last Name</label>
+                                <input type="text" class="form-control" id="lastName" name="lastName" required placeholder="Enter last name">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Company Name</label>
+                                <input type="text" class="form-control" id="companyName" name="companyName" placeholder="Enter company name (if applicable)">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label required">Customer Category</label>
+                                <select class="form-select" id="categoryId" name="categoryId" required>
+                                    <option value="">Select Category</option>
+                                    <option value="1">Individual</option>
+                                    <option value="2">Business</option>
+                                    <option value="3">VIP</option>
+                                    <option value="4">Wholesale</option>
+                                    <option value="5">Reseller</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                            Contact Information
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label required">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" required placeholder="Enter email address">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" placeholder="+63-XXX-XXX-XXXX">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            Address
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Street Address</label>
+                                <input type="text" class="form-control" id="street" name="street" placeholder="Enter street address">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">City</label>
+                                <input type="text" class="form-control" id="city" name="city" placeholder="City">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Province</label>
+                                <input type="text" class="form-control" id="province" name="province" placeholder="Province">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Postal Code</label>
+                                <input type="text" class="form-control" id="postalCode" name="postalCode" placeholder="Postal code">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                            </svg>
+                            Additional Settings
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Credit Limit (₱)</label>
+                                <input type="number" class="form-control" id="creditLimit" name="creditLimit" value="0" min="0" step="1000" placeholder="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" id="isActive" name="isActive">
+                                    <option value="true">Active</option>
+                                    <option value="false">Inactive</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Notes</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="2" placeholder="Additional notes about this customer"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        Save Customer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Customer Modal -->
+<div class="modal fade" id="viewCustomerModal" tabindex="-1" aria-labelledby="viewCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-info">
+                <h5 class="modal-title" id="viewCustomerModalLabel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Customer Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="user-profile-header text-center mb-4">
+                    <div class="avatar avatar-xl mx-auto mb-3">
+                        <span class="avatar-text bg-primary" id="viewAvatar">AC</span>
+                    </div>
+                    <h4 id="viewCustomerName">Acme Corporation</h4>
+                    <p class="mb-0"><span class="badge badge-info" id="viewCategory">Business</span></p>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <h6>Contact Information</h6>
+                            <div class="detail-item">
+                                <span class="detail-label">Email:</span>
+                                <span class="detail-value" id="viewEmail">contact@acme.com</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Phone:</span>
+                                <span class="detail-value" id="viewPhone">+63-917-555-0101</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Address:</span>
+                                <span class="detail-value" id="viewAddress">Manila, Metro Manila</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <h6>Account Information</h6>
+                            <div class="detail-item">
+                                <span class="detail-label">Status:</span>
+                                <span class="detail-value" id="viewStatus"><span class="badge badge-success">Active</span></span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Total Orders:</span>
+                                <span class="detail-value" id="viewOrders">45</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Total Spent:</span>
+                                <span class="detail-value fw-bold text-primary" id="viewSpent">₱6,271,500</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Credit Limit:</span>
+                                <span class="detail-value" id="viewCredit">₱500,000</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="editCustomerFromView()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Edit Customer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-danger">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="delete-warning">
+                    <div class="delete-icon mb-3">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-danger">
+                            <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                    </div>
+                    <p class="delete-message">Are you sure you want to delete <strong id="deleteItemName"></strong>?</p>
+                    <p class="text-muted mb-0">This will remove all customer data and order history.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete Customer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="successMessage">Operation successful!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="errorMessage">An error occurred!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let currentCustomerId = null;
+    const customersData = [
+        { id: 1, firstName: 'Acme', lastName: 'Corporation', companyName: 'Acme Corporation', email: 'contact@acme.com', phone: '+63-917-555-0101', categoryId: 2, category: 'Business', isActive: true, orders: 45, totalSpent: 6271500, creditLimit: 500000, address: 'Manila, Metro Manila' },
+        { id: 2, firstName: 'John', lastName: 'Doe', companyName: '', email: 'john.doe@email.com', phone: '+63-917-555-0102', categoryId: 1, category: 'Individual', isActive: true, orders: 12, totalSpent: 162500, creditLimit: 50000, address: 'Quezon City' },
+        { id: 3, firstName: 'Tech', lastName: 'Solutions', companyName: 'Tech Solutions Inc', email: 'info@techsol.com', phone: '+63-917-555-0103', categoryId: 2, category: 'Business', isActive: true, orders: 89, totalSpent: 14382500, creditLimit: 1000000, address: 'Makati City' },
+        { id: 4, firstName: 'Jane', lastName: 'Smith', companyName: '', email: 'jane.smith@email.com', phone: '+63-917-555-0104', categoryId: 1, category: 'Individual', isActive: false, orders: 3, totalSpent: 44500, creditLimit: 20000, address: 'Cebu City' },
+        { id: 5, firstName: 'Global', lastName: 'Enterprises', companyName: 'Global Enterprises', email: 'sales@globalent.com', phone: '+63-917-555-0105', categoryId: 3, category: 'VIP', isActive: true, orders: 156, totalSpent: 27105000, creditLimit: 2000000, address: 'Taguig City' },
+        { id: 6, firstName: 'StartUp', lastName: 'Hub', companyName: 'StartUp Hub', email: 'hello@startuphub.com', phone: '+63-917-555-0106', categoryId: 2, category: 'Business', isActive: true, orders: 28, totalSpent: 3390000, creditLimit: 300000, address: 'BGC, Taguig' }
+    ];
+
+    const categoryBadgeClasses = { 1: 'badge-pending', 2: 'badge-info', 3: 'badge-error', 4: 'badge-warning', 5: 'badge-success' };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('searchCustomers').addEventListener('input', filterTable);
+        document.getElementById('filterType').addEventListener('change', filterTable);
+        document.getElementById('filterStatus').addEventListener('change', filterTable);
+    });
+
+    function openCreateCustomerModal() {
+        currentCustomerId = null;
+        document.getElementById('modalTitle').textContent = 'Add New Customer';
+        document.getElementById('customerForm').reset();
+        document.getElementById('customerId').value = '0';
+    }
+
+    function viewCustomer(id) {
+        const customer = customersData.find(c => c.id === id);
+        if (!customer) return;
+        currentCustomerId = id;
+        const displayName = customer.companyName || (customer.firstName + ' ' + customer.lastName);
+        const initials = displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        document.getElementById('viewAvatar').textContent = initials;
+        document.getElementById('viewCustomerName').textContent = displayName;
+        document.getElementById('viewCategory').textContent = customer.category;
+        document.getElementById('viewCategory').className = 'badge ' + categoryBadgeClasses[customer.categoryId];
+        document.getElementById('viewEmail').textContent = customer.email;
+        document.getElementById('viewPhone').textContent = customer.phone || 'Not provided';
+        document.getElementById('viewAddress').textContent = customer.address || 'Not provided';
+        document.getElementById('viewStatus').innerHTML = customer.isActive ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-neutral">Inactive</span>';
+        document.getElementById('viewOrders').textContent = customer.orders;
+        document.getElementById('viewSpent').textContent = '₱' + customer.totalSpent.toLocaleString('en-PH');
+        document.getElementById('viewCredit').textContent = '₱' + customer.creditLimit.toLocaleString('en-PH');
+        new bootstrap.Modal(document.getElementById('viewCustomerModal')).show();
+    }
+
+    function editCustomer(id) {
+        const customer = customersData.find(c => c.id === id);
+        if (!customer) return;
+        currentCustomerId = id;
+        document.getElementById('modalTitle').textContent = 'Edit Customer';
+        document.getElementById('customerId').value = id;
+        document.getElementById('firstName').value = customer.firstName;
+        document.getElementById('lastName').value = customer.lastName;
+        document.getElementById('companyName').value = customer.companyName || '';
+        document.getElementById('email').value = customer.email;
+        document.getElementById('phone').value = customer.phone || '';
+        document.getElementById('categoryId').value = customer.categoryId;
+        document.getElementById('creditLimit').value = customer.creditLimit;
+        document.getElementById('isActive').value = customer.isActive.toString();
+        new bootstrap.Modal(document.getElementById('customerModal')).show();
+    }
+
+    function editCustomerFromView() {
+        bootstrap.Modal.getInstance(document.getElementById('viewCustomerModal')).hide();
+        setTimeout(() => editCustomer(currentCustomerId), 300);
+    }
+
+    function deleteCustomer(id, name) {
+        currentCustomerId = id;
+        document.getElementById('deleteItemName').textContent = name;
+        new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
+        document.getElementById('confirmDeleteBtn').onclick = function() {
+            showToast('success', name + ' has been removed from customers!');
+            bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
+            const row = document.querySelector('tr[data-id="' + id + '"]');
+            if (row) { row.style.transition = 'opacity 0.3s'; row.style.opacity = '0'; setTimeout(() => row.remove(), 300); }
+        };
+    }
+
+    function saveCustomer(event) {
+        event.preventDefault();
+        const customerId = document.getElementById('customerId').value;
+        const isNew = customerId === '0';
+        showToast('success', isNew ? 'Customer added successfully!' : 'Customer updated successfully!');
+        bootstrap.Modal.getInstance(document.getElementById('customerModal')).hide();
+    }
+
+    function filterTable() {
+        const search = document.getElementById('searchCustomers').value.toLowerCase();
+        const typeFilter = document.getElementById('filterType').value;
+        const statusFilter = document.getElementById('filterStatus').value;
+        const rows = document.querySelectorAll('#customersTable tbody tr');
+        let visibleCount = 0;
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const customer = customersData.find(c => c.id === parseInt(row.dataset.id));
+            let show = true;
+            if (search && !text.includes(search)) show = false;
+            if (typeFilter && customer && customer.category !== typeFilter) show = false;
+            if (statusFilter === 'active' && customer && !customer.isActive) show = false;
+            if (statusFilter === 'inactive' && customer && customer.isActive) show = false;
+            row.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+        document.getElementById('customerCount').textContent = visibleCount + ' customers';
+    }
+
+    function resetFilters() {
+        document.getElementById('searchCustomers').value = '';
+        document.getElementById('filterType').value = '';
+        document.getElementById('filterStatus').value = '';
+        filterTable();
+    }
+
+    function exportCustomers() { showToast('success', 'Exporting customer data...'); }
+
+    function showToast(type, message) {
+        const toastId = type === 'success' ? 'successToast' : 'errorToast';
+        const messageId = type === 'success' ? 'successMessage' : 'errorMessage';
+        document.getElementById(messageId).textContent = message;
+        new bootstrap.Toast(document.getElementById(toastId)).show();
+    }
+</script>
+}

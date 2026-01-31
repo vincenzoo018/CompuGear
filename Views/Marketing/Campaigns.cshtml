@@ -1,0 +1,746 @@
+@{
+    ViewData["Title"] = "Marketing Campaigns";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Marketing Campaigns</h1>
+        <p class="page-subtitle">Manage and track marketing campaigns</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" onclick="viewAnalytics()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            Analytics
+        </button>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#campaignModal" onclick="openCreateCampaignModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            New Campaign
+        </button>
+    </div>
+</div>
+
+<!-- Campaign Stats -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">12</div>
+                <div class="stat-label">Total Campaigns</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">3</div>
+                <div class="stat-label">Active</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-info">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">₱2.1M</div>
+                <div class="stat-label">Total Budget</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">245%</div>
+                <div class="stat-label">Avg ROI</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter & Search -->
+<div class="card mb-4 fade-in">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Search Campaigns</label>
+                <div class="search-input">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" class="form-control" id="searchCampaigns" placeholder="Search campaigns...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Type</label>
+                <select class="form-select" id="filterType">
+                    <option value="">All Types</option>
+                    <option value="Email">Email</option>
+                    <option value="Social">Social Media</option>
+                    <option value="Direct">Direct</option>
+                    <option value="PPC">PPC</option>
+                    <option value="SMS">SMS</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="filterStatus">
+                    <option value="">All Status</option>
+                    <option value="Draft">Draft</option>
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Active">Active</option>
+                    <option value="Paused">Paused</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Date Range</label>
+                <select class="form-select" id="filterDateRange">
+                    <option value="">All Time</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="quarter">This Quarter</option>
+                    <option value="year">This Year</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary flex-fill" onclick="resetFilters()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                        </svg>
+                        Reset
+                    </button>
+                    <button class="btn btn-outline-primary flex-fill" onclick="applyFilters()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                        </svg>
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Campaigns Table -->
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Campaign List</h5>
+        <span class="badge bg-primary" id="campaignCount">4 campaigns</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table" id="campaignsTable">
+                <thead>
+                    <tr>
+                        <th>Campaign</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Duration</th>
+                        <th>Budget</th>
+                        <th>ROI</th>
+                        <th class="text-center" style="width: 140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr data-id="1">
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="campaign-icon bg-primary-subtle text-primary">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <strong>Winter Sale 2026</strong>
+                                    <div class="text-muted small">Seasonal promotion</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-info-subtle text-info">Email</span></td>
+                        <td><span class="badge badge-success"><span class="badge-dot"></span>Active</span></td>
+                        <td>
+                            <div>Jan 15 - Feb 28</div>
+                            <div class="text-muted small">44 days remaining</div>
+                        </td>
+                        <td><strong>₱250,000</strong></td>
+                        <td><span class="text-success fw-bold">245%</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewCampaign(1)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editCampaign(1)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="pauseCampaign(1)" title="Pause">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="2">
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="campaign-icon bg-warning-subtle text-warning">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <strong>New Product Launch</strong>
+                                    <div class="text-muted small">ProBook 15 announcement</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-warning-subtle text-warning">Social</span></td>
+                        <td><span class="badge badge-info"><span class="badge-dot"></span>Scheduled</span></td>
+                        <td>
+                            <div>Feb 1 - Feb 15</div>
+                            <div class="text-muted small">Starts in 2 days</div>
+                        </td>
+                        <td><strong>₱425,000</strong></td>
+                        <td><span class="text-muted">-</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewCampaign(2)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editCampaign(2)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCampaign(2)" title="Delete">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="3">
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="campaign-icon bg-primary-subtle text-primary">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <strong>Holiday Promo 2025</strong>
+                                    <div class="text-muted small">Year-end sale</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-info-subtle text-info">Email</span></td>
+                        <td><span class="badge badge-neutral"><span class="badge-dot"></span>Completed</span></td>
+                        <td>
+                            <div>Dec 1 - Dec 31</div>
+                            <div class="text-muted small">Ended</div>
+                        </td>
+                        <td><strong>₱600,000</strong></td>
+                        <td><span class="text-success fw-bold">312%</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewCampaign(3)" title="View Report">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="duplicateCampaign(3)" title="Duplicate">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-id="4">
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="campaign-icon bg-secondary-subtle text-secondary">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <strong>B2B Outreach</strong>
+                                    <div class="text-muted small">Enterprise partnerships</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-secondary-subtle text-secondary">Direct</span></td>
+                        <td><span class="badge badge-success"><span class="badge-dot"></span>Active</span></td>
+                        <td>
+                            <div>Jan 1 - Mar 31</div>
+                            <div class="text-muted small">60 days remaining</div>
+                        </td>
+                        <td><strong>₱750,000</strong></td>
+                        <td><span class="text-success fw-bold">178%</span></td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewCampaign(4)" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning" onclick="editCampaign(4)" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="pauseCampaign(4)" title="Pause">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between align-items-center">
+        <div class="text-muted small">Showing 1 to 4 of 4 campaigns</div>
+        <nav>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">Next</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Create/Edit Campaign Modal -->
+<div class="modal fade" id="campaignModal" tabindex="-1" aria-labelledby="campaignModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header modal-header-primary">
+                <h5 class="modal-title" id="campaignModalLabel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
+                    </svg>
+                    <span id="modalTitle">Create New Campaign</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="campaignForm" onsubmit="saveCampaign(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="campaignId" value="0">
+                    
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            </svg>
+                            Campaign Details
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label required">Campaign Name</label>
+                                <input type="text" class="form-control" id="campaignName" placeholder="Enter campaign name" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label required">Type</label>
+                                <select class="form-select" id="campaignType" required>
+                                    <option value="">Select Type</option>
+                                    <option value="Email">Email</option>
+                                    <option value="Social">Social Media</option>
+                                    <option value="Direct">Direct</option>
+                                    <option value="PPC">PPC</option>
+                                    <option value="SMS">SMS</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" id="campaignDescription" rows="3" placeholder="Brief description of the campaign"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                            </svg>
+                            Schedule & Budget
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label required">Start Date</label>
+                                <input type="date" class="form-control" id="campaignStartDate" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label required">End Date</label>
+                                <input type="date" class="form-control" id="campaignEndDate" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label required">Budget (₱)</label>
+                                <input type="number" class="form-control" id="campaignBudget" placeholder="0.00" step="0.01" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                            </svg>
+                            Target Audience
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Customer Segment</label>
+                                <select class="form-select" id="campaignSegment">
+                                    <option value="">All Customers</option>
+                                    <option value="Business">Business</option>
+                                    <option value="Individual">Individual</option>
+                                    <option value="VIP">VIP</option>
+                                    <option value="New">New Customers</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Expected Reach</label>
+                                <input type="number" class="form-control" id="campaignReach" placeholder="e.g., 5000">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                            </svg>
+                            Settings
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" id="campaignStatus">
+                                    <option value="Draft">Draft</option>
+                                    <option value="Scheduled">Scheduled</option>
+                                    <option value="Active">Active</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Assigned Team</label>
+                                <select class="form-select" id="campaignTeam">
+                                    <option value="">Select Team</option>
+                                    <option value="1">Marketing Team A</option>
+                                    <option value="2">Marketing Team B</option>
+                                    <option value="3">Sales Team</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        Save Campaign
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Campaign Modal -->
+<div class="modal fade" id="viewCampaignModal" tabindex="-1" aria-labelledby="viewCampaignModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header modal-header-info">
+                <h5 class="modal-title" id="viewCampaignModalLabel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Campaign Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <h4 id="viewCampaignName">Winter Sale 2026</h4>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-info-subtle text-info" id="viewCampaignType">Email</span>
+                            <span class="badge badge-success" id="viewCampaignStatus">Active</span>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="h3 mb-0 text-success" id="viewCampaignROI">245%</div>
+                        <div class="text-muted small">ROI</div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <h6>Budget & Performance</h6>
+                            <div class="detail-item">
+                                <span class="detail-label">Budget:</span>
+                                <span class="detail-value" id="viewCampaignBudget">₱250,000</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Spent:</span>
+                                <span class="detail-value" id="viewCampaignSpent">₱125,000</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Revenue:</span>
+                                <span class="detail-value text-success" id="viewCampaignRevenue">₱612,500</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-card">
+                            <h6>Schedule</h6>
+                            <div class="detail-item">
+                                <span class="detail-label">Start:</span>
+                                <span class="detail-value" id="viewCampaignStart">Jan 15, 2026</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">End:</span>
+                                <span class="detail-value" id="viewCampaignEnd">Feb 28, 2026</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Remaining:</span>
+                                <span class="detail-value" id="viewCampaignRemaining">44 days</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-card mt-4">
+                    <h6>Campaign Metrics</h6>
+                    <div class="row text-center">
+                        <div class="col-3">
+                            <div class="h4 mb-0 text-primary" id="viewMetricReach">12,500</div>
+                            <div class="text-muted small">Reach</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="h4 mb-0 text-info" id="viewMetricImpressions">45,000</div>
+                            <div class="text-muted small">Impressions</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="h4 mb-0 text-warning" id="viewMetricClicks">3,200</div>
+                            <div class="text-muted small">Clicks</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="h4 mb-0 text-success" id="viewMetricConversions">256</div>
+                            <div class="text-muted small">Conversions</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-outline-primary" onclick="downloadReport()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Download Report
+                </button>
+                <button type="button" class="btn btn-primary" onclick="editCampaignFromView()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                    Edit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Campaign Modal -->
+<div class="modal fade" id="deleteCampaignModal" tabindex="-1" aria-labelledby="deleteCampaignModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-danger">
+                <h5 class="modal-title" id="deleteCampaignModalLabel">Delete Campaign</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="delete-warning">
+                    <div class="delete-icon mb-3">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-danger">
+                            <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                    </div>
+                    <p class="delete-message">Are you sure you want to delete "<strong id="deleteCampaignName">New Product Launch</strong>"?</p>
+                    <p class="text-muted mb-0">This action cannot be undone.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteCampaign()">Delete Campaign</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="successMessage">Operation successful!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="errorMessage">An error occurred!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<style>
+.campaign-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+</style>
+
+@section Scripts {
+<script>
+    let currentCampaignId = null;
+    const campaignsData = [
+        { id: 1, name: 'Winter Sale 2026', type: 'Email', status: 'Active', startDate: 'Jan 15, 2026', endDate: 'Feb 28, 2026', remaining: '44 days', budget: 250000, spent: 125000, revenue: 612500, roi: 245, reach: 12500, impressions: 45000, clicks: 3200, conversions: 256, description: 'Seasonal winter promotion for all products' },
+        { id: 2, name: 'New Product Launch', type: 'Social', status: 'Scheduled', startDate: 'Feb 1, 2026', endDate: 'Feb 15, 2026', remaining: '2 days until start', budget: 425000, spent: 0, revenue: 0, roi: 0, reach: 0, impressions: 0, clicks: 0, conversions: 0, description: 'ProBook 15 launch announcement on social media' },
+        { id: 3, name: 'Holiday Promo 2025', type: 'Email', status: 'Completed', startDate: 'Dec 1, 2025', endDate: 'Dec 31, 2025', remaining: 'Ended', budget: 600000, spent: 600000, revenue: 1872000, roi: 312, reach: 25000, impressions: 92000, clicks: 8500, conversions: 624, description: 'Year-end holiday sale campaign' },
+        { id: 4, name: 'B2B Outreach', type: 'Direct', status: 'Active', startDate: 'Jan 1, 2026', endDate: 'Mar 31, 2026', remaining: '60 days', budget: 750000, spent: 250000, revenue: 445000, roi: 178, reach: 500, impressions: 2000, clicks: 450, conversions: 45, description: 'Direct outreach to enterprise customers' }
+    ];
+
+    const typeBadgeClasses = { 'Email': 'bg-info-subtle text-info', 'Social': 'bg-warning-subtle text-warning', 'Direct': 'bg-secondary-subtle text-secondary', 'PPC': 'bg-danger-subtle text-danger', 'SMS': 'bg-success-subtle text-success' };
+    const statusBadgeClasses = { 'Draft': 'badge-neutral', 'Scheduled': 'badge-info', 'Active': 'badge-success', 'Paused': 'badge-warning', 'Completed': 'badge-neutral' };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('searchCampaigns').addEventListener('input', filterTable);
+        document.getElementById('filterType').addEventListener('change', filterTable);
+        document.getElementById('filterStatus').addEventListener('change', filterTable);
+    });
+
+    function openCreateCampaignModal() {
+        currentCampaignId = null;
+        document.getElementById('modalTitle').textContent = 'Create New Campaign';
+        document.getElementById('campaignForm').reset();
+        document.getElementById('campaignId').value = '0';
+    }
+
+    function viewCampaign(id) {
+        const campaign = campaignsData.find(c => c.id === id);
+        if (!campaign) return;
+        currentCampaignId = id;
+        document.getElementById('viewCampaignName').textContent = campaign.name;
+        document.getElementById('viewCampaignType').textContent = campaign.type;
+        document.getElementById('viewCampaignType').className = 'badge ' + typeBadgeClasses[campaign.type];
+        document.getElementById('viewCampaignStatus').textContent = campaign.status;
+        document.getElementById('viewCampaignStatus').className = 'badge ' + statusBadgeClasses[campaign.status];
+        document.getElementById('viewCampaignROI').textContent = campaign.roi + '%';
+        document.getElementById('viewCampaignBudget').textContent = '₱' + campaign.budget.toLocaleString();
+        document.getElementById('viewCampaignSpent').textContent = '₱' + campaign.spent.toLocaleString();
+        document.getElementById('viewCampaignRevenue').textContent = '₱' + campaign.revenue.toLocaleString();
+        document.getElementById('viewCampaignStart').textContent = campaign.startDate;
+        document.getElementById('viewCampaignEnd').textContent = campaign.endDate;
+        document.getElementById('viewCampaignRemaining').textContent = campaign.remaining;
+        document.getElementById('viewMetricReach').textContent = campaign.reach.toLocaleString();
+        document.getElementById('viewMetricImpressions').textContent = campaign.impressions.toLocaleString();
+        document.getElementById('viewMetricClicks').textContent = campaign.clicks.toLocaleString();
+        document.getElementById('viewMetricConversions').textContent = campaign.conversions.toLocaleString();
+        new bootstrap.Modal(document.getElementById('viewCampaignModal')).show();
+    }
+
+    function editCampaign(id) {
+        const campaign = campaignsData.find(c => c.id === id);
+        if (!campaign) return;
+        currentCampaignId = id;
+        document.getElementById('modalTitle').textContent = 'Edit Campaign';
+        document.getElementById('campaignId').value = id;
+        document.getElementById('campaignName').value = campaign.name;
+        document.getElementById('campaignType').value = campaign.type;
+        document.getElementById('campaignDescription').value = campaign.description;
+        document.getElementById('campaignBudget').value = campaign.budget;
+        document.getElementById('campaignStatus').value = campaign.status;
+        new bootstrap.Modal(document.getElementById('campaignModal')).show();
+    }
+
+    function editCampaignFromView() {
+        bootstrap.Modal.getInstance(document.getElementById('viewCampaignModal')).hide();
+        setTimeout(() => editCampaign(currentCampaignId), 300);
+    }
+
+    function deleteCampaign(id) {
+        const campaign = campaignsData.find(c => c.id === id);
+        if (!campaign) return;
+        currentCampaignId = id;
+        document.getElementById('deleteCampaignName').textContent = campaign.name;
+        new bootstrap.Modal(document.getElementById('deleteCampaignModal')).show();
+    }
+
+    function confirmDeleteCampaign() {
+        showToast('success', 'Campaign deleted successfully!');
+        bootstrap.Modal.getInstance(document.getElementById('deleteCampaignModal')).hide();
+    }
+
+    function saveCampaign(event) {
+        event.preventDefault();
+        const campaignId = document.getElementById('campaignId').value;
+        const isNew = campaignId === '0';
+        showToast('success', isNew ? 'Campaign created successfully!' : 'Campaign updated successfully!');
+        bootstrap.Modal.getInstance(document.getElementById('campaignModal')).hide();
+    }
+
+    function pauseCampaign(id) { showToast('success', 'Campaign paused!'); }
+    function duplicateCampaign(id) { showToast('success', 'Campaign duplicated!'); }
+    function downloadReport() { showToast('success', 'Downloading report...'); }
+    function viewAnalytics() { showToast('success', 'Opening analytics dashboard...'); }
+
+    function filterTable() {
+        const search = document.getElementById('searchCampaigns').value.toLowerCase();
+        const typeFilter = document.getElementById('filterType').value;
+        const statusFilter = document.getElementById('filterStatus').value;
+        const rows = document.querySelectorAll('#campaignsTable tbody tr');
+        let visibleCount = 0;
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const campaign = campaignsData.find(c => c.id === parseInt(row.dataset.id));
+            let show = true;
+            if (search && !text.includes(search)) show = false;
+            if (typeFilter && campaign && campaign.type !== typeFilter) show = false;
+            if (statusFilter && campaign && campaign.status !== statusFilter) show = false;
+            row.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
+        });
+        document.getElementById('campaignCount').textContent = visibleCount + ' campaigns';
+    }
+
+    function resetFilters() {
+        document.getElementById('searchCampaigns').value = '';
+        document.getElementById('filterType').value = '';
+        document.getElementById('filterStatus').value = '';
+        document.getElementById('filterDateRange').value = '';
+        filterTable();
+    }
+
+    function applyFilters() { filterTable(); showToast('success', 'Filters applied!'); }
+
+    function showToast(type, message) {
+        const toastId = type === 'success' ? 'successToast' : 'errorToast';
+        const messageId = type === 'success' ? 'successMessage' : 'errorMessage';
+        document.getElementById(messageId).textContent = message;
+        new bootstrap.Toast(document.getElementById(toastId)).show();
+    }
+</script>
+}

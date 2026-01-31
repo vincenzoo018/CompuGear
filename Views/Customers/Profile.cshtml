@@ -1,0 +1,103 @@
+@{
+    ViewData["Title"] = "Customer Profile";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Customer Profile</h1>
+    <p class="page-subtitle">View detailed customer information</p>
+</div>
+
+<div class="grid grid-3" style="grid-template-columns: 1fr 2fr;">
+    <!-- Profile Card -->
+    <div class="card fade-in">
+        <div class="card-body" style="text-align: center; padding: 2rem;">
+            <div style="width: 80px; height: 80px; background: var(--primary-light); border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+            </div>
+            <h3 style="margin-bottom: 0.25rem;">Acme Corporation</h3>
+            <p class="text-muted mb-2">Business Account</p>
+            <span class="badge badge-success"><span class="badge-dot"></span>Active</span>
+            
+            <hr style="margin: 1.5rem 0; border-color: var(--gray-200);">
+            
+            <div style="text-align: left;">
+                <p class="mb-1"><strong>Contact Person:</strong> John Manager</p>
+                <p class="mb-1"><strong>Email:</strong> contact@acme.com</p>
+                <p class="mb-1"><strong>Phone:</strong> +1 555-0101</p>
+                <p class="mb-1"><strong>Address:</strong> 123 Business St, NY</p>
+                <p class="mb-0"><strong>Member Since:</strong> Jan 2024</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details -->
+    <div>
+        <!-- Stats -->
+        <div class="stat-cards" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="stat-card fade-in">
+                <div class="stat-info">
+                    <span class="stat-label">Total Orders</span>
+                    <span class="stat-value">45</span>
+                </div>
+            </div>
+            <div class="stat-card fade-in">
+                <div class="stat-info">
+                    <span class="stat-label">Total Spent</span>
+                    <span class="stat-value">$125,430</span>
+                </div>
+            </div>
+            <div class="stat-card fade-in">
+                <div class="stat-info">
+                    <span class="stat-label">Avg. Order</span>
+                    <span class="stat-value">$2,787</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="card fade-in">
+            <div class="card-header">
+                <h3 class="card-title">Recent Orders</h3>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Items</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#ORD-2847</td>
+                            <td>Jan 28, 2026</td>
+                            <td>5 items</td>
+                            <td>$2,450</td>
+                            <td><span class="badge badge-success">Completed</span></td>
+                        </tr>
+                        <tr>
+                            <td>#ORD-2832</td>
+                            <td>Jan 15, 2026</td>
+                            <td>3 items</td>
+                            <td>$1,890</td>
+                            <td><span class="badge badge-success">Completed</span></td>
+                        </tr>
+                        <tr>
+                            <td>#ORD-2815</td>
+                            <td>Jan 5, 2026</td>
+                            <td>8 items</td>
+                            <td>$4,200</td>
+                            <td><span class="badge badge-success">Completed</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

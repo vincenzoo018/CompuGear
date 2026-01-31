@@ -1,0 +1,70 @@
+@{
+    ViewData["Title"] = "Customer History";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Customer History</h1>
+    <p class="page-subtitle">View customer activity and transaction history</p>
+</div>
+
+<div class="card fade-in">
+    <div class="card-header">
+        <div class="search-input">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" placeholder="Search history...">
+        </div>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Activity</th>
+                    <th>Details</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Jan 30, 2026</td>
+                    <td><strong>Acme Corporation</strong></td>
+                    <td><span class="badge badge-info">Order Placed</span></td>
+                    <td>Order #ORD-2850 - 3 items</td>
+                    <td>$1,250</td>
+                </tr>
+                <tr>
+                    <td>Jan 29, 2026</td>
+                    <td><strong>Tech Solutions Inc</strong></td>
+                    <td><span class="badge badge-success">Payment Received</span></td>
+                    <td>Invoice #INV-1234</td>
+                    <td>$5,200</td>
+                </tr>
+                <tr>
+                    <td>Jan 28, 2026</td>
+                    <td><strong>John Doe</strong></td>
+                    <td><span class="badge badge-warning">Support Ticket</span></td>
+                    <td>Ticket #TKT-456 - Product inquiry</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>Jan 27, 2026</td>
+                    <td><strong>Global Enterprises</strong></td>
+                    <td><span class="badge badge-info">Order Placed</span></td>
+                    <td>Order #ORD-2848 - 12 items</td>
+                    <td>$8,900</td>
+                </tr>
+                <tr>
+                    <td>Jan 26, 2026</td>
+                    <td><strong>StartUp Hub</strong></td>
+                    <td><span class="badge badge-neutral">Profile Updated</span></td>
+                    <td>Contact information changed</td>
+                    <td>-</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

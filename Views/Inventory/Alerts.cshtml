@@ -1,0 +1,73 @@
+@{
+    ViewData["Title"] = "Low Stock Alerts";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Low Stock Alerts</h1>
+    <p class="page-subtitle">Products that need restocking</p>
+</div>
+
+<div class="card fade-in">
+    <div class="card-body" style="padding: 0;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>SKU</th>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Current Stock</th>
+                    <th>Min Stock</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>MON-005</td>
+                    <td><strong>UltraWide Monitor 34"</strong></td>
+                    <td>Accessories</td>
+                    <td><span class="text-error fw-600">0</span></td>
+                    <td>10</td>
+                    <td><span class="badge badge-error">Out of Stock</span></td>
+                    <td><button class="btn btn-primary btn-sm">Reorder</button></td>
+                </tr>
+                <tr>
+                    <td>KEY-008</td>
+                    <td><strong>Mechanical Keyboard Pro</strong></td>
+                    <td>Accessories</td>
+                    <td><span class="text-error fw-600">2</span></td>
+                    <td>15</td>
+                    <td><span class="badge badge-error">Critical</span></td>
+                    <td><button class="btn btn-primary btn-sm">Reorder</button></td>
+                </tr>
+                <tr>
+                    <td>DES-002</td>
+                    <td><strong>WorkStation Pro Desktop</strong></td>
+                    <td>Desktops</td>
+                    <td><span class="text-warning fw-600">12</span></td>
+                    <td>20</td>
+                    <td><span class="badge badge-warning">Low Stock</span></td>
+                    <td><button class="btn btn-primary btn-sm">Reorder</button></td>
+                </tr>
+                <tr>
+                    <td>LAP-012</td>
+                    <td><strong>Gaming Laptop X15</strong></td>
+                    <td>Laptops</td>
+                    <td><span class="text-warning fw-600">8</span></td>
+                    <td>15</td>
+                    <td><span class="badge badge-warning">Low Stock</span></td>
+                    <td><button class="btn btn-primary btn-sm">Reorder</button></td>
+                </tr>
+                <tr>
+                    <td>CAM-015</td>
+                    <td><strong>HD Webcam Pro</strong></td>
+                    <td>Accessories</td>
+                    <td><span class="text-warning fw-600">18</span></td>
+                    <td>25</td>
+                    <td><span class="badge badge-warning">Low Stock</span></td>
+                    <td><button class="btn btn-primary btn-sm">Reorder</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

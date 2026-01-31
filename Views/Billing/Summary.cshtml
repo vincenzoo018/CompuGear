@@ -1,0 +1,118 @@
+@{
+    ViewData["Title"] = "Financial Summary";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Financial Summary</h1>
+    <p class="page-subtitle">Overview of financial performance</p>
+</div>
+
+<div class="stat-cards">
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Total Revenue (YTD)</span>
+            <span class="stat-value">$542,100</span>
+            <div class="stat-trend up">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                </svg>
+                <span>25.7% vs last year</span>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">This Month</span>
+            <span class="stat-value">$128,450</span>
+            <div class="stat-trend up">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                </svg>
+                <span>15.3% vs last month</span>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Outstanding</span>
+            <span class="stat-value">$45,230</span>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Profit Margin</span>
+            <span class="stat-value">32.5%</span>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3 class="card-title">Revenue Trend</h3>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3 class="card-title">Revenue by Category</h3>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Revenue Chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Revenue',
+                    data: [45000, 52000, 48000, 61000, 55000, 67000, 58000, 72000, 65000, 78000, 82000, 128450],
+                    borderColor: '#008080',
+                    backgroundColor: 'rgba(0, 128, 128, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + (v/1000) + 'k' } } }
+            }
+        });
+
+        // Category Chart
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Laptops', 'Desktops', 'Accessories', 'Software', 'Services'],
+                datasets: [{
+                    data: [35, 25, 20, 12, 8],
+                    backgroundColor: ['#008080', '#10B981', '#3B82F6', '#F59E0B', '#F97316'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    </script>
+}

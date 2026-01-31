@@ -1,0 +1,118 @@
+@{
+    ViewData["Title"] = "Stock Levels";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Stock Levels</h1>
+    <p class="page-subtitle">Monitor inventory stock levels across all products</p>
+</div>
+
+<div class="stat-cards">
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Total Products</span>
+            <span class="stat-value">456</span>
+        </div>
+        <div class="stat-icon teal">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            </svg>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">In Stock</span>
+            <span class="stat-value">398</span>
+        </div>
+        <div class="stat-icon green">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Low Stock</span>
+            <span class="stat-value">42</span>
+        </div>
+        <div class="stat-icon orange">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Out of Stock</span>
+            <span class="stat-value">16</span>
+        </div>
+        <div class="stat-icon" style="background: var(--error-bg); color: var(--error);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<div class="card fade-in">
+    <div class="card-header">
+        <h3 class="card-title">Stock by Category</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Total Items</th>
+                    <th>In Stock</th>
+                    <th>Low Stock</th>
+                    <th>Out of Stock</th>
+                    <th>Stock Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Laptops</strong></td>
+                    <td>85</td>
+                    <td><span class="text-success">72</span></td>
+                    <td><span class="text-warning">10</span></td>
+                    <td><span class="text-error">3</span></td>
+                    <td>$156,000</td>
+                </tr>
+                <tr>
+                    <td><strong>Desktops</strong></td>
+                    <td>45</td>
+                    <td><span class="text-success">35</span></td>
+                    <td><span class="text-warning">8</span></td>
+                    <td><span class="text-error">2</span></td>
+                    <td>$89,500</td>
+                </tr>
+                <tr>
+                    <td><strong>Accessories</strong></td>
+                    <td>250</td>
+                    <td><span class="text-success">220</span></td>
+                    <td><span class="text-warning">22</span></td>
+                    <td><span class="text-error">8</span></td>
+                    <td>$45,200</td>
+                </tr>
+                <tr>
+                    <td><strong>Software</strong></td>
+                    <td>56</td>
+                    <td><span class="text-success">56</span></td>
+                    <td><span class="text-warning">0</span></td>
+                    <td><span class="text-error">0</span></td>
+                    <td>$28,000</td>
+                </tr>
+                <tr>
+                    <td><strong>Peripherals</strong></td>
+                    <td>20</td>
+                    <td><span class="text-success">15</span></td>
+                    <td><span class="text-warning">2</span></td>
+                    <td><span class="text-error">3</span></td>
+                    <td>$12,800</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

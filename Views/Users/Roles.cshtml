@@ -1,0 +1,67 @@
+@{
+    ViewData["Title"] = "Roles & Permissions";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="page-title">Roles & Permissions</h1>
+        <p class="page-subtitle">Configure user roles and their permissions</p>
+    </div>
+    <button class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Add Role
+    </button>
+</div>
+
+<div class="grid grid-2">
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3 class="card-title">Administrator</h3>
+            <span class="badge badge-error">Full Access</span>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-2">Full system access with all permissions</p>
+            <p class="mb-1"><strong>Users:</strong> 1</p>
+            <p class="mb-0"><strong>Permissions:</strong> All modules, Settings, User management</p>
+        </div>
+    </div>
+
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3 class="card-title">Sales Manager</h3>
+            <span class="badge badge-info">Sales Access</span>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-2">Access to sales and customer modules</p>
+            <p class="mb-1"><strong>Users:</strong> 3</p>
+            <p class="mb-0"><strong>Permissions:</strong> Sales, Customers, Reports</p>
+        </div>
+    </div>
+
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3 class="card-title">Support Agent</h3>
+            <span class="badge badge-warning">Support Access</span>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-2">Access to support and customer modules</p>
+            <p class="mb-1"><strong>Users:</strong> 5</p>
+            <p class="mb-0"><strong>Permissions:</strong> Support, Customers (read-only)</p>
+        </div>
+    </div>
+
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3 class="card-title">Inventory Staff</h3>
+            <span class="badge badge-neutral">Inventory Access</span>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-2">Access to inventory management</p>
+            <p class="mb-1"><strong>Users:</strong> 2</p>
+            <p class="mb-0"><strong>Permissions:</strong> Inventory, Stock alerts</p>
+        </div>
+    </div>
+</div>

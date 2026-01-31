@@ -1,0 +1,92 @@
+@{
+    ViewData["Title"] = "Support Reports";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Support Reports</h1>
+    <p class="page-subtitle">Analyze support performance metrics</p>
+</div>
+
+<div class="stat-cards">
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Total Tickets (Month)</span>
+            <span class="stat-value">197</span>
+            <div class="stat-trend down">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
+                </svg>
+                <span>5.2% vs last month</span>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Resolution Rate</span>
+            <span class="stat-value">94.5%</span>
+            <div class="stat-trend up">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                </svg>
+                <span>2.1% improvement</span>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Avg Response Time</span>
+            <span class="stat-value">2.4 hrs</span>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Customer Satisfaction</span>
+            <span class="stat-value">4.7/5</span>
+        </div>
+    </div>
+</div>
+
+<div class="card fade-in">
+    <div class="card-header">
+        <h3 class="card-title">Tickets Over Time</h3>
+    </div>
+    <div class="card-body">
+        <div class="chart-container">
+            <canvas id="ticketsChart"></canvas>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('ticketsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                datasets: [{
+                    label: 'New Tickets',
+                    data: [45, 52, 48, 52],
+                    borderColor: '#008080',
+                    backgroundColor: 'rgba(0, 128, 128, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Resolved',
+                    data: [42, 48, 50, 47],
+                    borderColor: '#10B981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    </script>
+}

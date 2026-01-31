@@ -1,0 +1,80 @@
+@{
+    ViewData["Title"] = "Inventory Reports";
+}
+
+<div class="page-header">
+    <h1 class="page-title">Inventory Reports</h1>
+    <p class="page-subtitle">Analyze inventory performance and trends</p>
+</div>
+
+<div class="stat-cards">
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Total Inventory Value</span>
+            <span class="stat-value">$331,500</span>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Items Sold (This Month)</span>
+            <span class="stat-value">234</span>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Stock Turnover Rate</span>
+            <span class="stat-value">4.2x</span>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Restock Orders</span>
+            <span class="stat-value">12</span>
+        </div>
+    </div>
+</div>
+
+<div class="card fade-in">
+    <div class="card-header">
+        <h3 class="card-title">Inventory Movement</h3>
+    </div>
+    <div class="card-body">
+        <div class="chart-container">
+            <canvas id="inventoryChart"></canvas>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('inventoryChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                datasets: [{
+                    label: 'Stock In',
+                    data: [120, 85, 150, 95],
+                    borderColor: '#10B981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Stock Out',
+                    data: [90, 110, 75, 125],
+                    borderColor: '#EF4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    </script>
+}

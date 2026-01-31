@@ -1,0 +1,67 @@
+@{
+    ViewData["Title"] = "Customer Segments";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="page-title">Customer Segments</h1>
+        <p class="page-subtitle">Group customers for targeted marketing</p>
+    </div>
+    <button class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Create Segment
+    </button>
+</div>
+
+<div class="grid grid-2">
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3 class="card-title">High-Value Customers</h3>
+            <span class="badge badge-success">845 customers</span>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">Customers with lifetime value > $5,000</p>
+            <p class="mb-1"><strong>Avg. Order Value:</strong> $2,450</p>
+            <p class="mb-0"><strong>Avg. Orders:</strong> 12 per year</p>
+        </div>
+    </div>
+
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3 class="card-title">New Customers</h3>
+            <span class="badge badge-info">324 customers</span>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">Customers acquired in last 30 days</p>
+            <p class="mb-1"><strong>Avg. First Order:</strong> $890</p>
+            <p class="mb-0"><strong>Conversion Source:</strong> 45% Website, 35% Referral</p>
+        </div>
+    </div>
+
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3 class="card-title">At-Risk Customers</h3>
+            <span class="badge badge-warning">156 customers</span>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">No purchase in last 90 days</p>
+            <p class="mb-1"><strong>Previous Avg. Value:</strong> $1,200</p>
+            <p class="mb-0"><strong>Win-back Rate:</strong> 23%</p>
+        </div>
+    </div>
+
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3 class="card-title">Business Accounts</h3>
+            <span class="badge badge-neutral">89 customers</span>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">B2B and enterprise customers</p>
+            <p class="mb-1"><strong>Avg. Order Value:</strong> $8,500</p>
+            <p class="mb-0"><strong>Total Revenue Share:</strong> 62%</p>
+        </div>
+    </div>
+</div>
