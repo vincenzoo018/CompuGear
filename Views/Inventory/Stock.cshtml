@@ -11,7 +11,7 @@
     <div class="stat-card fade-in">
         <div class="stat-info">
             <span class="stat-label">Total Products</span>
-            <span class="stat-value">456</span>
+            <span class="stat-value" id="totalProducts">0</span>
         </div>
         <div class="stat-icon teal">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -22,7 +22,7 @@
     <div class="stat-card fade-in">
         <div class="stat-info">
             <span class="stat-label">In Stock</span>
-            <span class="stat-value">398</span>
+            <span class="stat-value" id="inStockCount">0</span>
         </div>
         <div class="stat-icon green">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -33,7 +33,7 @@
     <div class="stat-card fade-in">
         <div class="stat-info">
             <span class="stat-label">Low Stock</span>
-            <span class="stat-value">42</span>
+            <span class="stat-value" id="lowStockCount">0</span>
         </div>
         <div class="stat-icon orange">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -45,7 +45,7 @@
     <div class="stat-card fade-in">
         <div class="stat-info">
             <span class="stat-label">Out of Stock</span>
-            <span class="stat-value">16</span>
+            <span class="stat-value" id="outOfStockCount">0</span>
         </div>
         <div class="stat-icon" style="background: var(--error-bg); color: var(--error);">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -60,7 +60,7 @@
         <h3 class="card-title">Stock by Category</h3>
     </div>
     <div class="card-body" style="padding: 0;">
-        <table class="data-table">
+        <table class="data-table" id="stockByCategoryTable">
             <thead>
                 <tr>
                     <th>Category</th>
@@ -71,48 +71,70 @@
                     <th>Stock Value</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td><strong>Laptops</strong></td>
-                    <td>85</td>
-                    <td><span class="text-success">72</span></td>
-                    <td><span class="text-warning">10</span></td>
-                    <td><span class="text-error">3</span></td>
-                    <td>$156,000</td>
-                </tr>
-                <tr>
-                    <td><strong>Desktops</strong></td>
-                    <td>45</td>
-                    <td><span class="text-success">35</span></td>
-                    <td><span class="text-warning">8</span></td>
-                    <td><span class="text-error">2</span></td>
-                    <td>$89,500</td>
-                </tr>
-                <tr>
-                    <td><strong>Accessories</strong></td>
-                    <td>250</td>
-                    <td><span class="text-success">220</span></td>
-                    <td><span class="text-warning">22</span></td>
-                    <td><span class="text-error">8</span></td>
-                    <td>$45,200</td>
-                </tr>
-                <tr>
-                    <td><strong>Software</strong></td>
-                    <td>56</td>
-                    <td><span class="text-success">56</span></td>
-                    <td><span class="text-warning">0</span></td>
-                    <td><span class="text-error">0</span></td>
-                    <td>$28,000</td>
-                </tr>
-                <tr>
-                    <td><strong>Peripherals</strong></td>
-                    <td>20</td>
-                    <td><span class="text-success">15</span></td>
-                    <td><span class="text-warning">2</span></td>
-                    <td><span class="text-error">3</span></td>
-                    <td>$12,800</td>
-                </tr>
+            <tbody id="stockCategoryBody">
+                <!-- Dynamic content loaded from products -->
             </tbody>
         </table>
     </div>
 </div>
+
+@section Scripts {
+<script src="~/js/admin.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadStockData();
+    });
+
+    async function loadStockData() {
+        try {
+            const products = await API.get('/products');
+            
+            // Calculate totals
+            const totalProducts = products.length;
+            const outOfStock = products.filter(p => p.stockQuantity === 0).length;
+            const lowStock = products.filter(p => p.stockQuantity > 0 && p.stockQuantity <= p.reorderLevel).length;
+            const inStock = products.filter(p => p.stockQuantity > p.reorderLevel).length;
+            
+            // Update stat cards
+            document.getElementById('totalProducts').textContent = totalProducts;
+            document.getElementById('inStockCount').textContent = inStock;
+            document.getElementById('lowStockCount').textContent = lowStock;
+            document.getElementById('outOfStockCount').textContent = outOfStock;
+            
+            // Group by category
+            const categoryStats = {};
+            products.forEach(p => {
+                const cat = p.categoryName || 'Uncategorized';
+                if (!categoryStats[cat]) {
+                    categoryStats[cat] = { total: 0, inStock: 0, lowStock: 0, outOfStock: 0, value: 0 };
+                }
+                categoryStats[cat].total++;
+                if (p.stockQuantity === 0) categoryStats[cat].outOfStock++;
+                else if (p.stockQuantity <= p.reorderLevel) categoryStats[cat].lowStock++;
+                else categoryStats[cat].inStock++;
+                categoryStats[cat].value += (p.stockQuantity * (p.costPrice || p.price || 0));
+            });
+            
+            // Render table
+            const tbody = document.getElementById('stockCategoryBody');
+            tbody.innerHTML = Object.entries(categoryStats).map(([cat, stats]) => `
+                <tr>
+                    <td><strong>${cat}</strong></td>
+                    <td>${stats.total}</td>
+                    <td><span class="text-success">${stats.inStock}</span></td>
+                    <td><span class="text-warning">${stats.lowStock}</span></td>
+                    <td><span class="text-error">${stats.outOfStock}</span></td>
+                    <td>${Format.currency(stats.value)}</td>
+                </tr>
+            `).join('');
+            
+            if (Object.keys(categoryStats).length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No products found</td></tr>';
+            }
+        } catch (error) {
+            console.error('Failed to load stock data:', error);
+            Toast.error('Failed to load stock data');
+        }
+    }
+</script>
+}

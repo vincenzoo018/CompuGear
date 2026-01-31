@@ -8,66 +8,84 @@
 </div>
 
 <div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Alert Items</h5>
+        <span class="badge bg-danger" id="alertCount">0 alerts</span>
+    </div>
     <div class="card-body" style="padding: 0;">
-        <table class="data-table">
+        <table class="data-table" id="alertsTable">
             <thead>
                 <tr>
                     <th>SKU</th>
                     <th>Product</th>
                     <th>Category</th>
                     <th>Current Stock</th>
-                    <th>Min Stock</th>
+                    <th>Reorder Level</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td>MON-005</td>
-                    <td><strong>UltraWide Monitor 34"</strong></td>
-                    <td>Accessories</td>
-                    <td><span class="text-error fw-600">0</span></td>
-                    <td>10</td>
-                    <td><span class="badge badge-error">Out of Stock</span></td>
-                    <td><button class="btn btn-primary btn-sm">Reorder</button></td>
-                </tr>
-                <tr>
-                    <td>KEY-008</td>
-                    <td><strong>Mechanical Keyboard Pro</strong></td>
-                    <td>Accessories</td>
-                    <td><span class="text-error fw-600">2</span></td>
-                    <td>15</td>
-                    <td><span class="badge badge-error">Critical</span></td>
-                    <td><button class="btn btn-primary btn-sm">Reorder</button></td>
-                </tr>
-                <tr>
-                    <td>DES-002</td>
-                    <td><strong>WorkStation Pro Desktop</strong></td>
-                    <td>Desktops</td>
-                    <td><span class="text-warning fw-600">12</span></td>
-                    <td>20</td>
-                    <td><span class="badge badge-warning">Low Stock</span></td>
-                    <td><button class="btn btn-primary btn-sm">Reorder</button></td>
-                </tr>
-                <tr>
-                    <td>LAP-012</td>
-                    <td><strong>Gaming Laptop X15</strong></td>
-                    <td>Laptops</td>
-                    <td><span class="text-warning fw-600">8</span></td>
-                    <td>15</td>
-                    <td><span class="badge badge-warning">Low Stock</span></td>
-                    <td><button class="btn btn-primary btn-sm">Reorder</button></td>
-                </tr>
-                <tr>
-                    <td>CAM-015</td>
-                    <td><strong>HD Webcam Pro</strong></td>
-                    <td>Accessories</td>
-                    <td><span class="text-warning fw-600">18</span></td>
-                    <td>25</td>
-                    <td><span class="badge badge-warning">Low Stock</span></td>
-                    <td><button class="btn btn-primary btn-sm">Reorder</button></td>
-                </tr>
+            <tbody id="alertsTableBody">
+                <!-- Dynamic content loaded from products -->
             </tbody>
         </table>
     </div>
 </div>
+
+@section Scripts {
+<script src="~/js/admin.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadAlerts();
+    });
+
+    async function loadAlerts() {
+        try {
+            const products = await API.get('/products');
+            const lowStockProducts = products.filter(p => p.stockQuantity <= p.reorderLevel);
+            
+            const tbody = document.getElementById('alertsTableBody');
+            document.getElementById('alertCount').textContent = lowStockProducts.length + ' alerts';
+            
+            if (lowStockProducts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No low stock alerts. All products are well stocked!</td></tr>';
+                return;
+            }
+            
+            // Sort by stock level (critical first)
+            lowStockProducts.sort((a, b) => a.stockQuantity - b.stockQuantity);
+            
+            tbody.innerHTML = lowStockProducts.map(p => {
+                const isCritical = p.stockQuantity === 0;
+                const statusClass = isCritical ? 'badge-error' : 'badge-warning';
+                const statusText = isCritical ? 'Out of Stock' : (p.stockQuantity <= p.reorderLevel / 2 ? 'Critical' : 'Low Stock');
+                const stockClass = isCritical ? 'text-error' : 'text-warning';
+                
+                return `
+                    <tr data-id="${p.productId}">
+                        <td>${p.sku || 'N/A'}</td>
+                        <td><strong>${p.productName}</strong></td>
+                        <td>${p.categoryName || 'Uncategorized'}</td>
+                        <td><span class="${stockClass} fw-600">${p.stockQuantity}</span></td>
+                        <td>${p.reorderLevel}</td>
+                        <td><span class="badge ${statusClass}">${statusText}</span></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="reorderProduct(${p.productId}, '${p.productName}')">
+                                Reorder
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (error) {
+            console.error('Failed to load alerts:', error);
+            Toast.error('Failed to load stock alerts');
+        }
+    }
+
+    function reorderProduct(id, name) {
+        Toast.success(`Reorder request initiated for ${name}`);
+        // In a real app, this would open a purchase order modal or redirect
+    }
+</script>
+}

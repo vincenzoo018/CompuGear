@@ -2,9 +2,17 @@
     ViewData["Title"] = "Customer Profile";
 }
 
-<div class="page-header">
-    <h1 class="page-title">Customer Profile</h1>
-    <p class="page-subtitle">View detailed customer information</p>
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="page-title">Customer Profile</h1>
+        <p class="page-subtitle">View detailed customer information</p>
+    </div>
+    <a href="/Customers/List" class="btn btn-outline-secondary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+            <line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Back to List
+    </a>
 </div>
 
 <div class="grid grid-3" style="grid-template-columns: 1fr 2fr;">
@@ -12,23 +20,20 @@
     <div class="card fade-in">
         <div class="card-body" style="text-align: center; padding: 2rem;">
             <div style="width: 80px; height: 80px; background: var(--primary-light); border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center;">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                </svg>
+                <span id="customerInitials" style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">--</span>
             </div>
-            <h3 style="margin-bottom: 0.25rem;">Acme Corporation</h3>
-            <p class="text-muted mb-2">Business Account</p>
-            <span class="badge badge-success"><span class="badge-dot"></span>Active</span>
+            <h3 style="margin-bottom: 0.25rem;" id="customerName">Loading...</h3>
+            <p class="text-muted mb-2" id="customerType">Customer</p>
+            <span class="badge badge-success" id="customerStatus"><span class="badge-dot"></span>Active</span>
             
             <hr style="margin: 1.5rem 0; border-color: var(--gray-200);">
             
             <div style="text-align: left;">
-                <p class="mb-1"><strong>Contact Person:</strong> John Manager</p>
-                <p class="mb-1"><strong>Email:</strong> contact@acme.com</p>
-                <p class="mb-1"><strong>Phone:</strong> +1 555-0101</p>
-                <p class="mb-1"><strong>Address:</strong> 123 Business St, NY</p>
-                <p class="mb-0"><strong>Member Since:</strong> Jan 2024</p>
+                <p class="mb-1"><strong>Contact:</strong> <span id="contactName">-</span></p>
+                <p class="mb-1"><strong>Email:</strong> <span id="customerEmail">-</span></p>
+                <p class="mb-1"><strong>Phone:</strong> <span id="customerPhone">-</span></p>
+                <p class="mb-1"><strong>Address:</strong> <span id="customerAddress">-</span></p>
+                <p class="mb-0"><strong>Member Since:</strong> <span id="memberSince">-</span></p>
             </div>
         </div>
     </div>
@@ -40,19 +45,19 @@
             <div class="stat-card fade-in">
                 <div class="stat-info">
                     <span class="stat-label">Total Orders</span>
-                    <span class="stat-value">45</span>
+                    <span class="stat-value" id="totalOrders">0</span>
                 </div>
             </div>
             <div class="stat-card fade-in">
                 <div class="stat-info">
                     <span class="stat-label">Total Spent</span>
-                    <span class="stat-value">$125,430</span>
+                    <span class="stat-value" id="totalSpent">₱0</span>
                 </div>
             </div>
             <div class="stat-card fade-in">
                 <div class="stat-info">
                     <span class="stat-label">Avg. Order</span>
-                    <span class="stat-value">$2,787</span>
+                    <span class="stat-value" id="avgOrder">₱0</span>
                 </div>
             </div>
         </div>
@@ -68,36 +73,91 @@
                         <tr>
                             <th>Order ID</th>
                             <th>Date</th>
-                            <th>Items</th>
                             <th>Amount</th>
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>#ORD-2847</td>
-                            <td>Jan 28, 2026</td>
-                            <td>5 items</td>
-                            <td>$2,450</td>
-                            <td><span class="badge badge-success">Completed</span></td>
-                        </tr>
-                        <tr>
-                            <td>#ORD-2832</td>
-                            <td>Jan 15, 2026</td>
-                            <td>3 items</td>
-                            <td>$1,890</td>
-                            <td><span class="badge badge-success">Completed</span></td>
-                        </tr>
-                        <tr>
-                            <td>#ORD-2815</td>
-                            <td>Jan 5, 2026</td>
-                            <td>8 items</td>
-                            <td>$4,200</td>
-                            <td><span class="badge badge-success">Completed</span></td>
-                        </tr>
+                    <tbody id="customerOrdersBody">
+                        <tr><td colspan="4" class="text-center text-muted">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script src="~/js/admin.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const customerId = urlParams.get('id');
+        
+        if (customerId) {
+            await loadCustomerProfile(customerId);
+        } else {
+            Toast.error('No customer ID provided');
+        }
+    });
+
+    async function loadCustomerProfile(customerId) {
+        try {
+            const [customers, orders] = await Promise.all([
+                API.get('/customers'),
+                API.get('/orders')
+            ]);
+
+            const customer = customers.find(c => c.customerId == customerId);
+            if (!customer) {
+                Toast.error('Customer not found');
+                return;
+            }
+
+            // Update profile info
+            const name = customer.companyName || (customer.firstName + ' ' + customer.lastName);
+            const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            
+            document.getElementById('customerInitials').textContent = initials;
+            document.getElementById('customerName').textContent = name;
+            document.getElementById('customerType').textContent = customer.customerType || 'Regular';
+            document.getElementById('customerStatus').innerHTML = customer.isActive !== false 
+                ? '<span class="badge-dot"></span>Active' 
+                : '<span class="badge-dot"></span>Inactive';
+            document.getElementById('customerStatus').className = customer.isActive !== false ? 'badge badge-success' : 'badge badge-neutral';
+            document.getElementById('contactName').textContent = customer.firstName + ' ' + customer.lastName;
+            document.getElementById('customerEmail').textContent = customer.email || '-';
+            document.getElementById('customerPhone').textContent = customer.phone || '-';
+            document.getElementById('customerAddress').textContent = [customer.address, customer.city].filter(Boolean).join(', ') || '-';
+            document.getElementById('memberSince').textContent = customer.createdAt ? Format.date(customer.createdAt) : '-';
+
+            // Filter customer orders
+            const customerOrders = orders.filter(o => o.customerId == customerId);
+            const totalSpent = customerOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+            const avgOrder = customerOrders.length > 0 ? totalSpent / customerOrders.length : 0;
+
+            document.getElementById('totalOrders').textContent = customerOrders.length;
+            document.getElementById('totalSpent').textContent = Format.currency(totalSpent);
+            document.getElementById('avgOrder').textContent = Format.currency(avgOrder);
+
+            // Render recent orders
+            const tbody = document.getElementById('customerOrdersBody');
+            if (customerOrders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No orders found</td></tr>';
+            } else {
+                const statusClasses = { 'Pending': 'badge-warning', 'Processing': 'badge-info', 'Shipped': 'badge-info', 'Delivered': 'badge-success', 'Completed': 'badge-success', 'Cancelled': 'badge-error' };
+                tbody.innerHTML = customerOrders.slice(0, 10).map(o => `
+                    <tr>
+                        <td>#${o.orderNumber || 'ORD-' + o.orderId}</td>
+                        <td>${Format.date(o.orderDate)}</td>
+                        <td>${Format.currency(o.totalAmount)}</td>
+                        <td><span class="badge ${statusClasses[o.status] || 'badge-neutral'}">${o.status}</span></td>
+                    </tr>
+                `).join('');
+            }
+        } catch (error) {
+            console.error('Failed to load customer profile:', error);
+            Toast.error('Failed to load customer profile');
+        }
+    }
+</script>
+}

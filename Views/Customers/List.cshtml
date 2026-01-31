@@ -34,7 +34,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-value">248</div>
+                <div class="stat-value" id="totalCustomers">0</div>
                 <div class="stat-label">Total Customers</div>
             </div>
         </div>
@@ -47,7 +47,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-value">215</div>
+                <div class="stat-value" id="activeCustomers">0</div>
                 <div class="stat-label">Active Customers</div>
             </div>
         </div>
@@ -60,7 +60,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-value">156</div>
+                <div class="stat-value" id="businessCustomers">0</div>
                 <div class="stat-label">Business</div>
             </div>
         </div>
@@ -73,7 +73,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-value">92</div>
+                <div class="stat-value" id="individualCustomers">0</div>
                 <div class="stat-label">Individual</div>
             </div>
         </div>
@@ -144,211 +144,8 @@
                         <th class="text-center" style="width: 120px;">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr data-id="1">
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="avatar avatar-sm">
-                                    <span class="avatar-text bg-info">AC</span>
-                                </div>
-                                <div>
-                                    <strong>Acme Corporation</strong>
-                                    <div class="text-muted small">Since Jan 2024</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="small">contact@acme.com</div>
-                            <div class="text-muted small">+63-917-555-0101</div>
-                        </td>
-                        <td><span class="badge badge-info">Business</span></td>
-                        <td><span class="badge badge-success"><span class="badge-dot"></span>Active</span></td>
-                        <td>45</td>
-                        <td><strong>₱6,271,500</strong></td>
-                        <td class="text-center">
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="viewCustomer(1)" title="View">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-warning" onclick="editCustomer(1)" title="Edit">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCustomer(1, 'Acme Corporation')" title="Delete">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr data-id="2">
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="avatar avatar-sm">
-                                    <span class="avatar-text bg-primary">JD</span>
-                                </div>
-                                <div>
-                                    <strong>John Doe</strong>
-                                    <div class="text-muted small">Since Mar 2024</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="small">john.doe@email.com</div>
-                            <div class="text-muted small">+63-917-555-0102</div>
-                        </td>
-                        <td><span class="badge badge-pending">Individual</span></td>
-                        <td><span class="badge badge-success"><span class="badge-dot"></span>Active</span></td>
-                        <td>12</td>
-                        <td><strong>₱162,500</strong></td>
-                        <td class="text-center">
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="viewCustomer(2)" title="View">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-warning" onclick="editCustomer(2)" title="Edit">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCustomer(2, 'John Doe')" title="Delete">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr data-id="3">
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="avatar avatar-sm">
-                                    <span class="avatar-text bg-success">TS</span>
-                                </div>
-                                <div>
-                                    <strong>Tech Solutions Inc</strong>
-                                    <div class="text-muted small">Since Dec 2023</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="small">info@techsol.com</div>
-                            <div class="text-muted small">+63-917-555-0103</div>
-                        </td>
-                        <td><span class="badge badge-info">Business</span></td>
-                        <td><span class="badge badge-success"><span class="badge-dot"></span>Active</span></td>
-                        <td>89</td>
-                        <td><strong>₱14,382,500</strong></td>
-                        <td class="text-center">
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="viewCustomer(3)" title="View">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-warning" onclick="editCustomer(3)" title="Edit">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCustomer(3, 'Tech Solutions Inc')" title="Delete">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr data-id="4">
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="avatar avatar-sm">
-                                    <span class="avatar-text bg-secondary">JS</span>
-                                </div>
-                                <div>
-                                    <strong>Jane Smith</strong>
-                                    <div class="text-muted small">Since Aug 2024</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="small">jane.smith@email.com</div>
-                            <div class="text-muted small">+63-917-555-0104</div>
-                        </td>
-                        <td><span class="badge badge-pending">Individual</span></td>
-                        <td><span class="badge badge-neutral"><span class="badge-dot"></span>Inactive</span></td>
-                        <td>3</td>
-                        <td><strong>₱44,500</strong></td>
-                        <td class="text-center">
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="viewCustomer(4)" title="View">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-warning" onclick="editCustomer(4)" title="Edit">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCustomer(4, 'Jane Smith')" title="Delete">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr data-id="5">
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="avatar avatar-sm">
-                                    <span class="avatar-text bg-warning">GE</span>
-                                </div>
-                                <div>
-                                    <strong>Global Enterprises</strong>
-                                    <div class="text-muted small">Since Nov 2023</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="small">sales@globalent.com</div>
-                            <div class="text-muted small">+63-917-555-0105</div>
-                        </td>
-                        <td><span class="badge badge-error">VIP</span></td>
-                        <td><span class="badge badge-success"><span class="badge-dot"></span>Active</span></td>
-                        <td>156</td>
-                        <td><strong>₱27,105,000</strong></td>
-                        <td class="text-center">
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="viewCustomer(5)" title="View">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-warning" onclick="editCustomer(5)" title="Edit">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCustomer(5, 'Global Enterprises')" title="Delete">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr data-id="6">
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="avatar avatar-sm">
-                                    <span class="avatar-text bg-danger">SH</span>
-                                </div>
-                                <div>
-                                    <strong>StartUp Hub</strong>
-                                    <div class="text-muted small">Since May 2024</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="small">hello@startuphub.com</div>
-                            <div class="text-muted small">+63-917-555-0106</div>
-                        </td>
-                        <td><span class="badge badge-info">Business</span></td>
-                        <td><span class="badge badge-success"><span class="badge-dot"></span>Active</span></td>
-                        <td>28</td>
-                        <td><strong>₱3,390,000</strong></td>
-                        <td class="text-center">
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="viewCustomer(6)" title="View">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-warning" onclick="editCustomer(6)" title="Edit">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteCustomer(6, 'StartUp Hub')" title="Delete">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                <tbody id="customersTableBody">
+                    <!-- Dynamic content loaded via JavaScript -->
                 </tbody>
             </table>
         </div>
@@ -624,128 +421,61 @@
 </div>
 
 @section Scripts {
+<script src="~/js/admin.js"></script>
 <script>
-    let currentCustomerId = null;
-    const customersData = [
-        { id: 1, firstName: 'Acme', lastName: 'Corporation', companyName: 'Acme Corporation', email: 'contact@acme.com', phone: '+63-917-555-0101', categoryId: 2, category: 'Business', isActive: true, orders: 45, totalSpent: 6271500, creditLimit: 500000, address: 'Manila, Metro Manila' },
-        { id: 2, firstName: 'John', lastName: 'Doe', companyName: '', email: 'john.doe@email.com', phone: '+63-917-555-0102', categoryId: 1, category: 'Individual', isActive: true, orders: 12, totalSpent: 162500, creditLimit: 50000, address: 'Quezon City' },
-        { id: 3, firstName: 'Tech', lastName: 'Solutions', companyName: 'Tech Solutions Inc', email: 'info@techsol.com', phone: '+63-917-555-0103', categoryId: 2, category: 'Business', isActive: true, orders: 89, totalSpent: 14382500, creditLimit: 1000000, address: 'Makati City' },
-        { id: 4, firstName: 'Jane', lastName: 'Smith', companyName: '', email: 'jane.smith@email.com', phone: '+63-917-555-0104', categoryId: 1, category: 'Individual', isActive: false, orders: 3, totalSpent: 44500, creditLimit: 20000, address: 'Cebu City' },
-        { id: 5, firstName: 'Global', lastName: 'Enterprises', companyName: 'Global Enterprises', email: 'sales@globalent.com', phone: '+63-917-555-0105', categoryId: 3, category: 'VIP', isActive: true, orders: 156, totalSpent: 27105000, creditLimit: 2000000, address: 'Taguig City' },
-        { id: 6, firstName: 'StartUp', lastName: 'Hub', companyName: 'StartUp Hub', email: 'hello@startuphub.com', phone: '+63-917-555-0106', categoryId: 2, category: 'Business', isActive: true, orders: 28, totalSpent: 3390000, creditLimit: 300000, address: 'BGC, Taguig' }
-    ];
-
-    const categoryBadgeClasses = { 1: 'badge-pending', 2: 'badge-info', 3: 'badge-error', 4: 'badge-warning', 5: 'badge-success' };
-
     document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('searchCustomers').addEventListener('input', filterTable);
-        document.getElementById('filterType').addEventListener('change', filterTable);
-        document.getElementById('filterStatus').addEventListener('change', filterTable);
+        Customers.load();
+        
+        document.getElementById('searchCustomers')?.addEventListener('input', filterCustomers);
+        document.getElementById('filterType')?.addEventListener('change', filterCustomers);
+        document.getElementById('filterStatus')?.addEventListener('change', filterCustomers);
     });
 
     function openCreateCustomerModal() {
-        currentCustomerId = null;
-        document.getElementById('modalTitle').textContent = 'Add New Customer';
-        document.getElementById('customerForm').reset();
-        document.getElementById('customerId').value = '0';
+        Customers.showModal();
     }
 
     function viewCustomer(id) {
-        const customer = customersData.find(c => c.id === id);
-        if (!customer) return;
-        currentCustomerId = id;
-        const displayName = customer.companyName || (customer.firstName + ' ' + customer.lastName);
-        const initials = displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-        document.getElementById('viewAvatar').textContent = initials;
-        document.getElementById('viewCustomerName').textContent = displayName;
-        document.getElementById('viewCategory').textContent = customer.category;
-        document.getElementById('viewCategory').className = 'badge ' + categoryBadgeClasses[customer.categoryId];
-        document.getElementById('viewEmail').textContent = customer.email;
-        document.getElementById('viewPhone').textContent = customer.phone || 'Not provided';
-        document.getElementById('viewAddress').textContent = customer.address || 'Not provided';
-        document.getElementById('viewStatus').innerHTML = customer.isActive ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-neutral">Inactive</span>';
-        document.getElementById('viewOrders').textContent = customer.orders;
-        document.getElementById('viewSpent').textContent = '₱' + customer.totalSpent.toLocaleString('en-PH');
-        document.getElementById('viewCredit').textContent = '₱' + customer.creditLimit.toLocaleString('en-PH');
-        new bootstrap.Modal(document.getElementById('viewCustomerModal')).show();
+        Customers.view(id);
     }
 
     function editCustomer(id) {
-        const customer = customersData.find(c => c.id === id);
-        if (!customer) return;
-        currentCustomerId = id;
-        document.getElementById('modalTitle').textContent = 'Edit Customer';
-        document.getElementById('customerId').value = id;
-        document.getElementById('firstName').value = customer.firstName;
-        document.getElementById('lastName').value = customer.lastName;
-        document.getElementById('companyName').value = customer.companyName || '';
-        document.getElementById('email').value = customer.email;
-        document.getElementById('phone').value = customer.phone || '';
-        document.getElementById('categoryId').value = customer.categoryId;
-        document.getElementById('creditLimit').value = customer.creditLimit;
-        document.getElementById('isActive').value = customer.isActive.toString();
-        new bootstrap.Modal(document.getElementById('customerModal')).show();
+        Customers.edit(id);
     }
 
     function editCustomerFromView() {
-        bootstrap.Modal.getInstance(document.getElementById('viewCustomerModal')).hide();
-        setTimeout(() => editCustomer(currentCustomerId), 300);
+        Modal.hide('viewCustomerModal');
+        setTimeout(() => Customers.edit(Customers.currentId), 300);
     }
 
     function deleteCustomer(id, name) {
-        currentCustomerId = id;
-        document.getElementById('deleteItemName').textContent = name;
-        new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
-        document.getElementById('confirmDeleteBtn').onclick = function() {
-            showToast('success', name + ' has been removed from customers!');
-            bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
-            const row = document.querySelector('tr[data-id="' + id + '"]');
-            if (row) { row.style.transition = 'opacity 0.3s'; row.style.opacity = '0'; setTimeout(() => row.remove(), 300); }
-        };
+        if (confirm(`Are you sure you want to delete "${name}"?`)) {
+            Customers.delete(id);
+        }
     }
 
     function saveCustomer(event) {
         event.preventDefault();
-        const customerId = document.getElementById('customerId').value;
-        const isNew = customerId === '0';
-        showToast('success', isNew ? 'Customer added successfully!' : 'Customer updated successfully!');
-        bootstrap.Modal.getInstance(document.getElementById('customerModal')).hide();
+        Customers.save();
     }
 
-    function filterTable() {
-        const search = document.getElementById('searchCustomers').value.toLowerCase();
-        const typeFilter = document.getElementById('filterType').value;
-        const statusFilter = document.getElementById('filterStatus').value;
-        const rows = document.querySelectorAll('#customersTable tbody tr');
-        let visibleCount = 0;
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            const customer = customersData.find(c => c.id === parseInt(row.dataset.id));
-            let show = true;
-            if (search && !text.includes(search)) show = false;
-            if (typeFilter && customer && customer.category !== typeFilter) show = false;
-            if (statusFilter === 'active' && customer && !customer.isActive) show = false;
-            if (statusFilter === 'inactive' && customer && customer.isActive) show = false;
-            row.style.display = show ? '' : 'none';
-            if (show) visibleCount++;
-        });
-        document.getElementById('customerCount').textContent = visibleCount + ' customers';
+    function filterCustomers() {
+        const search = (document.getElementById('searchCustomers')?.value || '').toLowerCase();
+        const type = document.getElementById('filterType')?.value || '';
+        const status = document.getElementById('filterStatus')?.value || '';
+        
+        Customers.filter(search, type, status);
     }
 
     function resetFilters() {
         document.getElementById('searchCustomers').value = '';
         document.getElementById('filterType').value = '';
         document.getElementById('filterStatus').value = '';
-        filterTable();
+        Customers.load();
     }
 
-    function exportCustomers() { showToast('success', 'Exporting customer data...'); }
-
-    function showToast(type, message) {
-        const toastId = type === 'success' ? 'successToast' : 'errorToast';
-        const messageId = type === 'success' ? 'successMessage' : 'errorMessage';
-        document.getElementById(messageId).textContent = message;
-        new bootstrap.Toast(document.getElementById(toastId)).show();
+    function exportCustomers() {
+        Toast.success('Exporting customer data...');
     }
 </script>
 }

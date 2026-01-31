@@ -33,7 +33,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-value">24</div>
+                <div class="stat-value" id="openTickets">0</div>
                 <div class="stat-label">Open Tickets</div>
             </div>
         </div>
@@ -46,7 +46,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-value">12</div>
+                <div class="stat-value" id="inProgressTickets">0</div>
                 <div class="stat-label">In Progress</div>
             </div>
         </div>
@@ -59,8 +59,8 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-value">8</div>
-                <div class="stat-label">Resolved Today</div>
+                <div class="stat-value" id="resolvedTickets">0</div>
+                <div class="stat-label">Resolved</div>
             </div>
         </div>
     </div>
@@ -72,8 +72,8 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-value">2.4h</div>
-                <div class="stat-label">Avg Response</div>
+                <div class="stat-value" id="totalTickets">0</div>
+                <div class="stat-label">Total Tickets</div>
             </div>
         </div>
     </div>
@@ -568,24 +568,105 @@
 </style>
 
 @section Scripts {
+<script src="~/js/admin.js"></script>
 <script>
     let currentTicketId = null;
-    const ticketsData = [
-        { id: 1, number: 'TKT-1024', subject: 'Laptop not starting after update', customerId: 1, customer: 'John Doe', email: 'john.doe@email.com', phone: '+63-917-555-0102', category: 'Technical', priority: 'High', status: 'Open', created: 'Jan 30, 2026', description: 'After installing the latest Windows update, my laptop wont start. It shows a blue screen error and restarts repeatedly. I need urgent help as this is my work laptop.' },
-        { id: 2, number: 'TKT-1023', subject: 'Software license activation issue', customerId: 2, customer: 'Acme Corporation', email: 'contact@acme.com', phone: '+63-917-555-0101', category: 'Technical', priority: 'Medium', status: 'In Progress', created: 'Jan 29, 2026', description: 'We purchased 10 licenses for Office Suite Pro but only 8 are activating properly. Getting error code 0x8004FC12.' },
-        { id: 3, number: 'TKT-1022', subject: 'Request for product return', customerId: 3, customer: 'Jane Smith', email: 'jane.smith@email.com', phone: '+63-917-555-0103', category: 'Returns', priority: 'Low', status: 'Resolved', created: 'Jan 28, 2026', description: 'I would like to return the wireless mouse I purchased. It does not work well with my laptop.' },
-        { id: 4, number: 'TKT-1021', subject: 'Billing discrepancy inquiry', customerId: 4, customer: 'Tech Solutions Inc', email: 'info@techsol.com', phone: '+63-917-555-0104', category: 'Billing', priority: 'Medium', status: 'Resolved', created: 'Jan 27, 2026', description: 'We noticed a discrepancy in our last invoice. The amount charged is different from the quoted price.' }
-    ];
+    let ticketsData = [];
 
-    const priorityBadgeClasses = { 'Low': 'badge-info', 'Medium': 'badge-warning', 'High': 'badge-error', 'Critical': 'badge-error' };
-    const statusBadgeClasses = { 'Open': 'badge-warning', 'In Progress': 'badge-info', 'Waiting': 'badge-pending', 'Resolved': 'badge-success', 'Closed': 'badge-neutral' };
+    const priorityBadgeClasses = { 'Low': 'bg-info', 'Medium': 'bg-warning', 'High': 'bg-danger', 'Critical': 'bg-dark' };
+    const statusBadgeClasses = { 'Open': 'bg-warning', 'In Progress': 'bg-info', 'Waiting': 'bg-secondary', 'Resolved': 'bg-success', 'Closed': 'bg-dark' };
 
     document.addEventListener('DOMContentLoaded', function() {
+        loadTickets();
         document.getElementById('searchTickets').addEventListener('input', filterTable);
         document.getElementById('filterStatus').addEventListener('change', filterTable);
         document.getElementById('filterPriority').addEventListener('change', filterTable);
         document.getElementById('filterCategory').addEventListener('change', filterTable);
     });
+
+    async function loadTickets() {
+        try {
+            ticketsData = await API.get('/tickets');
+            renderTickets();
+            updateStats();
+        } catch (error) {
+            Toast.error('Failed to load tickets');
+        }
+    }
+
+    function renderTickets() {
+        const tbody = document.getElementById('ticketsTableBody');
+        if (!tbody) return;
+
+        if (ticketsData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No tickets found. Click "New Ticket" to create one.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = ticketsData.map(t => `
+            <tr data-id="${t.ticketId}">
+                <td><strong class="text-primary">#TKT-${t.ticketId.toString().padStart(4, '0')}</strong></td>
+                <td>
+                    <div><strong>${t.subject}</strong></div>
+                    <div class="text-muted small">${t.category}</div>
+                </td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="avatar avatar-sm">
+                            <span class="avatar-text bg-primary">${(t.customerName || 'N/A').split(' ').map(n => n[0]).join('').substring(0, 2)}</span>
+                        </div>
+                        <div>${t.customerName || 'Unknown'}</div>
+                    </div>
+                </td>
+                <td><span class="badge ${priorityBadgeClasses[t.priority] || 'bg-secondary'}">${t.priority}</span></td>
+                <td><span class="badge ${statusBadgeClasses[t.status] || 'bg-secondary'}">${t.status}</span></td>
+                <td>
+                    <div>${Format.date(t.createdAt)}</div>
+                    <small class="text-muted">${getTimeAgo(t.createdAt)}</small>
+                </td>
+                <td class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewTicket(${t.ticketId})" title="View">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="editTicket(${t.ticketId})" title="Edit">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        ${t.status !== 'Resolved' && t.status !== 'Closed' ? `
+                        <button class="btn btn-sm btn-outline-success" onclick="replyTicket(${t.ticketId})" title="Reply">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        </button>` : `
+                        <button class="btn btn-sm btn-outline-secondary" onclick="reopenTicket(${t.ticketId})" title="Reopen">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                        </button>`}
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        document.getElementById('ticketCount').textContent = ticketsData.length + ' tickets';
+    }
+
+    function updateStats() {
+        const total = ticketsData.length;
+        const open = ticketsData.filter(t => t.status === 'Open').length;
+        const inProgress = ticketsData.filter(t => t.status === 'In Progress').length;
+        const resolved = ticketsData.filter(t => t.status === 'Resolved').length;
+
+        document.getElementById('openTickets').textContent = open;
+        document.getElementById('inProgressTickets').textContent = inProgress;
+        document.getElementById('resolvedTickets').textContent = resolved;
+        document.getElementById('totalTickets').textContent = total;
+    }
+
+    function getTimeAgo(date) {
+        const now = new Date();
+        const then = new Date(date);
+        const diff = Math.floor((now - then) / (1000 * 60 * 60 * 24));
+        if (diff === 0) return 'Today';
+        if (diff === 1) return 'Yesterday';
+        return diff + ' days ago';
+    }
 
     function openCreateTicketModal() {
         currentTicketId = null;
@@ -594,38 +675,44 @@
         document.getElementById('ticketId').value = '0';
     }
 
-    function viewTicket(id) {
-        const ticket = ticketsData.find(t => t.id === id);
-        if (!ticket) return;
-        currentTicketId = id;
-        document.getElementById('viewTicketNumber').textContent = '#' + ticket.number;
-        document.getElementById('viewTicketSubject').textContent = ticket.subject;
-        document.getElementById('viewTicketPriority').textContent = ticket.priority;
-        document.getElementById('viewTicketPriority').className = 'badge ' + priorityBadgeClasses[ticket.priority];
-        document.getElementById('viewTicketStatus').textContent = ticket.status;
-        document.getElementById('viewTicketStatus').className = 'badge ' + statusBadgeClasses[ticket.status];
-        document.getElementById('viewTicketCategory').textContent = ticket.category;
-        document.getElementById('viewTicketCreated').textContent = ticket.created;
-        document.getElementById('viewCustomerName').textContent = ticket.customer;
-        document.getElementById('viewCustomerEmail').textContent = ticket.email;
-        document.getElementById('viewCustomerPhone').textContent = ticket.phone;
-        document.getElementById('viewCustomerInitials').textContent = ticket.customer.split(' ').map(n => n[0]).join('');
-        document.getElementById('viewTicketDescription').textContent = ticket.description;
-        new bootstrap.Modal(document.getElementById('viewTicketModal')).show();
+    async function viewTicket(id) {
+        try {
+            const ticket = await API.get(`/tickets/${id}`);
+            currentTicketId = id;
+            document.getElementById('viewTicketNumber').textContent = '#TKT-' + id.toString().padStart(4, '0');
+            document.getElementById('viewTicketSubject').textContent = ticket.subject;
+            document.getElementById('viewTicketPriority').textContent = ticket.priority;
+            document.getElementById('viewTicketPriority').className = 'badge ' + (priorityBadgeClasses[ticket.priority] || 'bg-secondary');
+            document.getElementById('viewTicketStatus').textContent = ticket.status;
+            document.getElementById('viewTicketStatus').className = 'badge ' + (statusBadgeClasses[ticket.status] || 'bg-secondary');
+            document.getElementById('viewTicketCategory').textContent = ticket.category;
+            document.getElementById('viewTicketCreated').textContent = Format.date(ticket.createdAt);
+            document.getElementById('viewCustomerName').textContent = ticket.customerName || 'Unknown';
+            document.getElementById('viewCustomerEmail').textContent = ticket.customerEmail || '-';
+            document.getElementById('viewCustomerPhone').textContent = ticket.customerPhone || '-';
+            document.getElementById('viewCustomerInitials').textContent = (ticket.customerName || 'NA').split(' ').map(n => n[0]).join('').substring(0, 2);
+            document.getElementById('viewTicketDescription').textContent = ticket.description;
+            new bootstrap.Modal(document.getElementById('viewTicketModal')).show();
+        } catch (error) {
+            Toast.error('Failed to load ticket details');
+        }
     }
 
-    function editTicket(id) {
-        const ticket = ticketsData.find(t => t.id === id);
-        if (!ticket) return;
-        currentTicketId = id;
-        document.getElementById('modalTitle').textContent = 'Edit Ticket #' + ticket.number;
-        document.getElementById('ticketId').value = id;
-        document.getElementById('ticketSubject').value = ticket.subject;
-        document.getElementById('ticketCustomer').value = ticket.customerId;
-        document.getElementById('ticketCategory').value = ticket.category;
-        document.getElementById('ticketPriority').value = ticket.priority;
-        document.getElementById('ticketDescription').value = ticket.description;
-        new bootstrap.Modal(document.getElementById('ticketModal')).show();
+    async function editTicket(id) {
+        try {
+            const ticket = await API.get(`/tickets/${id}`);
+            currentTicketId = id;
+            document.getElementById('modalTitle').textContent = 'Edit Ticket #TKT-' + id.toString().padStart(4, '0');
+            document.getElementById('ticketId').value = id;
+            document.getElementById('ticketSubject').value = ticket.subject;
+            document.getElementById('ticketCustomer').value = ticket.customerId;
+            document.getElementById('ticketCategory').value = ticket.category;
+            document.getElementById('ticketPriority').value = ticket.priority;
+            document.getElementById('ticketDescription').value = ticket.description;
+            new bootstrap.Modal(document.getElementById('ticketModal')).show();
+        } catch (error) {
+            Toast.error('Failed to load ticket');
+        }
     }
 
     function editTicketFromView() {
@@ -634,10 +721,10 @@
     }
 
     function replyTicket(id) {
-        const ticket = ticketsData.find(t => t.id === id);
+        const ticket = ticketsData.find(t => t.ticketId === id);
         if (!ticket) return;
         currentTicketId = id;
-        document.getElementById('replyTicketNumber').textContent = '#' + ticket.number;
+        document.getElementById('replyTicketNumber').textContent = '#TKT-' + id.toString().padStart(4, '0');
         document.getElementById('replyMessage').value = '';
         document.getElementById('replyStatus').value = '';
         new bootstrap.Modal(document.getElementById('replyModal')).show();
@@ -648,25 +735,59 @@
         setTimeout(() => replyTicket(currentTicketId), 300);
     }
 
-    function reopenTicket(id) {
-        const ticket = ticketsData.find(t => t.id === id);
-        if (!ticket) return;
-        showToast('success', 'Ticket #' + ticket.number + ' has been reopened!');
+    async function reopenTicket(id) {
+        try {
+            await API.put(`/tickets/${id}`, { status: 'Open' });
+            Toast.success('Ticket #TKT-' + id.toString().padStart(4, '0') + ' has been reopened!');
+            loadTickets();
+        } catch (error) {
+            Toast.error('Failed to reopen ticket');
+        }
     }
 
-    function saveTicket(event) {
+    async function saveTicket(event) {
         event.preventDefault();
         const ticketId = document.getElementById('ticketId').value;
         const isNew = ticketId === '0';
-        showToast('success', isNew ? 'Ticket created successfully!' : 'Ticket updated successfully!');
-        bootstrap.Modal.getInstance(document.getElementById('ticketModal')).hide();
+
+        const data = {
+            subject: document.getElementById('ticketSubject').value,
+            customerId: parseInt(document.getElementById('ticketCustomer').value),
+            category: document.getElementById('ticketCategory').value,
+            priority: document.getElementById('ticketPriority').value,
+            description: document.getElementById('ticketDescription').value,
+            status: 'Open'
+        };
+
+        try {
+            if (isNew) {
+                await API.post('/tickets', data);
+                Toast.success('Ticket created successfully!');
+            } else {
+                await API.put(`/tickets/${ticketId}`, data);
+                Toast.success('Ticket updated successfully!');
+            }
+            bootstrap.Modal.getInstance(document.getElementById('ticketModal')).hide();
+            loadTickets();
+        } catch (error) {
+            Toast.error(error.message || 'Failed to save ticket');
+        }
     }
 
-    function sendReply() {
+    async function sendReply() {
         const message = document.getElementById('replyMessage').value;
-        if (!message.trim()) { showToast('error', 'Please enter a message!'); return; }
-        showToast('success', 'Reply sent successfully!');
+        if (!message.trim()) { Toast.error('Please enter a message!'); return; }
+        
+        const newStatus = document.getElementById('replyStatus').value;
+        if (newStatus) {
+            try {
+                await API.put(`/tickets/${currentTicketId}`, { status: newStatus });
+            } catch (error) { }
+        }
+        
+        Toast.success('Reply sent successfully!');
         bootstrap.Modal.getInstance(document.getElementById('replyModal')).hide();
+        loadTickets();
     }
 
     function filterTable() {
@@ -674,11 +795,11 @@
         const statusFilter = document.getElementById('filterStatus').value;
         const priorityFilter = document.getElementById('filterPriority').value;
         const categoryFilter = document.getElementById('filterCategory').value;
-        const rows = document.querySelectorAll('#ticketsTable tbody tr');
+        const rows = document.querySelectorAll('#ticketsTableBody tr');
         let visibleCount = 0;
         rows.forEach(row => {
             const text = row.textContent.toLowerCase();
-            const ticket = ticketsData.find(t => t.id === parseInt(row.dataset.id));
+            const ticket = ticketsData.find(t => t.ticketId === parseInt(row.dataset.id));
             let show = true;
             if (search && !text.includes(search)) show = false;
             if (statusFilter && ticket && ticket.status !== statusFilter) show = false;
@@ -698,14 +819,7 @@
         filterTable();
     }
 
-    function applyFilters() { filterTable(); showToast('success', 'Filters applied!'); }
-    function exportTickets() { showToast('success', 'Exporting tickets...'); }
-
-    function showToast(type, message) {
-        const toastId = type === 'success' ? 'successToast' : 'errorToast';
-        const messageId = type === 'success' ? 'successMessage' : 'errorMessage';
-        document.getElementById(messageId).textContent = message;
-        new bootstrap.Toast(document.getElementById(toastId)).show();
-    }
+    function applyFilters() { filterTable(); Toast.success('Filters applied!'); }
+    function exportTickets() { Toast.success('Exporting tickets...'); }
 </script>
 }

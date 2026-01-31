@@ -2,72 +2,369 @@
     ViewData["Title"] = "Promotions";
 }
 
-<div class="page-header d-flex justify-content-between align-items-center">
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
-        <h1 class="page-title">Promotions</h1>
-        <p class="page-subtitle">Manage discount codes and special offers</p>
+        <h1 class="page-title">Promotions & Discounts</h1>
+        <p class="page-subtitle">Create and manage promotions that can be deployed to the customer portal</p>
     </div>
-    <button class="btn btn-primary">
+    <button class="btn btn-primary" onclick="Marketing.promotions.showModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        Create Promotion
+        New Promotion
     </button>
 </div>
 
-<div class="card fade-in">
-    <div class="card-body" style="padding: 0;">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Code</th>
-                    <th>Description</th>
-                    <th>Discount</th>
-                    <th>Usage</th>
-                    <th>Valid Until</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><strong>WINTER25</strong></td>
-                    <td>Winter Sale 25% Off</td>
-                    <td>25%</td>
-                    <td>156 / 500</td>
-                    <td>Feb 28, 2026</td>
-                    <td><span class="badge badge-success">Active</span></td>
-                    <td><button class="action-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td>
-                </tr>
-                <tr>
-                    <td><strong>NEWCUST10</strong></td>
-                    <td>New Customer Discount</td>
-                    <td>10%</td>
-                    <td>89 / ∞</td>
-                    <td>Dec 31, 2026</td>
-                    <td><span class="badge badge-success">Active</span></td>
-                    <td><button class="action-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td>
-                </tr>
-                <tr>
-                    <td><strong>FREESHIP</strong></td>
-                    <td>Free Shipping on $100+</td>
-                    <td>Free Ship</td>
-                    <td>234 / ∞</td>
-                    <td>Mar 31, 2026</td>
-                    <td><span class="badge badge-success">Active</span></td>
-                    <td><button class="action-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td>
-                </tr>
-                <tr>
-                    <td><strong>HOLIDAY50</strong></td>
-                    <td>Holiday Special $50 Off</td>
-                    <td>$50</td>
-                    <td>500 / 500</td>
-                    <td>Dec 31, 2025</td>
-                    <td><span class="badge badge-neutral">Expired</span></td>
-                    <td><button class="action-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td>
-                </tr>
-            </tbody>
-        </table>
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalPromotions">0</div>
+                <div class="stat-label">Total Promotions</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="activePromotions">0</div>
+                <div class="stat-label">Active</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-info">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="deployedPromotions">0</div>
+                <div class="stat-label">Deployed to Customers</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalUsage">0</div>
+                <div class="stat-label">Times Used</div>
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- Filter Section -->
+<div class="card mb-4 fade-in">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Search Promotions</label>
+                <div class="search-input">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" class="form-control" id="searchPromotions" placeholder="Search by code or name..." onkeyup="filterPromotions()">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Discount Type</label>
+                <select class="form-select" id="filterDiscountType" onchange="filterPromotions()">
+                    <option value="">All Types</option>
+                    <option value="Percentage">Percentage</option>
+                    <option value="Fixed">Fixed Amount</option>
+                    <option value="FreeShipping">Free Shipping</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="filterPromotionStatus" onchange="filterPromotions()">
+                    <option value="">All Status</option>
+                    <option value="deployed">Deployed</option>
+                    <option value="notdeployed">Not Deployed</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" onclick="resetPromotionFilters()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                    </svg>
+                    Reset
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Promotions Table -->
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Promotions List</h5>
+        <span class="badge bg-primary" id="promotionCount">0 promotions</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table" id="promotionsTable">
+                <thead>
+                    <tr>
+                        <th>Promotion</th>
+                        <th>Type</th>
+                        <th>Discount</th>
+                        <th>Valid Period</th>
+                        <th>Usage</th>
+                        <th>Visibility</th>
+                        <th class="text-center" style="width: 200px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="promotionsTableBody">
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 mb-0 text-muted">Loading promotions...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Promotion Modal -->
+<div class="modal fade" id="promotionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header modal-header-primary">
+                <h5 class="modal-title" id="promotionModalTitle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/>
+                    </svg>
+                    New Promotion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="promotionForm" onsubmit="savePromotion(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="promotionId">
+                    
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            </svg>
+                            Promotion Details
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label required">Promotion Code</label>
+                                <input type="text" class="form-control text-uppercase" id="promotionCode" placeholder="e.g., SUMMER25" required>
+                                <small class="text-muted">Customers will use this code at checkout</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label required">Promotion Name</label>
+                                <input type="text" class="form-control" id="promotionName" placeholder="e.g., Summer Sale 25% Off" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" id="promotionDescription" rows="2" placeholder="Brief description of this promotion"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
+                            Discount Configuration
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label required">Discount Type</label>
+                                <select class="form-select" id="discountType" required onchange="toggleDiscountFields()">
+                                    <option value="">Select Type</option>
+                                    <option value="Percentage">Percentage Off</option>
+                                    <option value="Fixed">Fixed Amount Off</option>
+                                    <option value="FreeShipping">Free Shipping</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6" id="discountValueGroup">
+                                <label class="form-label required">Discount Value</label>
+                                <div class="input-group">
+                                    <span class="input-group-text" id="discountPrefix">%</span>
+                                    <input type="number" class="form-control" id="discountValue" placeholder="0" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Minimum Order Amount (₱)</label>
+                                <input type="number" class="form-control" id="minOrderAmount" placeholder="0.00" step="0.01">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Maximum Discount (₱)</label>
+                                <input type="number" class="form-control" id="maxDiscount" placeholder="No limit" step="0.01">
+                                <small class="text-muted">Leave empty for no limit</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                            </svg>
+                            Validity & Limits
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label required">Start Date</label>
+                                <input type="date" class="form-control" id="promotionStartDate" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label required">End Date</label>
+                                <input type="date" class="form-control" id="promotionEndDate" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Usage Limit</label>
+                                <input type="number" class="form-control" id="usageLimit" placeholder="Unlimited">
+                                <small class="text-muted">Leave empty for unlimited</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        Save Promotion
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Promotion Modal -->
+<div class="modal fade" id="viewPromotionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-info">
+                <h5 class="modal-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Promotion Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewPromotionContent">
+                <!-- Content loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-section { margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e9ecef; }
+.form-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.form-section-title { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: #008080; font-weight: 600; }
+.required::after { content: " *"; color: #dc3545; }
+.deploy-btn { transition: all 0.3s ease; }
+.deploy-btn:hover { transform: scale(1.05); }
+.deploy-btn.deployed { background: linear-gradient(135deg, #28a745, #20c997); }
+.deploy-btn.not-deployed { background: linear-gradient(135deg, #6c757d, #495057); }
+</style>
+
+@section Scripts {
+<script src="~/js/admin.js"></script>
+<script>
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        Marketing.promotions.load();
+    });
+
+    // Save promotion
+    function savePromotion(event) {
+        event.preventDefault();
+        Marketing.promotions.save();
+    }
+
+    // Toggle discount value field based on type
+    function toggleDiscountFields() {
+        const type = document.getElementById('discountType').value;
+        const prefix = document.getElementById('discountPrefix');
+        const valueGroup = document.getElementById('discountValueGroup');
+        
+        if (type === 'Percentage') {
+            prefix.textContent = '%';
+            valueGroup.style.display = 'block';
+        } else if (type === 'Fixed') {
+            prefix.textContent = '₱';
+            valueGroup.style.display = 'block';
+        } else if (type === 'FreeShipping') {
+            valueGroup.style.display = 'none';
+            document.getElementById('discountValue').value = '0';
+        } else {
+            valueGroup.style.display = 'block';
+        }
+    }
+
+    // Filter promotions
+    function filterPromotions() {
+        const search = document.getElementById('searchPromotions').value.toLowerCase();
+        const typeFilter = document.getElementById('filterDiscountType').value.toLowerCase();
+        const statusFilter = document.getElementById('filterPromotionStatus').value.toLowerCase();
+
+        const rows = document.querySelectorAll('#promotionsTableBody tr');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const isDeployed = row.dataset.deployed === 'true';
+            let show = true;
+
+            if (search && !text.includes(search)) show = false;
+            if (typeFilter && !text.includes(typeFilter)) show = false;
+            if (statusFilter === 'deployed' && !isDeployed) show = false;
+            if (statusFilter === 'notdeployed' && isDeployed) show = false;
+
+            row.style.display = show ? '' : 'none';
+            if (show && !row.querySelector('.spinner-border')) visibleCount++;
+        });
+
+        document.getElementById('promotionCount').textContent = visibleCount + ' promotions';
+    }
+
+    function resetPromotionFilters() {
+        document.getElementById('searchPromotions').value = '';
+        document.getElementById('filterDiscountType').value = '';
+        document.getElementById('filterPromotionStatus').value = '';
+        filterPromotions();
+        Marketing.promotions.load();
+    }
+</script>
+}

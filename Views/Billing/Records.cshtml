@@ -8,74 +8,105 @@
 </div>
 
 <div class="card fade-in">
-    <div class="card-header">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <div class="search-input">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <input type="text" placeholder="Search records...">
+            <input type="text" id="searchRecords" placeholder="Search records..." oninput="filterRecords()">
         </div>
+        <span class="badge bg-primary" id="recordsCount">0 accounts</span>
     </div>
     <div class="card-body" style="padding: 0;">
-        <table class="data-table">
+        <table class="data-table" id="recordsTable">
             <thead>
                 <tr>
                     <th>Account</th>
                     <th>Customer</th>
                     <th>Type</th>
-                    <th>Credit Limit</th>
-                    <th>Balance</th>
+                    <th>Outstanding</th>
                     <th>Status</th>
-                    <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td><strong>ACC-001</strong></td>
-                    <td>Tech Solutions Inc</td>
-                    <td><span class="badge badge-info">Business</span></td>
-                    <td>$50,000</td>
-                    <td>$5,200</td>
-                    <td><span class="badge badge-success">Good Standing</span></td>
-                    <td><button class="action-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td>
-                </tr>
-                <tr>
-                    <td><strong>ACC-002</strong></td>
-                    <td>Global Enterprises</td>
-                    <td><span class="badge badge-info">Business</span></td>
-                    <td>$100,000</td>
-                    <td>$12,800</td>
-                    <td><span class="badge badge-warning">Past Due</span></td>
-                    <td><button class="action-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td>
-                </tr>
-                <tr>
-                    <td><strong>ACC-003</strong></td>
-                    <td>Acme Corporation</td>
-                    <td><span class="badge badge-info">Business</span></td>
-                    <td>$25,000</td>
-                    <td>$0</td>
-                    <td><span class="badge badge-success">Good Standing</span></td>
-                    <td><button class="action-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td>
-                </tr>
-                <tr>
-                    <td><strong>ACC-004</strong></td>
-                    <td>John Doe</td>
-                    <td><span class="badge badge-neutral">Individual</span></td>
-                    <td>$5,000</td>
-                    <td>$350</td>
-                    <td><span class="badge badge-success">Good Standing</span></td>
-                    <td><button class="action-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td>
-                </tr>
-                <tr>
-                    <td><strong>ACC-005</strong></td>
-                    <td>StartUp Hub</td>
-                    <td><span class="badge badge-info">Business</span></td>
-                    <td>$15,000</td>
-                    <td>$0</td>
-                    <td><span class="badge badge-success">Good Standing</span></td>
-                    <td><button class="action-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td>
-                </tr>
+            <tbody id="recordsTableBody">
+                <!-- Dynamic content loaded from customers and invoices -->
             </tbody>
         </table>
     </div>
 </div>
+
+@section Scripts {
+<script src="~/js/admin.js"></script>
+<script>
+    let recordsData = [];
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadRecords();
+    });
+
+    async function loadRecords() {
+        try {
+            const [customers, invoices] = await Promise.all([
+                API.get('/customers'),
+                API.get('/invoices')
+            ]);
+
+            // Calculate outstanding for each customer
+            recordsData = customers.map((c, idx) => {
+                const customerInvoices = invoices.filter(i => i.customerId === c.customerId);
+                const outstanding = customerInvoices
+                    .filter(i => i.status === 'Pending' || i.status === 'Overdue')
+                    .reduce((sum, i) => sum + (i.totalAmount || 0), 0);
+                const hasOverdue = customerInvoices.some(i => i.status === 'Overdue');
+
+                return {
+                    accountId: 'ACC-' + String(idx + 1).padStart(3, '0'),
+                    customerId: c.customerId,
+                    customerName: c.companyName || (c.firstName + ' ' + c.lastName),
+                    customerType: c.customerType || 'Regular',
+                    outstanding: outstanding,
+                    status: hasOverdue ? 'Past Due' : outstanding > 0 ? 'Balance Due' : 'Good Standing'
+                };
+            });
+
+            renderRecords();
+        } catch (error) {
+            console.error('Failed to load records:', error);
+            Toast.error('Failed to load account records');
+        }
+    }
+
+    function renderRecords(data = recordsData) {
+        const tbody = document.getElementById('recordsTableBody');
+        document.getElementById('recordsCount').textContent = data.length + ' accounts';
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No account records found</td></tr>';
+            return;
+        }
+
+        const typeClasses = { 'Business': 'badge-info', 'VIP': 'badge-success', 'Premium': 'badge-warning', 'Regular': 'badge-neutral' };
+        const statusClasses = { 'Good Standing': 'badge-success', 'Balance Due': 'badge-warning', 'Past Due': 'badge-error' };
+
+        tbody.innerHTML = data.map(r => `
+            <tr data-id="${r.customerId}">
+                <td><strong>${r.accountId}</strong></td>
+                <td>${r.customerName}</td>
+                <td><span class="badge ${typeClasses[r.customerType] || 'badge-neutral'}">${r.customerType}</span></td>
+                <td>${Format.currency(r.outstanding)}</td>
+                <td><span class="badge ${statusClasses[r.status]}">${r.status}</span></td>
+            </tr>
+        `).join('');
+    }
+
+    function filterRecords() {
+        const search = document.getElementById('searchRecords').value.toLowerCase();
+        const filtered = recordsData.filter(r => 
+            r.customerName.toLowerCase().includes(search) || 
+            r.accountId.toLowerCase().includes(search) ||
+            r.customerType.toLowerCase().includes(search)
+        );
+        renderRecords(filtered);
+    }
+</script>
+}

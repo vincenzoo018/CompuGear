@@ -8,17 +8,18 @@
 </div>
 
 <div class="card fade-in">
-    <div class="card-header">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <div class="search-input">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"/>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <input type="text" placeholder="Search history...">
+            <input type="text" id="searchHistory" placeholder="Search history..." oninput="filterHistory()">
         </div>
+        <span class="badge bg-primary" id="historyCount">0 activities</span>
     </div>
     <div class="card-body" style="padding: 0;">
-        <table class="data-table">
+        <table class="data-table" id="historyTable">
             <thead>
                 <tr>
                     <th>Date</th>
@@ -28,43 +29,118 @@
                     <th>Amount</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td>Jan 30, 2026</td>
-                    <td><strong>Acme Corporation</strong></td>
-                    <td><span class="badge badge-info">Order Placed</span></td>
-                    <td>Order #ORD-2850 - 3 items</td>
-                    <td>$1,250</td>
-                </tr>
-                <tr>
-                    <td>Jan 29, 2026</td>
-                    <td><strong>Tech Solutions Inc</strong></td>
-                    <td><span class="badge badge-success">Payment Received</span></td>
-                    <td>Invoice #INV-1234</td>
-                    <td>$5,200</td>
-                </tr>
-                <tr>
-                    <td>Jan 28, 2026</td>
-                    <td><strong>John Doe</strong></td>
-                    <td><span class="badge badge-warning">Support Ticket</span></td>
-                    <td>Ticket #TKT-456 - Product inquiry</td>
-                    <td>-</td>
-                </tr>
-                <tr>
-                    <td>Jan 27, 2026</td>
-                    <td><strong>Global Enterprises</strong></td>
-                    <td><span class="badge badge-info">Order Placed</span></td>
-                    <td>Order #ORD-2848 - 12 items</td>
-                    <td>$8,900</td>
-                </tr>
-                <tr>
-                    <td>Jan 26, 2026</td>
-                    <td><strong>StartUp Hub</strong></td>
-                    <td><span class="badge badge-neutral">Profile Updated</span></td>
-                    <td>Contact information changed</td>
-                    <td>-</td>
-                </tr>
+            <tbody id="historyTableBody">
+                <!-- Dynamic content loaded from orders and tickets -->
             </tbody>
         </table>
     </div>
 </div>
+
+@section Scripts {
+<script src="~/js/admin.js"></script>
+<script>
+    let historyData = [];
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadHistory();
+    });
+
+    async function loadHistory() {
+        try {
+            const [orders, tickets, customers] = await Promise.all([
+                API.get('/orders'),
+                API.get('/tickets'),
+                API.get('/customers')
+            ]);
+
+            // Create customer lookup
+            const customerMap = {};
+            customers.forEach(c => {
+                customerMap[c.customerId] = c.companyName || (c.firstName + ' ' + c.lastName);
+            });
+
+            // Combine activities
+            historyData = [];
+
+            // Add orders
+            orders.forEach(o => {
+                historyData.push({
+                    date: new Date(o.orderDate),
+                    customer: customerMap[o.customerId] || 'Unknown',
+                    type: 'Order',
+                    badge: 'badge-info',
+                    details: `Order #${o.orderNumber || o.orderId} - ${o.status}`,
+                    amount: o.totalAmount || 0
+                });
+            });
+
+            // Add tickets
+            tickets.forEach(t => {
+                historyData.push({
+                    date: new Date(t.createdAt),
+                    customer: customerMap[t.customerId] || 'Unknown',
+                    type: 'Support Ticket',
+                    badge: 'badge-warning',
+                    details: `Ticket #${t.ticketId} - ${t.subject}`,
+                    amount: null
+                });
+            });
+
+            // Sort by date descending
+            historyData.sort((a, b) => b.date - a.date);
+
+            renderHistory();
+        } catch (error) {
+            console.error('Failed to load history:', error);
+            Toast.error('Failed to load customer history');
+        }
+    }
+
+    function renderHistory() {
+        const tbody = document.getElementById('historyTableBody');
+        document.getElementById('historyCount').textContent = historyData.length + ' activities';
+
+        if (historyData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No activity history found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = historyData.slice(0, 100).map(h => `
+            <tr>
+                <td>${Format.date(h.date)}</td>
+                <td><strong>${h.customer}</strong></td>
+                <td><span class="badge ${h.badge}">${h.type}</span></td>
+                <td>${h.details}</td>
+                <td>${h.amount ? Format.currency(h.amount) : '-'}</td>
+            </tr>
+        `).join('');
+    }
+
+    function filterHistory() {
+        const search = document.getElementById('searchHistory').value.toLowerCase();
+        const filtered = historyData.filter(h => 
+            h.customer.toLowerCase().includes(search) || 
+            h.details.toLowerCase().includes(search) ||
+            h.type.toLowerCase().includes(search)
+        );
+
+        const tbody = document.getElementById('historyTableBody');
+        document.getElementById('historyCount').textContent = filtered.length + ' activities';
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No matching activities found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = filtered.slice(0, 100).map(h => `
+            <tr>
+                <td>${Format.date(h.date)}</td>
+                <td><strong>${h.customer}</strong></td>
+                <td><span class="badge ${h.badge}">${h.type}</span></td>
+                <td>${h.details}</td>
+                <td>${h.amount ? Format.currency(h.amount) : '-'}</td>
+            </tr>
+        `).join('');
+    }
+</script>
+}

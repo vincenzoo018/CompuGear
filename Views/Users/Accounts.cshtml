@@ -34,7 +34,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-value">12</div>
+                <div class="stat-value" id="totalUsers">0</div>
                 <div class="stat-label">Total Users</div>
             </div>
         </div>
@@ -47,7 +47,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-value">10</div>
+                <div class="stat-value" id="activeUsers">0</div>
                 <div class="stat-label">Active Users</div>
             </div>
         </div>
@@ -60,7 +60,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-value">2</div>
+                <div class="stat-value" id="inactiveUsers">0</div>
                 <div class="stat-label">Inactive Users</div>
             </div>
         </div>
@@ -73,7 +73,7 @@
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-value">3</div>
+                <div class="stat-value" id="adminUsers">0</div>
                 <div class="stat-label">Administrators</div>
             </div>
         </div>
@@ -144,167 +144,8 @@
                         <th class="text-center" style="width: 120px;">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr data-id="1">
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="avatar avatar-sm">
-                                    <span class="avatar-text bg-primary">SA</span>
-                                </div>
-                                <div>
-                                    <strong>System Administrator</strong>
-                                    <div class="text-muted small">@@admin</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>admin@compugear.com</td>
-                        <td><span class="badge badge-error">Super Admin</span></td>
-                        <td><span class="badge badge-success"><span class="badge-dot"></span>Active</span></td>
-                        <td>
-                            <div>Jan 30, 2026</div>
-                            <div class="text-muted small">09:15 AM</div>
-                        </td>
-                        <td class="text-center">
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="viewUser(1)" title="View">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-warning" onclick="editUser(1)" title="Edit">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(1, 'System Administrator')" title="Delete">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr data-id="2">
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="avatar avatar-sm">
-                                    <span class="avatar-text bg-info">SJ</span>
-                                </div>
-                                <div>
-                                    <strong>Sarah Johnson</strong>
-                                    <div class="text-muted small">@@sarah.j</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>sarah.j@compugear.com</td>
-                        <td><span class="badge badge-info">Sales Staff</span></td>
-                        <td><span class="badge badge-success"><span class="badge-dot"></span>Active</span></td>
-                        <td>
-                            <div>Jan 30, 2026</div>
-                            <div class="text-muted small">08:45 AM</div>
-                        </td>
-                        <td class="text-center">
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="viewUser(2)" title="View">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-warning" onclick="editUser(2)" title="Edit">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(2, 'Sarah Johnson')" title="Delete">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr data-id="3">
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="avatar avatar-sm">
-                                    <span class="avatar-text bg-warning">MC</span>
-                                </div>
-                                <div>
-                                    <strong>Mike Chen</strong>
-                                    <div class="text-muted small">@@mike.c</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>mike.c@compugear.com</td>
-                        <td><span class="badge badge-warning">Support Staff</span></td>
-                        <td><span class="badge badge-success"><span class="badge-dot"></span>Active</span></td>
-                        <td>
-                            <div>Jan 29, 2026</div>
-                            <div class="text-muted small">05:30 PM</div>
-                        </td>
-                        <td class="text-center">
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="viewUser(3)" title="View">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-warning" onclick="editUser(3)" title="Edit">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(3, 'Mike Chen')" title="Delete">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr data-id="4">
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="avatar avatar-sm">
-                                    <span class="avatar-text bg-secondary">EB</span>
-                                </div>
-                                <div>
-                                    <strong>Emily Brown</strong>
-                                    <div class="text-muted small">@@emily.b</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>emily.b@compugear.com</td>
-                        <td><span class="badge badge-neutral">Marketing Staff</span></td>
-                        <td><span class="badge badge-neutral"><span class="badge-dot"></span>Inactive</span></td>
-                        <td>
-                            <div>Jan 25, 2026</div>
-                            <div class="text-muted small">02:15 PM</div>
-                        </td>
-                        <td class="text-center">
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-primary" onclick="viewUser(4)" title="View">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-warning" onclick="editUser(4)" title="Edit">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteUser(4, 'Emily Brown')" title="Delete">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                <tbody id="usersTableBody">
+                    <!-- Dynamic content loaded via JavaScript -->
                 </tbody>
             </table>
         </div>
@@ -556,112 +397,57 @@
 </div>
 
 @section Scripts {
+<script src="~/js/admin.js"></script>
 <script>
-    let currentUserId = null;
-    const usersData = [
-        { id: 1, firstName: 'System', lastName: 'Administrator', username: 'admin', email: 'admin@compugear.com', phone: '+63-900-000-0001', roleId: 1, roleName: 'Super Admin', isActive: true },
-        { id: 2, firstName: 'Sarah', lastName: 'Johnson', username: 'sarah.j', email: 'sarah.j@compugear.com', phone: '+63-900-000-0002', roleId: 3, roleName: 'Sales Staff', isActive: true },
-        { id: 3, firstName: 'Mike', lastName: 'Chen', username: 'mike.c', email: 'mike.c@compugear.com', phone: '+63-900-000-0003', roleId: 4, roleName: 'Support Staff', isActive: true },
-        { id: 4, firstName: 'Emily', lastName: 'Brown', username: 'emily.b', email: 'emily.b@compugear.com', phone: '+63-900-000-0004', roleId: 5, roleName: 'Marketing Staff', isActive: false }
-    ];
-
-    const roleBadgeClasses = { 1: 'badge-error', 2: 'badge-warning', 3: 'badge-info', 4: 'badge-warning', 5: 'badge-neutral', 6: 'badge-success' };
-
     document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('searchUsers').addEventListener('input', filterTable);
-        document.getElementById('filterRole').addEventListener('change', filterTable);
-        document.getElementById('filterStatus').addEventListener('change', filterTable);
+        Users.load();
+        
+        document.getElementById('searchUsers')?.addEventListener('input', filterUsers);
+        document.getElementById('filterRole')?.addEventListener('change', filterUsers);
+        document.getElementById('filterStatus')?.addEventListener('change', filterUsers);
     });
 
     function openCreateUserModal() {
-        currentUserId = null;
-        document.getElementById('modalTitle').textContent = 'Add New User';
-        document.getElementById('userForm').reset();
-        document.getElementById('userId').value = '0';
+        Users.showModal();
     }
 
     function viewUser(id) {
-        const user = usersData.find(u => u.id === id);
-        if (!user) return;
-        currentUserId = id;
-        document.getElementById('viewAvatar').textContent = user.firstName.charAt(0) + user.lastName.charAt(0);
-        document.getElementById('viewFullName').textContent = user.firstName + ' ' + user.lastName;
-        document.getElementById('viewUsername').textContent = '@@' + user.username;
-        document.getElementById('viewEmail').textContent = user.email;
-        document.getElementById('viewPhone').textContent = user.phone || 'Not provided';
-        document.getElementById('viewRole').innerHTML = '<span class="badge ' + roleBadgeClasses[user.roleId] + '">' + user.roleName + '</span>';
-        document.getElementById('viewStatus').innerHTML = user.isActive ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-neutral">Inactive</span>';
-        new bootstrap.Modal(document.getElementById('viewUserModal')).show();
+        Users.view(id);
     }
 
     function editUser(id) {
-        const user = usersData.find(u => u.id === id);
-        if (!user) return;
-        currentUserId = id;
-        document.getElementById('modalTitle').textContent = 'Edit User';
-        document.getElementById('userId').value = id;
-        document.getElementById('firstName').value = user.firstName;
-        document.getElementById('lastName').value = user.lastName;
-        document.getElementById('username').value = user.username;
-        document.getElementById('email').value = user.email;
-        document.getElementById('phone').value = user.phone || '';
-        document.getElementById('roleId').value = user.roleId;
-        document.getElementById('isActive').value = user.isActive.toString();
-        document.getElementById('password').value = '';
-        document.getElementById('confirmPassword').value = '';
-        new bootstrap.Modal(document.getElementById('userModal')).show();
+        Users.edit(id);
     }
 
     function editUserFromView() {
-        bootstrap.Modal.getInstance(document.getElementById('viewUserModal')).hide();
-        setTimeout(() => editUser(currentUserId), 300);
+        Modal.hide('viewUserModal');
+        setTimeout(() => Users.edit(Users.currentId), 300);
     }
 
     function deleteUser(id, name) {
-        currentUserId = id;
-        document.getElementById('deleteItemName').textContent = name;
-        new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
-        document.getElementById('confirmDeleteBtn').onclick = function() {
-            showToast('success', name + ' has been deleted successfully!');
-            bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
-            const row = document.querySelector('tr[data-id="' + id + '"]');
-            if (row) { row.style.transition = 'opacity 0.3s'; row.style.opacity = '0'; setTimeout(() => row.remove(), 300); }
-        };
+        if (confirm(`Are you sure you want to delete "${name}"?`)) {
+            Users.delete(id);
+        }
     }
 
     function saveUser(event) {
         event.preventDefault();
-        const userId = document.getElementById('userId').value;
-        const isNew = userId === '0';
-        showToast('success', isNew ? 'User created successfully!' : 'User updated successfully!');
-        bootstrap.Modal.getInstance(document.getElementById('userModal')).hide();
+        Users.save();
     }
 
-    function filterTable() {
-        const search = document.getElementById('searchUsers').value.toLowerCase();
-        const roleFilter = document.getElementById('filterRole').value;
-        const statusFilter = document.getElementById('filterStatus').value;
-        const rows = document.querySelectorAll('#usersTable tbody tr');
-        let visibleCount = 0;
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            const user = usersData.find(u => u.id === parseInt(row.dataset.id));
-            let show = true;
-            if (search && !text.includes(search)) show = false;
-            if (roleFilter && user && user.roleId !== parseInt(roleFilter)) show = false;
-            if (statusFilter === 'active' && user && !user.isActive) show = false;
-            if (statusFilter === 'inactive' && user && user.isActive) show = false;
-            row.style.display = show ? '' : 'none';
-            if (show) visibleCount++;
-        });
-        document.getElementById('userCount').textContent = visibleCount + ' users';
+    function filterUsers() {
+        const search = (document.getElementById('searchUsers')?.value || '').toLowerCase();
+        const role = document.getElementById('filterRole')?.value || '';
+        const status = document.getElementById('filterStatus')?.value || '';
+        
+        Users.filter(search, role, status);
     }
 
     function resetFilters() {
         document.getElementById('searchUsers').value = '';
         document.getElementById('filterRole').value = '';
         document.getElementById('filterStatus').value = '';
-        filterTable();
+        Users.load();
     }
 
     function togglePassword(fieldId) {
@@ -669,13 +455,8 @@
         field.type = field.type === 'password' ? 'text' : 'password';
     }
 
-    function exportUsers() { showToast('success', 'Export started!'); }
-
-    function showToast(type, message) {
-        const toastId = type === 'success' ? 'successToast' : 'errorToast';
-        const messageId = type === 'success' ? 'successMessage' : 'errorMessage';
-        document.getElementById(messageId).textContent = message;
-        new bootstrap.Toast(document.getElementById(toastId)).show();
+    function exportUsers() {
+        Toast.success('Export started!');
     }
 </script>
 }

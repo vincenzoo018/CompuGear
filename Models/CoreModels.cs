@@ -194,6 +194,10 @@ namespace CompuGear.Models
         [NotMapped]
         public string FullName => $"{FirstName} {LastName}";
 
+        // For JSON binding (not stored in database)
+        [NotMapped]
+        public string? Password { get; set; }
+
         // Navigation Properties
         [ForeignKey("RoleId")]
         public virtual Role Role { get; set; } = null!;

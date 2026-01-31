@@ -11,32 +11,32 @@
     <div class="stat-card fade-in">
         <div class="stat-info">
             <span class="stat-label">Total Inventory Value</span>
-            <span class="stat-value">$331,500</span>
+            <span class="stat-value" id="totalInventoryValue">₱0</span>
         </div>
     </div>
     <div class="stat-card fade-in">
         <div class="stat-info">
-            <span class="stat-label">Items Sold (This Month)</span>
-            <span class="stat-value">234</span>
+            <span class="stat-label">Total Products</span>
+            <span class="stat-value" id="totalProductCount">0</span>
         </div>
     </div>
     <div class="stat-card fade-in">
         <div class="stat-info">
-            <span class="stat-label">Stock Turnover Rate</span>
-            <span class="stat-value">4.2x</span>
+            <span class="stat-label">Total Stock Units</span>
+            <span class="stat-value" id="totalStockUnits">0</span>
         </div>
     </div>
     <div class="stat-card fade-in">
         <div class="stat-info">
-            <span class="stat-label">Restock Orders</span>
-            <span class="stat-value">12</span>
+            <span class="stat-label">Low Stock Items</span>
+            <span class="stat-value" id="lowStockItems">0</span>
         </div>
     </div>
 </div>
 
 <div class="card fade-in">
     <div class="card-header">
-        <h3 class="card-title">Inventory Movement</h3>
+        <h3 class="card-title">Stock Distribution by Category</h3>
     </div>
     <div class="card-body">
         <div class="chart-container">
@@ -46,35 +46,75 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/admin.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const ctx = document.getElementById('inventoryChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-                datasets: [{
-                    label: 'Stock In',
-                    data: [120, 85, 150, 95],
-                    borderColor: '#10B981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }, {
-                    label: 'Stock Out',
-                    data: [90, 110, 75, 125],
-                    borderColor: '#EF4444',
-                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'top' } },
-                scales: { y: { beginAtZero: true } }
-            }
+        let inventoryChart = null;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadInventoryReport();
         });
+
+        async function loadInventoryReport() {
+            try {
+                const products = await API.get('/products');
+                
+                // Calculate stats
+                const totalValue = products.reduce((sum, p) => sum + (p.stockQuantity * (p.costPrice || p.price || 0)), 0);
+                const totalUnits = products.reduce((sum, p) => sum + p.stockQuantity, 0);
+                const lowStock = products.filter(p => p.stockQuantity <= p.reorderLevel).length;
+
+                // Update stats
+                document.getElementById('totalInventoryValue').textContent = Format.currency(totalValue);
+                document.getElementById('totalProductCount').textContent = products.length;
+                document.getElementById('totalStockUnits').textContent = totalUnits.toLocaleString();
+                document.getElementById('lowStockItems').textContent = lowStock;
+
+                // Group by category for chart
+                const categoryData = {};
+                products.forEach(p => {
+                    const cat = p.categoryName || 'Uncategorized';
+                    if (!categoryData[cat]) categoryData[cat] = 0;
+                    categoryData[cat] += p.stockQuantity;
+                });
+
+                const labels = Object.keys(categoryData);
+                const data = Object.values(categoryData);
+                const colors = ['#008080', '#ff6b35', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B'];
+
+                // Create chart
+                const ctx = document.getElementById('inventoryChart').getContext('2d');
+                if (inventoryChart) inventoryChart.destroy();
+                inventoryChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: colors.slice(0, labels.length),
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { position: 'right' },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.label + ': ' + context.raw.toLocaleString() + ' units';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to load inventory report:', error);
+                Toast.error('Failed to load inventory report');
+            }
+        }
     </script>
 }

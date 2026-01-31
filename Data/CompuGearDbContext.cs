@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using CompuGear.Models;
 
-namespace CompuGear.Models
+namespace CompuGear.Data
 {
     /// <summary>
     /// CompuGear Database Context

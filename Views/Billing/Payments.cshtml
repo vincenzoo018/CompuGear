@@ -8,16 +8,17 @@
 </div>
 
 <div class="card fade-in">
-    <div class="card-header">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <div class="search-input">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <input type="text" placeholder="Search payments...">
+            <input type="text" id="searchPayments" placeholder="Search payments..." oninput="Billing.payments.filter()">
         </div>
+        <span class="badge bg-primary" id="paymentCount">0 payments</span>
     </div>
     <div class="card-body" style="padding: 0;">
-        <table class="data-table">
+        <table class="data-table" id="paymentsTable">
             <thead>
                 <tr>
                     <th>Transaction ID</th>
@@ -29,53 +30,18 @@
                     <th>Status</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td><strong>TXN-78945612</strong></td>
-                    <td>Acme Corporation</td>
-                    <td>#INV-2024-0155</td>
-                    <td>Jan 28, 2026</td>
-                    <td><span class="badge badge-info">Credit Card</span></td>
-                    <td>$2,450.00</td>
-                    <td><span class="badge badge-success">Completed</span></td>
-                </tr>
-                <tr>
-                    <td><strong>TXN-78945611</strong></td>
-                    <td>StartUp Hub</td>
-                    <td>#INV-2024-0153</td>
-                    <td>Jan 26, 2026</td>
-                    <td><span class="badge badge-warning">PayPal</span></td>
-                    <td>$890.00</td>
-                    <td><span class="badge badge-success">Completed</span></td>
-                </tr>
-                <tr>
-                    <td><strong>TXN-78945610</strong></td>
-                    <td>John Doe</td>
-                    <td>#INV-2024-0152</td>
-                    <td>Jan 25, 2026</td>
-                    <td><span class="badge badge-info">Credit Card</span></td>
-                    <td>$350.00</td>
-                    <td><span class="badge badge-success">Completed</span></td>
-                </tr>
-                <tr>
-                    <td><strong>TXN-78945609</strong></td>
-                    <td>Tech Solutions Inc</td>
-                    <td>#INV-2024-0151</td>
-                    <td>Jan 20, 2026</td>
-                    <td><span class="badge badge-neutral">Bank Transfer</span></td>
-                    <td>$8,500.00</td>
-                    <td><span class="badge badge-success">Completed</span></td>
-                </tr>
-                <tr>
-                    <td><strong>TXN-78945608</strong></td>
-                    <td>Jane Smith</td>
-                    <td>#INV-2024-0150</td>
-                    <td>Jan 18, 2026</td>
-                    <td><span class="badge badge-info">Credit Card</span></td>
-                    <td>$125.00</td>
-                    <td><span class="badge badge-error">Failed</span></td>
-                </tr>
+            <tbody id="paymentsTableBody">
+                <!-- Dynamic content loaded by admin.js -->
             </tbody>
         </table>
     </div>
 </div>
+
+@section Scripts {
+<script src="~/js/admin.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Billing.payments.load();
+    });
+</script>
+}

@@ -1,0 +1,773 @@
+@{
+    ViewData["Title"] = "Create Account";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CompuGear</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #008080;
+            --primary-dark: #006666;
+            --primary-light: #00a0a0;
+            --accent-color: #ff6b35;
+            --gradient-start: #008080;
+            --gradient-end: #004d4d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+            overflow-x: hidden;
+        }
+
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Left Side - Branding */
+        .brand-side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-side::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            animation: pulse 15s ease-in-out infinite;
+        }
+
+        @@keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .shape {
+            position: absolute;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .shape:nth-child(1) { width: 80px; height: 80px; top: 10%; left: 10%; animation-delay: 0s; }
+        .shape:nth-child(2) { width: 60px; height: 60px; top: 60%; left: 80%; animation-delay: 2s; }
+        .shape:nth-child(3) { width: 100px; height: 100px; top: 80%; left: 20%; animation-delay: 4s; }
+        .shape:nth-child(4) { width: 40px; height: 40px; top: 30%; left: 70%; animation-delay: 6s; }
+        .shape:nth-child(5) { width: 70px; height: 70px; top: 50%; left: 5%; animation-delay: 8s; }
+
+        @@keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(180deg); }
+        }
+
+        .brand-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            color: white;
+        }
+
+        .logo-container {
+            margin-bottom: 40px;
+        }
+
+        .logo-container img {
+            max-width: 250px;
+            filter: drop-shadow(0 10px 30px rgba(0,0,0,0.3));
+            animation: logoFloat 6s ease-in-out infinite;
+        }
+
+        @@keyframes logoFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .brand-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 20px rgba(0,0,0,0.3);
+        }
+
+        .brand-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .benefits-list {
+            list-style: none;
+            text-align: left;
+            max-width: 350px;
+            margin: 0 auto;
+        }
+
+        .benefits-list li {
+            padding: 15px 0;
+            font-size: 1rem;
+            display: flex;
+            align-items: flex-start;
+            opacity: 0.95;
+        }
+
+        .benefits-list li i {
+            font-size: 1.5rem;
+            margin-right: 15px;
+            color: var(--accent-color);
+            flex-shrink: 0;
+        }
+
+        .benefits-list li div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .benefits-list li strong {
+            margin-bottom: 2px;
+        }
+
+        .benefits-list li small {
+            opacity: 0.8;
+        }
+
+        /* Right Side - Form */
+        .form-side {
+            flex: 1.2;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 50px;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .form-side::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary-color), var(--accent-color));
+        }
+
+        .form-container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-header h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .form-header p {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .form-group .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 43px;
+            color: #999;
+            font-size: 1.1rem;
+            transition: color 0.3s;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 14px 14px 48px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(0,128,128,0.1);
+            outline: none;
+        }
+
+        .form-control:focus + .input-icon,
+        .form-control:not(:placeholder-shown) + .input-icon {
+            color: var(--primary-color);
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 43px;
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: color 0.3s;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary-color);
+        }
+
+        .row-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .row-group .form-group {
+            flex: 1;
+        }
+
+        .password-strength {
+            margin-top: 8px;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .strength-bar-fill {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s;
+        }
+
+        .strength-text {
+            font-size: 0.75rem;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        .terms-check {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .terms-check input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+            cursor: pointer;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .terms-check label {
+            font-size: 0.9rem;
+            color: #666;
+            cursor: pointer;
+        }
+
+        .terms-check a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .terms-check a:hover {
+            text-decoration: underline;
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-register::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-register:hover::before {
+            left: 100%;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,128,128,0.4);
+        }
+
+        .btn-register:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 25px 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e0e0e0;
+        }
+
+        .divider span {
+            padding: 0 20px;
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .social-login {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .social-btn:hover {
+            border-color: var(--primary-color);
+            background: #f8f9fa;
+        }
+
+        .login-link {
+            text-align: center;
+            color: #666;
+        }
+
+        .login-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .login-link a:hover {
+            color: var(--accent-color);
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-danger {
+            background: #fff5f5;
+            border: 1px solid #feb2b2;
+            color: #c53030;
+        }
+
+        .alert-success {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            color: #276749;
+        }
+
+        /* Responsive */
+        @@media (max-width: 992px) {
+            .auth-container {
+                flex-direction: column;
+            }
+
+            .brand-side {
+                padding: 40px;
+                min-height: 35vh;
+            }
+
+            .brand-title {
+                font-size: 2rem;
+            }
+
+            .benefits-list {
+                display: none;
+            }
+
+            .form-side {
+                padding: 40px 25px;
+            }
+
+            .form-side::before {
+                width: 100%;
+                height: 8px;
+                top: 0;
+                left: 0;
+            }
+
+            .row-group {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <!-- Left Side - Branding -->
+        <div class="brand-side">
+            <div class="floating-shapes">
+                <div class="shape"></div>
+                <div class="shape"></div>
+                <div class="shape"></div>
+                <div class="shape"></div>
+                <div class="shape"></div>
+            </div>
+            <div class="brand-content">
+                <div class="logo-container">
+                    <img src="/images/compugear-logo.png" alt="CompuGear Logo" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><circle cx=%22100%22 cy=%22100%22 r=%2280%22 fill=%22white%22/><text x=%22100%22 y=%22115%22 text-anchor=%22middle%22 font-size=%2250%22 font-family=%22Arial%22 fill=%22%23008080%22>CG</text></svg>';">
+                </div>
+                <h1 class="brand-title">CompuGear</h1>
+                <p class="brand-subtitle">Join Our Growing Community</p>
+                <ul class="benefits-list">
+                    <li>
+                        <i class="bi bi-gift"></i>
+                        <div>
+                            <strong>Welcome Discount</strong>
+                            <small>Get 10% off your first order</small>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="bi bi-truck"></i>
+                        <div>
+                            <strong>Free Shipping</strong>
+                            <small>On orders over ₱5,000</small>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="bi bi-star"></i>
+                        <div>
+                            <strong>Loyalty Points</strong>
+                            <small>Earn points on every purchase</small>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="bi bi-headset"></i>
+                        <div>
+                            <strong>Priority Support</strong>
+                            <small>Dedicated customer service</small>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Right Side - Register Form -->
+        <div class="form-side">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2>Create Account</h2>
+                    <p>Start your journey with CompuGear today</p>
+                </div>
+
+                <div class="alert alert-danger" id="alertError"></div>
+                <div class="alert alert-success" id="alertSuccess"></div>
+
+                <form id="registerForm" onsubmit="handleRegister(event)">
+                    <div class="row-group">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" class="form-control" id="firstName" placeholder="Enter first name" required>
+                            <i class="bi bi-person input-icon"></i>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" class="form-control" id="lastName" placeholder="Enter last name" required>
+                            <i class="bi bi-person input-icon"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" class="form-control" id="email" placeholder="Enter your email" required>
+                        <i class="bi bi-envelope input-icon"></i>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number (Optional)</label>
+                        <input type="tel" class="form-control" id="phone" placeholder="+63 XXX XXX XXXX">
+                        <i class="bi bi-telephone input-icon"></i>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" class="form-control" id="password" placeholder="Create a password" required minlength="8" oninput="checkPasswordStrength()">
+                        <i class="bi bi-lock input-icon"></i>
+                        <button type="button" class="password-toggle" onclick="togglePassword('password', 'toggleIcon1')">
+                            <i class="bi bi-eye" id="toggleIcon1"></i>
+                        </button>
+                        <div class="password-strength">
+                            <div class="strength-bar">
+                                <div class="strength-bar-fill" id="strengthBar"></div>
+                            </div>
+                            <div class="strength-text" id="strengthText"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm your password" required>
+                        <i class="bi bi-lock-fill input-icon"></i>
+                        <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword', 'toggleIcon2')">
+                            <i class="bi bi-eye" id="toggleIcon2"></i>
+                        </button>
+                    </div>
+
+                    <div class="terms-check">
+                        <input type="checkbox" id="agreeTerms" required>
+                        <label for="agreeTerms">
+                            I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-register" id="btnRegister">
+                        <span id="btnText">Create Account</span>
+                    </button>
+                </form>
+
+                <div class="divider">
+                    <span>or sign up with</span>
+                </div>
+
+                <div class="social-login">
+                    <button class="social-btn" type="button">
+                        <i class="bi bi-google" style="color: #db4437;"></i>
+                        Google
+                    </button>
+                    <button class="social-btn" type="button">
+                        <i class="bi bi-facebook" style="color: #4267b2;"></i>
+                        Facebook
+                    </button>
+                </div>
+
+                <p class="login-link">
+                    Already have an account? <a href="/Auth/Login">Sign In</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function togglePassword(inputId, iconId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleIcon = document.getElementById(iconId);
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('bi-eye');
+                toggleIcon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('bi-eye-slash');
+                toggleIcon.classList.add('bi-eye');
+            }
+        }
+
+        function checkPasswordStrength() {
+            const password = document.getElementById('password').value;
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthText = document.getElementById('strengthText');
+            
+            let strength = 0;
+            let text = '';
+            let color = '';
+
+            if (password.length >= 8) strength++;
+            if (password.length >= 12) strength++;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+            if (/\d/.test(password)) strength++;
+            if (/[^a-zA-Z\d]/.test(password)) strength++;
+
+            switch (strength) {
+                case 0:
+                case 1:
+                    text = 'Weak';
+                    color = '#dc3545';
+                    break;
+                case 2:
+                    text = 'Fair';
+                    color = '#ff6b35';
+                    break;
+                case 3:
+                    text = 'Good';
+                    color = '#ffc107';
+                    break;
+                case 4:
+                    text = 'Strong';
+                    color = '#28a745';
+                    break;
+                case 5:
+                    text = 'Very Strong';
+                    color = '#008080';
+                    break;
+            }
+
+            strengthBar.style.width = (strength * 20) + '%';
+            strengthBar.style.backgroundColor = color;
+            strengthText.textContent = password ? text : '';
+            strengthText.style.color = color;
+        }
+
+        function showAlert(type, message) {
+            const alertEl = document.getElementById(type === 'error' ? 'alertError' : 'alertSuccess');
+            const otherAlert = document.getElementById(type === 'error' ? 'alertSuccess' : 'alertError');
+            
+            otherAlert.style.display = 'none';
+            alertEl.textContent = message;
+            alertEl.style.display = 'block';
+            
+            if (type === 'error') {
+                setTimeout(() => {
+                    alertEl.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        async function handleRegister(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Check password match
+            if (password !== confirmPassword) {
+                showAlert('error', 'Passwords do not match');
+                return;
+            }
+
+            // Check password length
+            if (password.length < 8) {
+                showAlert('error', 'Password must be at least 8 characters');
+                return;
+            }
+            
+            const btn = document.getElementById('btnRegister');
+            const btnText = document.getElementById('btnText');
+            
+            btn.disabled = true;
+            btnText.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating account...';
+            
+            try {
+                const response = await fetch('/Auth/ProcessRegister', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        firstName: document.getElementById('firstName').value,
+                        lastName: document.getElementById('lastName').value,
+                        email: document.getElementById('email').value,
+                        phone: document.getElementById('phone').value,
+                        password: password,
+                        confirmPassword: confirmPassword
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('success', result.message + ' Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = result.redirectUrl || '/CustomerPortal';
+                    }, 1500);
+                } else {
+                    showAlert('error', result.message);
+                    btn.disabled = false;
+                    btnText.textContent = 'Create Account';
+                }
+            } catch (error) {
+                showAlert('error', 'An error occurred. Please try again.');
+                btn.disabled = false;
+                btnText.textContent = 'Create Account';
+            }
+        }
+    </script>
+</body>
+</html>

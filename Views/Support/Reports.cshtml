@@ -10,83 +10,141 @@
 <div class="stat-cards">
     <div class="stat-card fade-in">
         <div class="stat-info">
-            <span class="stat-label">Total Tickets (Month)</span>
-            <span class="stat-value">197</span>
-            <div class="stat-trend down">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
-                </svg>
-                <span>5.2% vs last month</span>
-            </div>
+            <span class="stat-label">Total Tickets</span>
+            <span class="stat-value" id="totalTickets">0</span>
         </div>
     </div>
     <div class="stat-card fade-in">
         <div class="stat-info">
             <span class="stat-label">Resolution Rate</span>
-            <span class="stat-value">94.5%</span>
-            <div class="stat-trend up">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-                </svg>
-                <span>2.1% improvement</span>
-            </div>
+            <span class="stat-value" id="resolutionRate">0%</span>
         </div>
     </div>
     <div class="stat-card fade-in">
         <div class="stat-info">
-            <span class="stat-label">Avg Response Time</span>
-            <span class="stat-value">2.4 hrs</span>
+            <span class="stat-label">Open Tickets</span>
+            <span class="stat-value" id="openTickets">0</span>
         </div>
     </div>
     <div class="stat-card fade-in">
         <div class="stat-info">
-            <span class="stat-label">Customer Satisfaction</span>
-            <span class="stat-value">4.7/5</span>
+            <span class="stat-label">High Priority</span>
+            <span class="stat-value" id="highPriorityTickets">0</span>
         </div>
     </div>
 </div>
 
-<div class="card fade-in">
-    <div class="card-header">
-        <h3 class="card-title">Tickets Over Time</h3>
+<div class="row">
+    <div class="col-md-8">
+        <div class="card fade-in">
+            <div class="card-header">
+                <h3 class="card-title">Tickets by Status</h3>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="ticketsChart"></canvas>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <div class="chart-container">
-            <canvas id="ticketsChart"></canvas>
+    <div class="col-md-4">
+        <div class="card fade-in">
+            <div class="card-header">
+                <h3 class="card-title">By Priority</h3>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="priorityChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
+    <script src="~/js/admin.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const ctx = document.getElementById('ticketsChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-                datasets: [{
-                    label: 'New Tickets',
-                    data: [45, 52, 48, 52],
-                    borderColor: '#008080',
-                    backgroundColor: 'rgba(0, 128, 128, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }, {
-                    label: 'Resolved',
-                    data: [42, 48, 50, 47],
-                    borderColor: '#10B981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'top' } },
-                scales: { y: { beginAtZero: true } }
-            }
+        let ticketsChart = null, priorityChart = null;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadSupportReport();
         });
+
+        async function loadSupportReport() {
+            try {
+                const tickets = await API.get('/tickets');
+                
+                // Calculate stats
+                const total = tickets.length;
+                const resolved = tickets.filter(t => t.status === 'Resolved' || t.status === 'Closed').length;
+                const open = tickets.filter(t => t.status === 'Open' || t.status === 'In Progress').length;
+                const highPriority = tickets.filter(t => t.priority === 'High' || t.priority === 'Critical').length;
+                const resolutionRate = total > 0 ? ((resolved / total) * 100).toFixed(1) : 0;
+
+                // Update stats
+                document.getElementById('totalTickets').textContent = total;
+                document.getElementById('resolutionRate').textContent = resolutionRate + '%';
+                document.getElementById('openTickets').textContent = open;
+                document.getElementById('highPriorityTickets').textContent = highPriority;
+
+                // Status chart
+                const statusCounts = { 'Open': 0, 'In Progress': 0, 'Resolved': 0, 'Closed': 0 };
+                tickets.forEach(t => {
+                    if (statusCounts.hasOwnProperty(t.status)) statusCounts[t.status]++;
+                    else statusCounts['Open']++;
+                });
+
+                const ctx1 = document.getElementById('ticketsChart').getContext('2d');
+                if (ticketsChart) ticketsChart.destroy();
+                ticketsChart = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(statusCounts),
+                        datasets: [{
+                            data: Object.values(statusCounts),
+                            backgroundColor: ['#3B82F6', '#F59E0B', '#10B981', '#6B7280'],
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+
+                // Priority chart
+                const priorityCounts = { 'Low': 0, 'Medium': 0, 'High': 0, 'Critical': 0 };
+                tickets.forEach(t => {
+                    if (priorityCounts.hasOwnProperty(t.priority)) priorityCounts[t.priority]++;
+                    else priorityCounts['Medium']++;
+                });
+
+                const ctx2 = document.getElementById('priorityChart').getContext('2d');
+                if (priorityChart) priorityChart.destroy();
+                priorityChart = new Chart(ctx2, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(priorityCounts),
+                        datasets: [{
+                            data: Object.values(priorityCounts),
+                            backgroundColor: ['#10B981', '#F59E0B', '#EF4444', '#991B1B'],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to load support report:', error);
+                Toast.error('Failed to load support report');
+            }
+        }
     </script>
 }

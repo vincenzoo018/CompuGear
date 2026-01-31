@@ -7,61 +7,100 @@
         <h1 class="page-title">Customer Segments</h1>
         <p class="page-subtitle">Group customers for targeted marketing</p>
     </div>
-    <button class="btn btn-primary">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-        Create Segment
-    </button>
 </div>
 
-<div class="grid grid-2">
-    <div class="card fade-in">
-        <div class="card-header">
-            <h3 class="card-title">High-Value Customers</h3>
-            <span class="badge badge-success">845 customers</span>
-        </div>
-        <div class="card-body">
-            <p class="text-muted">Customers with lifetime value > $5,000</p>
-            <p class="mb-1"><strong>Avg. Order Value:</strong> $2,450</p>
-            <p class="mb-0"><strong>Avg. Orders:</strong> 12 per year</p>
-        </div>
-    </div>
-
-    <div class="card fade-in">
-        <div class="card-header">
-            <h3 class="card-title">New Customers</h3>
-            <span class="badge badge-info">324 customers</span>
-        </div>
-        <div class="card-body">
-            <p class="text-muted">Customers acquired in last 30 days</p>
-            <p class="mb-1"><strong>Avg. First Order:</strong> $890</p>
-            <p class="mb-0"><strong>Conversion Source:</strong> 45% Website, 35% Referral</p>
-        </div>
-    </div>
-
-    <div class="card fade-in">
-        <div class="card-header">
-            <h3 class="card-title">At-Risk Customers</h3>
-            <span class="badge badge-warning">156 customers</span>
-        </div>
-        <div class="card-body">
-            <p class="text-muted">No purchase in last 90 days</p>
-            <p class="mb-1"><strong>Previous Avg. Value:</strong> $1,200</p>
-            <p class="mb-0"><strong>Win-back Rate:</strong> 23%</p>
-        </div>
-    </div>
-
-    <div class="card fade-in">
-        <div class="card-header">
-            <h3 class="card-title">Business Accounts</h3>
-            <span class="badge badge-neutral">89 customers</span>
-        </div>
-        <div class="card-body">
-            <p class="text-muted">B2B and enterprise customers</p>
-            <p class="mb-1"><strong>Avg. Order Value:</strong> $8,500</p>
-            <p class="mb-0"><strong>Total Revenue Share:</strong> 62%</p>
-        </div>
-    </div>
+<div class="grid grid-2" id="segmentsContainer">
+    <!-- Dynamic content loaded from customers -->
 </div>
+
+@section Scripts {
+<script src="~/js/admin.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadSegments();
+    });
+
+    async function loadSegments() {
+        try {
+            const customers = await API.get('/customers');
+            const now = new Date();
+            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
+            // Calculate segments
+            const segments = {
+                vip: customers.filter(c => c.customerType === 'VIP' || c.customerType === 'Premium'),
+                business: customers.filter(c => c.customerType === 'Business' || c.companyName),
+                newCustomers: customers.filter(c => new Date(c.createdAt) >= thirtyDaysAgo),
+                regular: customers.filter(c => c.customerType === 'Regular' || !c.customerType)
+            };
+
+            const container = document.getElementById('segmentsContainer');
+            container.innerHTML = `
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <h3 class="card-title">VIP & Premium Customers</h3>
+                        <span class="badge badge-success">${segments.vip.length} customers</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">High-value customers with VIP or Premium status</p>
+                        <p class="mb-1"><strong>Customer Type:</strong> VIP / Premium</p>
+                        <p class="mb-0"><strong>Priority:</strong> High priority support</p>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <h3 class="card-title">Business Accounts</h3>
+                        <span class="badge badge-info">${segments.business.length} customers</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">B2B and enterprise customers</p>
+                        <p class="mb-1"><strong>Customer Type:</strong> Business</p>
+                        <p class="mb-0"><strong>Features:</strong> Bulk orders, invoicing</p>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <h3 class="card-title">New Customers</h3>
+                        <span class="badge badge-warning">${segments.newCustomers.length} customers</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Customers acquired in last 30 days</p>
+                        <p class="mb-1"><strong>Onboarding:</strong> Welcome emails sent</p>
+                        <p class="mb-0"><strong>Focus:</strong> First purchase incentives</p>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <h3 class="card-title">Regular Customers</h3>
+                        <span class="badge badge-neutral">${segments.regular.length} customers</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Standard customer accounts</p>
+                        <p class="mb-1"><strong>Engagement:</strong> Newsletter, promotions</p>
+                        <p class="mb-0"><strong>Potential:</strong> Upgrade to VIP</p>
+                    </div>
+                </div>
+
+                <div class="card fade-in">
+                    <div class="card-header">
+                        <h3 class="card-title">All Customers</h3>
+                        <span class="badge bg-primary">${customers.length} total</span>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Complete customer database</p>
+                        <p class="mb-1"><strong>Active:</strong> ${customers.filter(c => c.isActive !== false).length} active</p>
+                        <p class="mb-0"><strong>With Email:</strong> ${customers.filter(c => c.email).length} contactable</p>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            console.error('Failed to load segments:', error);
+            Toast.error('Failed to load customer segments');
+        }
+    }
+</script>
+}

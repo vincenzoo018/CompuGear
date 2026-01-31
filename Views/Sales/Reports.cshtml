@@ -11,43 +11,43 @@
     <div class="stat-card fade-in">
         <div class="stat-info">
             <span class="stat-label">This Month</span>
-            <span class="stat-value">$45,230</span>
+            <span class="stat-value" id="thisMonthSales">₱0</span>
             <div class="stat-trend up">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
                 </svg>
-                <span>18.5% vs last month</span>
+                <span id="monthTrend">Calculating...</span>
             </div>
         </div>
     </div>
     <div class="stat-card fade-in">
         <div class="stat-info">
             <span class="stat-label">This Quarter</span>
-            <span class="stat-value">$128,450</span>
+            <span class="stat-value" id="thisQuarterSales">₱0</span>
             <div class="stat-trend up">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
                 </svg>
-                <span>12.3% vs last quarter</span>
+                <span id="quarterTrend">Calculating...</span>
             </div>
         </div>
     </div>
     <div class="stat-card fade-in">
         <div class="stat-info">
             <span class="stat-label">This Year</span>
-            <span class="stat-value">$542,100</span>
+            <span class="stat-value" id="thisYearSales">₱0</span>
             <div class="stat-trend up">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
                 </svg>
-                <span>25.7% vs last year</span>
+                <span id="yearTrend">Calculating...</span>
             </div>
         </div>
     </div>
     <div class="stat-card fade-in">
         <div class="stat-info">
             <span class="stat-label">Avg Order Value</span>
-            <span class="stat-value">$1,245</span>
+            <span class="stat-value" id="avgOrderValue">₱0</span>
         </div>
     </div>
 </div>
@@ -64,31 +64,89 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/admin.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const ctx = document.getElementById('salesChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                datasets: [{
-                    label: 'Sales',
-                    data: [32000, 28000, 35000, 42000, 38000, 45000, 52000, 48000, 55000, 58000, 62000, 45230],
-                    backgroundColor: '#008080',
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { callback: value => '$' + (value / 1000) + 'k' }
-                    }
-                }
-            }
+        let salesChart = null;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadSalesReport();
         });
+
+        async function loadSalesReport() {
+            try {
+                const orders = await API.get('/orders');
+                const now = new Date();
+                const currentMonth = now.getMonth();
+                const currentYear = now.getFullYear();
+                const currentQuarter = Math.floor(currentMonth / 3);
+
+                // Calculate totals
+                let thisMonth = 0, thisQuarter = 0, thisYear = 0, totalOrders = 0;
+                const monthlyData = Array(12).fill(0);
+
+                orders.forEach(order => {
+                    const orderDate = new Date(order.orderDate);
+                    const orderYear = orderDate.getFullYear();
+                    const orderMonth = orderDate.getMonth();
+                    const orderQuarter = Math.floor(orderMonth / 3);
+                    const amount = order.totalAmount || 0;
+
+                    if (orderYear === currentYear) {
+                        thisYear += amount;
+                        monthlyData[orderMonth] += amount;
+                        
+                        if (orderQuarter === currentQuarter) {
+                            thisQuarter += amount;
+                        }
+                        if (orderMonth === currentMonth) {
+                            thisMonth += amount;
+                        }
+                    }
+                    totalOrders++;
+                });
+
+                const avgOrder = totalOrders > 0 ? thisYear / totalOrders : 0;
+
+                // Update stats
+                document.getElementById('thisMonthSales').textContent = Format.currency(thisMonth);
+                document.getElementById('thisQuarterSales').textContent = Format.currency(thisQuarter);
+                document.getElementById('thisYearSales').textContent = Format.currency(thisYear);
+                document.getElementById('avgOrderValue').textContent = Format.currency(avgOrder);
+                document.getElementById('monthTrend').textContent = 'Based on ' + orders.filter(o => new Date(o.orderDate).getMonth() === currentMonth).length + ' orders';
+                document.getElementById('quarterTrend').textContent = 'Q' + (currentQuarter + 1) + ' ' + currentYear;
+                document.getElementById('yearTrend').textContent = currentYear + ' total';
+
+                // Create chart
+                const ctx = document.getElementById('salesChart').getContext('2d');
+                if (salesChart) salesChart.destroy();
+                salesChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        datasets: [{
+                            label: 'Sales',
+                            data: monthlyData,
+                            backgroundColor: '#008080',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { callback: value => '₱' + (value / 1000).toFixed(0) + 'k' }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to load sales report:', error);
+                Toast.error('Failed to load sales report');
+            }
+        }
     </script>
 }

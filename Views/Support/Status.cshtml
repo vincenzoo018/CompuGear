@@ -10,25 +10,25 @@
 <div class="grid grid-4">
     <div class="card fade-in">
         <div class="card-body" style="text-align: center;">
-            <h2 style="font-size: 2.5rem; color: var(--warning); margin-bottom: 0.5rem;">24</h2>
+            <h2 style="font-size: 2.5rem; color: var(--warning); margin-bottom: 0.5rem;" id="openCount">0</h2>
             <p class="text-muted mb-0">Open</p>
         </div>
     </div>
     <div class="card fade-in">
         <div class="card-body" style="text-align: center;">
-            <h2 style="font-size: 2.5rem; color: var(--info); margin-bottom: 0.5rem;">12</h2>
+            <h2 style="font-size: 2.5rem; color: var(--info); margin-bottom: 0.5rem;" id="progressCount">0</h2>
             <p class="text-muted mb-0">In Progress</p>
         </div>
     </div>
     <div class="card fade-in">
         <div class="card-body" style="text-align: center;">
-            <h2 style="font-size: 2.5rem; color: var(--pending); margin-bottom: 0.5rem;">5</h2>
+            <h2 style="font-size: 2.5rem; color: var(--pending); margin-bottom: 0.5rem;" id="pendingCount">0</h2>
             <p class="text-muted mb-0">Pending</p>
         </div>
     </div>
     <div class="card fade-in">
         <div class="card-body" style="text-align: center;">
-            <h2 style="font-size: 2.5rem; color: var(--success); margin-bottom: 0.5rem;">156</h2>
+            <h2 style="font-size: 2.5rem; color: var(--success); margin-bottom: 0.5rem;" id="resolvedCount">0</h2>
             <p class="text-muted mb-0">Resolved</p>
         </div>
     </div>
@@ -46,26 +46,58 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/admin.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const ctx = document.getElementById('statusChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Open', 'In Progress', 'Pending', 'Resolved'],
-                datasets: [{
-                    data: [24, 12, 5, 156],
-                    backgroundColor: ['#F59E0B', '#3B82F6', '#F97316', '#10B981'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'bottom' }
-                }
-            }
+        let statusChart = null;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadTicketStatus();
         });
+
+        async function loadTicketStatus() {
+            try {
+                const tickets = await API.get('/tickets');
+                
+                // Count by status
+                const statusCounts = { 'Open': 0, 'In Progress': 0, 'Pending': 0, 'Resolved': 0, 'Closed': 0 };
+                tickets.forEach(t => {
+                    if (statusCounts.hasOwnProperty(t.status)) statusCounts[t.status]++;
+                    else statusCounts['Open']++;
+                });
+
+                // Update stat cards
+                document.getElementById('openCount').textContent = statusCounts['Open'];
+                document.getElementById('progressCount').textContent = statusCounts['In Progress'];
+                document.getElementById('pendingCount').textContent = statusCounts['Pending'];
+                document.getElementById('resolvedCount').textContent = statusCounts['Resolved'] + statusCounts['Closed'];
+
+                // Create chart
+                const ctx = document.getElementById('statusChart').getContext('2d');
+                if (statusChart) statusChart.destroy();
+                statusChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(statusCounts),
+                        datasets: [{
+                            data: Object.values(statusCounts),
+                            backgroundColor: ['#F59E0B', '#3B82F6', '#F97316', '#10B981', '#6B7280'],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to load ticket status:', error);
+                Toast.error('Failed to load ticket status');
+            }
+        }
     </script>
 }

@@ -1,10 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using CompuGear.Models;
+using CompuGear.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        // Suppress automatic 400 response for invalid model states
+        // This allows us to handle validation errors in the controllers
+        options.SuppressModelStateInvalidFilter = true;
+    });
 
 // Add Entity Framework DbContext
 builder.Services.AddDbContext<CompuGearDbContext>(options =>

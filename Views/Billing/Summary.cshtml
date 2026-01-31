@@ -11,37 +11,25 @@
     <div class="stat-card fade-in">
         <div class="stat-info">
             <span class="stat-label">Total Revenue (YTD)</span>
-            <span class="stat-value">$542,100</span>
-            <div class="stat-trend up">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-                </svg>
-                <span>25.7% vs last year</span>
-            </div>
+            <span class="stat-value" id="totalRevenue">₱0</span>
         </div>
     </div>
     <div class="stat-card fade-in">
         <div class="stat-info">
             <span class="stat-label">This Month</span>
-            <span class="stat-value">$128,450</span>
-            <div class="stat-trend up">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-                </svg>
-                <span>15.3% vs last month</span>
-            </div>
+            <span class="stat-value" id="thisMonthRevenue">₱0</span>
         </div>
     </div>
     <div class="stat-card fade-in">
         <div class="stat-info">
             <span class="stat-label">Outstanding</span>
-            <span class="stat-value">$45,230</span>
+            <span class="stat-value" id="outstandingAmount">₱0</span>
         </div>
     </div>
     <div class="stat-card fade-in">
         <div class="stat-info">
-            <span class="stat-label">Profit Margin</span>
-            <span class="stat-value">32.5%</span>
+            <span class="stat-label">Total Paid</span>
+            <span class="stat-value" id="totalPaid">₱0</span>
         </div>
     </div>
 </div>
@@ -60,7 +48,7 @@
 
     <div class="card fade-in">
         <div class="card-header">
-            <h3 class="card-title">Revenue by Category</h3>
+            <h3 class="card-title">Invoice Status</h3>
         </div>
         <div class="card-body">
             <div class="chart-container">
@@ -71,48 +59,108 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/admin.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Revenue Chart
-        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-        new Chart(revenueCtx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                datasets: [{
-                    label: 'Revenue',
-                    data: [45000, 52000, 48000, 61000, 55000, 67000, 58000, 72000, 65000, 78000, 82000, 128450],
-                    borderColor: '#008080',
-                    backgroundColor: 'rgba(0, 128, 128, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + (v/1000) + 'k' } } }
-            }
+        let revenueChart = null, categoryChart = null;
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadFinancialSummary();
         });
 
-        // Category Chart
-        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-        new Chart(categoryCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Laptops', 'Desktops', 'Accessories', 'Software', 'Services'],
-                datasets: [{
-                    data: [35, 25, 20, 12, 8],
-                    backgroundColor: ['#008080', '#10B981', '#3B82F6', '#F59E0B', '#F97316'],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom' } }
+        async function loadFinancialSummary() {
+            try {
+                const [invoices, orders] = await Promise.all([
+                    API.get('/invoices'),
+                    API.get('/orders')
+                ]);
+
+                const now = new Date();
+                const currentMonth = now.getMonth();
+                const currentYear = now.getFullYear();
+
+                // Calculate totals from orders
+                let totalRevenue = 0, thisMonth = 0;
+                const monthlyData = Array(12).fill(0);
+
+                orders.forEach(o => {
+                    const orderDate = new Date(o.orderDate);
+                    const amount = o.totalAmount || 0;
+
+                    if (orderDate.getFullYear() === currentYear) {
+                        totalRevenue += amount;
+                        monthlyData[orderDate.getMonth()] += amount;
+                        
+                        if (orderDate.getMonth() === currentMonth) {
+                            thisMonth += amount;
+                        }
+                    }
+                });
+
+                // Calculate invoice stats
+                const totalInvoiced = invoices.reduce((sum, i) => sum + (i.totalAmount || 0), 0);
+                const totalPaid = invoices.filter(i => i.status === 'Paid').reduce((sum, i) => sum + (i.totalAmount || 0), 0);
+                const outstanding = invoices.filter(i => i.status === 'Pending' || i.status === 'Overdue').reduce((sum, i) => sum + (i.totalAmount || 0), 0);
+
+                // Update stats
+                document.getElementById('totalRevenue').textContent = Format.currency(totalRevenue);
+                document.getElementById('thisMonthRevenue').textContent = Format.currency(thisMonth);
+                document.getElementById('outstandingAmount').textContent = Format.currency(outstanding);
+                document.getElementById('totalPaid').textContent = Format.currency(totalPaid);
+
+                // Revenue trend chart
+                const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+                if (revenueChart) revenueChart.destroy();
+                revenueChart = new Chart(revenueCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        datasets: [{
+                            label: 'Revenue',
+                            data: monthlyData,
+                            borderColor: '#008080',
+                            backgroundColor: 'rgba(0, 128, 128, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true, ticks: { callback: v => '₱' + (v/1000).toFixed(0) + 'k' } } }
+                    }
+                });
+
+                // Invoice status chart
+                const statusCounts = { 'Paid': 0, 'Pending': 0, 'Overdue': 0, 'Draft': 0 };
+                invoices.forEach(i => {
+                    if (statusCounts.hasOwnProperty(i.status)) statusCounts[i.status]++;
+                });
+
+                const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+                if (categoryChart) categoryChart.destroy();
+                categoryChart = new Chart(categoryCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(statusCounts),
+                        datasets: [{
+                            data: Object.values(statusCounts),
+                            backgroundColor: ['#10B981', '#F59E0B', '#EF4444', '#6B7280'],
+                            borderWidth: 2,
+                            borderColor: '#fff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } }
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to load financial summary:', error);
+                Toast.error('Failed to load financial summary');
             }
-        });
+        }
     </script>
 }
