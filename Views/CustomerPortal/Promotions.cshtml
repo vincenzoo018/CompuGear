@@ -1,0 +1,274 @@
+@{
+    ViewData["Title"] = "Promotions & Deals";
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+}
+
+<!-- Hero Banner -->
+<div class="promo-banner mb-4" style="background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 50%, #ffa64d 100%); padding: 50px 40px;">
+    <div class="row align-items-center">
+        <div class="col-lg-7">
+            <span style="background: rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 20px; font-size: 0.9rem; font-weight: 600;">🔥 LIMITED TIME OFFER</span>
+            <h1 style="font-size: 3rem; font-weight: 800; margin: 20px 0 15px;">Gaming Week Sale!</h1>
+            <p style="font-size: 1.3rem; opacity: 0.95; margin-bottom: 25px;">Get up to <strong>30% OFF</strong> on all gaming peripherals. Upgrade your setup today!</p>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <a href="/CustomerPortal/Products?category=gaming" class="btn-shop" style="padding: 15px 35px; font-size: 1.1rem;">
+                    Shop Gaming Gear
+                </a>
+                <div style="background: rgba(255,255,255,0.2); padding: 12px 25px; border-radius: 50px; display: inline-flex; align-items: center; gap: 15px;">
+                    <span style="font-weight: 500;">Ends in:</span>
+                    <div style="display: flex; gap: 10px;">
+                        <div style="background: white; color: #ff6b35; padding: 8px 12px; border-radius: 8px; font-weight: 700;">05</div>
+                        <div style="background: white; color: #ff6b35; padding: 8px 12px; border-radius: 8px; font-weight: 700;">12</div>
+                        <div style="background: white; color: #ff6b35; padding: 8px 12px; border-radius: 8px; font-weight: 700;">36</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5 text-center d-none d-lg-block">
+            <div style="font-size: 10rem; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2));">🎮</div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Promotions -->
+<h3 style="font-weight: 700; color: #1f2937; margin-bottom: 25px;">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2" style="margin-right: 10px; vertical-align: middle;">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+    </svg>
+    Active Promotions from Marketing
+</h3>
+
+<div class="row g-4 mb-5">
+    <!-- Promo Card 1 -->
+    <div class="col-md-6">
+        <div class="portal-card h-100" style="border: 2px solid #ff6b35; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 15px; right: 15px; background: #ff6b35; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">
+                🔥 HOT DEAL
+            </div>
+            <div class="d-flex align-items-start gap-4">
+                <div style="font-size: 4rem;">⌨️</div>
+                <div>
+                    <h5 style="font-weight: 700; color: #1f2937;">Gaming Keyboards - 20% OFF</h5>
+                    <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 15px;">
+                        Upgrade your gaming experience with our premium mechanical keyboards. All Razer and Corsair keyboards included!
+                    </p>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
+                        <span style="background: #f0fdf4; color: #10b981; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">Use Code: KEYBOARD20</span>
+                        <span style="color: #6b7280; font-size: 0.85rem;">Valid until Feb 15, 2026</span>
+                    </div>
+                    <a href="/CustomerPortal/Products?category=keyboards" style="color: #ff6b35; font-weight: 600; text-decoration: none;">Shop Now →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Promo Card 2 -->
+    <div class="col-md-6">
+        <div class="portal-card h-100" style="border: 2px solid #10b981; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 15px; right: 15px; background: #10b981; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">
+                🚚 FREE SHIPPING
+            </div>
+            <div class="d-flex align-items-start gap-4">
+                <div style="font-size: 4rem;">📦</div>
+                <div>
+                    <h5 style="font-weight: 700; color: #1f2937;">Free Shipping on Orders ₱5,000+</h5>
+                    <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 15px;">
+                        Enjoy free nationwide delivery on all orders over ₱5,000. No code needed - automatically applied at checkout!
+                    </p>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
+                        <span style="background: #f0fdf4; color: #10b981; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">Auto-Applied</span>
+                        <span style="color: #6b7280; font-size: 0.85rem;">Limited time offer</span>
+                    </div>
+                    <a href="/CustomerPortal/Products" style="color: #10b981; font-weight: 600; text-decoration: none;">Start Shopping →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Promo Card 3 -->
+    <div class="col-md-6">
+        <div class="portal-card h-100" style="border: 2px solid #8b5cf6; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 15px; right: 15px; background: #8b5cf6; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">
+                🎁 BUNDLE DEAL
+            </div>
+            <div class="d-flex align-items-start gap-4">
+                <div style="font-size: 4rem;">🎮</div>
+                <div>
+                    <h5 style="font-weight: 700; color: #1f2937;">Gaming Bundle - Save ₱3,000!</h5>
+                    <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 15px;">
+                        Get a complete gaming setup: Keyboard + Mouse + Headset + Mousepad at a special bundle price!
+                    </p>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
+                        <span style="background: #f5f3ff; color: #8b5cf6; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">Use Code: BUNDLE3K</span>
+                        <span style="color: #6b7280; font-size: 0.85rem;">While stocks last</span>
+                    </div>
+                    <a href="/CustomerPortal/Products?bundle=gaming" style="color: #8b5cf6; font-weight: 600; text-decoration: none;">View Bundle →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Promo Card 4 -->
+    <div class="col-md-6">
+        <div class="portal-card h-100" style="border: 2px solid #f59e0b; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 15px; right: 15px; background: #f59e0b; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">
+                ⭐ LOYALTY BONUS
+            </div>
+            <div class="d-flex align-items-start gap-4">
+                <div style="font-size: 4rem;">🏆</div>
+                <div>
+                    <h5 style="font-weight: 700; color: #1f2937;">Double Loyalty Points!</h5>
+                    <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 15px;">
+                        Earn 2x loyalty points on all purchases this month. Redeem points for discounts on future orders!
+                    </p>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
+                        <span style="background: #fffbeb; color: #f59e0b; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">Auto-Applied for Members</span>
+                        <span style="color: #6b7280; font-size: 0.85rem;">January 2026 only</span>
+                    </div>
+                    <a href="/CustomerPortal/Profile" style="color: #f59e0b; font-weight: 600; text-decoration: none;">Check My Points →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Flash Sales Section -->
+<div class="portal-card mb-4" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 style="font-weight: 700; margin: 0;">
+            ⚡ Flash Sale - Ends in <span style="color: #ff6b35;">02:45:30</span>
+        </h4>
+        <a href="/CustomerPortal/Products?sale=flash" style="color: #20b2aa; text-decoration: none; font-weight: 500;">View All →</a>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 10px;">🖱️</div>
+                <div style="font-size: 0.8rem; color: #20b2aa; text-transform: uppercase; letter-spacing: 1px;">Gaming Mice</div>
+                <div style="font-weight: 600; margin: 5px 0;">Razer DeathAdder V3</div>
+                <div style="display: flex; justify-content: center; gap: 10px; margin: 10px 0;">
+                    <span style="color: #ff6b35; font-size: 1.3rem; font-weight: 700;">₱4,200</span>
+                    <span style="color: #9ca3af; text-decoration: line-through;">₱5,500</span>
+                </div>
+                <div style="background: #ff6b35; color: white; padding: 3px 10px; border-radius: 10px; display: inline-block; font-size: 0.8rem; font-weight: 600;">-24% OFF</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 10px;">🎧</div>
+                <div style="font-size: 0.8rem; color: #20b2aa; text-transform: uppercase; letter-spacing: 1px;">Headsets</div>
+                <div style="font-weight: 600; margin: 5px 0;">SteelSeries Arctis Nova 7</div>
+                <div style="display: flex; justify-content: center; gap: 10px; margin: 10px 0;">
+                    <span style="color: #ff6b35; font-size: 1.3rem; font-weight: 700;">₱9,500</span>
+                    <span style="color: #9ca3af; text-decoration: line-through;">₱12,000</span>
+                </div>
+                <div style="background: #ff6b35; color: white; padding: 3px 10px; border-radius: 10px; display: inline-block; font-size: 0.8rem; font-weight: 600;">-21% OFF</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 10px;">💾</div>
+                <div style="font-size: 0.8rem; color: #20b2aa; text-transform: uppercase; letter-spacing: 1px;">Storage</div>
+                <div style="font-weight: 600; margin: 5px 0;">WD Black SN850X 2TB</div>
+                <div style="display: flex; justify-content: center; gap: 10px; margin: 10px 0;">
+                    <span style="color: #ff6b35; font-size: 1.3rem; font-weight: 700;">₱11,200</span>
+                    <span style="color: #9ca3af; text-decoration: line-through;">₱14,000</span>
+                </div>
+                <div style="background: #ff6b35; color: white; padding: 3px 10px; border-radius: 10px; display: inline-block; font-size: 0.8rem; font-weight: 600;">-20% OFF</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div style="background: rgba(255,255,255,0.1); border-radius: 16px; padding: 20px; text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 10px;">⌨️</div>
+                <div style="font-size: 0.8rem; color: #20b2aa; text-transform: uppercase; letter-spacing: 1px;">Keyboards</div>
+                <div style="font-weight: 600; margin: 5px 0;">Corsair K70 RGB Pro</div>
+                <div style="display: flex; justify-content: center; gap: 10px; margin: 10px 0;">
+                    <span style="color: #ff6b35; font-size: 1.3rem; font-weight: 700;">₱7,500</span>
+                    <span style="color: #9ca3af; text-decoration: line-through;">₱9,500</span>
+                </div>
+                <div style="background: #ff6b35; color: white; padding: 3px 10px; border-radius: 10px; display: inline-block; font-size: 0.8rem; font-weight: 600;">-21% OFF</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Coupon Codes -->
+<h3 style="font-weight: 700; color: #1f2937; margin: 30px 0 25px;">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2" style="margin-right: 10px; vertical-align: middle;">
+        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+    </svg>
+    Available Coupon Codes
+</h3>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="portal-card" style="background: linear-gradient(135deg, #f0fff4, #dcfce7); border: 2px dashed #10b981;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div style="font-size: 0.8rem; color: #10b981; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Save 10%</div>
+                    <h5 style="font-weight: 700; color: #1f2937; margin: 10px 0;">First Order Discount</h5>
+                    <p style="color: #6b7280; font-size: 0.85rem; margin-bottom: 15px;">10% off on your first purchase. New customers only!</p>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 12px 15px; border-radius: 10px;">
+                <code style="font-size: 1.1rem; font-weight: 700; color: #10b981; letter-spacing: 2px;">WELCOME10</code>
+                <button onclick="copyCode('WELCOME10')" style="background: #10b981; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 0.85rem; cursor: pointer;">Copy</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="portal-card" style="background: linear-gradient(135deg, #fff5f0, #ffebe0); border: 2px dashed #ff6b35;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div style="font-size: 0.8rem; color: #ff6b35; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Save ₱500</div>
+                    <h5 style="font-weight: 700; color: #1f2937; margin: 10px 0;">Minimum ₱3,000 Purchase</h5>
+                    <p style="color: #6b7280; font-size: 0.85rem; margin-bottom: 15px;">₱500 off when you spend ₱3,000 or more</p>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 12px 15px; border-radius: 10px;">
+                <code style="font-size: 1.1rem; font-weight: 700; color: #ff6b35; letter-spacing: 2px;">SAVE500</code>
+                <button onclick="copyCode('SAVE500')" style="background: #ff6b35; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 0.85rem; cursor: pointer;">Copy</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="portal-card" style="background: linear-gradient(135deg, #f5f3ff, #ede9fe); border: 2px dashed #8b5cf6;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div style="font-size: 0.8rem; color: #8b5cf6; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Save 15%</div>
+                    <h5 style="font-weight: 700; color: #1f2937; margin: 10px 0;">Gaming Accessories</h5>
+                    <p style="color: #6b7280; font-size: 0.85rem; margin-bottom: 15px;">15% off all gaming peripherals this month</p>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 12px 15px; border-radius: 10px;">
+                <code style="font-size: 1.1rem; font-weight: 700; color: #8b5cf6; letter-spacing: 2px;">GAME15</code>
+                <button onclick="copyCode('GAME15')" style="background: #8b5cf6; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 0.85rem; cursor: pointer;">Copy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast for Copy -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="copyToast" class="toast" role="alert">
+        <div class="toast-header" style="background: linear-gradient(135deg, #10b981, #34d399); color: white;">
+            <strong class="me-auto">✓ Copied!</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="copyToastBody">
+            Coupon code copied to clipboard!
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function copyCode(code) {
+        navigator.clipboard.writeText(code);
+        document.getElementById('copyToastBody').textContent = 'Coupon code "' + code + '" copied to clipboard!';
+        var toast = new bootstrap.Toast(document.getElementById('copyToast'));
+        toast.show();
+    }
+</script>
+}

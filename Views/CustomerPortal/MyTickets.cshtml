@@ -1,0 +1,371 @@
+@{
+    ViewData["Title"] = "My Support Tickets";
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+}
+
+<style>
+    .ticket-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        margin-bottom: 15px;
+        border-left: 4px solid transparent;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+
+    .ticket-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+    }
+
+    .ticket-card.status-open {
+        border-left-color: #3b82f6;
+    }
+
+    .ticket-card.status-in-progress {
+        border-left-color: #f59e0b;
+    }
+
+    .ticket-card.status-resolved {
+        border-left-color: #10b981;
+    }
+
+    .ticket-card.status-closed {
+        border-left-color: #6b7280;
+    }
+
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-badge.open {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .status-badge.in-progress {
+        background: #fef3c7;
+        color: #b45309;
+    }
+
+    .status-badge.resolved {
+        background: #d1fae5;
+        color: #059669;
+    }
+
+    .status-badge.closed {
+        background: #f3f4f6;
+        color: #4b5563;
+    }
+
+    .priority-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .filter-tab {
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 500;
+        color: #6b7280;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: none;
+        background: none;
+    }
+
+    .filter-tab:hover {
+        color: #008080;
+    }
+
+    .filter-tab.active {
+        background: #008080;
+        color: white;
+    }
+
+    .ticket-meta {
+        display: flex;
+        gap: 20px;
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
+
+    .ticket-meta span {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+</style>
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 style="font-weight: 700; color: #1f2937; margin-bottom: 5px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2" style="margin-right: 10px; vertical-align: middle;">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            My Support Tickets
+        </h2>
+        <p style="color: #6b7280; margin: 0;">Track and manage your support requests</p>
+    </div>
+    <a href="/CustomerPortal/SubmitTicket" class="btn" style="background: linear-gradient(135deg, #008080, #006666); color: white; border-radius: 12px; padding: 12px 25px; font-weight: 600;">
+        + New Ticket
+    </a>
+</div>
+
+<!-- Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="portal-card text-center">
+            <h3 style="font-size: 2rem; font-weight: 700; color: #3b82f6; margin: 0;">2</h3>
+            <div style="color: #6b7280; font-size: 0.9rem;">Open Tickets</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="portal-card text-center">
+            <h3 style="font-size: 2rem; font-weight: 700; color: #f59e0b; margin: 0;">1</h3>
+            <div style="color: #6b7280; font-size: 0.9rem;">In Progress</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="portal-card text-center">
+            <h3 style="font-size: 2rem; font-weight: 700; color: #10b981; margin: 0;">5</h3>
+            <div style="color: #6b7280; font-size: 0.9rem;">Resolved</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="portal-card text-center">
+            <h3 style="font-size: 2rem; font-weight: 700; color: #008080; margin: 0;">8</h3>
+            <div style="color: #6b7280; font-size: 0.9rem;">Total Tickets</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="portal-card mb-4">
+    <div class="d-flex gap-2 flex-wrap">
+        <button class="filter-tab active" onclick="filterTickets('all', this)">All Tickets (8)</button>
+        <button class="filter-tab" onclick="filterTickets('open', this)">Open (2)</button>
+        <button class="filter-tab" onclick="filterTickets('in-progress', this)">In Progress (1)</button>
+        <button class="filter-tab" onclick="filterTickets('resolved', this)">Resolved (5)</button>
+    </div>
+</div>
+
+<!-- Tickets List -->
+<div id="ticketsList">
+    <!-- Open Ticket -->
+    <a href="/CustomerPortal/TicketDetails?id=TKT-2026-0045" class="text-decoration-none">
+        <div class="ticket-card status-open" data-status="open">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <span class="status-badge open">Open</span>
+                    <span class="priority-indicator ms-2">🔴 High Priority</span>
+                </div>
+                <div style="font-size: 0.85rem; color: #9ca3af;">TKT-2026-0045</div>
+            </div>
+            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 10px;">Gaming headset not working after 2 weeks</h6>
+            <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 15px; line-height: 1.5;">
+                My HyperX Cloud II headset stopped producing sound on the left ear cup. Tried different devices but the issue persists...
+            </p>
+            <div class="ticket-meta">
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Opened Jan 18, 2026
+                </span>
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    2 replies
+                </span>
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                    Order: ORD-2026-0892
+                </span>
+            </div>
+        </div>
+    </a>
+
+    <!-- In Progress Ticket -->
+    <a href="/CustomerPortal/TicketDetails?id=TKT-2026-0038" class="text-decoration-none">
+        <div class="ticket-card status-in-progress" data-status="in-progress">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <span class="status-badge in-progress">In Progress</span>
+                    <span class="priority-indicator ms-2">🟡 Medium Priority</span>
+                </div>
+                <div style="font-size: 0.85rem; color: #9ca3af;">TKT-2026-0038</div>
+            </div>
+            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 10px;">Request for invoice copy</h6>
+            <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 15px; line-height: 1.5;">
+                I need a copy of my invoice for warranty claim. The original got lost during my move to a new office...
+            </p>
+            <div class="ticket-meta">
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Opened Jan 15, 2026
+                </span>
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    4 replies
+                </span>
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    Agent: Sarah Chen
+                </span>
+            </div>
+        </div>
+    </a>
+
+    <!-- Open Ticket 2 -->
+    <a href="/CustomerPortal/TicketDetails?id=TKT-2026-0042" class="text-decoration-none">
+        <div class="ticket-card status-open" data-status="open">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <span class="status-badge open">Open</span>
+                    <span class="priority-indicator ms-2">🟢 Low Priority</span>
+                </div>
+                <div style="font-size: 0.85rem; color: #9ca3af;">TKT-2026-0042</div>
+            </div>
+            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 10px;">Question about bulk order discount</h6>
+            <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 15px; line-height: 1.5;">
+                I'm interested in ordering 20 units of mechanical keyboards for our office. Do you offer bulk discounts?
+            </p>
+            <div class="ticket-meta">
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Opened Jan 17, 2026
+                </span>
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    0 replies
+                </span>
+                <span>Awaiting response</span>
+            </div>
+        </div>
+    </a>
+
+    <!-- Resolved Tickets -->
+    <a href="/CustomerPortal/TicketDetails?id=TKT-2026-0031" class="text-decoration-none">
+        <div class="ticket-card status-resolved" data-status="resolved">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <span class="status-badge resolved">Resolved</span>
+                    <span class="priority-indicator ms-2">🟡 Medium Priority</span>
+                </div>
+                <div style="font-size: 0.85rem; color: #9ca3af;">TKT-2026-0031</div>
+            </div>
+            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 10px;">Wrong item delivered - received mouse instead of keyboard</h6>
+            <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 15px; line-height: 1.5;">
+                Order was corrected and correct item shipped with express delivery. Customer confirmed receipt of correct item.
+            </p>
+            <div class="ticket-meta">
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Resolved Jan 14, 2026
+                </span>
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    6 replies
+                </span>
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    Resolved by Mike Chen
+                </span>
+            </div>
+        </div>
+    </a>
+
+    <a href="/CustomerPortal/TicketDetails?id=TKT-2026-0025" class="text-decoration-none">
+        <div class="ticket-card status-resolved" data-status="resolved">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <span class="status-badge resolved">Resolved</span>
+                    <span class="priority-indicator ms-2">🟢 Low Priority</span>
+                </div>
+                <div style="font-size: 0.85rem; color: #9ca3af;">TKT-2026-0025</div>
+            </div>
+            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 10px;">How to redeem loyalty points?</h6>
+            <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 15px; line-height: 1.5;">
+                Customer was guided on how to apply loyalty points during checkout. Issue resolved.
+            </p>
+            <div class="ticket-meta">
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Resolved Jan 10, 2026
+                </span>
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    3 replies
+                </span>
+            </div>
+        </div>
+    </a>
+
+    <a href="/CustomerPortal/TicketDetails?id=TKT-2025-0198" class="text-decoration-none">
+        <div class="ticket-card status-resolved" data-status="resolved">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <span class="status-badge resolved">Resolved</span>
+                    <span class="priority-indicator ms-2">🔴 High Priority</span>
+                </div>
+                <div style="font-size: 0.85rem; color: #9ca3af;">TKT-2025-0198</div>
+            </div>
+            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 10px;">SSD not detected by computer</h6>
+            <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 15px; line-height: 1.5;">
+                Customer had BIOS settings issue. Guided through proper setup. SSD now working correctly.
+            </p>
+            <div class="ticket-meta">
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Resolved Dec 28, 2025
+                </span>
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    8 replies
+                </span>
+            </div>
+        </div>
+    </a>
+</div>
+
+<!-- Pagination -->
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+        <li class="page-item active"><a class="page-link" href="#" style="background: #008080; border-color: #008080;">1</a></li>
+        <li class="page-item"><a class="page-link" href="#" style="color: #008080;">2</a></li>
+        <li class="page-item"><a class="page-link" href="#" style="color: #008080;">Next</a></li>
+    </ul>
+</nav>
+
+@section Scripts {
+<script>
+    function filterTickets(status, button) {
+        // Update active tab
+        document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+        button.classList.add('active');
+
+        // Filter tickets
+        document.querySelectorAll('.ticket-card').forEach(card => {
+            const cardStatus = card.getAttribute('data-status');
+            if (status === 'all' || cardStatus === status) {
+                card.parentElement.style.display = 'block';
+            } else {
+                card.parentElement.style.display = 'none';
+            }
+        });
+    }
+</script>
+}

@@ -1,0 +1,266 @@
+@{
+    ViewData["Title"] = "My Dashboard";
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+}
+
+<!-- Welcome Banner -->
+<div class="promo-banner mb-4">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <h2>🎮 Welcome back, Maria!</h2>
+            <p>Check out our latest computer accessories and exclusive deals just for you!</p>
+            <a href="/CustomerPortal/Promotions" class="btn-shop">View Promotions</a>
+        </div>
+        <div class="col-lg-4 text-center d-none d-lg-block">
+            <div style="font-size: 6rem;">🖥️</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-value">12</div>
+                    <div class="stat-label">Total Orders</div>
+                </div>
+                <div class="stat-icon" style="background: linear-gradient(135deg, #008080, #20b2aa); color: white;">
+                    📦
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-value">2</div>
+                    <div class="stat-label">Pending Orders</div>
+                </div>
+                <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white;">
+                    ⏳
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-value">1,250</div>
+                    <div class="stat-label">Loyalty Points</div>
+                </div>
+                <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #34d399); color: white;">
+                    ⭐
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <div class="stat-value">1</div>
+                    <div class="stat-label">Open Tickets</div>
+                </div>
+                <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444, #f87171); color: white;">
+                    🎫
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="row g-4">
+    <!-- Recent Orders -->
+    <div class="col-lg-8">
+        <div class="portal-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0" style="font-weight: 600; color: #1f2937;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2" style="margin-right: 10px; vertical-align: middle;">
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+                    </svg>
+                    Recent Orders
+                </h5>
+                <a href="/CustomerPortal/Orders" style="color: #008080; text-decoration: none; font-weight: 500;">View All →</a>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table" style="margin-bottom: 0;">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th style="border: none; padding: 12px; color: #6b7280; font-weight: 600;">Order #</th>
+                            <th style="border: none; padding: 12px; color: #6b7280; font-weight: 600;">Date</th>
+                            <th style="border: none; padding: 12px; color: #6b7280; font-weight: 600;">Items</th>
+                            <th style="border: none; padding: 12px; color: #6b7280; font-weight: 600;">Total</th>
+                            <th style="border: none; padding: 12px; color: #6b7280; font-weight: 600;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
+                                <strong style="color: #008080;">ORD-2026-0089</strong>
+                            </td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">Jan 30, 2026</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">Razer BlackWidow V4 Pro</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; font-weight: 600;">₱11,000.00</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
+                                <span style="background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">Processing</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
+                                <strong style="color: #008080;">ORD-2026-0082</strong>
+                            </td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">Jan 28, 2026</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">Logitech G502 X Plus</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; font-weight: 600;">₱6,500.00</td>
+                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
+                                <span style="background: linear-gradient(135deg, #3b82f6, #60a5fa); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">Shipped</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 15px;">
+                                <strong style="color: #008080;">ORD-2026-0075</strong>
+                            </td>
+                            <td style="padding: 15px;">Jan 25, 2026</td>
+                            <td style="padding: 15px;">Corsair Vengeance 32GB DDR5</td>
+                            <td style="padding: 15px; font-weight: 600;">₱11,500.00</td>
+                            <td style="padding: 15px;">
+                                <span style="background: linear-gradient(135deg, #10b981, #34d399); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">Delivered</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions & Notifications -->
+    <div class="col-lg-4">
+        <!-- Quick Actions -->
+        <div class="portal-card mb-4">
+            <h5 class="mb-4" style="font-weight: 600; color: #1f2937;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2" style="margin-right: 10px; vertical-align: middle;">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+                Quick Actions
+            </h5>
+            <div class="d-grid gap-3">
+                <a href="/CustomerPortal/Products" class="btn" style="background: linear-gradient(135deg, #008080, #006666); color: white; padding: 12px; border-radius: 10px; text-decoration: none; display: flex; align-items: center; gap: 10px;">
+                    🛒 Browse Products
+                </a>
+                <a href="/CustomerPortal/SubmitTicket" class="btn" style="background: linear-gradient(135deg, #ff6b35, #ff8c42); color: white; padding: 12px; border-radius: 10px; text-decoration: none; display: flex; align-items: center; gap: 10px;">
+                    🎫 Submit Support Ticket
+                </a>
+                <a href="/CustomerPortal/Support" class="btn" style="background: linear-gradient(135deg, #10b981, #34d399); color: white; padding: 12px; border-radius: 10px; text-decoration: none; display: flex; align-items: center; gap: 10px;">
+                    💬 Chat with Support
+                </a>
+            </div>
+        </div>
+
+        <!-- Active Promotions -->
+        <div class="portal-card">
+            <h5 class="mb-4" style="font-weight: 600; color: #1f2937;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2" style="margin-right: 10px; vertical-align: middle;">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                Active Promotions
+            </h5>
+            <div class="promo-item p-3 mb-3" style="background: linear-gradient(135deg, #fff5f0, #ffebe0); border-radius: 12px; border-left: 4px solid #ff6b35;">
+                <div style="font-weight: 600; color: #ff6b35;">🔥 Gaming Week Sale!</div>
+                <div style="font-size: 0.85rem; color: #6b7280; margin-top: 5px;">Up to 30% off on gaming peripherals</div>
+                <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 5px;">Valid until Feb 15, 2026</div>
+            </div>
+            <div class="promo-item p-3" style="background: linear-gradient(135deg, #f0fff4, #dcfce7); border-radius: 12px; border-left: 4px solid #10b981;">
+                <div style="font-weight: 600; color: #10b981;">🎁 Free Shipping</div>
+                <div style="font-size: 0.85rem; color: #6b7280; margin-top: 5px;">On orders over ₱5,000</div>
+                <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 5px;">Limited time offer</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Featured Products -->
+<div class="portal-card mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="mb-0" style="font-weight: 600; color: #1f2937;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2" style="margin-right: 10px; vertical-align: middle;">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            Featured Products
+        </h5>
+        <a href="/CustomerPortal/Products" style="color: #008080; text-decoration: none; font-weight: 500;">View All →</a>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="product-card">
+                <div class="product-image">
+                    <span class="sale-badge">-20%</span>
+                    <div style="font-size: 4rem;">⌨️</div>
+                </div>
+                <div class="product-info">
+                    <div class="product-category">Gaming Keyboards</div>
+                    <div class="product-name">Razer BlackWidow V4 Pro</div>
+                    <div class="product-price">
+                        <span class="current-price">₱8,800</span>
+                        <span class="original-price">₱11,000</span>
+                    </div>
+                    <button class="btn-add-cart">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="product-card">
+                <div class="product-image">
+                    <span class="sale-badge">-15%</span>
+                    <div style="font-size: 4rem;">🖱️</div>
+                </div>
+                <div class="product-info">
+                    <div class="product-category">Gaming Mice</div>
+                    <div class="product-name">Logitech G502 X Plus</div>
+                    <div class="product-price">
+                        <span class="current-price">₱5,525</span>
+                        <span class="original-price">₱6,500</span>
+                    </div>
+                    <button class="btn-add-cart">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="product-card">
+                <div class="product-image">
+                    <div style="font-size: 4rem;">🎧</div>
+                </div>
+                <div class="product-info">
+                    <div class="product-category">Headsets</div>
+                    <div class="product-name">HyperX Cloud III Wireless</div>
+                    <div class="product-price">
+                        <span class="current-price">₱8,500</span>
+                    </div>
+                    <button class="btn-add-cart">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="product-card">
+                <div class="product-image">
+                    <span class="sale-badge">HOT</span>
+                    <div style="font-size: 4rem;">💾</div>
+                </div>
+                <div class="product-info">
+                    <div class="product-category">Storage</div>
+                    <div class="product-name">Samsung 990 Pro 1TB NVMe</div>
+                    <div class="product-price">
+                        <span class="current-price">₱7,500</span>
+                    </div>
+                    <button class="btn-add-cart">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

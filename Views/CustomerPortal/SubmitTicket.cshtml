@@ -1,0 +1,505 @@
+@{
+    ViewData["Title"] = "Submit Support Ticket";
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+}
+
+<style>
+    .ticket-form-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+    }
+
+    .form-control, .form-select {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #008080;
+        box-shadow: 0 0 0 4px rgba(0,128,128,0.1);
+    }
+
+    .required-asterisk {
+        color: #ef4444;
+    }
+
+    .file-upload-area {
+        border: 2px dashed #d1d5db;
+        border-radius: 12px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: #f9fafb;
+    }
+
+    .file-upload-area:hover {
+        border-color: #008080;
+        background: #f0fdfa;
+    }
+
+    .file-upload-area.dragover {
+        border-color: #008080;
+        background: #f0fdfa;
+    }
+
+    .ticket-type-card {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-align: center;
+    }
+
+    .ticket-type-card:hover {
+        border-color: #008080;
+    }
+
+    .ticket-type-card.selected {
+        border-color: #008080;
+        background: linear-gradient(135deg, #f0fdfa, #e6fffa);
+    }
+
+    .ticket-type-card .icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-size: 1.5rem;
+    }
+
+    .priority-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 2px solid transparent;
+    }
+
+    .priority-badge:hover {
+        transform: scale(1.05);
+    }
+
+    .priority-badge.selected {
+        transform: scale(1.05);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .btn-submit-ticket {
+        background: linear-gradient(135deg, #008080, #006666);
+        border: none;
+        color: white;
+        padding: 15px 40px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+
+    .btn-submit-ticket:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0,128,128,0.3);
+        color: white;
+    }
+
+    .order-select-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 2px solid #e5e7eb;
+        margin-bottom: 10px;
+    }
+
+    .order-select-item:hover {
+        border-color: #008080;
+    }
+
+    .order-select-item.selected {
+        border-color: #008080;
+        background: #f0fdfa;
+    }
+
+    .attached-file {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 15px;
+        background: #f3f4f6;
+        border-radius: 10px;
+        margin-top: 10px;
+    }
+</style>
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb" style="background: none; padding: 0;">
+        <li class="breadcrumb-item"><a href="/CustomerPortal/Support" style="color: #008080; text-decoration: none;">Support Center</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Submit Ticket</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="ticket-form-card">
+            <h4 style="font-weight: 700; color: #1f2937; margin-bottom: 5px;">
+                🎫 Submit a Support Ticket
+            </h4>
+            <p style="color: #6b7280; margin-bottom: 30px;">Fill in the details below and our team will assist you as soon as possible.</p>
+
+            <form id="ticketForm">
+                <!-- Ticket Type Selection -->
+                <div class="mb-4">
+                    <label class="form-label">What do you need help with? <span class="required-asterisk">*</span></label>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="ticket-type-card" onclick="selectTicketType(this, 'Order Issue')" data-type="order">
+                                <div class="icon" style="background: #fef3c7;">📦</div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem;">Order Issue</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="ticket-type-card" onclick="selectTicketType(this, 'Product Defect')" data-type="defect">
+                                <div class="icon" style="background: #fee2e2;">⚠️</div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem;">Product Defect</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="ticket-type-card" onclick="selectTicketType(this, 'Return/Refund')" data-type="return">
+                                <div class="icon" style="background: #dbeafe;">↩️</div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem;">Return/Refund</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="ticket-type-card" onclick="selectTicketType(this, 'General Inquiry')" data-type="general">
+                                <div class="icon" style="background: #e0f2f1;">❓</div>
+                                <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem;">General Inquiry</div>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="ticketType" id="ticketType" required>
+                </div>
+
+                <!-- Related Order (Optional) -->
+                <div class="mb-4" id="orderSection" style="display: none;">
+                    <label class="form-label">Related Order (if applicable)</label>
+                    <select class="form-select" id="relatedOrder" name="relatedOrder">
+                        <option value="">-- Select an order --</option>
+                        <option value="ORD-2026-0892">ORD-2026-0892 - HyperX Gaming Headset (Jan 15, 2026)</option>
+                        <option value="ORD-2026-0756">ORD-2026-0756 - Razer Keyboard + Mouse Bundle (Jan 10, 2026)</option>
+                        <option value="ORD-2026-0698">ORD-2026-0698 - Samsung 1TB SSD (Jan 5, 2026)</option>
+                        <option value="ORD-2025-0543">ORD-2025-0543 - Logitech Webcam (Dec 20, 2025)</option>
+                    </select>
+                </div>
+
+                <!-- Subject -->
+                <div class="mb-4">
+                    <label class="form-label">Subject <span class="required-asterisk">*</span></label>
+                    <input type="text" class="form-control" id="subject" name="subject" placeholder="Brief description of your issue" required>
+                </div>
+
+                <!-- Priority -->
+                <div class="mb-4">
+                    <label class="form-label">Priority <span class="required-asterisk">*</span></label>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <span class="priority-badge" style="background: #dcfce7; color: #166534;" onclick="selectPriority(this, 'Low')">
+                            🟢 Low - General question
+                        </span>
+                        <span class="priority-badge selected" style="background: #fef3c7; color: #92400e; border-color: #fbbf24;" onclick="selectPriority(this, 'Medium')">
+                            🟡 Medium - Need assistance
+                        </span>
+                        <span class="priority-badge" style="background: #fecaca; color: #991b1b;" onclick="selectPriority(this, 'High')">
+                            🔴 High - Urgent issue
+                        </span>
+                    </div>
+                    <input type="hidden" name="priority" id="priority" value="Medium">
+                </div>
+
+                <!-- Description -->
+                <div class="mb-4">
+                    <label class="form-label">Describe your issue in detail <span class="required-asterisk">*</span></label>
+                    <textarea class="form-control" id="description" name="description" rows="5" placeholder="Please provide as much detail as possible:
+• What happened?
+• When did it occur?
+• What were you trying to do?
+• Any error messages?" required></textarea>
+                    <div class="form-text">Minimum 50 characters. Be specific to help us resolve your issue faster.</div>
+                </div>
+
+                <!-- Product Details (for defect reports) -->
+                <div class="mb-4" id="productSection" style="display: none;">
+                    <label class="form-label">Product Details</label>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" placeholder="Product name/model" name="productName">
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" placeholder="Serial number (if available)" name="serialNumber">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Attachments -->
+                <div class="mb-4">
+                    <label class="form-label">Attachments (Optional)</label>
+                    <div class="file-upload-area" id="fileUploadArea" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.getElementById('fileInput').click()">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" style="margin-bottom: 10px;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <p style="margin: 0; color: #6b7280;">
+                            <span style="color: #008080; font-weight: 600;">Click to upload</span> or drag and drop
+                        </p>
+                        <p style="margin: 5px 0 0; font-size: 0.8rem; color: #9ca3af;">PNG, JPG, PDF up to 10MB</p>
+                    </div>
+                    <input type="file" id="fileInput" name="attachments" multiple accept=".png,.jpg,.jpeg,.pdf" style="display: none;" onchange="handleFileSelect(event)">
+                    <div id="fileList"></div>
+                </div>
+
+                <!-- Contact Preference -->
+                <div class="mb-4">
+                    <label class="form-label">How would you like us to respond?</label>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="contactMethod" id="contactEmail" value="email" checked style="border-color: #008080;">
+                        <label class="form-check-label" for="contactEmail">
+                            Email notification (customer@@example.com)
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="contactMethod" id="contactSMS" value="sms" style="border-color: #008080;">
+                        <label class="form-check-label" for="contactSMS">
+                            SMS notification (+63 9XX XXX XXXX)
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="contactMethod" id="contactBoth" value="both" style="border-color: #008080;">
+                        <label class="form-check-label" for="contactBoth">
+                            Both email and SMS
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-flex justify-content-between align-items-center mt-5">
+                    <a href="/CustomerPortal/Support" class="btn btn-outline-secondary" style="border-radius: 12px; padding: 12px 25px;">
+                        ← Back to Support
+                    </a>
+                    <button type="submit" class="btn-submit-ticket">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
+                            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                        Submit Ticket
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Guidelines -->
+        <div class="portal-card mb-4">
+            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 15px;">
+                📋 Ticket Guidelines
+            </h6>
+            <ul style="color: #6b7280; font-size: 0.9rem; padding-left: 20px; margin: 0;">
+                <li class="mb-2">Be specific about your issue</li>
+                <li class="mb-2">Include order number if applicable</li>
+                <li class="mb-2">Attach photos for product defects</li>
+                <li class="mb-2">One issue per ticket</li>
+                <li>Response time: 24-48 hours</li>
+            </ul>
+        </div>
+
+        <!-- Response Time -->
+        <div class="portal-card mb-4">
+            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 15px;">
+                ⏱️ Expected Response Time
+            </h6>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span style="font-size: 0.9rem; color: #374151;"><span style="color: #22c55e;">🟢</span> Low Priority</span>
+                    <span style="font-weight: 600; color: #008080;">48 hours</span>
+                </div>
+            </div>
+            <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span style="font-size: 0.9rem; color: #374151;"><span style="color: #eab308;">🟡</span> Medium Priority</span>
+                    <span style="font-weight: 600; color: #008080;">24 hours</span>
+                </div>
+            </div>
+            <div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span style="font-size: 0.9rem; color: #374151;"><span style="color: #ef4444;">🔴</span> High Priority</span>
+                    <span style="font-weight: 600; color: #008080;">4-8 hours</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Help -->
+        <div class="portal-card" style="background: linear-gradient(135deg, #f0fdfa, #e0f2f1);">
+            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 15px;">
+                💡 Need Faster Help?
+            </h6>
+            <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 15px;">Try our AI Assistant for instant answers to common questions!</p>
+            <a href="/CustomerPortal/Support" class="btn w-100" style="background: #008080; color: white; border-radius: 10px;">
+                🤖 Chat with AI
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px; text-align: center; padding: 40px;">
+            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #10b981, #34d399); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2.5rem;">
+                ✓
+            </div>
+            <h4 style="font-weight: 700; color: #1f2937;">Ticket Submitted!</h4>
+            <p style="color: #6b7280; margin: 15px 0;">Your ticket has been submitted successfully. Our support team will respond within the estimated timeframe.</p>
+            <div style="background: #f3f4f6; border-radius: 12px; padding: 15px; margin: 20px 0;">
+                <div style="font-size: 0.8rem; color: #6b7280;">Ticket Number</div>
+                <div style="font-size: 1.3rem; font-weight: 700; color: #008080;" id="ticketNumber">TKT-2026-0001</div>
+            </div>
+            <div class="d-flex gap-3 justify-content-center">
+                <a href="/CustomerPortal/MyTickets" class="btn" style="background: #008080; color: white; border-radius: 10px; padding: 12px 25px;">View My Tickets</a>
+                <a href="/CustomerPortal/Support" class="btn btn-outline-secondary" style="border-radius: 10px; padding: 12px 25px;">Back to Support</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let selectedFiles = [];
+
+    function selectTicketType(element, type) {
+        document.querySelectorAll('.ticket-type-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        element.classList.add('selected');
+        document.getElementById('ticketType').value = type;
+
+        // Show/hide related sections
+        const dataType = element.getAttribute('data-type');
+        document.getElementById('orderSection').style.display = 
+            ['order', 'defect', 'return'].includes(dataType) ? 'block' : 'none';
+        document.getElementById('productSection').style.display = 
+            dataType === 'defect' ? 'block' : 'none';
+    }
+
+    function selectPriority(element, priority) {
+        document.querySelectorAll('.priority-badge').forEach(badge => {
+            badge.classList.remove('selected');
+            badge.style.borderColor = 'transparent';
+        });
+        element.classList.add('selected');
+        element.style.borderColor = '#fbbf24';
+        document.getElementById('priority').value = priority;
+    }
+
+    function handleDragOver(event) {
+        event.preventDefault();
+        document.getElementById('fileUploadArea').classList.add('dragover');
+    }
+
+    function handleDragLeave(event) {
+        event.preventDefault();
+        document.getElementById('fileUploadArea').classList.remove('dragover');
+    }
+
+    function handleDrop(event) {
+        event.preventDefault();
+        document.getElementById('fileUploadArea').classList.remove('dragover');
+        const files = event.dataTransfer.files;
+        addFiles(files);
+    }
+
+    function handleFileSelect(event) {
+        const files = event.target.files;
+        addFiles(files);
+    }
+
+    function addFiles(files) {
+        const fileList = document.getElementById('fileList');
+
+        for (let file of files) {
+            if (selectedFiles.length >= 5) {
+                alert('Maximum 5 files allowed');
+                break;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                alert(`File ${file.name} is too large. Maximum 10MB.`);
+                continue;
+            }
+
+            selectedFiles.push(file);
+
+            const fileElement = document.createElement('div');
+            fileElement.className = 'attached-file';
+            fileElement.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span style="flex: 1; font-size: 0.9rem;">${file.name}</span>
+                <span style="color: #6b7280; font-size: 0.8rem;">${(file.size / 1024).toFixed(1)} KB</span>
+                <button type="button" onclick="removeFile(this, '${file.name}')" style="background: none; border: none; color: #ef4444; cursor: pointer;">✕</button>
+            `;
+            fileList.appendChild(fileElement);
+        }
+    }
+
+    function removeFile(button, fileName) {
+        selectedFiles = selectedFiles.filter(f => f.name !== fileName);
+        button.parentElement.remove();
+    }
+
+    document.getElementById('ticketForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Validate
+        const ticketType = document.getElementById('ticketType').value;
+        const subject = document.getElementById('subject').value;
+        const description = document.getElementById('description').value;
+
+        if (!ticketType) {
+            alert('Please select a ticket type');
+            return;
+        }
+
+        if (description.length < 50) {
+            alert('Please provide more details (minimum 50 characters)');
+            return;
+        }
+
+        // Generate ticket number
+        const ticketNum = 'TKT-2026-' + String(Math.floor(Math.random() * 9000) + 1000);
+        document.getElementById('ticketNumber').textContent = ticketNum;
+
+        // Show success modal
+        const modal = new bootstrap.Modal(document.getElementById('successModal'));
+        modal.show();
+    });
+</script>
+}

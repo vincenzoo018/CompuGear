@@ -1,0 +1,617 @@
+@{
+    ViewData["Title"] = "Support Center";
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+}
+
+<style>
+    /* Chat Container */
+    .chat-container {
+        height: 500px;
+        display: flex;
+        flex-direction: column;
+        background: #f8f9fa;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .chat-header {
+        background: linear-gradient(135deg, #008080, #006666);
+        color: white;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .chat-avatar {
+        width: 50px;
+        height: 50px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .chat-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        opacity: 0.9;
+    }
+
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        background: #10b981;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .message {
+        max-width: 80%;
+        display: flex;
+        gap: 10px;
+    }
+
+    .message.bot {
+        align-self: flex-start;
+    }
+
+    .message.user {
+        align-self: flex-end;
+        flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .message.bot .message-avatar {
+        background: linear-gradient(135deg, #008080, #20b2aa);
+        color: white;
+    }
+
+    .message.user .message-avatar {
+        background: linear-gradient(135deg, #6b7280, #9ca3af);
+        color: white;
+    }
+
+    .message-content {
+        background: white;
+        padding: 12px 18px;
+        border-radius: 18px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .message.bot .message-content {
+        border-bottom-left-radius: 5px;
+    }
+
+    .message.user .message-content {
+        background: linear-gradient(135deg, #008080, #006666);
+        color: white;
+        border-bottom-right-radius: 5px;
+    }
+
+    .message-time {
+        font-size: 0.7rem;
+        color: #9ca3af;
+        margin-top: 5px;
+    }
+
+    .quick-replies {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .quick-reply-btn {
+        background: #e0f2f1;
+        color: #008080;
+        border: 1px solid #008080;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .quick-reply-btn:hover {
+        background: #008080;
+        color: white;
+    }
+
+    .chat-input-container {
+        padding: 15px 20px;
+        background: white;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        gap: 10px;
+    }
+
+    .chat-input {
+        flex: 1;
+        padding: 12px 20px;
+        border: 2px solid #e5e7eb;
+        border-radius: 25px;
+        font-size: 0.95rem;
+        outline: none;
+        transition: all 0.3s;
+    }
+
+    .chat-input:focus {
+        border-color: #008080;
+    }
+
+    .chat-send-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #008080, #006666);
+        border: none;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+    }
+
+    .chat-send-btn:hover {
+        transform: scale(1.05);
+    }
+
+    .typing-indicator {
+        display: flex;
+        gap: 5px;
+        padding: 15px;
+    }
+
+    .typing-indicator span {
+        width: 8px;
+        height: 8px;
+        background: #008080;
+        border-radius: 50%;
+        animation: typing 1.4s infinite;
+    }
+
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @@keyframes typing {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+
+    /* Support Options */
+    .support-option {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s;
+        cursor: pointer;
+        border: 2px solid transparent;
+    }
+
+    .support-option:hover {
+        transform: translateY(-5px);
+        border-color: #008080;
+        box-shadow: 0 10px 40px rgba(0,128,128,0.15);
+    }
+
+    .support-option .icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 2rem;
+    }
+</style>
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 style="font-weight: 700; color: #1f2937; margin-bottom: 5px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2" style="margin-right: 10px; vertical-align: middle;">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Support Center
+        </h2>
+        <p style="color: #6b7280; margin: 0;">Get help with your orders, products, or technical issues</p>
+    </div>
+</div>
+
+<!-- Support Options -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="support-option" onclick="startAIChat()">
+            <div class="icon" style="background: linear-gradient(135deg, #008080, #20b2aa); color: white;">🤖</div>
+            <h6 style="font-weight: 600; color: #1f2937;">AI Assistant</h6>
+            <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">Get instant answers 24/7</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="support-option" onclick="requestLiveAgent()">
+            <div class="icon" style="background: linear-gradient(135deg, #10b981, #34d399); color: white;">👨‍💼</div>
+            <h6 style="font-weight: 600; color: #1f2937;">Live Agent</h6>
+            <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">Chat with support staff</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <a href="/CustomerPortal/SubmitTicket" class="text-decoration-none">
+            <div class="support-option">
+                <div class="icon" style="background: linear-gradient(135deg, #ff6b35, #ff8c42); color: white;">🎫</div>
+                <h6 style="font-weight: 600; color: #1f2937;">Submit Ticket</h6>
+                <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">Report an issue</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="/CustomerPortal/MyTickets" class="text-decoration-none">
+            <div class="support-option">
+                <div class="icon" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: white;">📋</div>
+                <h6 style="font-weight: 600; color: #1f2937;">My Tickets</h6>
+                <p style="color: #6b7280; font-size: 0.85rem; margin: 0;">View ticket history</p>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- AI Chat Section -->
+    <div class="col-lg-8">
+        <div class="portal-card p-0">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="chat-avatar">🤖</div>
+                    <div>
+                        <h6 style="margin: 0; font-weight: 600;">CompuGear AI Assistant</h6>
+                        <div class="chat-status">
+                            <span class="status-dot"></span>
+                            <span id="chatStatus">Online - Ready to help</span>
+                        </div>
+                    </div>
+                    <button id="transferBtn" class="btn btn-sm" style="margin-left: auto; background: rgba(255,255,255,0.2); color: white; border: none; border-radius: 20px; padding: 8px 15px; display: none;" onclick="requestLiveAgent()">
+                        Transfer to Agent
+                    </button>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <!-- Bot Welcome Message -->
+                    <div class="message bot">
+                        <div class="message-avatar">🤖</div>
+                        <div>
+                            <div class="message-content">
+                                <p style="margin: 0;">Hello! 👋 I'm your CompuGear AI Assistant. I can help you with:</p>
+                                <ul style="margin: 10px 0 0; padding-left: 20px; font-size: 0.9rem;">
+                                    <li>Product information & specifications</li>
+                                    <li>Order status & tracking</li>
+                                    <li>Returns & refunds</li>
+                                    <li>Technical support</li>
+                                    <li>Warranty claims</li>
+                                </ul>
+                            </div>
+                            <div class="quick-replies">
+                                <button class="quick-reply-btn" onclick="sendQuickReply('Track my order')">📦 Track my order</button>
+                                <button class="quick-reply-btn" onclick="sendQuickReply('Product warranty')">🛡️ Warranty info</button>
+                                <button class="quick-reply-btn" onclick="sendQuickReply('Return policy')">↩️ Return policy</button>
+                                <button class="quick-reply-btn" onclick="sendQuickReply('Talk to human')">👤 Talk to human</button>
+                            </div>
+                            <div class="message-time">Just now</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+                    <button class="chat-send-btn" onclick="sendMessage()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ & Help Topics -->
+    <div class="col-lg-4">
+        <div class="portal-card mb-4">
+            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 20px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
+                    <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                Frequently Asked Questions
+            </h6>
+
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item" style="border: none; margin-bottom: 10px;">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" style="background: #f8f9fa; border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
+                            How do I track my order?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body" style="font-size: 0.85rem; color: #6b7280;">
+                            Go to "My Orders" section and click on the order you want to track. You'll see the current status and tracking information.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item" style="border: none; margin-bottom: 10px;">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" style="background: #f8f9fa; border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
+                            What is the return policy?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body" style="font-size: 0.85rem; color: #6b7280;">
+                            We accept returns within 7 days of delivery for unused items in original packaging. Defective items can be returned within the warranty period.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item" style="border: none; margin-bottom: 10px;">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" style="background: #f8f9fa; border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
+                            How long does shipping take?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body" style="font-size: 0.85rem; color: #6b7280;">
+                            Metro Manila: 1-3 business days<br>
+                            Provincial: 3-7 business days<br>
+                            Express shipping available for faster delivery.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item" style="border: none; margin-bottom: 10px;">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" style="background: #f8f9fa; border-radius: 10px; font-size: 0.9rem; font-weight: 500;">
+                            How do I claim warranty?
+                        </button>
+                    </h2>
+                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body" style="font-size: 0.85rem; color: #6b7280;">
+                            Submit a support ticket with your order number and describe the issue. Our team will review and provide instructions for warranty claim processing.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Info -->
+        <div class="portal-card">
+            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 20px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                Contact Us Directly
+            </h6>
+
+            <div class="mb-3 p-3" style="background: #f8f9fa; border-radius: 10px;">
+                <div style="font-size: 0.8rem; color: #6b7280; text-transform: uppercase; letter-spacing: 1px;">Phone Support</div>
+                <div style="font-weight: 600; color: #1f2937; margin-top: 5px;">+63 912 345 6789</div>
+                <div style="font-size: 0.8rem; color: #10b981;">Mon-Sat: 9AM - 6PM</div>
+            </div>
+
+            <div class="mb-3 p-3" style="background: #f8f9fa; border-radius: 10px;">
+                <div style="font-size: 0.8rem; color: #6b7280; text-transform: uppercase; letter-spacing: 1px;">Email Support</div>
+                <div style="font-weight: 600; color: #1f2937; margin-top: 5px;">support@@compugear.com</div>
+                <div style="font-size: 0.8rem; color: #10b981;">24-48 hour response time</div>
+            </div>
+
+            <div class="p-3" style="background: linear-gradient(135deg, #f0fff4, #dcfce7); border-radius: 10px; border: 1px solid #10b981;">
+                <div style="font-size: 0.8rem; color: #10b981; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">💡 Tip</div>
+                <div style="font-size: 0.85rem; color: #374151; margin-top: 5px;">For fastest response, use our AI Assistant or submit a support ticket with detailed information.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // AI Chat Responses
+    const aiResponses = {
+        'track my order': {
+            message: "To track your order, please provide your order number (e.g., ORD-2026-XXXX). You can also view all your orders in the 'My Orders' section.",
+            quickReplies: ['Go to My Orders', 'Enter order number', 'Talk to human']
+        },
+        'product warranty': {
+            message: "Most of our computer accessories come with manufacturer warranty:\n\n• Keyboards & Mice: 1-2 years\n• Headsets: 1 year\n• Storage devices: 3-5 years\n• Monitors: 3 years\n\nKeep your receipt and product packaging for warranty claims.",
+            quickReplies: ['File warranty claim', 'Check my product', 'Talk to human']
+        },
+        'return policy': {
+            message: "Our return policy:\n\n✅ 7-day return for unopened items\n✅ 15-day replacement for defective items\n✅ Items must be in original packaging\n✅ Receipt/proof of purchase required\n\n❌ No returns for opened software\n❌ No returns for items with physical damage",
+            quickReplies: ['Start a return', 'Report defective item', 'Talk to human']
+        },
+        'talk to human': {
+            message: "I'll connect you with a live support agent. Please wait a moment while I transfer your chat...",
+            action: 'transfer'
+        },
+        'default': {
+            message: "I understand you need help with that. Let me assist you. Could you please provide more details about your concern? Or you can choose from the options below:",
+            quickReplies: ['Track my order', 'Product warranty', 'Return policy', 'Talk to human']
+        }
+    };
+
+    function sendMessage() {
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+        if (!message) return;
+
+        // Add user message
+        addMessage(message, 'user');
+        input.value = '';
+
+        // Show typing indicator
+        showTyping();
+
+        // Simulate AI response
+        setTimeout(() => {
+            hideTyping();
+            processAIResponse(message);
+        }, 1500);
+    }
+
+    function sendQuickReply(text) {
+        document.getElementById('chatInput').value = text;
+        sendMessage();
+    }
+
+    function addMessage(text, sender) {
+        const chatMessages = document.getElementById('chatMessages');
+        const time = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+        let avatar = sender === 'bot' ? '🤖' : '👤';
+        let avatarBg = sender === 'bot' ? 'background: linear-gradient(135deg, #008080, #20b2aa);' : 'background: linear-gradient(135deg, #6b7280, #9ca3af);';
+
+        const messageHtml = `
+            <div class="message ${sender}">
+                <div class="message-avatar" style="${avatarBg} color: white;">${avatar}</div>
+                <div>
+                    <div class="message-content">
+                        <p style="margin: 0; white-space: pre-line;">${text}</p>
+                    </div>
+                    <div class="message-time">${time}</div>
+                </div>
+            </div>
+        `;
+
+        chatMessages.insertAdjacentHTML('beforeend', messageHtml);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addMessageWithQuickReplies(text, quickReplies) {
+        const chatMessages = document.getElementById('chatMessages');
+        const time = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+        let quickReplyHtml = '';
+        if (quickReplies && quickReplies.length > 0) {
+            quickReplyHtml = '<div class="quick-replies">';
+            quickReplies.forEach(reply => {
+                quickReplyHtml += `<button class="quick-reply-btn" onclick="sendQuickReply('${reply}')">${reply}</button>`;
+            });
+            quickReplyHtml += '</div>';
+        }
+
+        const messageHtml = `
+            <div class="message bot">
+                <div class="message-avatar" style="background: linear-gradient(135deg, #008080, #20b2aa); color: white;">🤖</div>
+                <div>
+                    <div class="message-content">
+                        <p style="margin: 0; white-space: pre-line;">${text}</p>
+                    </div>
+                    ${quickReplyHtml}
+                    <div class="message-time">${time}</div>
+                </div>
+            </div>
+        `;
+
+        chatMessages.insertAdjacentHTML('beforeend', messageHtml);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showTyping() {
+        const chatMessages = document.getElementById('chatMessages');
+        const typingHtml = `
+            <div class="message bot" id="typingIndicator">
+                <div class="message-avatar" style="background: linear-gradient(135deg, #008080, #20b2aa); color: white;">🤖</div>
+                <div class="message-content">
+                    <div class="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            </div>
+        `;
+        chatMessages.insertAdjacentHTML('beforeend', typingHtml);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function hideTyping() {
+        const typing = document.getElementById('typingIndicator');
+        if (typing) typing.remove();
+    }
+
+    function processAIResponse(userMessage) {
+        const lowerMessage = userMessage.toLowerCase();
+        let response = aiResponses['default'];
+
+        // Check for matching responses
+        for (let key in aiResponses) {
+            if (lowerMessage.includes(key)) {
+                response = aiResponses[key];
+                break;
+            }
+        }
+
+        // Handle special actions
+        if (response.action === 'transfer') {
+            addMessage(response.message, 'bot');
+            setTimeout(() => {
+                requestLiveAgent();
+            }, 2000);
+            return;
+        }
+
+        addMessageWithQuickReplies(response.message, response.quickReplies);
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+    function startAIChat() {
+        document.getElementById('chatInput').focus();
+    }
+
+    function requestLiveAgent() {
+        document.getElementById('chatStatus').textContent = 'Connecting to live agent...';
+        document.getElementById('transferBtn').style.display = 'none';
+
+        showTyping();
+        setTimeout(() => {
+            hideTyping();
+            addMessage("You are now connected with a Customer Support Agent. How may I assist you today?", 'bot');
+
+            // Update header to show live agent
+            document.querySelector('.chat-avatar').textContent = '👨‍💼';
+            document.querySelector('.chat-header h6').textContent = 'Live Support Agent';
+            document.getElementById('chatStatus').innerHTML = '<span class="status-dot"></span> Mike Chen - Online';
+        }, 3000);
+    }
+</script>
+}
