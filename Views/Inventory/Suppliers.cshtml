@@ -7,7 +7,7 @@
         <h1 class="page-title">Suppliers</h1>
         <p class="page-subtitle">Manage your product suppliers</p>
     </div>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#supplierModal" onclick="openCreateSupplierModal()">
+    <button class="btn btn-primary" onclick="openAddModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
@@ -47,15 +47,15 @@
         </div>
     </div>
     <div class="col-xl-4 col-md-6 mb-3">
-        <div class="stat-card stat-card-info">
+        <div class="stat-card stat-card-warning">
             <div class="stat-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                    <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
                 </svg>
             </div>
             <div class="stat-content">
-                <div class="stat-value" id="totalSupplierProducts">0</div>
-                <div class="stat-label">Products Supplied</div>
+                <div class="stat-value" id="inactiveSuppliers">0</div>
+                <div class="stat-label">Inactive Suppliers</div>
             </div>
         </div>
     </div>
@@ -64,139 +64,34 @@
 <!-- Suppliers Table -->
 <div class="card fade-in">
     <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <h5 class="card-title mb-0">Supplier List</h5>
             <div class="search-input" style="max-width: 300px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
-                <input type="text" class="form-control" id="searchSuppliers" placeholder="Search suppliers...">
+                <input type="text" class="form-control" id="searchInput" placeholder="Search suppliers..." oninput="filterTable()">
             </div>
         </div>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0" id="suppliersTable">
+            <table class="table table-hover mb-0">
                 <thead>
                     <tr>
                         <th>Supplier Name</th>
                         <th>Company Name</th>
-                        <th>Products</th>
+                        <th>Contact Number</th>
+                        <th>Email</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody id="suppliersTableBody">
-                    <!-- Sample Data -->
+                <tbody id="tableBody">
                     <tr>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="product-image-placeholder">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                                    </svg>
-                                </div>
-                                <span class="fw-medium">John Doe</span>
-                            </div>
-                        </td>
-                        <td>TechSupply Corp</td>
-                        <td>
-                            <span class="badge bg-info-subtle text-info">15 Products</span>
-                        </td>
-                        <td><span class="badge bg-success-subtle text-success">Active</span></td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary" onclick="viewSupplier(1)" title="View">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-outline-secondary" onclick="editSupplier(1)" title="Edit">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-outline-danger" onclick="deleteSupplier(1)" title="Delete">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="product-image-placeholder">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                                    </svg>
-                                </div>
-                                <span class="fw-medium">Maria Santos</span>
-                            </div>
-                        </td>
-                        <td>PC Parts Philippines</td>
-                        <td>
-                            <span class="badge bg-info-subtle text-info">28 Products</span>
-                        </td>
-                        <td><span class="badge bg-success-subtle text-success">Active</span></td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary" onclick="viewSupplier(2)" title="View">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-outline-secondary" onclick="editSupplier(2)" title="Edit">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-outline-danger" onclick="deleteSupplier(2)" title="Delete">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="product-image-placeholder">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                                    </svg>
-                                </div>
-                                <span class="fw-medium">Roberto Cruz</span>
-                            </div>
-                        </td>
-                        <td>Gaming Gear Inc.</td>
-                        <td>
-                            <span class="badge bg-info-subtle text-info">42 Products</span>
-                        </td>
-                        <td><span class="badge bg-success-subtle text-success">Active</span></td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary" onclick="viewSupplier(3)" title="View">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-outline-secondary" onclick="editSupplier(3)" title="Edit">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-outline-danger" onclick="deleteSupplier(3)" title="Delete">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                    </svg>
-                                </button>
-                            </div>
+                        <td colspan="6" class="text-center py-4">
+                            <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                            Loading suppliers...
                         </td>
                     </tr>
                 </tbody>
@@ -205,49 +100,39 @@
     </div>
 </div>
 
-<!-- Supplier Modal -->
-<div class="modal fade" id="supplierModal" tabindex="-1" aria-labelledby="supplierModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<!-- Add/Edit Supplier Modal -->
+<div class="modal fade" id="supplierModal" tabindex="-1">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="supplierModalLabel">Add New Supplier</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="modalTitle">Add New Supplier</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="supplierForm">
                     <input type="hidden" id="supplierId" value="0">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Supplier Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="supplierName" required placeholder="Enter supplier name">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Company Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="companyName" required placeholder="Enter company name">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Products Supplied</label>
-                            <select class="form-select" id="supplierProducts" multiple style="min-height: 150px;">
-                                <option value="1">Gaming Mouse - Razer DeathAdder</option>
-                                <option value="2">Mechanical Keyboard - Logitech G Pro</option>
-                                <option value="3">Gaming Headset - HyperX Cloud II</option>
-                                <option value="4">Monitor - ASUS ROG 27"</option>
-                                <option value="5">Graphics Card - RTX 4070</option>
-                                <option value="6">Processor - AMD Ryzen 7</option>
-                                <option value="7">RAM - Corsair 32GB DDR5</option>
-                                <option value="8">SSD - Samsung 1TB NVMe</option>
-                                <option value="9">Power Supply - Seasonic 750W</option>
-                                <option value="10">PC Case - NZXT H510</option>
-                            </select>
-                            <small class="text-muted">Hold Ctrl/Cmd to select multiple products</small>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Status</label>
-                            <select class="form-select" id="supplierStatus">
-                                <option value="Active">Active</option>
-                                <option value="Inactive">Inactive</option>
-                            </select>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label">Supplier Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="supplierName" required placeholder="Enter supplier name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Company Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="companyName" required placeholder="Enter company name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contact Number</label>
+                        <input type="text" class="form-control" id="contactNumber" placeholder="Enter contact number">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" placeholder="Enter email address">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="status">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
                     </div>
                 </form>
             </div>
@@ -260,34 +145,37 @@
 </div>
 
 <!-- View Supplier Modal -->
-<div class="modal fade" id="viewSupplierModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<div class="modal fade" id="viewModal" tabindex="-1">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Supplier Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label text-muted">Supplier Name</label>
-                        <p class="fw-medium" id="viewSupplierName">-</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label text-muted">Company Name</label>
-                        <p class="fw-medium" id="viewCompanyName">-</p>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label text-muted">Products Supplied</label>
-                        <div id="viewSupplierProducts" class="d-flex flex-wrap gap-2">
-                            <!-- Products badges will be inserted here -->
-                        </div>
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Supplier Name</label>
+                    <p class="fw-medium mb-0" id="viewName">-</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Company Name</label>
+                    <p class="fw-medium mb-0" id="viewCompany">-</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Contact Number</label>
+                    <p class="fw-medium mb-0" id="viewPhone">-</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Email</label>
+                    <p class="fw-medium mb-0" id="viewEmail">-</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Status</label>
+                    <p class="mb-0" id="viewStatus">-</p>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <a href="/Inventory/PurchaseOrders" class="btn btn-primary">Create Purchase Order</a>
             </div>
         </div>
     </div>
@@ -295,68 +183,267 @@
 
 @section Scripts {
 <script>
-    // Initialize stats
-    document.getElementById('totalSuppliers').textContent = '3';
-    document.getElementById('activeSuppliers').textContent = '3';
-    document.getElementById('totalSupplierProducts').textContent = '85';
+    let suppliers = [];
+    let modal, viewModalInstance;
 
-    function openCreateSupplierModal() {
-        document.getElementById('supplierModalLabel').textContent = 'Add New Supplier';
-        document.getElementById('supplierForm').reset();
-        document.getElementById('supplierId').value = '0';
+    document.addEventListener('DOMContentLoaded', function() {
+        modal = new bootstrap.Modal(document.getElementById('supplierModal'));
+        viewModalInstance = new bootstrap.Modal(document.getElementById('viewModal'));
+        loadSuppliers();
+    });
+
+    // Load suppliers from database
+    async function loadSuppliers() {
+        try {
+            const response = await fetch('/api/suppliers');
+            if (!response.ok) {
+                throw new Error('Failed to fetch suppliers');
+            }
+            suppliers = await response.json();
+            
+            updateStats();
+            renderTable(suppliers);
+        } catch (error) {
+            console.error('Error loading suppliers:', error);
+            document.getElementById('tableBody').innerHTML = `
+                <tr><td colspan="6" class="text-center py-4 text-danger">Error loading suppliers. Please refresh the page.</td></tr>
+            `;
+        }
     }
 
-    function editSupplier(id) {
-        document.getElementById('supplierModalLabel').textContent = 'Edit Supplier';
-        document.getElementById('supplierId').value = id;
-        // Load supplier data here
-        var modal = new bootstrap.Modal(document.getElementById('supplierModal'));
-        modal.show();
+    // Update stats
+    function updateStats() {
+        document.getElementById('totalSuppliers').textContent = suppliers.length;
+        document.getElementById('activeSuppliers').textContent = suppliers.filter(s => s.status === 'Active').length;
+        document.getElementById('inactiveSuppliers').textContent = suppliers.filter(s => s.status === 'Inactive').length;
     }
 
-    function viewSupplier(id) {
-        // Sample data - replace with actual API call
-        document.getElementById('viewSupplierName').textContent = 'John Doe';
-        document.getElementById('viewCompanyName').textContent = 'TechSupply Corp';
-        document.getElementById('viewSupplierProducts').innerHTML = `
-            <span class="badge bg-primary">Gaming Mouse</span>
-            <span class="badge bg-primary">Mechanical Keyboard</span>
-            <span class="badge bg-primary">Gaming Headset</span>
-            <span class="badge bg-primary">Monitor</span>
-        `;
-        var modal = new bootstrap.Modal(document.getElementById('viewSupplierModal'));
-        modal.show();
-    }
-
-    function saveSupplier() {
-        const name = document.getElementById('supplierName').value;
-        const company = document.getElementById('companyName').value;
-
-        if (!name || !company) {
-            alert('Please fill in all required fields');
+    // Render table
+    function renderTable(data) {
+        const tbody = document.getElementById('tableBody');
+        
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-4">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="text-muted mb-2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                        </svg>
+                        <p class="text-muted mb-0">No suppliers found</p>
+                    </td>
+                </tr>
+            `;
             return;
         }
 
-        // Save logic here - API call
-        alert('Supplier saved successfully!');
-        bootstrap.Modal.getInstance(document.getElementById('supplierModal')).hide();
+        tbody.innerHTML = data.map(s => `
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--bs-primary-bg-subtle); display: flex; align-items: center; justify-content: center;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--bs-primary)" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                            </svg>
+                        </div>
+                        <span class="fw-medium">${escapeHtml(s.supplierName || '')}</span>
+                    </div>
+                </td>
+                <td>${escapeHtml(s.contactPerson || '-')}</td>
+                <td>${escapeHtml(s.phone || '-')}</td>
+                <td>${escapeHtml(s.email || '-')}</td>
+                <td>
+                    <span class="badge ${s.status === 'Active' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}">
+                        ${s.status || 'Active'}
+                    </span>
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary" onclick="viewSupplier(${s.supplierId})" title="View">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="editSupplier(${s.supplierId})" title="Edit">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                        </button>
+                        <button class="btn ${s.status === 'Active' ? 'btn-outline-danger' : 'btn-outline-success'}" 
+                                onclick="toggleStatus(${s.supplierId}, '${s.status || 'Active'}')" 
+                                title="${s.status === 'Active' ? 'Deactivate' : 'Activate'}">
+                            ${s.status === 'Active' ? 
+                                `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                                </svg>` : 
+                                `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>`
+                            }
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
     }
 
-    function deleteSupplier(id) {
-        if (confirm('Are you sure you want to delete this supplier?')) {
-            // Delete logic here - API call
-            alert('Supplier deleted successfully!');
+    // Filter table
+    function filterTable() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = suppliers.filter(s => 
+            (s.supplierName || '').toLowerCase().includes(search) ||
+            (s.contactPerson || '').toLowerCase().includes(search) ||
+            (s.email || '').toLowerCase().includes(search) ||
+            (s.phone || '').toLowerCase().includes(search)
+        );
+        renderTable(filtered);
+    }
+
+    // Open add modal
+    function openAddModal() {
+        document.getElementById('modalTitle').textContent = 'Add New Supplier';
+        document.getElementById('supplierForm').reset();
+        document.getElementById('supplierId').value = '0';
+        document.getElementById('status').value = 'Active';
+        modal.show();
+    }
+
+    // Edit supplier
+    function editSupplier(id) {
+        const s = suppliers.find(x => x.supplierId === id);
+        if (!s) {
+            alert('Supplier not found');
+            return;
+        }
+
+        document.getElementById('modalTitle').textContent = 'Edit Supplier';
+        document.getElementById('supplierId').value = s.supplierId;
+        document.getElementById('supplierName').value = s.supplierName || '';
+        document.getElementById('companyName').value = s.contactPerson || '';
+        document.getElementById('contactNumber').value = s.phone || '';
+        document.getElementById('email').value = s.email || '';
+        document.getElementById('status').value = s.status || 'Active';
+
+        modal.show();
+    }
+
+    // View supplier
+    function viewSupplier(id) {
+        const s = suppliers.find(x => x.supplierId === id);
+        if (!s) {
+            alert('Supplier not found');
+            return;
+        }
+
+        document.getElementById('viewName').textContent = s.supplierName || '-';
+        document.getElementById('viewCompany').textContent = s.contactPerson || '-';
+        document.getElementById('viewPhone').textContent = s.phone || '-';
+        document.getElementById('viewEmail').textContent = s.email || '-';
+        
+        const statusEl = document.getElementById('viewStatus');
+        statusEl.innerHTML = `<span class="badge ${s.status === 'Active' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}">${s.status || 'Active'}</span>`;
+
+        viewModalInstance.show();
+    }
+
+    // Save supplier
+    async function saveSupplier() {
+        const id = parseInt(document.getElementById('supplierId').value);
+        const supplierName = document.getElementById('supplierName').value.trim();
+        const companyName = document.getElementById('companyName').value.trim();
+
+        if (!supplierName || !companyName) {
+            alert('Please fill in Supplier Name and Company Name');
+            return;
+        }
+
+        const data = {
+            supplierName: supplierName,
+            contactPerson: companyName,
+            phone: document.getElementById('contactNumber').value.trim() || null,
+            email: document.getElementById('email').value.trim() || null,
+            status: document.getElementById('status').value
+        };
+
+        try {
+            let response;
+            if (id === 0) {
+                // Create new
+                response = await fetch('/api/suppliers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+            } else {
+                // Update existing
+                response = await fetch(`/api/suppliers/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(id === 0 ? 'Supplier added successfully!' : 'Supplier updated successfully!');
+                modal.hide();
+                loadSuppliers(); // Reload the table
+            } else {
+                alert(result.message || 'Error saving supplier');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error saving supplier. Please try again.');
         }
     }
 
-    // Search functionality
-    document.getElementById('searchSuppliers').addEventListener('input', function(e) {
-        const searchTerm = e.target.value.toLowerCase();
-        const rows = document.querySelectorAll('#suppliersTableBody tr');
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
-    });
+    // Toggle status
+    async function toggleStatus(id, currentStatus) {
+        const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
+        const action = currentStatus === 'Active' ? 'deactivate' : 'activate';
+
+        if (!confirm(`Are you sure you want to ${action} this supplier?`)) return;
+
+        const s = suppliers.find(x => x.supplierId === id);
+        if (!s) return;
+
+        const data = {
+            supplierName: s.supplierName,
+            contactPerson: s.contactPerson,
+            phone: s.phone,
+            email: s.email,
+            status: newStatus
+        };
+
+        try {
+            const response = await fetch(`/api/suppliers/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert(`Supplier ${newStatus === 'Active' ? 'activated' : 'deactivated'} successfully!`);
+                loadSuppliers();
+            } else {
+                alert(result.message || 'Error updating status');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error updating status');
+        }
+    }
+
+    // Escape HTML
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
 </script>
 }

@@ -137,6 +137,7 @@
                         <a asp-controller="Inventory" asp-action="Products" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Products" ? "active" : "")">Product Management</a>
                         <a asp-controller="Inventory" asp-action="Categories" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Categories" ? "active" : "")">Product Categories</a>
                         <a asp-controller="Inventory" asp-action="Stock" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Stock" ? "active" : "")">Stock Levels</a>
+                        <a asp-controller="Inventory" asp-action="StockAdjustment" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "StockAdjustment" ? "active" : "")">Stock Adjustment</a>
                         <a asp-controller="Inventory" asp-action="Alerts" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Alerts" ? "active" : "")">Low Stock Alerts</a>
                         <a asp-controller="Inventory" asp-action="Suppliers" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Suppliers" ? "active" : "")">Suppliers</a>
                         <a asp-controller="Inventory" asp-action="PurchaseOrders" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "PurchaseOrders" ? "active" : "")">Purchase Orders</a>

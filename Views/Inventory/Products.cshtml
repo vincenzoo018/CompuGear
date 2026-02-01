@@ -244,21 +244,25 @@
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                             </svg>
-                            Category & Brand
+                            Category, Brand & Supplier
                         </h6>
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label required">Category</label>
                                 <select class="form-select" id="categoryId" name="categoryId" required>
                                     <option value="">Select Category</option>
-                                    <!-- Categories loaded dynamically from database -->
                                 </select>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label">Brand</label>
                                 <select class="form-select" id="brandId" name="brandId">
                                     <option value="">Select Brand</option>
-                                    <!-- Brands loaded dynamically from database -->
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Supplier</label>
+                                <select class="form-select" id="supplierId" name="supplierId">
+                                    <option value="">Select Supplier</option>
                                 </select>
                             </div>
                         </div>
@@ -451,6 +455,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         loadCategoriesDropdown();
         loadBrandsDropdown();
+        loadSuppliersDropdown();
         Inventory.products.load();
         
         document.getElementById('searchProducts')?.addEventListener('input', filterProducts);
@@ -602,6 +607,20 @@
             }
         } catch (error) {
             console.error('Failed to load brands:', error);
+        }
+    }
+
+    async function loadSuppliersDropdown() {
+        try {
+            const suppliers = await API.get('/suppliers');
+            const select = document.getElementById('supplierId');
+            
+            if (select) {
+                select.innerHTML = '<option value="">Select Supplier</option>' + 
+                    suppliers.map(s => `<option value="${s.supplierId}">${s.supplierName}</option>`).join('');
+            }
+        } catch (error) {
+            console.error('Failed to load suppliers:', error);
         }
     }
 

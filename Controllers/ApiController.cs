@@ -422,6 +422,7 @@ namespace CompuGear.Controllers
                 var products = await _context.Products
                     .Include(p => p.Category)
                     .Include(p => p.Brand)
+                    .Include(p => p.Supplier)
                     .OrderByDescending(p => p.CreatedAt)
                     .Select(p => new
                     {
@@ -434,6 +435,8 @@ namespace CompuGear.Controllers
                         p.CategoryId,
                         BrandName = p.Brand != null ? p.Brand.BrandName : "",
                         p.BrandId,
+                        SupplierName = p.Supplier != null ? p.Supplier.SupplierName : "",
+                        p.SupplierId,
                         p.CostPrice,
                         p.SellingPrice,
                         p.CompareAtPrice,
@@ -505,6 +508,7 @@ namespace CompuGear.Controllers
                 existing.ShortDescription = product.ShortDescription;
                 existing.CategoryId = product.CategoryId;
                 existing.BrandId = product.BrandId;
+                existing.SupplierId = product.SupplierId;
                 existing.CostPrice = product.CostPrice;
                 existing.SellingPrice = product.SellingPrice;
                 existing.CompareAtPrice = product.CompareAtPrice;
@@ -1589,6 +1593,232 @@ namespace CompuGear.Controllers
 
         #endregion
 
+        #region Suppliers
+
+        [HttpGet("suppliers")]
+        public async Task<IActionResult> GetSuppliers()
+        {
+            try
+            {
+                var suppliers = await _context.Suppliers
+                    .OrderBy(s => s.SupplierName)
+                    .Select(s => new
+                    {
+                        s.SupplierId,
+                        s.SupplierCode,
+                        s.SupplierName,
+                        s.ContactPerson,
+                        s.Email,
+                        s.Phone,
+                        s.Status
+                    })
+                    .ToListAsync();
+
+                return Ok(suppliers);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpGet("suppliers/{id}")]
+        public async Task<IActionResult> GetSupplier(int id)
+        {
+            try
+            {
+                var supplier = await _context.Suppliers.FindAsync(id);
+                if (supplier == null) return NotFound();
+                return Ok(supplier);
+            }
+            catch (Exception)
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet("suppliers/{id}/products")]
+        public async Task<IActionResult> GetSupplierProducts(int id)
+        {
+            try
+            {
+                var products = await _context.Products
+                    .Include(p => p.Category)
+                    .Include(p => p.Brand)
+                    .Where(p => p.SupplierId == id)
+                    .OrderBy(p => p.ProductName)
+                    .Select(p => new
+                    {
+                        p.ProductId,
+                        p.ProductCode,
+                        p.SKU,
+                        p.ProductName,
+                        p.ShortDescription,
+                        CategoryName = p.Category != null ? p.Category.CategoryName : "",
+                        BrandName = p.Brand != null ? p.Brand.BrandName : "",
+                        p.CostPrice,
+                        p.SellingPrice,
+                        p.StockQuantity,
+                        p.ReorderLevel,
+                        p.Status,
+                        p.MainImageUrl
+                    })
+                    .ToListAsync();
+
+                return Ok(products);
+            }
+            catch (Exception)
+            {
+                return Ok(new List<object>());
+            }
+        }
+
+        [HttpPost("suppliers")]
+        public async Task<IActionResult> CreateSupplier([FromBody] Supplier supplier)
+        {
+            try
+            {
+                supplier.SupplierCode = $"SUP-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
+                supplier.CreatedAt = DateTime.UtcNow;
+                supplier.UpdatedAt = DateTime.UtcNow;
+
+                _context.Suppliers.Add(supplier);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Supplier created successfully", data = supplier });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
+            }
+        }
+
+        [HttpPut("suppliers/{id}")]
+        public async Task<IActionResult> UpdateSupplier(int id, [FromBody] Supplier supplier)
+        {
+            try
+            {
+                var existing = await _context.Suppliers.FindAsync(id);
+                if (existing == null) return NotFound();
+
+                existing.SupplierName = supplier.SupplierName;
+                existing.ContactPerson = supplier.ContactPerson;
+                existing.Email = supplier.Email;
+                existing.Phone = supplier.Phone;
+                existing.Address = supplier.Address;
+                existing.City = supplier.City;
+                existing.Country = supplier.Country;
+                existing.Website = supplier.Website;
+                existing.PaymentTerms = supplier.PaymentTerms;
+                existing.Status = supplier.Status;
+                existing.Rating = supplier.Rating;
+                existing.Notes = supplier.Notes;
+                existing.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true, message = "Supplier updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
+            }
+        }
+
+        #endregion
+
+        #region Stock Adjustments
+
+        [HttpPost("stock-adjustments")]
+        public async Task<IActionResult> CreateStockAdjustment([FromBody] StockAdjustmentRequest request)
+        {
+            try
+            {
+                var product = await _context.Products.FindAsync(request.ProductId);
+                if (product == null)
+                    return NotFound(new { success = false, message = "Product not found" });
+
+                var previousStock = product.StockQuantity;
+                var adjustmentQuantity = request.AdjustmentType == "Add" ? request.Quantity : -request.Quantity;
+                var newStock = previousStock + adjustmentQuantity;
+
+                if (newStock < 0)
+                    return BadRequest(new { success = false, message = "Stock cannot be negative" });
+
+                product.StockQuantity = newStock;
+                product.UpdatedAt = DateTime.UtcNow;
+
+                // Create inventory transaction
+                var transaction = new InventoryTransaction
+                {
+                    ProductId = request.ProductId,
+                    TransactionType = request.AdjustmentType == "Add" ? "Stock In" : "Stock Out",
+                    Quantity = adjustmentQuantity,
+                    PreviousStock = previousStock,
+                    NewStock = newStock,
+                    UnitCost = product.CostPrice,
+                    TotalCost = Math.Abs(adjustmentQuantity) * product.CostPrice,
+                    ReferenceType = "Stock Adjustment",
+                    Notes = request.Notes,
+                    TransactionDate = DateTime.UtcNow
+                };
+
+                _context.InventoryTransactions.Add(transaction);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { 
+                    success = true, 
+                    message = $"Stock adjusted successfully. New stock: {newStock}",
+                    data = new {
+                        productId = product.ProductId,
+                        productName = product.ProductName,
+                        previousStock,
+                        adjustmentQuantity,
+                        newStock
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
+            }
+        }
+
+        [HttpGet("stock-adjustments")]
+        public async Task<IActionResult> GetStockAdjustments()
+        {
+            try
+            {
+                var adjustments = await _context.InventoryTransactions
+                    .Include(t => t.Product)
+                    .Where(t => t.ReferenceType == "Stock Adjustment")
+                    .OrderByDescending(t => t.TransactionDate)
+                    .Select(t => new
+                    {
+                        t.TransactionId,
+                        t.ProductId,
+                        ProductName = t.Product.ProductName,
+                        ProductImage = t.Product.MainImageUrl,
+                        t.TransactionType,
+                        t.Quantity,
+                        t.PreviousStock,
+                        t.NewStock,
+                        t.UnitCost,
+                        t.TotalCost,
+                        t.Notes,
+                        t.TransactionDate
+                    })
+                    .ToListAsync();
+
+                return Ok(adjustments);
+            }
+            catch (Exception)
+            {
+                return Ok(new List<object>());
+            }
+        }
+
+        #endregion
+
         #region Dashboard Stats
 
         [HttpGet("dashboard/stats")]
@@ -1705,4 +1935,13 @@ namespace CompuGear.Controllers
     {
         public bool IsActive { get; set; }
     }
+
+    public class StockAdjustmentRequest
+    {
+        public int ProductId { get; set; }
+        public string AdjustmentType { get; set; } = "Add"; // "Add" or "Deduct"
+        public int Quantity { get; set; }
+        public string? Notes { get; set; }
+    }
+
 }

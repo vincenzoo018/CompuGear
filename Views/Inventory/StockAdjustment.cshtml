@@ -1,0 +1,847 @@
+@{
+    ViewData["Title"] = "Stock Adjustment";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Stock Adjustment</h1>
+        <p class="page-subtitle">Manage stock levels - Add or deduct inventory quantities</p>
+    </div>
+    <button class="btn btn-primary" onclick="openAdjustmentModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Add Stock
+    </button>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalAdjustments">0</div>
+                <div class="stat-label">Total Adjustments</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="stockInCount">0</div>
+                <div class="stat-label">Stock In</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-danger">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="stockOutCount">0</div>
+                <div class="stat-label">Stock Out</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-info">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalSuppliers">0</div>
+                <div class="stat-label">Suppliers</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter & Search -->
+<div class="card mb-4 fade-in">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Search Adjustments</label>
+                <div class="search-input">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" class="form-control" id="searchAdjustments" placeholder="Search by product name..." oninput="filterAdjustments()">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Adjustment Type</label>
+                <select class="form-select" id="filterType" onchange="filterAdjustments()">
+                    <option value="">All Types</option>
+                    <option value="Stock In">Stock In</option>
+                    <option value="Stock Out">Stock Out</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date Range</label>
+                <input type="date" class="form-control" id="filterDate" onchange="filterAdjustments()">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                    </svg>
+                    Reset
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Adjustments Table -->
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Adjustment History</h5>
+        <span class="badge bg-primary" id="adjustmentCount">0 records</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table" id="adjustmentsTable">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Type</th>
+                        <th class="text-center">Quantity</th>
+                        <th class="text-center">Previous Stock</th>
+                        <th class="text-center">New Stock</th>
+                        <th>Notes</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="adjustmentsTableBody">
+                    <!-- Dynamic content loaded via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Adjustment Modal -->
+<div class="modal fade" id="adjustmentModal" tabindex="-1" aria-labelledby="adjustmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header modal-header-primary">
+                <h5 class="modal-title" id="adjustmentModalLabel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Add Stock Adjustment
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="adjustmentForm" onsubmit="saveAdjustment(event)">
+                <div class="modal-body">
+                    <!-- Supplier Selection -->
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                            Select Supplier
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label required">Supplier</label>
+                                <select class="form-select" id="supplierId" name="supplierId" required onchange="loadSupplierProducts()">
+                                    <option value="">-- Select a Supplier --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Selection Section -->
+                    <div class="form-section" id="productSelectionSection" style="display: none;">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                <line x1="8" y1="21" x2="16" y2="21"/>
+                                <line x1="12" y1="17" x2="12" y2="21"/>
+                            </svg>
+                            Supplier Products
+                        </h6>
+                        
+                        <!-- Live Search for Products -->
+                        <div class="mb-3">
+                            <label class="form-label">Search Products</label>
+                            <div class="search-input">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                </svg>
+                                <input type="text" class="form-control" id="searchSupplierProducts" placeholder="Search products..." oninput="filterSupplierProducts()">
+                            </div>
+                        </div>
+
+                        <!-- Products List -->
+                        <div id="supplierProductsList" class="product-selection-grid">
+                            <!-- Products will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Selected Product Details -->
+                    <div class="form-section" id="selectedProductSection" style="display: none;">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="16" x2="12" y2="12"/>
+                                <line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                            Selected Product Details
+                        </h6>
+                        <div class="selected-product-card">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <div id="selectedProductImage" class="selected-product-image">
+                                        <!-- Product image -->
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <h5 id="selectedProductName" class="mb-1">-</h5>
+                                    <p id="selectedProductCode" class="text-muted mb-1 small">-</p>
+                                    <div class="d-flex gap-3">
+                                        <span class="badge bg-secondary" id="selectedProductCategory">-</span>
+                                        <span class="badge bg-info" id="selectedProductBrand">-</span>
+                                    </div>
+                                </div>
+                                <div class="col-auto text-end">
+                                    <div class="fw-bold text-primary fs-4" id="selectedProductPrice">₱0.00</div>
+                                    <div class="text-muted small">Current Stock: <strong id="selectedProductStock">0</strong></div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="productId" name="productId">
+                    </div>
+
+                    <!-- Adjustment Details -->
+                    <div class="form-section" id="adjustmentDetailsSection" style="display: none;">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 20V10"/>
+                                <path d="M18 20V4"/>
+                                <path d="M6 20v-4"/>
+                            </svg>
+                            Adjustment Details
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label required">Adjustment Type</label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="adjustmentType" id="typeAdd" value="Add" checked>
+                                    <label class="btn btn-outline-success" for="typeAdd">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                                            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                                        </svg>
+                                        Add Stock
+                                    </label>
+                                    <input type="radio" class="btn-check" name="adjustmentType" id="typeDeduct" value="Deduct">
+                                    <label class="btn btn-outline-danger" for="typeDeduct">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                                            <line x1="5" y1="12" x2="19" y2="12"/>
+                                        </svg>
+                                        Deduct Stock
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label required">Quantity</label>
+                                <input type="number" class="form-control" id="adjustmentQuantity" name="quantity" min="1" value="1" required oninput="updatePreview()">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Notes / Reason</label>
+                                <textarea class="form-control" id="adjustmentNotes" name="notes" rows="2" placeholder="Enter reason for adjustment..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Preview -->
+                        <div class="adjustment-preview mt-3">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="preview-label">Current Stock</div>
+                                    <div class="preview-value" id="previewCurrentStock">0</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="preview-label">Adjustment</div>
+                                    <div class="preview-value" id="previewAdjustment">+0</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="preview-label">New Stock</div>
+                                    <div class="preview-value text-primary" id="previewNewStock">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        Save Adjustment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .product-selection-grid {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 10px;
+    }
+
+    .product-select-item {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        border: 2px solid transparent;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        background: #f8f9fa;
+        transition: all 0.2s ease;
+    }
+
+    .product-select-item:hover {
+        background: #e8f5f5;
+        border-color: #20c997;
+    }
+
+    .product-select-item.selected {
+        background: linear-gradient(135deg, #e8f5f5, #d0f0f0);
+        border-color: #008080;
+    }
+
+    .product-select-item .product-img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-right: 15px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .product-select-item .product-placeholder {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        color: #9ca3af;
+    }
+
+    .product-select-item .product-details {
+        flex: 1;
+    }
+
+    .product-select-item .product-name {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 2px;
+    }
+
+    .product-select-item .product-meta {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    .product-select-item .product-stock-info {
+        text-align: right;
+    }
+
+    .product-select-item .stock-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .stock-badge.in-stock { background: #d1fae5; color: #065f46; }
+    .stock-badge.low-stock { background: #fef3c7; color: #92400e; }
+    .stock-badge.out-of-stock { background: #fee2e2; color: #991b1b; }
+
+    .selected-product-card {
+        background: linear-gradient(135deg, #f0fdfa, #e8f5f5);
+        border: 2px solid #008080;
+        border-radius: 12px;
+        padding: 20px;
+    }
+
+    .selected-product-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+    }
+
+    .selected-product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .selected-product-image .placeholder-icon {
+        color: #9ca3af;
+    }
+
+    .adjustment-preview {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .preview-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: #6b7280;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .preview-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .form-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .form-section-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #008080;
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .no-products-message {
+        text-align: center;
+        padding: 30px;
+        color: #6b7280;
+    }
+
+    .no-products-message svg {
+        margin-bottom: 10px;
+        opacity: 0.5;
+    }
+
+    .search-input {
+        position: relative;
+    }
+
+    .search-input svg {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+    }
+
+    .search-input input {
+        padding-left: 40px;
+    }
+</style>
+
+@section Scripts {
+<script>
+    let suppliers = [];
+    let supplierProducts = [];
+    let allSupplierProducts = [];
+    let selectedProduct = null;
+    let adjustments = [];
+    let allAdjustments = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSuppliers();
+        loadAdjustments();
+        setupRadioListeners();
+    });
+
+    function setupRadioListeners() {
+        document.querySelectorAll('input[name="adjustmentType"]').forEach(radio => {
+            radio.addEventListener('change', updatePreview);
+        });
+    }
+
+    async function loadSuppliers() {
+        try {
+            const response = await fetch('/api/suppliers');
+            suppliers = await response.json();
+            
+            const select = document.getElementById('supplierId');
+            select.innerHTML = '<option value="">-- Select a Supplier --</option>' + 
+                suppliers.map(s => `<option value="${s.supplierId}">${s.supplierName} ${s.contactPerson ? '(' + s.contactPerson + ')' : ''}</option>`).join('');
+            
+            document.getElementById('totalSuppliers').textContent = suppliers.length;
+        } catch (error) {
+            console.error('Error loading suppliers:', error);
+        }
+    }
+
+    async function loadAdjustments() {
+        try {
+            const response = await fetch('/api/stock-adjustments');
+            allAdjustments = await response.json();
+            adjustments = [...allAdjustments];
+            renderAdjustments();
+            updateStats();
+        } catch (error) {
+            console.error('Error loading adjustments:', error);
+        }
+    }
+
+    function renderAdjustments() {
+        const tbody = document.getElementById('adjustmentsTableBody');
+        
+        if (adjustments.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center py-5 text-muted">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mb-2" style="opacity: 0.5;">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        </svg>
+                        <p class="mb-0">No stock adjustments found. Click "Add Stock" to create one.</p>
+                    </td>
+                </tr>
+            `;
+            document.getElementById('adjustmentCount').textContent = '0 records';
+            return;
+        }
+
+        tbody.innerHTML = adjustments.map(adj => {
+            const imageHtml = adj.productImage 
+                ? `<img src="${adj.productImage}" class="product-thumb me-3" alt="${adj.productName}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'product-image-placeholder me-3\\'><svg width=\\'24\\' height=\\'24\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\' ry=\\'2\\'/><circle cx=\\'8.5\\' cy=\\'8.5\\' r=\\'1.5\\'/><polyline points=\\'21 15 16 10 5 21\\'/></svg></div>';">`
+                : `<div class="product-image-placeholder me-3">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                </div>`;
+
+            const isStockIn = adj.transactionType === 'Stock In';
+            const quantityDisplay = isStockIn 
+                ? `<span class="text-success fw-bold">+${Math.abs(adj.quantity)}</span>` 
+                : `<span class="text-danger fw-bold">-${Math.abs(adj.quantity)}</span>`;
+
+            return `
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            ${imageHtml}
+                            <div>
+                                <div class="fw-semibold">${adj.productName}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge ${isStockIn ? 'bg-success' : 'bg-danger'}">
+                            ${adj.transactionType}
+                        </span>
+                    </td>
+                    <td class="text-center">${quantityDisplay}</td>
+                    <td class="text-center">${adj.previousStock}</td>
+                    <td class="text-center"><strong>${adj.newStock}</strong></td>
+                    <td>${adj.notes || '-'}</td>
+                    <td>${formatDate(adj.transactionDate)}</td>
+                </tr>
+            `;
+        }).join('');
+
+        document.getElementById('adjustmentCount').textContent = `${adjustments.length} records`;
+    }
+
+    function updateStats() {
+        const total = allAdjustments.length;
+        const stockIn = allAdjustments.filter(a => a.transactionType === 'Stock In').length;
+        const stockOut = allAdjustments.filter(a => a.transactionType === 'Stock Out').length;
+
+        document.getElementById('totalAdjustments').textContent = total;
+        document.getElementById('stockInCount').textContent = stockIn;
+        document.getElementById('stockOutCount').textContent = stockOut;
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-PH', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    function filterAdjustments() {
+        const searchTerm = document.getElementById('searchAdjustments').value.toLowerCase();
+        const typeFilter = document.getElementById('filterType').value;
+        const dateFilter = document.getElementById('filterDate').value;
+
+        adjustments = allAdjustments.filter(adj => {
+            const matchesSearch = !searchTerm || adj.productName.toLowerCase().includes(searchTerm);
+            const matchesType = !typeFilter || adj.transactionType === typeFilter;
+            const matchesDate = !dateFilter || adj.transactionDate.startsWith(dateFilter);
+            return matchesSearch && matchesType && matchesDate;
+        });
+
+        renderAdjustments();
+    }
+
+    function resetFilters() {
+        document.getElementById('searchAdjustments').value = '';
+        document.getElementById('filterType').value = '';
+        document.getElementById('filterDate').value = '';
+        adjustments = [...allAdjustments];
+        renderAdjustments();
+    }
+
+    function openAdjustmentModal() {
+        // Reset form
+        document.getElementById('adjustmentForm').reset();
+        document.getElementById('supplierId').value = '';
+        document.getElementById('productSelectionSection').style.display = 'none';
+        document.getElementById('selectedProductSection').style.display = 'none';
+        document.getElementById('adjustmentDetailsSection').style.display = 'none';
+        document.getElementById('submitBtn').disabled = true;
+        selectedProduct = null;
+        supplierProducts = [];
+        allSupplierProducts = [];
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('adjustmentModal'));
+        modal.show();
+    }
+
+    async function loadSupplierProducts() {
+        const supplierId = document.getElementById('supplierId').value;
+        
+        if (!supplierId) {
+            document.getElementById('productSelectionSection').style.display = 'none';
+            document.getElementById('selectedProductSection').style.display = 'none';
+            document.getElementById('adjustmentDetailsSection').style.display = 'none';
+            document.getElementById('submitBtn').disabled = true;
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/suppliers/${supplierId}/products`);
+            allSupplierProducts = await response.json();
+            supplierProducts = [...allSupplierProducts];
+            renderSupplierProducts();
+            document.getElementById('productSelectionSection').style.display = 'block';
+            document.getElementById('searchSupplierProducts').value = '';
+        } catch (error) {
+            console.error('Error loading supplier products:', error);
+            Toast.error('Failed to load supplier products');
+        }
+    }
+
+    function renderSupplierProducts() {
+        const container = document.getElementById('supplierProductsList');
+
+        if (supplierProducts.length === 0) {
+            container.innerHTML = `
+                <div class="no-products-message">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                    <p class="mb-0">No products found for this supplier.</p>
+                    <small class="text-muted">Assign products to this supplier first.</small>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = supplierProducts.map(product => {
+            const imageHtml = product.mainImageUrl 
+                ? `<img src="${product.mainImageUrl}" alt="${product.productName}" class="product-img">`
+                : `<div class="product-placeholder">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                </div>`;
+
+            const stockClass = product.stockQuantity === 0 ? 'out-of-stock' : 
+                              product.stockQuantity <= product.reorderLevel ? 'low-stock' : 'in-stock';
+            const stockLabel = product.stockQuantity === 0 ? 'Out of Stock' : 
+                              product.stockQuantity <= product.reorderLevel ? 'Low Stock' : 'In Stock';
+
+            const isSelected = selectedProduct && selectedProduct.productId === product.productId;
+
+            return `
+                <div class="product-select-item ${isSelected ? 'selected' : ''}" onclick="selectProduct(${JSON.stringify(product).replace(/"/g, '&quot;')})">
+                    ${imageHtml}
+                    <div class="product-details">
+                        <div class="product-name">${product.productName}</div>
+                        <div class="product-meta">
+                            ${product.sku || product.productCode} | ${product.categoryName || 'Uncategorized'}
+                        </div>
+                    </div>
+                    <div class="product-stock-info">
+                        <div class="stock-badge ${stockClass}">${stockLabel}</div>
+                        <div class="mt-1"><strong>${product.stockQuantity}</strong> units</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function filterSupplierProducts() {
+        const searchTerm = document.getElementById('searchSupplierProducts').value.toLowerCase();
+        
+        supplierProducts = allSupplierProducts.filter(p => {
+            return p.productName.toLowerCase().includes(searchTerm) ||
+                   (p.sku && p.sku.toLowerCase().includes(searchTerm)) ||
+                   (p.productCode && p.productCode.toLowerCase().includes(searchTerm));
+        });
+
+        renderSupplierProducts();
+    }
+
+    function selectProduct(product) {
+        selectedProduct = product;
+        
+        // Update product selection UI
+        renderSupplierProducts();
+
+        // Show selected product details
+        const imageSection = document.getElementById('selectedProductImage');
+        if (product.mainImageUrl) {
+            imageSection.innerHTML = `<img src="${product.mainImageUrl}" alt="${product.productName}">`;
+        } else {
+            imageSection.innerHTML = `
+                <svg class="placeholder-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                </svg>
+            `;
+        }
+
+        document.getElementById('selectedProductName').textContent = product.productName;
+        document.getElementById('selectedProductCode').textContent = product.sku || product.productCode;
+        document.getElementById('selectedProductCategory').textContent = product.categoryName || 'Uncategorized';
+        document.getElementById('selectedProductBrand').textContent = product.brandName || 'No Brand';
+        document.getElementById('selectedProductPrice').textContent = '₱' + parseFloat(product.sellingPrice).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        document.getElementById('selectedProductStock').textContent = product.stockQuantity;
+        document.getElementById('productId').value = product.productId;
+
+        // Show sections
+        document.getElementById('selectedProductSection').style.display = 'block';
+        document.getElementById('adjustmentDetailsSection').style.display = 'block';
+        document.getElementById('submitBtn').disabled = false;
+
+        // Update preview
+        updatePreview();
+    }
+
+    function updatePreview() {
+        if (!selectedProduct) return;
+
+        const currentStock = selectedProduct.stockQuantity;
+        const quantity = parseInt(document.getElementById('adjustmentQuantity').value) || 0;
+        const isAdd = document.querySelector('input[name="adjustmentType"]:checked').value === 'Add';
+        
+        const adjustment = isAdd ? quantity : -quantity;
+        const newStock = currentStock + adjustment;
+
+        document.getElementById('previewCurrentStock').textContent = currentStock;
+        document.getElementById('previewAdjustment').textContent = (adjustment >= 0 ? '+' : '') + adjustment;
+        document.getElementById('previewAdjustment').className = 'preview-value ' + (adjustment >= 0 ? 'text-success' : 'text-danger');
+        document.getElementById('previewNewStock').textContent = newStock;
+        document.getElementById('previewNewStock').className = 'preview-value ' + (newStock < 0 ? 'text-danger' : 'text-primary');
+    }
+
+    async function saveAdjustment(event) {
+        event.preventDefault();
+
+        if (!selectedProduct) {
+            Toast.error('Please select a product');
+            return;
+        }
+
+        const quantity = parseInt(document.getElementById('adjustmentQuantity').value);
+        const adjustmentType = document.querySelector('input[name="adjustmentType"]:checked').value;
+        const notes = document.getElementById('adjustmentNotes').value;
+
+        // Validate
+        if (adjustmentType === 'Deduct' && quantity > selectedProduct.stockQuantity) {
+            Toast.error('Cannot deduct more than current stock');
+            return;
+        }
+
+        const data = {
+            productId: selectedProduct.productId,
+            adjustmentType: adjustmentType,
+            quantity: quantity,
+            notes: notes
+        };
+
+        try {
+            const response = await fetch('/api/stock-adjustments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                Toast.success(result.message);
+                bootstrap.Modal.getInstance(document.getElementById('adjustmentModal')).hide();
+                loadAdjustments();
+            } else {
+                Toast.error(result.message || 'Failed to save adjustment');
+            }
+        } catch (error) {
+            console.error('Error saving adjustment:', error);
+            Toast.error('Failed to save adjustment');
+        }
+    }
+</script>
+}

@@ -1124,6 +1124,9 @@ const Inventory = {
                 document.getElementById('description').value = product.shortDescription || '';
                 document.getElementById('categoryId').value = product.categoryId || '';
                 document.getElementById('brandId').value = product.brandId || '';
+                if (document.getElementById('supplierId')) {
+                    document.getElementById('supplierId').value = product.supplierId || '';
+                }
                 document.getElementById('costPrice').value = product.costPrice || '';
                 document.getElementById('sellingPrice').value = product.sellingPrice || '';
                 document.getElementById('stockQuantity').value = product.stockQuantity || 0;
@@ -1175,6 +1178,7 @@ const Inventory = {
                 shortDescription: document.getElementById('description').value,
                 categoryId: parseInt(document.getElementById('categoryId').value) || null,
                 brandId: parseInt(document.getElementById('brandId').value) || null,
+                supplierId: parseInt(document.getElementById('supplierId')?.value) || null,
                 costPrice: parseFloat(document.getElementById('costPrice').value) || 0,
                 sellingPrice: parseFloat(document.getElementById('sellingPrice').value) || 0,
                 stockQuantity: parseInt(document.getElementById('stockQuantity').value) || 0,

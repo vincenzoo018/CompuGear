@@ -38,5 +38,10 @@ namespace CompuGear.Controllers
         {
             return View();
         }
+
+        public IActionResult StockAdjustment()
+        {
+            return View();
+        }
     }
 }

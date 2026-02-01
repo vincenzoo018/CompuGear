@@ -97,6 +97,8 @@ namespace CompuGear.Models
 
         public int? BrandId { get; set; }
 
+        public int? SupplierId { get; set; }
+
         // Pricing
         [Required]
         [Column(TypeName = "decimal(18,2)")]
@@ -179,6 +181,9 @@ namespace CompuGear.Models
 
         [ForeignKey("BrandId")]
         public virtual Brand? Brand { get; set; }
+
+        [ForeignKey("SupplierId")]
+        public virtual Supplier? Supplier { get; set; }
 
         public virtual ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
 
@@ -374,5 +379,8 @@ namespace CompuGear.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        // Navigation Properties
+        public virtual ICollection<Product> Products { get; set; } = new List<Product>();
     }
 }
