@@ -10,6 +10,14 @@ const CONFIG = {
     apiBase: '/api'
 };
 
+// SVG Icons for action buttons
+const Icons = {
+    view: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+    edit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+    toggleOn: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="16" cy="12" r="3"/></svg>',
+    toggleOff: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="8" cy="12" r="3"/></svg>'
+};
+
 // Toast Notification System
 const Toast = {
     container: null,
@@ -197,20 +205,60 @@ const Table = {
 
         return html;
     }
+
 };
 
 // Modal Manager
 const Modal = {
     show(modalId) {
-        const modal = new bootstrap.Modal(document.getElementById(modalId));
+        const modalEl = document.getElementById(modalId);
+        if (!modalEl) return null;
+        
+        // Clean up any existing backdrops first
+        this.cleanup();
+        
+        // Get existing instance or create new one
+        let modal = bootstrap.Modal.getInstance(modalEl);
+        if (!modal) {
+            modal = new bootstrap.Modal(modalEl, {
+                backdrop: true,
+                keyboard: true
+            });
+        }
         modal.show();
         return modal;
     },
 
     hide(modalId) {
         const modalEl = document.getElementById(modalId);
+        if (!modalEl) return;
+        
         const modal = bootstrap.Modal.getInstance(modalEl);
-        if (modal) modal.hide();
+        
+        // One-time listener for when modal is fully hidden
+        const onHidden = () => {
+            modalEl.removeEventListener('hidden.bs.modal', onHidden);
+            
+            // Dispose the modal instance
+            const instance = bootstrap.Modal.getInstance(modalEl);
+            if (instance) {
+                instance.dispose();
+            }
+            
+            // Force cleanup
+            this.cleanup();
+        };
+        
+        if (modal) {
+            modalEl.addEventListener('hidden.bs.modal', onHidden);
+            modal.hide();
+        } else {
+            // No instance, just cleanup
+            this.cleanup();
+        }
+        
+        // Backup cleanup after animation would complete
+        setTimeout(() => this.cleanup(), 500);
     },
 
     reset(formId) {
@@ -219,6 +267,21 @@ const Modal = {
             form.reset();
             form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
         }
+    },
+
+    // Force cleanup all modal backdrops
+    cleanup() {
+        // Remove all backdrop elements
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+            backdrop.remove();
+        });
+        
+        // Remove modal-open class and styles from body
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('padding-right');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
     }
 };
 
@@ -298,19 +361,16 @@ const Marketing = {
                         </div>
                         <small class="text-muted">${Format.currency(c.actualSpend)} spent</small>
                     </td>
-                    <td>
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-teal" onclick="Marketing.campaigns.view(${c.campaignId})" title="View">
-                                <i class="bi bi-eye"></i>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="Marketing.campaigns.view(${c.campaignId})" title="View">
+                                ${Icons.view}
                             </button>
-                            <button class="btn btn-outline-primary" onclick="Marketing.campaigns.edit(${c.campaignId})" title="Edit">
-                                <i class="bi bi-pencil"></i>
+                            <button class="btn btn-sm btn-outline-warning" onclick="Marketing.campaigns.edit(${c.campaignId})" title="Edit">
+                                ${Icons.edit}
                             </button>
-                            <button class="btn btn-outline-${c.status === 'Active' ? 'warning' : 'success'}" onclick="Marketing.campaigns.toggleStatus(${c.campaignId})" title="${c.status === 'Active' ? 'Pause' : 'Activate'}">
-                                <i class="bi bi-${c.status === 'Active' ? 'pause' : 'play'}"></i>
-                            </button>
-                            <button class="btn btn-outline-danger" onclick="Marketing.campaigns.delete(${c.campaignId})" title="Delete">
-                                <i class="bi bi-trash"></i>
+                            <button class="btn btn-sm btn-outline-${c.status === 'Active' ? 'danger' : 'success'}" onclick="Marketing.campaigns.toggleStatus(${c.campaignId})" title="${c.status === 'Active' ? 'Deactivate' : 'Activate'}">
+                                ${c.status === 'Active' ? Icons.toggleOff : Icons.toggleOn}
                             </button>
                         </div>
                     </td>
@@ -537,21 +597,15 @@ const Marketing = {
                         </button>
                     </td>
                     <td class="text-center">
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-teal" onclick="Marketing.promotions.view(${p.promotionId})" title="View Details">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                                </svg>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="Marketing.promotions.view(${p.promotionId})" title="View">
+                                ${Icons.view}
                             </button>
-                            <button class="btn btn-outline-primary" onclick="Marketing.promotions.edit(${p.promotionId})" title="Edit">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                </svg>
+                            <button class="btn btn-sm btn-outline-warning" onclick="Marketing.promotions.edit(${p.promotionId})" title="Edit">
+                                ${Icons.edit}
                             </button>
-                            <button class="btn btn-outline-danger" onclick="Marketing.promotions.delete(${p.promotionId})" title="Delete">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                </svg>
+                            <button class="btn btn-sm btn-outline-${p.isActive ? 'danger' : 'success'}" onclick="Marketing.promotions.toggleStatus(${p.promotionId})" title="${p.isActive ? 'Deactivate' : 'Activate'}">
+                                ${p.isActive ? Icons.toggleOff : Icons.toggleOn}
                             </button>
                         </div>
                     </td>
@@ -707,6 +761,20 @@ const Marketing = {
             }
         },
 
+        async toggleStatus(id) {
+            try {
+                const promotion = this.data.find(p => p.promotionId === id);
+                if (!promotion) return;
+                
+                const newStatus = !promotion.isActive;
+                await API.put(`/promotions/${id}/status`, { isActive: newStatus });
+                Toast.success(`Promotion ${newStatus ? 'activated' : 'deactivated'} successfully`);
+                this.load();
+            } catch (error) {
+                Toast.error('Failed to update promotion status');
+            }
+        },
+
         async delete(id) {
             if (!confirm('Are you sure you want to delete this promotion?')) return;
 
@@ -745,7 +813,7 @@ const Customers = {
         if (!tbody) return;
 
         if (this.data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No customers found. Click "Add Customer" to create one.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No customers found. Click "Add Customer" to create one.</td></tr>';
             return;
         }
 
@@ -768,17 +836,16 @@ const Customers = {
                 <td>${Format.statusBadge(c.status)}</td>
                 <td class="text-center">${c.totalOrders}</td>
                 <td class="text-end">${Format.currency(c.totalSpent)}</td>
-                <td class="text-center"><span class="badge bg-warning text-dark">${c.loyaltyPoints} pts</span></td>
-                <td>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-teal" onclick="Customers.view(${c.customerId})" title="View Profile">
-                            <i class="bi bi-eye"></i>
+                <td class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="Customers.view(${c.customerId})" title="View">
+                            ${Icons.view}
                         </button>
-                        <button class="btn btn-outline-primary" onclick="Customers.edit(${c.customerId})" title="Edit">
-                            <i class="bi bi-pencil"></i>
+                        <button class="btn btn-sm btn-outline-warning" onclick="Customers.edit(${c.customerId})" title="Edit">
+                            ${Icons.edit}
                         </button>
-                        <button class="btn btn-outline-danger" onclick="Customers.delete(${c.customerId})" title="Delete">
-                            <i class="bi bi-trash"></i>
+                        <button class="btn btn-sm btn-outline-${c.status === 'Active' ? 'danger' : 'success'}" onclick="Customers.toggleStatus(${c.customerId})" title="${c.status === 'Active' ? 'Deactivate' : 'Activate'}">
+                            ${c.status === 'Active' ? Icons.toggleOff : Icons.toggleOn}
                         </button>
                     </div>
                 </td>
@@ -920,15 +987,17 @@ const Customers = {
         }
     },
 
-    async delete(id) {
-        if (!confirm('Are you sure you want to delete this customer?')) return;
-
+    async toggleStatus(id) {
         try {
-            await API.delete(`/customers/${id}`);
-            Toast.success('Customer deleted successfully');
+            const customer = this.data.find(c => c.customerId === id);
+            if (!customer) return;
+            
+            const newStatus = customer.status === 'Active' ? 'Inactive' : 'Active';
+            await API.put(`/customers/${id}/status`, { status: newStatus });
+            Toast.success(`Customer ${newStatus === 'Active' ? 'activated' : 'deactivated'} successfully`);
             this.load();
         } catch (error) {
-            Toast.error('Failed to delete customer');
+            Toast.error('Failed to update customer status');
         }
     }
 };
@@ -989,19 +1058,16 @@ const Inventory = {
                         ${p.isFeatured ? '<i class="bi bi-star-fill text-warning"></i>' : ''}
                         ${p.isOnSale ? '<span class="badge bg-danger">Sale</span>' : ''}
                     </td>
-                    <td>
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-teal" onclick="Inventory.products.view(${p.productId})" title="View">
-                                <i class="bi bi-eye"></i>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="Inventory.products.view(${p.productId})" title="View">
+                                ${Icons.view}
                             </button>
-                            <button class="btn btn-outline-primary" onclick="Inventory.products.edit(${p.productId})" title="Edit">
-                                <i class="bi bi-pencil"></i>
+                            <button class="btn btn-sm btn-outline-warning" onclick="Inventory.products.edit(${p.productId})" title="Edit">
+                                ${Icons.edit}
                             </button>
-                            <button class="btn btn-outline-info" onclick="Inventory.products.updateStock(${p.productId})" title="Update Stock">
-                                <i class="bi bi-box-seam"></i>
-                            </button>
-                            <button class="btn btn-outline-danger" onclick="Inventory.products.delete(${p.productId})" title="Delete">
-                                <i class="bi bi-trash"></i>
+                            <button class="btn btn-sm btn-outline-${p.status === 'Active' ? 'danger' : 'success'}" onclick="Inventory.products.toggleStatus(${p.productId})" title="${p.status === 'Active' ? 'Deactivate' : 'Activate'}">
+                                ${p.status === 'Active' ? Icons.toggleOff : Icons.toggleOn}
                             </button>
                         </div>
                     </td>
@@ -1166,6 +1232,20 @@ const Inventory = {
             } catch (error) {
                 Toast.error('Failed to delete product');
             }
+        },
+
+        async toggleStatus(id) {
+            try {
+                const product = this.data.find(p => p.productId === id);
+                if (!product) return;
+                
+                const newStatus = product.status === 'Active' ? 'Inactive' : 'Active';
+                await API.put(`/products/${id}/status`, { status: newStatus });
+                Toast.success(`Product ${newStatus === 'Active' ? 'activated' : 'deactivated'} successfully`);
+                this.load();
+            } catch (error) {
+                Toast.error('Failed to update product status');
+            }
         }
     }
 };
@@ -1207,19 +1287,16 @@ const Sales = {
                     <td>${Format.statusBadge(o.orderStatus)}</td>
                     <td>${Format.statusBadge(o.paymentStatus)}</td>
                     <td>${o.paymentMethod || '-'}</td>
-                    <td>
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-teal" onclick="Sales.orders.view(${o.orderId})" title="View">
-                                <i class="bi bi-eye"></i>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="Sales.orders.view(${o.orderId})" title="View">
+                                ${Icons.view}
                             </button>
-                            <button class="btn btn-outline-primary" onclick="Sales.orders.edit(${o.orderId})" title="Edit">
-                                <i class="bi bi-pencil"></i>
+                            <button class="btn btn-sm btn-outline-warning" onclick="Sales.orders.edit(${o.orderId})" title="Edit">
+                                ${Icons.edit}
                             </button>
-                            <button class="btn btn-outline-info" onclick="Sales.orders.updateStatus(${o.orderId})" title="Update Status">
-                                <i class="bi bi-arrow-repeat"></i>
-                            </button>
-                            <button class="btn btn-outline-danger" onclick="Sales.orders.delete(${o.orderId})" title="Delete">
-                                <i class="bi bi-trash"></i>
+                            <button class="btn btn-sm btn-outline-${o.orderStatus === 'Cancelled' ? 'success' : 'danger'}" onclick="Sales.orders.toggleStatus(${o.orderId})" title="${o.orderStatus === 'Cancelled' ? 'Activate' : 'Cancel'}">
+                                ${o.orderStatus === 'Cancelled' ? Icons.toggleOn : Icons.toggleOff}
                             </button>
                         </div>
                     </td>
@@ -1393,6 +1470,20 @@ const Sales = {
             } catch (error) {
                 Toast.error('Failed to delete order');
             }
+        },
+
+        async toggleStatus(id) {
+            try {
+                const order = this.data.find(o => o.orderId === id);
+                if (!order) return;
+                
+                const newStatus = order.orderStatus === 'Cancelled' ? 'Pending' : 'Cancelled';
+                await API.put(`/orders/${id}/status`, { status: newStatus });
+                Toast.success(`Order ${newStatus === 'Cancelled' ? 'cancelled' : 'reactivated'} successfully`);
+                this.load();
+            } catch (error) {
+                Toast.error('Failed to update order status');
+            }
         }
     },
 
@@ -1430,19 +1521,16 @@ const Sales = {
                     <td>${Format.statusBadge(l.status)}</td>
                     <td>${Format.priorityBadge(l.priority)}</td>
                     <td class="text-end">${Format.currency(l.estimatedValue)}</td>
-                    <td>
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-teal" onclick="Sales.leads.view(${l.leadId})" title="View">
-                                <i class="bi bi-eye"></i>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="Sales.leads.view(${l.leadId})" title="View">
+                                ${Icons.view}
                             </button>
-                            <button class="btn btn-outline-primary" onclick="Sales.leads.edit(${l.leadId})" title="Edit">
-                                <i class="bi bi-pencil"></i>
+                            <button class="btn btn-sm btn-outline-warning" onclick="Sales.leads.edit(${l.leadId})" title="Edit">
+                                ${Icons.edit}
                             </button>
-                            ${!l.isConverted ? `<button class="btn btn-outline-success" onclick="Sales.leads.convert(${l.leadId})" title="Convert to Customer">
-                                <i class="bi bi-person-plus"></i>
-                            </button>` : ''}
-                            <button class="btn btn-outline-danger" onclick="Sales.leads.delete(${l.leadId})" title="Delete">
-                                <i class="bi bi-trash"></i>
+                            <button class="btn btn-sm btn-outline-${l.status === 'Active' || l.status === 'Hot' || l.status === 'Warm' ? 'danger' : 'success'}" onclick="Sales.leads.toggleStatus(${l.leadId})" title="${l.status === 'Active' || l.status === 'Hot' || l.status === 'Warm' ? 'Deactivate' : 'Activate'}">
+                                ${(l.status === 'Active' || l.status === 'Hot' || l.status === 'Warm') ? Icons.toggleOff : Icons.toggleOn}
                             </button>
                         </div>
                     </td>
@@ -1602,6 +1690,21 @@ const Sales = {
             } catch (error) {
                 Toast.error('Failed to delete lead');
             }
+        },
+
+        async toggleStatus(id) {
+            try {
+                const lead = this.data.find(l => l.leadId === id);
+                if (!lead) return;
+                
+                const isActive = lead.status === 'Active' || lead.status === 'Hot' || lead.status === 'Warm';
+                const newStatus = isActive ? 'Cold' : 'Active';
+                await API.put(`/leads/${id}/status`, { status: newStatus });
+                Toast.success(`Lead ${isActive ? 'deactivated' : 'activated'} successfully`);
+                this.load();
+            } catch (error) {
+                Toast.error('Failed to update lead status');
+            }
         }
     }
 };
@@ -1649,19 +1752,16 @@ const Support = {
                     <td>${Format.priorityBadge(t.priority)}</td>
                     <td>${Format.statusBadge(t.status)}</td>
                     <td>${t.firstResponseAt ? Format.date(t.firstResponseAt, true) : '<span class="text-warning">Awaiting</span>'}</td>
-                    <td>
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-teal" onclick="Support.tickets.view(${t.ticketId})" title="View">
-                                <i class="bi bi-eye"></i>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="Support.tickets.view(${t.ticketId})" title="View">
+                                ${Icons.view}
                             </button>
-                            <button class="btn btn-outline-primary" onclick="Support.tickets.reply(${t.ticketId})" title="Reply">
-                                <i class="bi bi-reply"></i>
+                            <button class="btn btn-sm btn-outline-warning" onclick="Support.tickets.edit(${t.ticketId})" title="Edit">
+                                ${Icons.edit}
                             </button>
-                            <button class="btn btn-outline-info" onclick="Support.tickets.edit(${t.ticketId})" title="Edit">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-outline-danger" onclick="Support.tickets.delete(${t.ticketId})" title="Delete">
-                                <i class="bi bi-trash"></i>
+                            <button class="btn btn-sm btn-outline-${t.status === 'Closed' ? 'success' : 'danger'}" onclick="Support.tickets.toggleStatus(${t.ticketId})" title="${t.status === 'Closed' ? 'Reopen' : 'Close'}">
+                                ${t.status === 'Closed' ? Icons.toggleOn : Icons.toggleOff}
                             </button>
                         </div>
                     </td>
@@ -1840,6 +1940,20 @@ const Support = {
             } catch (error) {
                 Toast.error('Failed to delete ticket');
             }
+        },
+
+        async toggleStatus(id) {
+            try {
+                const ticket = this.data.find(t => t.ticketId === id);
+                if (!ticket) return;
+                
+                const newStatus = ticket.status === 'Closed' ? 'Open' : 'Closed';
+                await API.put(`/tickets/${id}/status`, { status: newStatus });
+                Toast.success(`Ticket ${newStatus === 'Closed' ? 'closed' : 'reopened'} successfully`);
+                this.load();
+            } catch (error) {
+                Toast.error('Failed to update ticket status');
+            }
         }
     }
 };
@@ -1890,15 +2004,15 @@ const Users = {
                 </td>
                 <td>${u.lastLoginAt ? Format.date(u.lastLoginAt, true) : 'Never'}</td>
                 <td class="text-center">
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-outline-primary" onclick="Users.showModal(Users.data.find(x => x.userId === ${u.userId}))" title="Edit">
-                            <i class="bi bi-pencil"></i>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="Users.view(${u.userId})" title="View">
+                            ${Icons.view}
                         </button>
-                        <button class="btn btn-outline-${u.isActive ? 'warning' : 'success'}" onclick="Users.toggleStatus(${u.userId})" title="${u.isActive ? 'Deactivate' : 'Activate'}">
-                            <i class="bi bi-${u.isActive ? 'pause' : 'play'}"></i>
+                        <button class="btn btn-sm btn-outline-warning" onclick="Users.edit(${u.userId})" title="Edit">
+                            ${Icons.edit}
                         </button>
-                        <button class="btn btn-outline-danger" onclick="Users.delete(${u.userId})" title="Delete">
-                            <i class="bi bi-trash"></i>
+                        <button class="btn btn-sm btn-outline-${u.isActive ? 'danger' : 'success'}" onclick="Users.toggleStatus(${u.userId})" title="${u.isActive ? 'Deactivate' : 'Activate'}">
+                            ${u.isActive ? Icons.toggleOff : Icons.toggleOn}
                         </button>
                     </div>
                 </td>
@@ -2103,19 +2217,16 @@ const Billing = {
                     <td class="text-end text-success">${Format.currency(i.paidAmount)}</td>
                     <td class="text-end ${i.balance > 0 ? 'text-danger' : ''}">${Format.currency(i.balance)}</td>
                     <td>${Format.statusBadge(i.status)}</td>
-                    <td>
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-teal" onclick="Billing.invoices.view(${i.invoiceId})" title="View">
-                                <i class="bi bi-eye"></i>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="Billing.invoices.view(${i.invoiceId})" title="View">
+                                ${Icons.view}
                             </button>
-                            <button class="btn btn-outline-success" onclick="Billing.invoices.recordPayment(${i.invoiceId})" title="Record Payment">
-                                <i class="bi bi-cash"></i>
+                            <button class="btn btn-sm btn-outline-warning" onclick="Billing.invoices.edit(${i.invoiceId})" title="Edit">
+                                ${Icons.edit}
                             </button>
-                            <button class="btn btn-outline-primary" onclick="Billing.invoices.print(${i.invoiceId})" title="Print">
-                                <i class="bi bi-printer"></i>
-                            </button>
-                            <button class="btn btn-outline-danger" onclick="Billing.invoices.delete(${i.invoiceId})" title="Delete">
-                                <i class="bi bi-trash"></i>
+                            <button class="btn btn-sm btn-outline-${(i.status === 'Cancelled' || i.status === 'Void') ? 'success' : 'danger'}" onclick="Billing.invoices.toggleStatus(${i.invoiceId})" title="${(i.status === 'Cancelled' || i.status === 'Void') ? 'Activate' : 'Void'}">
+                                ${(i.status === 'Cancelled' || i.status === 'Void') ? Icons.toggleOn : Icons.toggleOff}
                             </button>
                         </div>
                     </td>
@@ -2337,6 +2448,30 @@ const Billing = {
             } catch (error) {
                 Toast.error('Failed to delete invoice');
             }
+        },
+
+        async edit(id) {
+            try {
+                const invoice = await API.get(`/invoices/${id}`);
+                this.showModal(invoice);
+            } catch (error) {
+                Toast.error('Failed to load invoice');
+            }
+        },
+
+        async toggleStatus(id) {
+            try {
+                const invoice = this.data.find(i => i.invoiceId === id);
+                if (!invoice) return;
+                
+                const isVoid = invoice.status === 'Cancelled' || invoice.status === 'Void';
+                const newStatus = isVoid ? 'Unpaid' : 'Void';
+                await API.put(`/invoices/${id}/status`, { status: newStatus });
+                Toast.success(`Invoice ${isVoid ? 'reactivated' : 'voided'} successfully`);
+                this.load();
+            } catch (error) {
+                Toast.error('Failed to update invoice status');
+            }
         }
     },
 
@@ -2436,6 +2571,34 @@ const CustomerPortal = {
 // INITIALIZATION
 // ===========================================
 document.addEventListener('DOMContentLoaded', () => {
+    // Global modal backdrop cleanup - ensures backdrops are removed when modals are hidden
+    document.addEventListener('hidden.bs.modal', function (event) {
+        // Immediate cleanup
+        Modal.cleanup();
+    });
+    
+    // Also listen for hide event as backup
+    document.addEventListener('hide.bs.modal', function (event) {
+        // Schedule cleanup
+        setTimeout(() => Modal.cleanup(), 350);
+    });
+    
+    // Emergency escape: click on backdrop to remove it if stuck
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal-backdrop')) {
+            Modal.cleanup();
+        }
+    });
+    
+    // Periodic cleanup check - removes orphaned backdrops
+    setInterval(() => {
+        const openModals = document.querySelectorAll('.modal.show');
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        if (openModals.length === 0 && backdrops.length > 0) {
+            Modal.cleanup();
+        }
+    }, 1000);
+
     // Add custom styles
     const style = document.createElement('style');
     style.textContent = `

@@ -762,6 +762,105 @@ body {
     font-size: 0.8rem;
 }
 
+/* Bootstrap-style outline buttons */
+.btn-outline-primary {
+    background: transparent;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.btn-outline-warning {
+    background: transparent;
+    border: 1px solid var(--warning);
+    color: var(--warning);
+}
+
+.btn-outline-warning:hover {
+    background: var(--warning);
+    color: var(--white);
+}
+
+.btn-outline-danger {
+    background: transparent;
+    border: 1px solid var(--error);
+    color: var(--error);
+}
+
+.btn-outline-danger:hover {
+    background: var(--error);
+    color: var(--white);
+}
+
+.btn-outline-success {
+    background: transparent;
+    border: 1px solid var(--success);
+    color: var(--success);
+}
+
+.btn-outline-success:hover {
+    background: var(--success);
+    color: var(--white);
+}
+
+.btn-outline-info {
+    background: transparent;
+    border: 1px solid var(--info);
+    color: var(--info);
+}
+
+.btn-outline-info:hover {
+    background: var(--info);
+    color: var(--white);
+}
+
+.btn-outline-secondary {
+    background: transparent;
+    border: 1px solid var(--gray-400);
+    color: var(--gray-600);
+}
+
+.btn-outline-secondary:hover {
+    background: var(--gray-200);
+    color: var(--gray-700);
+}
+
+/* Action Buttons Group */
+.btn-group {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.btn-group .btn {
+    border-radius: 6px;
+    min-width: 32px;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-group .btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+/* Ensure action buttons are visible */
+.data-table td .btn-group {
+    display: inline-flex !important;
+    visibility: visible !important;
+}
+
+.data-table td .btn-group .btn {
+    display: inline-flex !important;
+    visibility: visible !important;
+}
+
 .btn-icon {
     width: 32px;
     height: 32px;
