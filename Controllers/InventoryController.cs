@@ -28,5 +28,15 @@ namespace CompuGear.Controllers
         {
             return View();
         }
+
+        public IActionResult Suppliers()
+        {
+            return View();
+        }
+
+        public IActionResult PurchaseOrders()
+        {
+            return View();
+        }
     }
 }
