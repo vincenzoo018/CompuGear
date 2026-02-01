@@ -190,6 +190,7 @@
             <form id="productForm" onsubmit="saveProduct(event)">
                 <div class="modal-body">
                     <input type="hidden" id="productId" value="0">
+                    <input type="hidden" id="productImageUrl" value="">
                     
                     <div class="form-section">
                         <h6 class="form-section-title">
@@ -210,6 +211,30 @@
                             <div class="col-12">
                                 <label class="form-label">Description</label>
                                 <textarea class="form-control" id="description" name="description" rows="3" placeholder="Enter product description"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Image Section -->
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                            Product Image
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div id="imageUploadArea" class="image-upload-container" onclick="document.getElementById('productImage').click()">
+                                    <input type="file" id="productImage" accept="image/*" style="display: none;" onchange="handleImageUpload(this)">
+                                    <div id="imagePreviewArea">
+                                        <svg class="image-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                                        </svg>
+                                        <p class="mb-1 text-muted">Click to upload or drag and drop</p>
+                                        <small class="text-muted">PNG, JPG, GIF up to 5MB</small>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -421,6 +446,8 @@
 @section Scripts {
 <script src="~/js/admin.js"></script>
 <script>
+    let currentImageUrl = '';
+
     document.addEventListener('DOMContentLoaded', function() {
         loadCategoriesDropdown();
         loadBrandsDropdown();
@@ -430,7 +457,113 @@
         document.getElementById('filterCategory')?.addEventListener('change', filterProducts);
         document.getElementById('filterBrand')?.addEventListener('change', filterProducts);
         document.getElementById('filterStock')?.addEventListener('change', filterProducts);
+
+        // Setup drag and drop
+        setupImageDragDrop();
     });
+
+    function setupImageDragDrop() {
+        const uploadArea = document.getElementById('imageUploadArea');
+        if (!uploadArea) return;
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('productImage').files = files;
+                handleImageUpload(document.getElementById('productImage'));
+            }
+        }, false);
+    }
+
+    async function handleImageUpload(input) {
+        if (!input.files || !input.files[0]) return;
+
+        const file = input.files[0];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+
+        if (file.size > maxSize) {
+            Toast.error('File size must be less than 5MB');
+            return;
+        }
+
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            Toast.error('Only image files are allowed');
+            return;
+        }
+
+        // Show preview immediately
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            showImagePreview(e.target.result);
+        };
+        reader.readAsDataURL(file);
+
+        // Upload to server
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch('/api/upload-image?folder=products', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                currentImageUrl = result.imageUrl;
+                document.getElementById('productImageUrl').value = result.imageUrl;
+                Toast.success('Image uploaded successfully');
+            } else {
+                Toast.error(result.message || 'Failed to upload image');
+            }
+        } catch (error) {
+            Toast.error('Failed to upload image');
+            console.error(error);
+        }
+    }
+
+    function showImagePreview(src) {
+        const previewArea = document.getElementById('imagePreviewArea');
+        previewArea.innerHTML = `
+            <div class="image-preview-container">
+                <img src="${src}" class="image-preview" alt="Product Image">
+                <button type="button" class="image-preview-remove" onclick="removeImage(event)">×</button>
+            </div>
+            <p class="mt-2 mb-0 text-muted small">Click to change image</p>
+        `;
+    }
+
+    function removeImage(event) {
+        event.stopPropagation();
+        currentImageUrl = '';
+        document.getElementById('productImageUrl').value = '';
+        document.getElementById('productImage').value = '';
+        document.getElementById('imagePreviewArea').innerHTML = `
+            <svg class="image-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <p class="mb-1 text-muted">Click to upload or drag and drop</p>
+            <small class="text-muted">PNG, JPG, GIF up to 5MB</small>
+        `;
+    }
 
     async function loadCategoriesDropdown() {
         try {
@@ -473,6 +606,8 @@
     }
 
     function openCreateProductModal() {
+        currentImageUrl = '';
+        removeImage(new Event('click'));
         Inventory.products.showModal();
     }
 
@@ -497,6 +632,8 @@
 
     function saveProduct(event) {
         event.preventDefault();
+        // Add image URL to the save
+        Inventory.products.currentImageUrl = currentImageUrl;
         Inventory.products.save();
     }
 

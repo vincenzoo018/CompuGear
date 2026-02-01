@@ -1023,6 +1023,7 @@ const Inventory = {
         categories: [],
         brands: [],
         currentId: null,
+        currentImageUrl: '',
 
         async load() {
             try {
@@ -1050,7 +1051,14 @@ const Inventory = {
                 <tr>
                     <td>
                         <div class="d-flex align-items-center">
-                            <img src="${p.mainImageUrl || '/img/placeholder.png'}" class="product-thumb me-3" alt="">
+                            ${p.mainImageUrl ? 
+                                `<img src="${p.mainImageUrl}" class="product-thumb me-3" alt="${p.productName}" onerror="this.onerror=null; this.src='/images/placeholder.png'; this.classList.add('product-image-placeholder');">` :
+                                `<div class="product-image-placeholder me-3">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                                    </svg>
+                                </div>`
+                            }
                             <div>
                                 <div class="fw-semibold">${p.productName}</div>
                                 <small class="text-muted">${p.sku || p.productCode}</small>
@@ -1106,6 +1114,10 @@ const Inventory = {
             if (modalTitle) modalTitle.textContent = product ? 'Edit Product' : 'Add New Product';
             document.getElementById('productId').value = product?.productId || '';
 
+            // Reset image upload area
+            const imagePreviewArea = document.getElementById('imagePreviewArea');
+            const productImageUrl = document.getElementById('productImageUrl');
+            
             if (product) {
                 document.getElementById('productName').value = product.productName || '';
                 document.getElementById('productCode').value = product.sku || product.productCode || '';
@@ -1117,6 +1129,39 @@ const Inventory = {
                 document.getElementById('stockQuantity').value = product.stockQuantity || 0;
                 document.getElementById('reorderLevel').value = product.reorderLevel || 10;
                 document.getElementById('isActive').value = product.isActive ? 'true' : 'false';
+
+                // Show existing image if available
+                if (product.mainImageUrl && imagePreviewArea) {
+                    productImageUrl.value = product.mainImageUrl;
+                    this.currentImageUrl = product.mainImageUrl;
+                    imagePreviewArea.innerHTML = `
+                        <div class="image-preview-container">
+                            <img src="${product.mainImageUrl}" class="image-preview" alt="Product Image">
+                            <button type="button" class="image-preview-remove" onclick="removeImage(event)">×</button>
+                        </div>
+                        <p class="mt-2 mb-0 text-muted small">Click to change image</p>
+                    `;
+                } else if (imagePreviewArea) {
+                    productImageUrl.value = '';
+                    this.currentImageUrl = '';
+                    imagePreviewArea.innerHTML = `
+                        <svg class="image-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                        </svg>
+                        <p class="mb-1 text-muted">Click to upload or drag and drop</p>
+                        <small class="text-muted">PNG, JPG, GIF up to 5MB</small>
+                    `;
+                }
+            } else if (imagePreviewArea) {
+                productImageUrl.value = '';
+                this.currentImageUrl = '';
+                imagePreviewArea.innerHTML = `
+                    <svg class="image-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                    <p class="mb-1 text-muted">Click to upload or drag and drop</p>
+                    <small class="text-muted">PNG, JPG, GIF up to 5MB</small>
+                `;
             }
 
             Modal.show('productModal');
@@ -1134,7 +1179,8 @@ const Inventory = {
                 sellingPrice: parseFloat(document.getElementById('sellingPrice').value) || 0,
                 stockQuantity: parseInt(document.getElementById('stockQuantity').value) || 0,
                 reorderLevel: parseInt(document.getElementById('reorderLevel').value) || 10,
-                isActive: document.getElementById('isActive').value === 'true'
+                isActive: document.getElementById('isActive').value === 'true',
+                mainImageUrl: document.getElementById('productImageUrl')?.value || this.currentImageUrl || ''
             };
 
             try {

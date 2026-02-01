@@ -115,28 +115,38 @@ body {
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    min-height: var(--topbar-height);
+    min-height: 72px;
+    background: rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-brand {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.85rem;
     text-decoration: none;
     color: var(--white);
 }
 
 .sidebar-brand-icon {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     background: var(--white);
-    border-radius: 8px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--primary);
     font-weight: 700;
     font-size: 1.1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+}
+
+.sidebar-brand-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 4px;
 }
 
 .sidebar-brand-text {
@@ -146,8 +156,11 @@ body {
 }
 
 .sidebar-brand-name {
-    font-weight: 600;
-    font-size: 1.1rem;
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: -0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
 }
 
 .sidebar-brand-subtitle {
@@ -1123,6 +1136,140 @@ body {
 /* =====================================================
    Animations
    ===================================================== */
+
+/* =====================================================
+   Product Images & Image Uploader
+   ===================================================== */
+
+.product-thumb {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 8px;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+}
+
+.product-image-placeholder {
+    width: 50px;
+    height: 50px;
+    background: var(--gray-100);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gray-400);
+    border: 1px solid var(--gray-200);
+}
+
+.product-image-large {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 12px;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.image-upload-container {
+    border: 2px dashed var(--gray-300);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    background: var(--gray-50);
+    transition: var(--transition-fast);
+    cursor: pointer;
+}
+
+.image-upload-container:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.image-upload-container.dragover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.image-upload-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 0.75rem;
+    color: var(--gray-400);
+}
+
+.image-upload-container:hover .image-upload-icon {
+    color: var(--primary);
+}
+
+.image-preview-container {
+    position: relative;
+    display: inline-block;
+}
+
+.image-preview {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 2px solid var(--gray-200);
+}
+
+.image-preview-remove {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    background: var(--error);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: var(--transition-fast);
+}
+
+.image-preview-remove:hover {
+    background: #c0392b;
+    transform: scale(1.1);
+}
+
+/* Avatar styles for tables */
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 0.75rem;
+}
+
+.avatar-lg {
+    width: 56px;
+    height: 56px;
+    font-size: 1rem;
+}
+
+.bg-primary-light { background: var(--primary-light); }
+.bg-success-light { background: var(--success-bg); }
+.bg-warning-light { background: var(--warning-bg); }
+.bg-danger-light { background: var(--error-bg); }
+.bg-info-light { background: var(--info-bg); }
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }

@@ -513,6 +513,7 @@ namespace CompuGear.Controllers
                 existing.Status = product.Status;
                 existing.IsFeatured = product.IsFeatured;
                 existing.IsOnSale = product.IsOnSale;
+                existing.MainImageUrl = product.MainImageUrl;
                 existing.UpdatedAt = DateTime.UtcNow;
 
                 await _context.SaveChangesAsync();
@@ -1611,6 +1612,76 @@ namespace CompuGear.Controllers
             };
 
             return Ok(stats);
+        }
+
+        #endregion
+
+        #region Image Upload
+
+        [HttpPost("upload-image")]
+        public async Task<IActionResult> UploadImage(IFormFile file, [FromQuery] string folder = "products")
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                    return BadRequest(new { success = false, message = "No file uploaded" });
+
+                // Validate file type
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(extension))
+                    return BadRequest(new { success = false, message = "Invalid file type. Only images are allowed." });
+
+                // Validate file size (max 5MB)
+                if (file.Length > 5 * 1024 * 1024)
+                    return BadRequest(new { success = false, message = "File size must be less than 5MB" });
+
+                // Create folder path
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", folder);
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                // Generate unique filename
+                var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                // Save file
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // Return the URL path
+                var imageUrl = $"/images/{folder}/{uniqueFileName}";
+                return Ok(new { success = true, message = "Image uploaded successfully", imageUrl });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = "Failed to upload image: " + ex.Message });
+            }
+        }
+
+        [HttpDelete("delete-image")]
+        public IActionResult DeleteImage([FromQuery] string imageUrl)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(imageUrl))
+                    return BadRequest(new { success = false, message = "No image URL provided" });
+
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", imageUrl.TrimStart('/'));
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                    return Ok(new { success = true, message = "Image deleted successfully" });
+                }
+
+                return NotFound(new { success = false, message = "Image not found" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = "Failed to delete image: " + ex.Message });
+            }
         }
 
         #endregion

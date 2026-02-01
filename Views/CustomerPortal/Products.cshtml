@@ -163,7 +163,7 @@
 
         <!-- Results Info -->
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <span style="color: #6b7280;">Showing <strong>1-12</strong> of <strong>48</strong> products</span>
+            <span style="color: #6b7280;" id="resultsInfo">Loading products...</span>
             <div class="btn-group">
                 <button class="btn btn-sm" style="background: #008080; color: white; border-radius: 8px 0 0 8px;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -175,222 +175,13 @@
         </div>
 
         <!-- Products Grid -->
-        <div class="row g-4">
-            <!-- Product 1 -->
-            <div class="col-md-4">
-                <div class="product-card">
-                    <div class="product-image">
-                        <span class="sale-badge">-20%</span>
-                        <div style="font-size: 4rem;">⌨️</div>
-                    </div>
-                    <div class="product-info">
-                        <div class="product-category">Gaming Keyboards</div>
-                        <div class="product-name">Razer BlackWidow V4 Pro</div>
-                        <div style="color: #6b7280; font-size: 0.8rem; margin-bottom: 8px;">Mechanical RGB Gaming Keyboard</div>
-                        <div class="product-price">
-                            <span class="current-price">₱8,800</span>
-                            <span class="original-price">₱11,000</span>
-                        </div>
-                        <button class="btn-add-cart" onclick="addToCart('Razer BlackWidow V4 Pro', 8800)">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px;">
-                                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                            </svg>
-                            Add to Cart
-                        </button>
-                    </div>
+        <div class="row g-4" id="productsGrid">
+            <!-- Products will be loaded dynamically -->
+            <div class="col-12 text-center py-5" id="productsLoading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
                 </div>
-            </div>
-
-            <!-- Product 2 -->
-            <div class="col-md-4">
-                <div class="product-card">
-                    <div class="product-image">
-                        <span class="sale-badge">-15%</span>
-                        <div style="font-size: 4rem;">🖱️</div>
-                    </div>
-                    <div class="product-info">
-                        <div class="product-category">Gaming Mice</div>
-                        <div class="product-name">Logitech G502 X Plus</div>
-                        <div style="color: #6b7280; font-size: 0.8rem; margin-bottom: 8px;">Wireless Gaming Mouse</div>
-                        <div class="product-price">
-                            <span class="current-price">₱5,525</span>
-                            <span class="original-price">₱6,500</span>
-                        </div>
-                        <button class="btn-add-cart" onclick="addToCart('Logitech G502 X Plus', 5525)">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px;">
-                                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                            </svg>
-                            Add to Cart
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Product 3 -->
-            <div class="col-md-4">
-                <div class="product-card">
-                    <div class="product-image">
-                        <div style="font-size: 4rem;">🎧</div>
-                    </div>
-                    <div class="product-info">
-                        <div class="product-category">Headsets</div>
-                        <div class="product-name">HyperX Cloud III Wireless</div>
-                        <div style="color: #6b7280; font-size: 0.8rem; margin-bottom: 8px;">Wireless Gaming Headset</div>
-                        <div class="product-price">
-                            <span class="current-price">₱8,500</span>
-                        </div>
-                        <button class="btn-add-cart" onclick="addToCart('HyperX Cloud III Wireless', 8500)">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px;">
-                                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                            </svg>
-                            Add to Cart
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Product 4 -->
-            <div class="col-md-4">
-                <div class="product-card">
-                    <div class="product-image">
-                        <span class="sale-badge">HOT</span>
-                        <div style="font-size: 4rem;">💾</div>
-                    </div>
-                    <div class="product-info">
-                        <div class="product-category">Storage</div>
-                        <div class="product-name">Samsung 990 Pro 1TB NVMe</div>
-                        <div style="color: #6b7280; font-size: 0.8rem; margin-bottom: 8px;">PCIe 4.0 NVMe SSD</div>
-                        <div class="product-price">
-                            <span class="current-price">₱7,500</span>
-                        </div>
-                        <button class="btn-add-cart" onclick="addToCart('Samsung 990 Pro 1TB NVMe', 7500)">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px;">
-                                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                            </svg>
-                            Add to Cart
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Product 5 -->
-            <div class="col-md-4">
-                <div class="product-card">
-                    <div class="product-image">
-                        <span class="sale-badge">-10%</span>
-                        <div style="font-size: 4rem;">🖥️</div>
-                    </div>
-                    <div class="product-info">
-                        <div class="product-category">Monitors</div>
-                        <div class="product-name">ASUS ROG Swift 27" 165Hz</div>
-                        <div style="color: #6b7280; font-size: 0.8rem; margin-bottom: 8px;">IPS Gaming Monitor</div>
-                        <div class="product-price">
-                            <span class="current-price">₱25,200</span>
-                            <span class="original-price">₱28,000</span>
-                        </div>
-                        <button class="btn-add-cart" onclick="addToCart('ASUS ROG Swift 27\"', 25200)">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px;">
-                                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                            </svg>
-                            Add to Cart
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Product 6 -->
-            <div class="col-md-4">
-                <div class="product-card">
-                    <div class="product-image">
-                        <div style="font-size: 4rem;">🎮</div>
-                    </div>
-                    <div class="product-info">
-                        <div class="product-category">Controllers</div>
-                        <div class="product-name">Xbox Wireless Controller</div>
-                        <div style="color: #6b7280; font-size: 0.8rem; margin-bottom: 8px;">Carbon Black Edition</div>
-                        <div class="product-price">
-                            <span class="current-price">₱3,500</span>
-                        </div>
-                        <button class="btn-add-cart" onclick="addToCart('Xbox Wireless Controller', 3500)">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px;">
-                                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                            </svg>
-                            Add to Cart
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Product 7 -->
-            <div class="col-md-4">
-                <div class="product-card">
-                    <div class="product-image">
-                        <span class="sale-badge">-25%</span>
-                        <div style="font-size: 4rem;">🔌</div>
-                    </div>
-                    <div class="product-info">
-                        <div class="product-category">Cables</div>
-                        <div class="product-name">USB-C Hub 7-in-1</div>
-                        <div style="color: #6b7280; font-size: 0.8rem; margin-bottom: 8px;">Multi-port Adapter</div>
-                        <div class="product-price">
-                            <span class="current-price">₱1,875</span>
-                            <span class="original-price">₱2,500</span>
-                        </div>
-                        <button class="btn-add-cart" onclick="addToCart('USB-C Hub 7-in-1', 1875)">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px;">
-                                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                            </svg>
-                            Add to Cart
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Product 8 -->
-            <div class="col-md-4">
-                <div class="product-card">
-                    <div class="product-image">
-                        <div style="font-size: 4rem;">🖲️</div>
-                    </div>
-                    <div class="product-info">
-                        <div class="product-category">Mousepads</div>
-                        <div class="product-name">SteelSeries QcK XXL</div>
-                        <div style="color: #6b7280; font-size: 0.8rem; margin-bottom: 8px;">Extended Gaming Mousepad</div>
-                        <div class="product-price">
-                            <span class="current-price">₱2,200</span>
-                        </div>
-                        <button class="btn-add-cart" onclick="addToCart('SteelSeries QcK XXL', 2200)">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px;">
-                                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                            </svg>
-                            Add to Cart
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Product 9 -->
-            <div class="col-md-4">
-                <div class="product-card">
-                    <div class="product-image">
-                        <span class="sale-badge">NEW</span>
-                        <div style="font-size: 4rem;">📷</div>
-                    </div>
-                    <div class="product-info">
-                        <div class="product-category">Webcams</div>
-                        <div class="product-name">Logitech C920 HD Pro</div>
-                        <div style="color: #6b7280; font-size: 0.8rem; margin-bottom: 8px;">1080p Webcam</div>
-                        <div class="product-price">
-                            <span class="current-price">₱4,500</span>
-                        </div>
-                        <button class="btn-add-cart" onclick="addToCart('Logitech C920 HD Pro', 4500)">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px;">
-                                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                            </svg>
-                            Add to Cart
-                        </button>
-                    </div>
-                </div>
+                <p class="mt-2 text-muted">Loading products...</p>
             </div>
         </div>
 
@@ -435,10 +226,206 @@
 
 @section Scripts {
 <script>
-    function addToCart(productName, price) {
+    let allProducts = [];
+    let currentPage = 1;
+    const productsPerPage = 9;
+    let currentCategory = '';
+    let searchQuery = '';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadProducts();
+        setupEventListeners();
+    });
+
+    function setupEventListeners() {
+        // Search functionality
+        const searchInput = document.querySelector('.input-group input');
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                searchQuery = e.target.value.toLowerCase();
+                currentPage = 1;
+                renderProducts();
+            });
+        }
+
+        // Category filter
+        const categoryLinks = document.querySelectorAll('.quick-link');
+        categoryLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                categoryLinks.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+                currentCategory = this.textContent.trim() === 'All Products' ? '' : this.textContent.trim();
+                currentPage = 1;
+                renderProducts();
+            });
+        });
+    }
+
+    async function loadProducts() {
+        try {
+            const response = await fetch('/api/products');
+            if (response.ok) {
+                allProducts = await response.json();
+                renderProducts();
+            } else {
+                showEmptyState('Failed to load products');
+            }
+        } catch (error) {
+            console.error('Error loading products:', error);
+            showEmptyState('Error loading products');
+        }
+    }
+
+    function renderProducts() {
+        const grid = document.getElementById('productsGrid');
+        const loading = document.getElementById('productsLoading');
+        if (loading) loading.remove();
+
+        // Filter products
+        let filtered = allProducts.filter(p => {
+            const matchesSearch = !searchQuery || 
+                p.productName.toLowerCase().includes(searchQuery) ||
+                (p.shortDescription && p.shortDescription.toLowerCase().includes(searchQuery));
+            const matchesCategory = !currentCategory || 
+                (p.categoryName && p.categoryName.toLowerCase() === currentCategory.toLowerCase());
+            return matchesSearch && matchesCategory;
+        });
+
+        // Update results info
+        const resultsInfo = document.getElementById('resultsInfo');
+        if (resultsInfo) {
+            const start = filtered.length > 0 ? ((currentPage - 1) * productsPerPage) + 1 : 0;
+            const end = Math.min(currentPage * productsPerPage, filtered.length);
+            resultsInfo.innerHTML = `Showing <strong>${start}-${end}</strong> of <strong>${filtered.length}</strong> products`;
+        }
+
+        if (filtered.length === 0) {
+            grid.innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <div style="font-size: 4rem; opacity: 0.5;">📦</div>
+                    <h5 class="text-muted mt-3">No products found</h5>
+                    <p class="text-muted">Try adjusting your search or filter criteria</p>
+                </div>
+            `;
+            renderPagination(0);
+            return;
+        }
+
+        // Pagination
+        const totalPages = Math.ceil(filtered.length / productsPerPage);
+        const start = (currentPage - 1) * productsPerPage;
+        const paged = filtered.slice(start, start + productsPerPage);
+
+        grid.innerHTML = paged.map(product => {
+            const imageHtml = product.mainImageUrl 
+                ? `<img src="${product.mainImageUrl}" alt="${product.productName}" class="product-img" onerror="this.parentElement.innerHTML='<div class=\\'product-image-placeholder\\'><svg width=\\'48\\' height=\\'48\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'1.5\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\'/><circle cx=\\'8.5\\' cy=\\'8.5\\' r=\\'1.5\\'/><path d=\\'m21 15-5-5L5 21\\'/></svg></div>'">`
+                : `<div class="product-image-placeholder">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <path d="m21 15-5-5L5 21"/>
+                    </svg>
+                </div>`;
+
+            const badge = product.stockQuantity <= 5 && product.stockQuantity > 0 
+                ? '<span class="sale-badge">LOW STOCK</span>' 
+                : product.stockQuantity === 0 
+                    ? '<span class="sale-badge" style="background: #dc3545;">OUT OF STOCK</span>' 
+                    : product.isOnSale 
+                        ? '<span class="sale-badge">SALE</span>'
+                        : product.isFeatured 
+                            ? '<span class="sale-badge" style="background: #f59e0b;">FEATURED</span>'
+                            : '';
+
+            const price = product.sellingPrice || product.costPrice || 0;
+            const comparePrice = product.compareAtPrice && product.compareAtPrice > price 
+                ? `<span class="original-price">₱${parseFloat(product.compareAtPrice).toLocaleString('en-PH')}</span>` 
+                : '';
+
+            return `
+                <div class="col-md-4">
+                    <div class="product-card">
+                        <div class="product-image">
+                            ${badge}
+                            ${imageHtml}
+                        </div>
+                        <div class="product-info">
+                            <div class="product-category">${product.categoryName || 'Uncategorized'}</div>
+                            <div class="product-name">${product.productName}</div>
+                            <div style="color: #6b7280; font-size: 0.8rem; margin-bottom: 8px;">${product.shortDescription || ''}</div>
+                            <div class="product-price">
+                                <span class="current-price">₱${parseFloat(price).toLocaleString('en-PH')}</span>
+                                ${comparePrice}
+                            </div>
+                            <button class="btn-add-cart" onclick="addToCart(${product.productId}, '${product.productName.replace(/'/g, "\\'")}', ${price})" ${product.stockQuantity === 0 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px;">
+                                    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                                </svg>
+                                ${product.stockQuantity === 0 ? 'Out of Stock' : 'Add to Cart'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+        const paginationContainer = document.querySelector('.pagination');
+        if (!paginationContainer || totalPages <= 1) {
+            if (paginationContainer) paginationContainer.innerHTML = '';
+            return;
+        }
+
+        let html = `
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;" style="border-radius: 10px; border: none; background: #f3f4f6;">Previous</a>
+            </li>
+        `;
+
+        for (let i = 1; i <= totalPages; i++) {
+            html += `
+                <li class="page-item ${currentPage === i ? 'active' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${i}); return false;" style="border-radius: 10px; border: none; ${currentPage === i ? 'background: linear-gradient(135deg, #008080, #006666);' : 'background: #f3f4f6; color: #374151;'}">${i}</a>
+                </li>
+            `;
+        }
+
+        html += `
+            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;" style="border-radius: 10px; border: none; background: #f3f4f6; color: #374151;">Next</a>
+            </li>
+        `;
+
+        paginationContainer.innerHTML = html;
+    }
+
+    function changePage(page) {
+        currentPage = page;
+        renderProducts();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showEmptyState(message) {
+        const grid = document.getElementById('productsGrid');
+        grid.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <div style="font-size: 4rem; opacity: 0.5;">⚠️</div>
+                <h5 class="text-muted mt-3">${message}</h5>
+            </div>
+        `;
+    }
+
+    function addToCart(productId, productName, price) {
         document.getElementById('cartToastBody').textContent = productName + ' (₱' + price.toLocaleString('en-PH') + ') has been added to your cart.';
         var toast = new bootstrap.Toast(document.getElementById('cartToast'));
         toast.show();
+        
+        // TODO: Implement actual cart functionality via API
+        console.log('Added to cart:', { productId, productName, price });
     }
 </script>
 }

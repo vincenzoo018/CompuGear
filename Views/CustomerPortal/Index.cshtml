@@ -196,71 +196,106 @@
         <a href="/CustomerPortal/Products" style="color: #008080; text-decoration: none; font-weight: 500;">View All →</a>
     </div>
     
-    <div class="row g-4">
-        <div class="col-md-3">
-            <div class="product-card">
-                <div class="product-image">
-                    <span class="sale-badge">-20%</span>
-                    <div style="font-size: 4rem;">⌨️</div>
-                </div>
-                <div class="product-info">
-                    <div class="product-category">Gaming Keyboards</div>
-                    <div class="product-name">Razer BlackWidow V4 Pro</div>
-                    <div class="product-price">
-                        <span class="current-price">₱8,800</span>
-                        <span class="original-price">₱11,000</span>
-                    </div>
-                    <button class="btn-add-cart">Add to Cart</button>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="product-card">
-                <div class="product-image">
-                    <span class="sale-badge">-15%</span>
-                    <div style="font-size: 4rem;">🖱️</div>
-                </div>
-                <div class="product-info">
-                    <div class="product-category">Gaming Mice</div>
-                    <div class="product-name">Logitech G502 X Plus</div>
-                    <div class="product-price">
-                        <span class="current-price">₱5,525</span>
-                        <span class="original-price">₱6,500</span>
-                    </div>
-                    <button class="btn-add-cart">Add to Cart</button>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="product-card">
-                <div class="product-image">
-                    <div style="font-size: 4rem;">🎧</div>
-                </div>
-                <div class="product-info">
-                    <div class="product-category">Headsets</div>
-                    <div class="product-name">HyperX Cloud III Wireless</div>
-                    <div class="product-price">
-                        <span class="current-price">₱8,500</span>
-                    </div>
-                    <button class="btn-add-cart">Add to Cart</button>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="product-card">
-                <div class="product-image">
-                    <span class="sale-badge">HOT</span>
-                    <div style="font-size: 4rem;">💾</div>
-                </div>
-                <div class="product-info">
-                    <div class="product-category">Storage</div>
-                    <div class="product-name">Samsung 990 Pro 1TB NVMe</div>
-                    <div class="product-price">
-                        <span class="current-price">₱7,500</span>
-                    </div>
-                    <button class="btn-add-cart">Add to Cart</button>
-                </div>
+    <div class="row g-4" id="featuredProductsGrid">
+        <div class="col-12 text-center py-4">
+            <div class="spinner-border text-primary spinner-border-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadFeaturedProducts();
+    });
+
+    async function loadFeaturedProducts() {
+        try {
+            const response = await fetch('/api/products');
+            if (response.ok) {
+                const products = await response.json();
+                // Get featured or first 4 products with sale badge
+                const featured = products.filter(p => p.isFeatured || p.isOnSale).slice(0, 4);
+                const displayProducts = featured.length >= 4 ? featured : products.slice(0, 4);
+                renderFeaturedProducts(displayProducts);
+            } else {
+                showFeaturedError();
+            }
+        } catch (error) {
+            console.error('Error loading featured products:', error);
+            showFeaturedError();
+        }
+    }
+
+    function renderFeaturedProducts(products) {
+        const grid = document.getElementById('featuredProductsGrid');
+        
+        if (products.length === 0) {
+            grid.innerHTML = `
+                <div class="col-12 text-center py-4 text-muted">
+                    <p>No products available at the moment.</p>
+                </div>
+            `;
+            return;
+        }
+
+        grid.innerHTML = products.map(product => {
+            const imageHtml = product.mainImageUrl 
+                ? `<img src="${product.mainImageUrl}" alt="${product.productName}" class="product-img" onerror="this.parentElement.innerHTML='<div class=\\'product-image-placeholder\\'><svg width=\\'48\\' height=\\'48\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'1.5\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\'/><circle cx=\\'8.5\\' cy=\\'8.5\\' r=\\'1.5\\'/><path d=\\'m21 15-5-5L5 21\\'/></svg></div>'">`
+                : `<div class="product-image-placeholder">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <path d="m21 15-5-5L5 21"/>
+                    </svg>
+                </div>`;
+
+            const badge = product.isOnSale 
+                ? '<span class="sale-badge">SALE</span>'
+                : product.isFeatured 
+                    ? '<span class="sale-badge" style="background: #f59e0b;">HOT</span>'
+                    : '';
+
+            const price = product.sellingPrice || product.costPrice || 0;
+            const comparePrice = product.compareAtPrice && product.compareAtPrice > price 
+                ? `<span class="original-price">₱${parseFloat(product.compareAtPrice).toLocaleString('en-PH')}</span>` 
+                : '';
+
+            return `
+                <div class="col-md-3">
+                    <div class="product-card">
+                        <div class="product-image">
+                            ${badge}
+                            ${imageHtml}
+                        </div>
+                        <div class="product-info">
+                            <div class="product-category">${product.categoryName || 'Uncategorized'}</div>
+                            <div class="product-name">${product.productName}</div>
+                            <div class="product-price">
+                                <span class="current-price">₱${parseFloat(price).toLocaleString('en-PH')}</span>
+                                ${comparePrice}
+                            </div>
+                            <button class="btn-add-cart" onclick="addToCart(${product.productId}, '${product.productName.replace(/'/g, "\\'")}', ${price})">Add to Cart</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function showFeaturedError() {
+        document.getElementById('featuredProductsGrid').innerHTML = `
+            <div class="col-12 text-center py-4 text-muted">
+                <p>Unable to load featured products.</p>
+            </div>
+        `;
+    }
+
+    function addToCart(productId, productName, price) {
+        // TODO: Implement actual cart functionality
+        alert(productName + ' has been added to your cart!');
+    }
+</script>
+}
