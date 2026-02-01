@@ -585,6 +585,119 @@ namespace CompuGear.Controllers
             }
         }
 
+        [HttpGet("product-categories/all")]
+        public async Task<IActionResult> GetAllProductCategories()
+        {
+            try
+            {
+                var categories = await _context.ProductCategories
+                    .OrderBy(c => c.DisplayOrder)
+                    .ThenBy(c => c.CategoryName)
+                    .Select(c => new
+                    {
+                        c.CategoryId,
+                        c.CategoryName,
+                        c.Description,
+                        c.DisplayOrder,
+                        c.IsActive,
+                        c.CreatedAt,
+                        c.UpdatedAt,
+                        ProductCount = _context.Products.Count(p => p.CategoryId == c.CategoryId)
+                    })
+                    .ToListAsync();
+                return Ok(categories);
+            }
+            catch (Exception)
+            {
+                return Ok(new List<object>());
+            }
+        }
+
+        [HttpGet("product-categories/{id}")]
+        public async Task<IActionResult> GetProductCategory(int id)
+        {
+            try
+            {
+                var category = await _context.ProductCategories.FindAsync(id);
+                if (category == null)
+                    return NotFound(new { success = false, message = "Category not found" });
+
+                return Ok(category);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost("product-categories")]
+        public async Task<IActionResult> CreateProductCategory([FromBody] ProductCategory category)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(category.CategoryName))
+                    return BadRequest(new { success = false, message = "Category name is required" });
+
+                category.CreatedAt = DateTime.UtcNow;
+                category.UpdatedAt = DateTime.UtcNow;
+
+                _context.ProductCategories.Add(category);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Category created successfully", categoryId = category.CategoryId });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut("product-categories/{id}")]
+        public async Task<IActionResult> UpdateProductCategory(int id, [FromBody] ProductCategory category)
+        {
+            try
+            {
+                var existing = await _context.ProductCategories.FindAsync(id);
+                if (existing == null)
+                    return NotFound(new { success = false, message = "Category not found" });
+
+                existing.CategoryName = category.CategoryName;
+                existing.Description = category.Description;
+                existing.DisplayOrder = category.DisplayOrder;
+                existing.IsActive = category.IsActive;
+                existing.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Category updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut("product-categories/{id}/status")]
+        public async Task<IActionResult> UpdateProductCategoryStatus(int id, [FromBody] StatusUpdateDto status)
+        {
+            try
+            {
+                var category = await _context.ProductCategories.FindAsync(id);
+                if (category == null)
+                    return NotFound(new { success = false, message = "Category not found" });
+
+                category.IsActive = status.IsActive;
+                category.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = $"Category {(status.IsActive ? "activated" : "deactivated")} successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
         [HttpGet("brands")]
         public async Task<IActionResult> GetBrands()
         {
@@ -1515,5 +1628,10 @@ namespace CompuGear.Controllers
     {
         public string Status { get; set; } = string.Empty;
         public string? Notes { get; set; }
+    }
+
+    public class StatusUpdateDto
+    {
+        public bool IsActive { get; set; }
     }
 }

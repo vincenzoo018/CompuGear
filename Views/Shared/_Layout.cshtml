@@ -133,6 +133,7 @@
                     </a>
                     <div class="nav-submenu">
                         <a asp-controller="Inventory" asp-action="Products" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Products" ? "active" : "")">Product Management</a>
+                        <a asp-controller="Inventory" asp-action="Categories" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Categories" ? "active" : "")">Product Categories</a>
                         <a asp-controller="Inventory" asp-action="Stock" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Stock" ? "active" : "")">Stock Levels</a>
                         <a asp-controller="Inventory" asp-action="Alerts" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Alerts" ? "active" : "")">Low Stock Alerts</a>
                         <a asp-controller="Inventory" asp-action="Reports" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Reports" ? "active" : "")">Inventory Reports</a>

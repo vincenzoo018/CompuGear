@@ -97,26 +97,14 @@
                 <label class="form-label">Category</label>
                 <select class="form-select" id="filterCategory">
                     <option value="">All Categories</option>
-                    <option value="Laptops">Laptops</option>
-                    <option value="Desktops">Desktops</option>
-                    <option value="Components">Components</option>
-                    <option value="Peripherals">Peripherals</option>
-                    <option value="Accessories">Accessories</option>
-                    <option value="Software">Software</option>
-                    <option value="Gaming">Gaming</option>
-                    <option value="Networking">Networking</option>
+                    <!-- Categories loaded dynamically from database -->
                 </select>
             </div>
             <div class="col-md-2">
                 <label class="form-label">Brand</label>
                 <select class="form-select" id="filterBrand">
                     <option value="">All Brands</option>
-                    <option value="ASUS">ASUS</option>
-                    <option value="MSI">MSI</option>
-                    <option value="Dell">Dell</option>
-                    <option value="HP">HP</option>
-                    <option value="Lenovo">Lenovo</option>
-                    <option value="Acer">Acer</option>
+                    <!-- Brands loaded dynamically from database -->
                 </select>
             </div>
             <div class="col-md-2">
@@ -238,36 +226,14 @@
                                 <label class="form-label required">Category</label>
                                 <select class="form-select" id="categoryId" name="categoryId" required>
                                     <option value="">Select Category</option>
-                                    <option value="1">Laptops</option>
-                                    <option value="2">Desktops</option>
-                                    <option value="3">Components</option>
-                                    <option value="4">Peripherals</option>
-                                    <option value="5">Accessories</option>
-                                    <option value="6">Software</option>
-                                    <option value="7">Gaming</option>
-                                    <option value="8">Networking</option>
+                                    <!-- Categories loaded dynamically from database -->
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Brand</label>
                                 <select class="form-select" id="brandId" name="brandId">
                                     <option value="">Select Brand</option>
-                                    <option value="1">ASUS</option>
-                                    <option value="2">MSI</option>
-                                    <option value="3">Gigabyte</option>
-                                    <option value="4">Dell</option>
-                                    <option value="5">HP</option>
-                                    <option value="6">Lenovo</option>
-                                    <option value="7">Acer</option>
-                                    <option value="8">Samsung</option>
-                                    <option value="9">LG</option>
-                                    <option value="10">Intel</option>
-                                    <option value="11">AMD</option>
-                                    <option value="12">NVIDIA</option>
-                                    <option value="13">Logitech</option>
-                                    <option value="14">Razer</option>
-                                    <option value="15">Corsair</option>
-                                    <option value="16">Microsoft</option>
+                                    <!-- Brands loaded dynamically from database -->
                                 </select>
                             </div>
                         </div>
@@ -456,6 +422,8 @@
 <script src="~/js/admin.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        loadCategoriesDropdown();
+        loadBrandsDropdown();
         Inventory.products.load();
         
         document.getElementById('searchProducts')?.addEventListener('input', filterProducts);
@@ -463,6 +431,46 @@
         document.getElementById('filterBrand')?.addEventListener('change', filterProducts);
         document.getElementById('filterStock')?.addEventListener('change', filterProducts);
     });
+
+    async function loadCategoriesDropdown() {
+        try {
+            const categories = await API.get('/product-categories');
+            const select = document.getElementById('categoryId');
+            const filterSelect = document.getElementById('filterCategory');
+            
+            if (select) {
+                select.innerHTML = '<option value="">Select Category</option>' + 
+                    categories.map(c => `<option value="${c.categoryId}">${c.categoryName}</option>`).join('');
+            }
+            
+            if (filterSelect) {
+                filterSelect.innerHTML = '<option value="">All Categories</option>' + 
+                    categories.map(c => `<option value="${c.categoryName}">${c.categoryName}</option>`).join('');
+            }
+        } catch (error) {
+            console.error('Failed to load categories:', error);
+        }
+    }
+
+    async function loadBrandsDropdown() {
+        try {
+            const brands = await API.get('/brands');
+            const select = document.getElementById('brandId');
+            const filterSelect = document.getElementById('filterBrand');
+            
+            if (select) {
+                select.innerHTML = '<option value="">Select Brand</option>' + 
+                    brands.map(b => `<option value="${b.brandId}">${b.brandName}</option>`).join('');
+            }
+            
+            if (filterSelect) {
+                filterSelect.innerHTML = '<option value="">All Brands</option>' + 
+                    brands.map(b => `<option value="${b.brandName}">${b.brandName}</option>`).join('');
+            }
+        } catch (error) {
+            console.error('Failed to load brands:', error);
+        }
+    }
 
     function openCreateProductModal() {
         Inventory.products.showModal();

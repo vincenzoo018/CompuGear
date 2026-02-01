@@ -322,6 +322,7 @@ const Marketing = {
     // Campaigns
     campaigns: {
         data: [],
+        currentId: null,
 
         async load() {
             try {
@@ -443,78 +444,81 @@ const Marketing = {
             }
         },
 
-        async view(id) {
-            try {
-                const campaign = await API.get(`/campaigns/${id}`);
-                document.getElementById('viewCampaignContent').innerHTML = `
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-1">Campaign Name</h6>
-                            <p class="fw-semibold">${campaign.campaignName}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-1">Code</h6>
-                            <p>${campaign.campaignCode}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-1">Type</h6>
-                            <p><span class="badge bg-info">${campaign.type || 'General'}</span></p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-1">Status</h6>
-                            <p>${Format.statusBadge(campaign.status)}</p>
-                        </div>
-                        <div class="col-12">
-                            <h6 class="text-muted mb-1">Description</h6>
-                            <p>${campaign.description || '-'}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-1">Duration</h6>
-                            <p>${Format.date(campaign.startDate)} - ${Format.date(campaign.endDate)}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-1">Target Segment</h6>
-                            <p>${campaign.targetSegment || 'All Customers'}</p>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h6 class="text-muted">Budget</h6>
-                                    <h4 class="text-teal">${Format.currency(campaign.budget)}</h4>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h6 class="text-muted">Spent</h6>
-                                    <h4 class="text-warning">${Format.currency(campaign.actualSpend)}</h4>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card bg-light">
-                                <div class="card-body text-center">
-                                    <h6 class="text-muted">ROI</h6>
-                                    <h4 class="text-success">${Format.percentage(campaign.roi)}</h4>
-                                </div>
+        view(id) {
+            const campaign = this.data.find(c => c.campaignId === id);
+            if (!campaign) {
+                Toast.error('Campaign not found');
+                return;
+            }
+            
+            this.currentId = id;
+            document.getElementById('viewCampaignContent').innerHTML = `
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-1">Campaign Name</h6>
+                        <p class="fw-semibold">${campaign.campaignName}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-1">Code</h6>
+                        <p>${campaign.campaignCode}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-1">Type</h6>
+                        <p><span class="badge bg-info">${campaign.type || 'General'}</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-1">Status</h6>
+                        <p>${Format.statusBadge(campaign.status)}</p>
+                    </div>
+                    <div class="col-12">
+                        <h6 class="text-muted mb-1">Description</h6>
+                        <p>${campaign.description || '-'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-1">Duration</h6>
+                        <p>${Format.date(campaign.startDate)} - ${Format.date(campaign.endDate)}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-1">Target Segment</h6>
+                        <p>${campaign.targetSegment || 'All Customers'}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted">Budget</h6>
+                                <h4 class="text-teal">${Format.currency(campaign.budget)}</h4>
                             </div>
                         </div>
                     </div>
-                `;
-                Modal.show('viewCampaignModal');
-            } catch (error) {
-                Toast.error('Failed to load campaign details');
-            }
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted">Spent</h6>
+                                <h4 class="text-warning">${Format.currency(campaign.actualSpend)}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h6 class="text-muted">ROI</h6>
+                                <h4 class="text-success">${Format.percentage(campaign.roi)}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            Modal.show('viewCampaignModal');
         },
 
-        async edit(id) {
-            try {
-                const campaign = await API.get(`/campaigns/${id}`);
-                this.showModal(campaign);
-            } catch (error) {
-                Toast.error('Failed to load campaign');
+        edit(id) {
+            const campaign = this.data.find(c => c.campaignId === id);
+            if (!campaign) {
+                Toast.error('Campaign not found');
+                return;
             }
+            this.currentId = id;
+            this.showModal(campaign);
         },
 
         async toggleStatus(id) {
@@ -548,6 +552,7 @@ const Marketing = {
     // Promotions
     promotions: {
         data: [],
+        currentId: null,
 
         async load() {
             try {
@@ -689,66 +694,69 @@ const Marketing = {
             }
         },
 
-        async view(id) {
-            try {
-                const p = await API.get(`/promotions/${id}`);
-                document.getElementById('viewPromotionContent').innerHTML = `
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-1">Promotion Name</h6>
-                            <p class="fw-semibold">${p.promotionName}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-1">Code</h6>
-                            <p><code class="bg-light px-2 py-1 rounded">${p.promotionCode}</code></p>
-                        </div>
-                        <div class="col-12">
-                            <h6 class="text-muted mb-1">Description</h6>
-                            <p>${p.description || '-'}</p>
-                        </div>
-                        <div class="col-md-4">
-                            <h6 class="text-muted mb-1">Discount Type</h6>
-                            <p><span class="badge bg-info">${p.discountType}</span></p>
-                        </div>
-                        <div class="col-md-4">
-                            <h6 class="text-muted mb-1">Discount Value</h6>
-                            <p class="fw-bold text-teal fs-5">${p.discountType === 'Percentage' ? Format.percentage(p.discountValue) : Format.currency(p.discountValue)}</p>
-                        </div>
-                        <div class="col-md-4">
-                            <h6 class="text-muted mb-1">Status</h6>
-                            <p>${p.isActive ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>'}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-1">Minimum Order</h6>
-                            <p>${Format.currency(p.minOrderAmount)}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-1">Max Discount</h6>
-                            <p>${p.maxDiscountAmount ? Format.currency(p.maxDiscountAmount) : 'No limit'}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-1">Valid Period</h6>
-                            <p>${Format.date(p.startDate)} - ${Format.date(p.endDate)}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-1">Usage</h6>
-                            <p>${p.timesUsed} / ${p.usageLimit || '∞'}</p>
-                        </div>
-                    </div>
-                `;
-                Modal.show('viewPromotionModal');
-            } catch (error) {
-                Toast.error('Failed to load promotion details');
+        view(id) {
+            const p = this.data.find(promo => promo.promotionId === id);
+            if (!p) {
+                Toast.error('Promotion not found');
+                return;
             }
+            
+            this.currentId = id;
+            document.getElementById('viewPromotionContent').innerHTML = `
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-1">Promotion Name</h6>
+                        <p class="fw-semibold">${p.promotionName}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-1">Code</h6>
+                        <p><code class="bg-light px-2 py-1 rounded">${p.promotionCode}</code></p>
+                    </div>
+                    <div class="col-12">
+                        <h6 class="text-muted mb-1">Description</h6>
+                        <p>${p.description || '-'}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted mb-1">Discount Type</h6>
+                        <p><span class="badge bg-info">${p.discountType}</span></p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted mb-1">Discount Value</h6>
+                        <p class="fw-bold text-teal fs-5">${p.discountType === 'Percentage' ? Format.percentage(p.discountValue) : Format.currency(p.discountValue)}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted mb-1">Status</h6>
+                        <p>${p.isActive ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-secondary">Inactive</span>'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-1">Minimum Order</h6>
+                        <p>${Format.currency(p.minOrderAmount)}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-1">Max Discount</h6>
+                        <p>${p.maxDiscountAmount ? Format.currency(p.maxDiscountAmount) : 'No limit'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-1">Valid Period</h6>
+                        <p>${Format.date(p.startDate)} - ${Format.date(p.endDate)}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-1">Usage</h6>
+                        <p>${p.timesUsed || 0} / ${p.usageLimit || '∞'}</p>
+                    </div>
+                </div>
+            `;
+            Modal.show('viewPromotionModal');
         },
 
-        async edit(id) {
-            try {
-                const promotion = await API.get(`/promotions/${id}`);
-                this.showModal(promotion);
-            } catch (error) {
-                Toast.error('Failed to load promotion');
+        edit(id) {
+            const promotion = this.data.find(p => p.promotionId === id);
+            if (!promotion) {
+                Toast.error('Promotion not found');
+                return;
             }
+            this.currentId = id;
+            this.showModal(promotion);
         },
 
         async toggleVisibility(id) {
@@ -795,6 +803,7 @@ const Marketing = {
 const Customers = {
     data: [],
     categories: [],
+    currentId: null,
 
     async load() {
         try {
@@ -923,68 +932,71 @@ const Customers = {
         }
     },
 
-    async view(id) {
-        try {
-            const c = await API.get(`/customers/${id}`);
-            document.getElementById('viewCustomerContent').innerHTML = `
-                <div class="text-center mb-4">
-                    <div class="avatar-circle avatar-lg mx-auto mb-3">${(c.firstName?.[0] || '') + (c.lastName?.[0] || '')}</div>
-                    <h4>${c.firstName} ${c.lastName}</h4>
-                    <p class="text-muted">${c.customerCode}</p>
-                    ${Format.statusBadge(c.status)}
-                </div>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <h6 class="text-muted"><i class="bi bi-envelope me-2"></i>Email</h6>
-                        <p>${c.email}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="text-muted"><i class="bi bi-phone me-2"></i>Phone</h6>
-                        <p>${c.phone || '-'}</p>
-                    </div>
-                    <div class="col-12">
-                        <h6 class="text-muted"><i class="bi bi-geo-alt me-2"></i>Address</h6>
-                        <p>${c.billingAddress || '-'}, ${c.billingCity || ''}</p>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card bg-light">
-                            <div class="card-body text-center">
-                                <h6 class="text-muted">Total Orders</h6>
-                                <h4 class="text-teal">${c.totalOrders}</h4>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card bg-light">
-                            <div class="card-body text-center">
-                                <h6 class="text-muted">Total Spent</h6>
-                                <h4 class="text-success">${Format.currency(c.totalSpent)}</h4>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card bg-light">
-                            <div class="card-body text-center">
-                                <h6 class="text-muted">Loyalty Points</h6>
-                                <h4 class="text-warning">${c.loyaltyPoints}</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            Modal.show('viewCustomerModal');
-        } catch (error) {
-            Toast.error('Failed to load customer details');
+    view(id) {
+        const c = this.data.find(customer => customer.customerId === id);
+        if (!c) {
+            Toast.error('Customer not found');
+            return;
         }
+        
+        this.currentId = id;
+        document.getElementById('viewCustomerContent').innerHTML = `
+            <div class="text-center mb-4">
+                <div class="avatar-circle avatar-lg mx-auto mb-3">${(c.firstName?.[0] || '') + (c.lastName?.[0] || '')}</div>
+                <h4>${c.firstName} ${c.lastName}</h4>
+                <p class="text-muted">${c.customerCode}</p>
+                ${Format.statusBadge(c.status)}
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <h6 class="text-muted">Email</h6>
+                    <p>${c.email}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-muted">Phone</h6>
+                    <p>${c.phone || '-'}</p>
+                </div>
+                <div class="col-12">
+                    <h6 class="text-muted">Address</h6>
+                    <p>${c.billingAddress || '-'}, ${c.billingCity || ''}</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted">Total Orders</h6>
+                            <h4 class="text-teal">${c.totalOrders || 0}</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted">Total Spent</h6>
+                            <h4 class="text-success">${Format.currency(c.totalSpent)}</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-light">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted">Loyalty Points</h6>
+                            <h4 class="text-warning">${c.loyaltyPoints || 0}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        Modal.show('viewCustomerModal');
     },
 
-    async edit(id) {
-        try {
-            const customer = await API.get(`/customers/${id}`);
-            this.showModal(customer);
-        } catch (error) {
-            Toast.error('Failed to load customer');
+    edit(id) {
+        const customer = this.data.find(c => c.customerId === id);
+        if (!customer) {
+            Toast.error('Customer not found');
+            return;
         }
+        this.currentId = id;
+        this.showModal(customer);
     },
 
     async toggleStatus(id) {
@@ -1010,6 +1022,7 @@ const Inventory = {
         data: [],
         categories: [],
         brands: [],
+        currentId: null,
 
         async load() {
             try {
@@ -1139,56 +1152,59 @@ const Inventory = {
             }
         },
 
-        async view(id) {
-            try {
-                const p = await API.get(`/products/${id}`);
-                document.getElementById('viewProductContent').innerHTML = `
-                    <div class="row g-4">
-                        <div class="col-md-4 text-center">
-                            <img src="${p.mainImageUrl || '/img/placeholder.png'}" class="img-fluid rounded mb-3" alt="">
-                            ${p.isFeatured ? '<span class="badge bg-warning">Featured</span>' : ''}
-                            ${p.isOnSale ? '<span class="badge bg-danger">On Sale</span>' : ''}
-                        </div>
-                        <div class="col-md-8">
-                            <h4>${p.productName}</h4>
-                            <p class="text-muted">${p.productCode} | SKU: ${p.sku || '-'}</p>
-                            <p>${p.shortDescription || ''}</p>
-                            <div class="row mt-3">
-                                <div class="col-6">
-                                    <h6 class="text-muted">Cost Price</h6>
-                                    <h5>${Format.currency(p.costPrice)}</h5>
-                                </div>
-                                <div class="col-6">
-                                    <h6 class="text-muted">Selling Price</h6>
-                                    <h5 class="text-teal">${Format.currency(p.sellingPrice)}</h5>
-                                </div>
+        view(id) {
+            const p = this.data.find(product => product.productId === id);
+            if (!p) {
+                Toast.error('Product not found');
+                return;
+            }
+            
+            this.currentId = id;
+            document.getElementById('viewProductContent').innerHTML = `
+                <div class="row g-4">
+                    <div class="col-md-4 text-center">
+                        <img src="${p.mainImageUrl || '/img/placeholder.png'}" class="img-fluid rounded mb-3" alt="">
+                        ${p.isFeatured ? '<span class="badge bg-warning">Featured</span>' : ''}
+                        ${p.isOnSale ? '<span class="badge bg-danger">On Sale</span>' : ''}
+                    </div>
+                    <div class="col-md-8">
+                        <h4>${p.productName}</h4>
+                        <p class="text-muted">${p.productCode || '-'} | SKU: ${p.sku || '-'}</p>
+                        <p>${p.shortDescription || ''}</p>
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <h6 class="text-muted">Cost Price</h6>
+                                <h5>${Format.currency(p.costPrice)}</h5>
                             </div>
-                            <div class="row mt-3">
-                                <div class="col-6">
-                                    <h6 class="text-muted">Stock</h6>
-                                    <h5 class="${p.stockQuantity <= p.reorderLevel ? 'text-danger' : 'text-success'}">${p.stockQuantity} units</h5>
-                                </div>
-                                <div class="col-6">
-                                    <h6 class="text-muted">Status</h6>
-                                    ${Format.statusBadge(p.status)}
-                                </div>
+                            <div class="col-6">
+                                <h6 class="text-muted">Selling Price</h6>
+                                <h5 class="text-teal">${Format.currency(p.sellingPrice)}</h5>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <h6 class="text-muted">Stock</h6>
+                                <h5 class="${p.stockQuantity <= p.reorderLevel ? 'text-danger' : 'text-success'}">${p.stockQuantity} units</h5>
+                            </div>
+                            <div class="col-6">
+                                <h6 class="text-muted">Status</h6>
+                                ${Format.statusBadge(p.status)}
                             </div>
                         </div>
                     </div>
-                `;
-                Modal.show('viewProductModal');
-            } catch (error) {
-                Toast.error('Failed to load product details');
-            }
+                </div>
+            `;
+            Modal.show('viewProductModal');
         },
 
-        async edit(id) {
-            try {
-                const product = await API.get(`/products/${id}`);
-                this.showModal(product);
-            } catch (error) {
-                Toast.error('Failed to load product');
+        edit(id) {
+            const product = this.data.find(p => p.productId === id);
+            if (!product) {
+                Toast.error('Product not found');
+                return;
             }
+            this.currentId = id;
+            this.showModal(product);
         },
 
         updateStock(id) {
@@ -1256,6 +1272,7 @@ const Inventory = {
 const Sales = {
     orders: {
         data: [],
+        currentId: null,
 
         async load() {
             try {
@@ -1316,98 +1333,102 @@ const Sales = {
             document.getElementById('totalSales')?.textContent && (document.getElementById('totalSales').textContent = Format.currency(totalRevenue));
         },
 
-        async view(id) {
-            try {
-                const o = await API.get(`/orders/${id}`);
-                let itemsHtml = '';
-                if (o.items && o.items.length > 0) {
-                    itemsHtml = `
-                        <h6 class="mt-4 mb-3">Order Items</h6>
-                        <table class="table table-sm">
-                            <thead><tr><th>Product</th><th class="text-center">Qty</th><th class="text-end">Price</th><th class="text-end">Total</th></tr></thead>
-                            <tbody>
-                                ${o.items.map(i => `<tr>
-                                    <td>${i.product?.productName || i.productName}</td>
-                                    <td class="text-center">${i.quantity}</td>
-                                    <td class="text-end">${Format.currency(i.unitPrice)}</td>
-                                    <td class="text-end">${Format.currency(i.totalPrice)}</td>
-                                </tr>`).join('')}
-                            </tbody>
-                        </table>
-                    `;
-                }
+        view(id) {
+            const o = this.data.find(order => order.orderId === id);
+            if (!o) {
+                Toast.error('Order not found');
+                return;
+            }
+            
+            this.currentId = id;
+            let itemsHtml = '';
+            if (o.items && o.items.length > 0) {
+                itemsHtml = `
+                    <h6 class="mt-4 mb-3">Order Items</h6>
+                    <table class="table table-sm">
+                        <thead><tr><th>Product</th><th class="text-center">Qty</th><th class="text-end">Price</th><th class="text-end">Total</th></tr></thead>
+                        <tbody>
+                            ${o.items.map(i => `<tr>
+                                <td>${i.productName || '-'}</td>
+                                <td class="text-center">${i.quantity}</td>
+                                <td class="text-end">${Format.currency(i.unitPrice)}</td>
+                                <td class="text-end">${Format.currency(i.totalPrice)}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
 
-                document.getElementById('viewOrderContent').innerHTML = `
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Order Number</h6>
-                            <p class="fw-semibold">${o.orderNumber}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Order Date</h6>
-                            <p>${Format.date(o.orderDate, true)}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Customer</h6>
-                            <p>${o.customer ? o.customer.firstName + ' ' + o.customer.lastName : 'Guest'}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Status</h6>
-                            <p>${Format.statusBadge(o.orderStatus)} ${Format.statusBadge(o.paymentStatus)}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Payment Method</h6>
-                            <p>${o.paymentMethod || '-'}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Shipping</h6>
-                            <p>${o.shippingMethod || '-'}</p>
-                        </div>
-                        ${itemsHtml}
-                        <div class="col-12">
-                            <hr>
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <h6 class="text-muted">Subtotal</h6>
-                                    <p>${Format.currency(o.subtotal)}</p>
-                                </div>
-                                <div class="col-md-3">
-                                    <h6 class="text-muted">Discount</h6>
-                                    <p class="text-danger">-${Format.currency(o.discountAmount)}</p>
-                                </div>
-                                <div class="col-md-3">
-                                    <h6 class="text-muted">Tax</h6>
-                                    <p>${Format.currency(o.taxAmount)}</p>
-                                </div>
-                                <div class="col-md-3">
-                                    <h6 class="text-muted">Total</h6>
-                                    <h5 class="text-teal">${Format.currency(o.totalAmount)}</h5>
-                                </div>
+            document.getElementById('viewOrderContent').innerHTML = `
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Order Number</h6>
+                        <p class="fw-semibold">${o.orderNumber}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Order Date</h6>
+                        <p>${Format.date(o.orderDate, true)}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Customer</h6>
+                        <p>${o.customerName || 'Guest'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Status</h6>
+                        <p>${Format.statusBadge(o.orderStatus)} ${Format.statusBadge(o.paymentStatus)}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Payment Method</h6>
+                        <p>${o.paymentMethod || '-'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Shipping</h6>
+                        <p>${o.shippingMethod || '-'}</p>
+                    </div>
+                    ${itemsHtml}
+                    <div class="col-12">
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h6 class="text-muted">Subtotal</h6>
+                                <p>${Format.currency(o.subtotal || 0)}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h6 class="text-muted">Discount</h6>
+                                <p class="text-danger">-${Format.currency(o.discountAmount || 0)}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h6 class="text-muted">Tax</h6>
+                                <p>${Format.currency(o.taxAmount || 0)}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h6 class="text-muted">Total</h6>
+                                <h5 class="text-teal">${Format.currency(o.totalAmount)}</h5>
                             </div>
                         </div>
                     </div>
-                `;
-                Modal.show('viewOrderModal');
-            } catch (error) {
-                Toast.error('Failed to load order details');
-            }
+                </div>
+            `;
+            Modal.show('viewOrderModal');
         },
 
-        async edit(id) {
-            try {
-                const order = await API.get(`/orders/${id}`);
-                Modal.reset('orderForm');
-                document.getElementById('orderId').value = order.orderId;
-                document.getElementById('orderStatus').value = order.orderStatus;
-                document.getElementById('paymentStatus').value = order.paymentStatus;
-                document.getElementById('paymentMethod').value = order.paymentMethod || '';
-                document.getElementById('shippingMethod').value = order.shippingMethod || '';
-                document.getElementById('trackingNumber').value = order.trackingNumber || '';
-                document.getElementById('orderNotes').value = order.notes || '';
-                Modal.show('orderModal');
-            } catch (error) {
-                Toast.error('Failed to load order');
+        edit(id) {
+            const order = this.data.find(o => o.orderId === id);
+            if (!order) {
+                Toast.error('Order not found');
+                return;
             }
+            
+            this.currentId = id;
+            Modal.reset('orderForm');
+            document.getElementById('orderId').value = order.orderId;
+            document.getElementById('orderStatus').value = order.orderStatus;
+            document.getElementById('paymentStatus').value = order.paymentStatus;
+            document.getElementById('paymentMethod').value = order.paymentMethod || '';
+            document.getElementById('shippingMethod').value = order.shippingMethod || '';
+            document.getElementById('trackingNumber').value = order.trackingNumber || '';
+            document.getElementById('orderNotes').value = order.notes || '';
+            Modal.show('orderModal');
         },
 
         async save() {
@@ -1489,6 +1510,7 @@ const Sales = {
 
     leads: {
         data: [],
+        currentId: null,
 
         async load() {
             try {
@@ -1606,66 +1628,69 @@ const Sales = {
             }
         },
 
-        async view(id) {
-            try {
-                const l = await API.get(`/leads/${id}`);
-                document.getElementById('viewLeadContent').innerHTML = `
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Name</h6>
-                            <p class="fw-semibold">${l.firstName} ${l.lastName}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Code</h6>
-                            <p>${l.leadCode}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Email</h6>
-                            <p>${l.email || '-'}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Phone</h6>
-                            <p>${l.phone || '-'}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Company</h6>
-                            <p>${l.companyName || '-'}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Source</h6>
-                            <p><span class="badge bg-info">${l.source || '-'}</span></p>
-                        </div>
-                        <div class="col-md-4">
-                            <h6 class="text-muted">Status</h6>
-                            <p>${Format.statusBadge(l.status)}</p>
-                        </div>
-                        <div class="col-md-4">
-                            <h6 class="text-muted">Priority</h6>
-                            <p>${Format.priorityBadge(l.priority)}</p>
-                        </div>
-                        <div class="col-md-4">
-                            <h6 class="text-muted">Est. Value</h6>
-                            <p class="fw-bold text-teal">${Format.currency(l.estimatedValue)}</p>
-                        </div>
-                        <div class="col-12">
-                            <h6 class="text-muted">Notes</h6>
-                            <p>${l.notes || '-'}</p>
-                        </div>
-                    </div>
-                `;
-                Modal.show('viewLeadModal');
-            } catch (error) {
-                Toast.error('Failed to load lead details');
+        view(id) {
+            const l = this.data.find(lead => lead.leadId === id);
+            if (!l) {
+                Toast.error('Lead not found');
+                return;
             }
+            
+            this.currentId = id;
+            document.getElementById('viewLeadContent').innerHTML = `
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Name</h6>
+                        <p class="fw-semibold">${l.firstName} ${l.lastName}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Code</h6>
+                        <p>${l.leadCode}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Email</h6>
+                        <p>${l.email || '-'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Phone</h6>
+                        <p>${l.phone || '-'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Company</h6>
+                        <p>${l.companyName || '-'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Source</h6>
+                        <p><span class="badge bg-info">${l.source || '-'}</span></p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Status</h6>
+                        <p>${Format.statusBadge(l.status)}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Priority</h6>
+                        <p>${Format.priorityBadge(l.priority)}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Est. Value</h6>
+                        <p class="fw-bold text-teal">${Format.currency(l.estimatedValue)}</p>
+                    </div>
+                    <div class="col-12">
+                        <h6 class="text-muted">Notes</h6>
+                        <p>${l.notes || '-'}</p>
+                    </div>
+                </div>
+            `;
+            Modal.show('viewLeadModal');
         },
 
-        async edit(id) {
-            try {
-                const lead = await API.get(`/leads/${id}`);
-                this.showModal(lead);
-            } catch (error) {
-                Toast.error('Failed to load lead');
+        edit(id) {
+            const lead = this.data.find(l => l.leadId === id);
+            if (!lead) {
+                Toast.error('Lead not found');
+                return;
             }
+            this.currentId = id;
+            this.showModal(lead);
         },
 
         async convert(id) {
@@ -1716,6 +1741,7 @@ const Support = {
     tickets: {
         data: [],
         categories: [],
+        currentId: null,
 
         async load() {
             try {
@@ -1827,77 +1853,80 @@ const Support = {
             }
         },
 
-        async view(id) {
-            try {
-                const t = await API.get(`/tickets/${id}`);
-                let messagesHtml = '';
-                if (t.messages && t.messages.length > 0) {
-                    messagesHtml = `
-                        <h6 class="mt-4 mb-3">Messages</h6>
-                        <div class="ticket-messages">
-                            ${t.messages.map(m => `
-                                <div class="message ${m.senderType === 'Staff' ? 'staff' : 'customer'} mb-3 p-3 rounded ${m.senderType === 'Staff' ? 'bg-teal-light' : 'bg-light'}">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <strong>${m.senderName || m.senderType}</strong>
-                                        <small class="text-muted">${Format.date(m.createdAt, true)}</small>
-                                    </div>
-                                    <p class="mb-0">${m.message}</p>
+        view(id) {
+            const t = this.data.find(ticket => ticket.ticketId === id);
+            if (!t) {
+                Toast.error('Ticket not found');
+                return;
+            }
+            
+            this.currentId = id;
+            let messagesHtml = '';
+            if (t.messages && t.messages.length > 0) {
+                messagesHtml = `
+                    <h6 class="mt-4 mb-3">Messages</h6>
+                    <div class="ticket-messages">
+                        ${t.messages.map(m => `
+                            <div class="message ${m.senderType === 'Staff' ? 'staff' : 'customer'} mb-3 p-3 rounded ${m.senderType === 'Staff' ? 'bg-teal-light' : 'bg-light'}">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <strong>${m.senderName || m.senderType}</strong>
+                                    <small class="text-muted">${Format.date(m.createdAt, true)}</small>
                                 </div>
-                            `).join('')}
-                        </div>
-                    `;
-                }
-
-                document.getElementById('viewTicketContent').innerHTML = `
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Ticket Number</h6>
-                            <p class="fw-semibold">${t.ticketNumber}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Created</h6>
-                            <p>${Format.date(t.createdAt, true)}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Customer</h6>
-                            <p>${t.customer ? t.customer.firstName + ' ' + t.customer.lastName : t.contactName || t.contactEmail}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Category</h6>
-                            <p>${t.category?.categoryName || '-'}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Priority</h6>
-                            <p>${Format.priorityBadge(t.priority)}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Status</h6>
-                            <p>${Format.statusBadge(t.status)}</p>
-                        </div>
-                        <div class="col-12">
-                            <h6 class="text-muted">Subject</h6>
-                            <p class="fw-semibold">${t.subject}</p>
-                        </div>
-                        <div class="col-12">
-                            <h6 class="text-muted">Description</h6>
-                            <p>${t.description || '-'}</p>
-                        </div>
-                        ${messagesHtml}
+                                <p class="mb-0">${m.message}</p>
+                            </div>
+                        `).join('')}
                     </div>
                 `;
-                Modal.show('viewTicketModal');
-            } catch (error) {
-                Toast.error('Failed to load ticket details');
             }
+
+            document.getElementById('viewTicketContent').innerHTML = `
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Ticket Number</h6>
+                        <p class="fw-semibold">${t.ticketNumber}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Created</h6>
+                        <p>${Format.date(t.createdAt, true)}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Customer</h6>
+                        <p>${t.customerName || t.contactName || t.contactEmail || '-'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Category</h6>
+                        <p>${t.categoryName || '-'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Priority</h6>
+                        <p>${Format.priorityBadge(t.priority)}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Status</h6>
+                        <p>${Format.statusBadge(t.status)}</p>
+                    </div>
+                    <div class="col-12">
+                        <h6 class="text-muted">Subject</h6>
+                        <p class="fw-semibold">${t.subject}</p>
+                    </div>
+                    <div class="col-12">
+                        <h6 class="text-muted">Description</h6>
+                        <p>${t.description || '-'}</p>
+                    </div>
+                    ${messagesHtml}
+                </div>
+            `;
+            Modal.show('viewTicketModal');
         },
 
-        async edit(id) {
-            try {
-                const ticket = await API.get(`/tickets/${id}`);
-                this.showModal(ticket);
-            } catch (error) {
-                Toast.error('Failed to load ticket');
+        edit(id) {
+            const ticket = this.data.find(t => t.ticketId === id);
+            if (!ticket) {
+                Toast.error('Ticket not found');
+                return;
             }
+            this.currentId = id;
+            this.showModal(ticket);
         },
 
         reply(id) {
@@ -1964,6 +1993,7 @@ const Support = {
 const Users = {
     data: [],
     roles: [],
+    currentId: null,
 
     async load() {
         try {
@@ -2113,48 +2143,51 @@ const Users = {
         }
     },
 
-    async view(id) {
-        try {
-            const u = await API.get(`/users/${id}`);
-            document.getElementById('viewUserContent').innerHTML = `
-                <div class="text-center mb-4">
-                    <div class="avatar-circle avatar-lg mx-auto mb-3">${(u.firstName?.[0] || '') + (u.lastName?.[0] || '')}</div>
-                    <h4>${u.firstName} ${u.lastName}</h4>
-                    <p class="text-muted">@${u.username}</p>
-                    <span class="badge ${u.isActive ? 'bg-success' : 'bg-secondary'}">${u.isActive ? 'Active' : 'Inactive'}</span>
-                </div>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <h6 class="text-muted"><i class="bi bi-envelope me-2"></i>Email</h6>
-                        <p>${u.email}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="text-muted"><i class="bi bi-phone me-2"></i>Phone</h6>
-                        <p>${u.phone || '-'}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="text-muted"><i class="bi bi-shield me-2"></i>Role</h6>
-                        <p><span class="badge bg-info">${u.role?.roleName || '-'}</span></p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="text-muted"><i class="bi bi-clock me-2"></i>Last Login</h6>
-                        <p>${u.lastLoginAt ? Format.date(u.lastLoginAt, true) : 'Never'}</p>
-                    </div>
-                </div>
-            `;
-            Modal.show('viewUserModal');
-        } catch (error) {
-            Toast.error('Failed to load user details');
+    view(id) {
+        const u = this.data.find(user => user.userId === id);
+        if (!u) {
+            Toast.error('User not found');
+            return;
         }
+        
+        this.currentId = id;
+        document.getElementById('viewUserContent').innerHTML = `
+            <div class="text-center mb-4">
+                <div class="avatar-circle avatar-lg mx-auto mb-3">${(u.firstName?.[0] || '') + (u.lastName?.[0] || '')}</div>
+                <h4>${u.firstName} ${u.lastName}</h4>
+                <p class="text-muted">@${u.username}</p>
+                <span class="badge ${u.isActive ? 'bg-success' : 'bg-secondary'}">${u.isActive ? 'Active' : 'Inactive'}</span>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <h6 class="text-muted">Email</h6>
+                    <p>${u.email}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-muted">Phone</h6>
+                    <p>${u.phone || '-'}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-muted">Role</h6>
+                    <p><span class="badge bg-info">${u.roleName || '-'}</span></p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-muted">Last Login</h6>
+                    <p>${u.lastLoginAt ? Format.date(u.lastLoginAt, true) : 'Never'}</p>
+                </div>
+            </div>
+        `;
+        Modal.show('viewUserModal');
     },
 
-    async edit(id) {
-        try {
-            const user = await API.get(`/users/${id}`);
-            this.showModal(user);
-        } catch (error) {
-            Toast.error('Failed to load user');
+    edit(id) {
+        const user = this.data.find(u => u.userId === id);
+        if (!user) {
+            Toast.error('User not found');
+            return;
         }
+        this.currentId = id;
+        this.showModal(user);
     },
 
     async toggleStatus(id) {
@@ -2186,6 +2219,7 @@ const Users = {
 const Billing = {
     invoices: {
         data: [],
+        currentId: null,
 
         async load() {
             try {
@@ -2325,73 +2359,75 @@ const Billing = {
             }
         },
 
-        async view(id) {
-            try {
-                const i = await API.get(`/invoices/${id}`);
-                let itemsHtml = '';
-                if (i.items && i.items.length > 0) {
-                    itemsHtml = `
-                        <h6 class="mt-4 mb-3">Invoice Items</h6>
-                        <table class="table table-sm">
-                            <thead><tr><th>Description</th><th class="text-center">Qty</th><th class="text-end">Price</th><th class="text-end">Total</th></tr></thead>
-                            <tbody>
-                                ${i.items.map(item => `<tr>
-                                    <td>${item.description}</td>
-                                    <td class="text-center">${item.quantity}</td>
-                                    <td class="text-end">${Format.currency(item.unitPrice)}</td>
-                                    <td class="text-end">${Format.currency(item.totalPrice)}</td>
-                                </tr>`).join('')}
-                            </tbody>
-                        </table>
-                    `;
-                }
+        view(id) {
+            const i = this.data.find(inv => inv.invoiceId === id);
+            if (!i) {
+                Toast.error('Invoice not found');
+                return;
+            }
+            
+            this.currentId = id;
+            let itemsHtml = '';
+            if (i.items && i.items.length > 0) {
+                itemsHtml = `
+                    <h6 class="mt-4 mb-3">Invoice Items</h6>
+                    <table class="table table-sm">
+                        <thead><tr><th>Description</th><th class="text-center">Qty</th><th class="text-end">Price</th><th class="text-end">Total</th></tr></thead>
+                        <tbody>
+                            ${i.items.map(item => `<tr>
+                                <td>${item.description}</td>
+                                <td class="text-center">${item.quantity}</td>
+                                <td class="text-end">${Format.currency(item.unitPrice)}</td>
+                                <td class="text-end">${Format.currency(item.totalPrice)}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
 
-                document.getElementById('viewInvoiceContent').innerHTML = `
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Invoice Number</h6>
-                            <p class="fw-semibold">${i.invoiceNumber}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Status</h6>
-                            <p>${Format.statusBadge(i.status)}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Customer</h6>
-                            <p>${i.customer ? i.customer.firstName + ' ' + i.customer.lastName : '-'}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Due Date</h6>
-                            <p>${Format.date(i.dueDate)}</p>
-                        </div>
-                        ${itemsHtml}
-                        <div class="col-12">
-                            <hr>
-                            <div class="row text-end">
-                                <div class="col-md-3">
-                                    <h6 class="text-muted">Subtotal</h6>
-                                    <p>${Format.currency(i.subtotal)}</p>
-                                </div>
-                                <div class="col-md-3">
-                                    <h6 class="text-muted">Tax</h6>
-                                    <p>${Format.currency(i.taxAmount)}</p>
-                                </div>
-                                <div class="col-md-3">
-                                    <h6 class="text-muted">Total</h6>
-                                    <h5 class="text-teal">${Format.currency(i.totalAmount)}</h5>
-                                </div>
-                                <div class="col-md-3">
-                                    <h6 class="text-muted">Balance</h6>
-                                    <h5 class="${i.totalAmount - i.paidAmount > 0 ? 'text-danger' : 'text-success'}">${Format.currency(i.totalAmount - i.paidAmount)}</h5>
-                                </div>
+            document.getElementById('viewInvoiceContent').innerHTML = `
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Invoice Number</h6>
+                        <p class="fw-semibold">${i.invoiceNumber}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Status</h6>
+                        <p>${Format.statusBadge(i.status)}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Customer</h6>
+                        <p>${i.customerName || '-'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Due Date</h6>
+                        <p>${Format.date(i.dueDate)}</p>
+                    </div>
+                    ${itemsHtml}
+                    <div class="col-12">
+                        <hr>
+                        <div class="row text-end">
+                            <div class="col-md-3">
+                                <h6 class="text-muted">Subtotal</h6>
+                                <p>${Format.currency(i.subtotal || 0)}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h6 class="text-muted">Tax</h6>
+                                <p>${Format.currency(i.taxAmount || 0)}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h6 class="text-muted">Total</h6>
+                                <h5 class="text-teal">${Format.currency(i.totalAmount)}</h5>
+                            </div>
+                            <div class="col-md-3">
+                                <h6 class="text-muted">Balance</h6>
+                                <h5 class="${i.balance > 0 ? 'text-danger' : 'text-success'}">${Format.currency(i.balance)}</h5>
                             </div>
                         </div>
                     </div>
-                `;
-                Modal.show('viewInvoiceModal');
-            } catch (error) {
-                Toast.error('Failed to load invoice details');
-            }
+                </div>
+            `;
+            Modal.show('viewInvoiceModal');
         },
 
         recordPayment(id) {
@@ -2450,13 +2486,14 @@ const Billing = {
             }
         },
 
-        async edit(id) {
-            try {
-                const invoice = await API.get(`/invoices/${id}`);
-                this.showModal(invoice);
-            } catch (error) {
-                Toast.error('Failed to load invoice');
+        edit(id) {
+            const invoice = this.data.find(i => i.invoiceId === id);
+            if (!invoice) {
+                Toast.error('Invoice not found');
+                return;
             }
+            this.currentId = id;
+            this.showModal(invoice);
         },
 
         async toggleStatus(id) {
@@ -2682,11 +2719,14 @@ window.Toast = Toast;
 window.API = API;
 window.Format = Format;
 window.Modal = Modal;
+window.Icons = Icons;
 window.Marketing = Marketing;
 window.Customers = Customers;
 window.Inventory = Inventory;
 window.Sales = Sales;
 window.Support = Support;
 window.Users = Users;
+window.Billing = Billing;
+window.CustomerPortal = CustomerPortal;
 window.Billing = Billing;
 window.CustomerPortal = CustomerPortal;
