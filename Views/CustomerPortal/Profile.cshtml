@@ -4,6 +4,11 @@
 }
 
 <style>
+    .profile-container {
+        min-height: 100vh;
+        padding: 20px 0;
+    }
+
     .profile-header {
         background: linear-gradient(135deg, #008080, #006666);
         border-radius: 20px;
@@ -11,6 +16,7 @@
         color: white;
         text-align: center;
         margin-bottom: 30px;
+        box-shadow: 0 10px 40px rgba(0, 128, 128, 0.3);
     }
 
     .profile-avatar {
@@ -26,6 +32,7 @@
         font-weight: 700;
         margin: 0 auto 20px;
         border: 4px solid rgba(255,255,255,0.3);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
     }
 
     .profile-card {
@@ -44,57 +51,6 @@
         border-bottom: 1px solid #e5e7eb;
     }
 
-    .info-row {
-        display: flex;
-        justify-content-between;
-        padding: 12px 0;
-        border-bottom: 1px solid #f3f4f6;
-    }
-
-    .info-row:last-child {
-        border-bottom: none;
-    }
-
-    .info-label {
-        font-size: 0.9rem;
-        color: #6b7280;
-    }
-
-    .info-value {
-        font-weight: 500;
-        color: #1f2937;
-        text-align: right;
-    }
-
-    .loyalty-card {
-        background: linear-gradient(135deg, #ff6b35, #ff8c42);
-        border-radius: 20px;
-        padding: 25px;
-        color: white;
-    }
-
-    .loyalty-points {
-        font-size: 2.5rem;
-        font-weight: 800;
-    }
-
-    .address-card {
-        border: 2px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 15px;
-        transition: all 0.3s;
-    }
-
-    .address-card:hover {
-        border-color: #008080;
-    }
-
-    .address-card.default {
-        border-color: #008080;
-        background: #f0fdfa;
-    }
-
     .tab-btn {
         padding: 12px 25px;
         border-radius: 10px;
@@ -104,10 +60,6 @@
         font-weight: 500;
         cursor: pointer;
         transition: all 0.3s;
-    }
-
-    .tab-btn:hover {
-        background: #e5e7eb;
     }
 
     .tab-btn.active {
@@ -125,421 +77,315 @@
         border-color: #008080;
         box-shadow: 0 0 0 4px rgba(0,128,128,0.1);
     }
+
+    .btn-save {
+        background: linear-gradient(135deg, #008080, #006666);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .loyalty-card {
+        background: linear-gradient(135deg, #ff6b35, #ff8c42);
+        border-radius: 20px;
+        padding: 25px;
+        color: white;
+    }
+
+    .loyalty-points {
+        font-size: 2.5rem;
+        font-weight: 800;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #f3f4f6;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: #6b7280; }
+    .info-value { font-weight: 500; color: #1f2937; }
 </style>
 
-<!-- Profile Header -->
-<div class="profile-header">
-    <div class="profile-avatar">JD</div>
-    <h3 style="font-weight: 700; margin-bottom: 5px;">Juan Dela Cruz</h3>
-    <p style="opacity: 0.9; margin-bottom: 15px;">Member since December 2024</p>
-    <div class="d-flex justify-content-center gap-4 flex-wrap">
-        <div>
-            <div style="font-size: 1.5rem; font-weight: 700;">12</div>
-            <div style="font-size: 0.85rem; opacity: 0.9;">Orders</div>
-        </div>
-        <div>
-            <div style="font-size: 1.5rem; font-weight: 700;">1,250</div>
-            <div style="font-size: 0.85rem; opacity: 0.9;">Loyalty Points</div>
-        </div>
-        <div>
-            <div style="font-size: 1.5rem; font-weight: 700;">₱45,890</div>
-            <div style="font-size: 0.85rem; opacity: 0.9;">Total Spent</div>
-        </div>
-    </div>
-</div>
-
-<!-- Tabs -->
-<div class="d-flex gap-2 mb-4 flex-wrap">
-    <button class="tab-btn active" onclick="showTab('personal')">👤 Personal Info</button>
-    <button class="tab-btn" onclick="showTab('addresses')">📍 Addresses</button>
-    <button class="tab-btn" onclick="showTab('payment')">💳 Payment Methods</button>
-    <button class="tab-btn" onclick="showTab('security')">🔒 Security</button>
-    <button class="tab-btn" onclick="showTab('preferences')">⚙️ Preferences</button>
-</div>
-
-<div class="row">
-    <div class="col-lg-8">
-        <!-- Personal Information Tab -->
-        <div id="tab-personal" class="tab-content">
-            <div class="profile-card">
-                <h6>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                    </svg>
-                    Personal Information
-                </h6>
-
-                <form id="personalForm">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label" style="font-weight: 500; color: #374151;">First Name</label>
-                            <input type="text" class="form-control" value="Juan" name="firstName">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label" style="font-weight: 500; color: #374151;">Last Name</label>
-                            <input type="text" class="form-control" value="Dela Cruz" name="lastName">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label" style="font-weight: 500; color: #374151;">Email Address</label>
-                            <input type="email" class="form-control" value="juan.delacruz@@email.com" name="email">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label" style="font-weight: 500; color: #374151;">Phone Number</label>
-                            <input type="tel" class="form-control" value="+63 912 345 6789" name="phone">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label" style="font-weight: 500; color: #374151;">Date of Birth</label>
-                            <input type="date" class="form-control" value="1995-06-15" name="birthdate">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label" style="font-weight: 500; color: #374151;">Gender</label>
-                            <select class="form-control" name="gender">
-                                <option value="male" selected>Male</option>
-                                <option value="female">Female</option>
-                                <option value="other">Other</option>
-                                <option value="prefer-not">Prefer not to say</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-end mt-4">
-                        <button type="submit" class="btn" style="background: linear-gradient(135deg, #008080, #006666); color: white; border-radius: 10px; padding: 12px 30px; font-weight: 600;">
-                            Save Changes
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Addresses Tab -->
-        <div id="tab-addresses" class="tab-content" style="display: none;">
-            <div class="profile-card">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h6 style="margin: 0; border: none; padding: 0;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-                        </svg>
-                        Saved Addresses
-                    </h6>
-                    <button class="btn btn-sm" style="background: #008080; color: white; border-radius: 8px;">+ Add Address</button>
-                </div>
-
-                <!-- Default Address -->
-                <div class="address-card default">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <span style="font-weight: 600; color: #1f2937;">Home</span>
-                                <span style="background: #008080; color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px;">Default</span>
-                            </div>
-                            <p style="color: #374151; margin: 0;">Juan Dela Cruz</p>
-                            <p style="color: #6b7280; margin: 5px 0; font-size: 0.9rem;">+63 912 345 6789</p>
-                            <p style="color: #6b7280; margin: 0; font-size: 0.9rem;">
-                                123 Rizal Avenue, Brgy. San Antonio<br>
-                                Makati City, Metro Manila 1234
-                            </p>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-outline-primary" style="border-radius: 8px;">Edit</button>
-                            <button class="btn btn-sm btn-outline-danger" style="border-radius: 8px;">Delete</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Office Address -->
-                <div class="address-card">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="mb-2">
-                                <span style="font-weight: 600; color: #1f2937;">Office</span>
-                            </div>
-                            <p style="color: #374151; margin: 0;">Juan Dela Cruz</p>
-                            <p style="color: #6b7280; margin: 5px 0; font-size: 0.9rem;">+63 917 234 5678</p>
-                            <p style="color: #6b7280; margin: 0; font-size: 0.9rem;">
-                                Unit 501, Tower A, BGC Corporate Center<br>
-                                Bonifacio Global City, Taguig 1634
-                            </p>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-outline-secondary" style="border-radius: 8px;">Set Default</button>
-                            <button class="btn btn-sm btn-outline-primary" style="border-radius: 8px;">Edit</button>
-                            <button class="btn btn-sm btn-outline-danger" style="border-radius: 8px;">Delete</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Payment Methods Tab -->
-        <div id="tab-payment" class="tab-content" style="display: none;">
-            <div class="profile-card">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h6 style="margin: 0; border: none; padding: 0;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
-                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
-                        </svg>
-                        Payment Methods
-                    </h6>
-                    <button class="btn btn-sm" style="background: #008080; color: white; border-radius: 8px;">+ Add Card</button>
-                </div>
-
-                <!-- Credit Card -->
-                <div class="address-card default">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-3">
-                            <div style="width: 50px; height: 35px; background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.7rem; font-weight: 700;">VISA</div>
-                            <div>
-                                <div style="font-weight: 600; color: #1f2937;">Visa ending in 4242</div>
-                                <div style="font-size: 0.85rem; color: #6b7280;">Expires 08/2028</div>
-                            </div>
-                            <span style="background: #008080; color: white; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px;">Default</span>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-outline-primary" style="border-radius: 8px;">Edit</button>
-                            <button class="btn btn-sm btn-outline-danger" style="border-radius: 8px;">Remove</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- GCash -->
-                <div class="address-card">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-3">
-                            <div style="width: 50px; height: 35px; background: linear-gradient(135deg, #007bff, #0056b3); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.6rem; font-weight: 700;">GCash</div>
-                            <div>
-                                <div style="font-weight: 600; color: #1f2937;">GCash</div>
-                                <div style="font-size: 0.85rem; color: #6b7280;">+63 912 ***-**89</div>
-                            </div>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-outline-secondary" style="border-radius: 8px;">Set Default</button>
-                            <button class="btn btn-sm btn-outline-danger" style="border-radius: 8px;">Remove</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-4 p-3" style="background: #f0f9ff; border-radius: 10px; border: 1px solid #0ea5e9;">
-                    <div class="d-flex align-items-center gap-2" style="color: #0369a1; font-size: 0.9rem;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-                        </svg>
-                        Your payment information is encrypted and secure
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Security Tab -->
-        <div id="tab-security" class="tab-content" style="display: none;">
-            <div class="profile-card">
-                <h6>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                    </svg>
-                    Change Password
-                </h6>
-
-                <form id="passwordForm">
-                    <div class="mb-3">
-                        <label class="form-label" style="font-weight: 500; color: #374151;">Current Password</label>
-                        <input type="password" class="form-control" placeholder="Enter current password">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label" style="font-weight: 500; color: #374151;">New Password</label>
-                        <input type="password" class="form-control" placeholder="Enter new password">
-                        <div class="form-text">Password must be at least 8 characters with uppercase, lowercase, and numbers.</div>
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label" style="font-weight: 500; color: #374151;">Confirm New Password</label>
-                        <input type="password" class="form-control" placeholder="Confirm new password">
-                    </div>
-
-                    <button type="submit" class="btn" style="background: linear-gradient(135deg, #008080, #006666); color: white; border-radius: 10px; padding: 12px 30px; font-weight: 600;">
-                        Update Password
-                    </button>
-                </form>
-            </div>
-
-            <div class="profile-card">
-                <h6>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                    </svg>
-                    Two-Factor Authentication
-                </h6>
-
-                <div class="d-flex justify-content-between align-items-center p-3" style="background: #f3f4f6; border-radius: 10px;">
-                    <div>
-                        <div style="font-weight: 600; color: #1f2937;">SMS Authentication</div>
-                        <div style="font-size: 0.85rem; color: #6b7280;">Receive code via SMS when logging in</div>
-                    </div>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="sms2fa" checked style="width: 50px; height: 25px;">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Preferences Tab -->
-        <div id="tab-preferences" class="tab-content" style="display: none;">
-            <div class="profile-card">
-                <h6>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                    </svg>
-                    Notification Preferences
-                </h6>
-
-                <div class="mb-3 p-3" style="background: #f9fafb; border-radius: 10px;">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div style="font-weight: 500; color: #1f2937;">Order Updates</div>
-                            <div style="font-size: 0.85rem; color: #6b7280;">Get notified about your order status</div>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" checked style="width: 45px; height: 22px;">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mb-3 p-3" style="background: #f9fafb; border-radius: 10px;">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div style="font-weight: 500; color: #1f2937;">Promotions & Deals</div>
-                            <div style="font-size: 0.85rem; color: #6b7280;">Receive updates about sales and discounts</div>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" checked style="width: 45px; height: 22px;">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mb-3 p-3" style="background: #f9fafb; border-radius: 10px;">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div style="font-weight: 500; color: #1f2937;">Newsletter</div>
-                            <div style="font-size: 0.85rem; color: #6b7280;">Weekly updates about new products</div>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" style="width: 45px; height: 22px;">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="p-3" style="background: #f9fafb; border-radius: 10px;">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div style="font-weight: 500; color: #1f2937;">Support Ticket Updates</div>
-                            <div style="font-size: 0.85rem; color: #6b7280;">Get notified when your tickets are updated</div>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" checked style="width: 45px; height: 22px;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="profile-container">
+    <div id="loadingState" style="text-align: center; padding: 50px;">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-2">Loading profile...</p>
     </div>
 
-    <!-- Sidebar -->
-    <div class="col-lg-4">
-        <!-- Loyalty Card -->
-        <div class="loyalty-card mb-4">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                    <div style="font-size: 0.85rem; opacity: 0.9;">CompuGear Rewards</div>
-                    <div class="loyalty-points">1,250</div>
-                    <div style="font-size: 0.9rem;">Points Available</div>
-                </div>
-                <div style="font-size: 2.5rem;">🏆</div>
-            </div>
-            <div class="mt-3">
-                <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 5px;">Gold Member Status</div>
-                <div style="background: rgba(255,255,255,0.3); border-radius: 10px; height: 8px; overflow: hidden;">
-                    <div style="width: 62%; height: 100%; background: white;"></div>
-                </div>
-                <div style="font-size: 0.8rem; opacity: 0.8; margin-top: 5px;">750 more points to Platinum</div>
+    <div id="profileContent" style="display: none;">
+        <div class="profile-header">
+            <div class="profile-avatar" id="profileAvatar">U</div>
+            <h3 id="profileName" style="font-weight: 700; margin-bottom: 5px;">Loading...</h3>
+            <p id="memberSince" style="opacity: 0.9; margin-bottom: 15px;">Member since...</p>
+            <div class="d-flex justify-content-center gap-4 flex-wrap">
+                <div><div style="font-size: 1.5rem; font-weight: 700;" id="totalOrders">0</div><div style="font-size: 0.85rem; opacity: 0.9;">Orders</div></div>
+                <div><div style="font-size: 1.5rem; font-weight: 700;" id="loyaltyPoints">0</div><div style="font-size: 0.85rem; opacity: 0.9;">Loyalty Points</div></div>
+                <div><div style="font-size: 1.5rem; font-weight: 700;" id="totalSpent">₱0</div><div style="font-size: 0.85rem; opacity: 0.9;">Total Spent</div></div>
             </div>
         </div>
 
-        <!-- Account Summary -->
-        <div class="profile-card">
-            <h6>📊 Account Summary</h6>
+        <div id="alertContainer"></div>
 
-            <div class="info-row">
-                <span class="info-label">Account ID</span>
-                <span class="info-value">CUST-2024-1234</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Member Since</span>
-                <span class="info-value">Dec 15, 2024</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Membership Tier</span>
-                <span class="info-value" style="color: #f59e0b;">🥇 Gold</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Total Orders</span>
-                <span class="info-value">12</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Total Spent</span>
-                <span class="info-value" style="color: #008080;">₱45,890.00</span>
-            </div>
+        <div class="d-flex gap-2 mb-4 flex-wrap">
+            <button class="tab-btn active" onclick="showTab('personal', this)">👤 Personal Info</button>
+            <button class="tab-btn" onclick="showTab('addresses', this)">📍 Addresses</button>
+            <button class="tab-btn" onclick="showTab('security', this)">🔒 Security</button>
+            <button class="tab-btn" onclick="showTab('preferences', this)">⚙️ Preferences</button>
         </div>
 
-        <!-- Quick Links -->
-        <div class="profile-card">
-            <h6>🔗 Quick Links</h6>
+        <div class="row">
+            <div class="col-lg-8">
+                <div id="tab-personal" class="tab-content active">
+                    <div class="profile-card">
+                        <h6>👤 Personal Information</h6>
+                        <form id="personalForm">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="firstName" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="lastName" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="email" readonly style="background: #f3f4f6;">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Date of Birth</label>
+                                    <input type="date" class="form-control" id="dateOfBirth">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Gender</label>
+                                    <select class="form-control" id="gender">
+                                        <option value="">Select...</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mt-3">
+                                    <button type="submit" class="btn-save">💾 Save Changes</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
 
-            <a href="/CustomerPortal/Orders" class="d-flex align-items-center gap-3 p-3 text-decoration-none" style="background: #f9fafb; border-radius: 10px; margin-bottom: 10px; color: #374151;">
-                <span style="font-size: 1.2rem;">📦</span>
-                <span style="flex: 1; font-weight: 500;">My Orders</span>
-                <span style="color: #9ca3af;">→</span>
-            </a>
-            <a href="/CustomerPortal/Wishlist" class="d-flex align-items-center gap-3 p-3 text-decoration-none" style="background: #f9fafb; border-radius: 10px; margin-bottom: 10px; color: #374151;">
-                <span style="font-size: 1.2rem;">❤️</span>
-                <span style="flex: 1; font-weight: 500;">Wishlist</span>
-                <span style="color: #9ca3af;">→</span>
-            </a>
-            <a href="/CustomerPortal/MyTickets" class="d-flex align-items-center gap-3 p-3 text-decoration-none" style="background: #f9fafb; border-radius: 10px; color: #374151;">
-                <span style="font-size: 1.2rem;">🎫</span>
-                <span style="flex: 1; font-weight: 500;">Support Tickets</span>
-                <span style="color: #9ca3af;">→</span>
-            </a>
+                <div id="tab-addresses" class="tab-content">
+                    <div class="profile-card">
+                        <h6>🏠 Billing Address</h6>
+                        <div class="row g-3">
+                            <div class="col-12"><input type="text" class="form-control" id="billingAddress" placeholder="Street Address"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" id="billingCity" placeholder="City"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" id="billingState" placeholder="State/Province"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" id="billingZipCode" placeholder="ZIP Code"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" id="billingCountry" placeholder="Country" value="Philippines"></div>
+                        </div>
+                    </div>
+                    <div class="profile-card">
+                        <h6>📦 Shipping Address</h6>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="sameAsBilling" onchange="copyBillingAddress()">
+                            <label class="form-check-label" for="sameAsBilling">Same as billing address</label>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-12"><input type="text" class="form-control" id="shippingAddress" placeholder="Street Address"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" id="shippingCity" placeholder="City"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" id="shippingState" placeholder="State/Province"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" id="shippingZipCode" placeholder="ZIP Code"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" id="shippingCountry" placeholder="Country" value="Philippines"></div>
+                        </div>
+                        <div class="mt-3">
+                            <button type="button" class="btn-save" onclick="saveAddresses()">💾 Save Addresses</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-security" class="tab-content">
+                    <div class="profile-card">
+                        <h6>🔒 Change Password</h6>
+                        <div class="row g-3">
+                            <div class="col-12"><input type="password" class="form-control" id="currentPassword" placeholder="Current Password"></div>
+                            <div class="col-md-6"><input type="password" class="form-control" id="newPassword" placeholder="New Password"></div>
+                            <div class="col-md-6"><input type="password" class="form-control" id="confirmPassword" placeholder="Confirm Password"></div>
+                            <div class="col-12 mt-3"><button type="button" class="btn-save">🔒 Update Password</button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-preferences" class="tab-content">
+                    <div class="profile-card">
+                        <h6>⚙️ Notification Preferences</h6>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="marketingOptIn" checked style="width: 3em; height: 1.5em;">
+                            <label class="form-check-label" for="marketingOptIn">Marketing Communications</label>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="orderUpdates" checked style="width: 3em; height: 1.5em;">
+                            <label class="form-check-label" for="orderUpdates">Order Updates</label>
+                        </div>
+                        <button type="button" class="btn-save" onclick="savePreferences()">💾 Save Preferences</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="loyalty-card mb-4">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span style="font-size: 2rem;">⭐</span>
+                        <div>
+                            <div style="font-weight: 700;">Loyalty Rewards</div>
+                            <div id="customerCategory" style="opacity: 0.9; font-size: 0.9rem;">Standard Member</div>
+                        </div>
+                    </div>
+                    <div class="loyalty-points" id="sidebarPoints">0</div>
+                    <div style="opacity: 0.9; font-size: 0.9rem;">Available Points</div>
+                </div>
+
+                <div class="profile-card">
+                    <h6>📋 Account Info</h6>
+                    <div class="info-row"><span class="info-label">Customer ID</span><span class="info-value" id="customerId">-</span></div>
+                    <div class="info-row"><span class="info-label">Status</span><span class="info-value"><span class="badge bg-success" id="accountStatus">Active</span></span></div>
+                    <div class="info-row"><span class="info-label">Member Since</span><span class="info-value" id="createdAt">-</span></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
 <script>
-    function showTab(tabName) {
-        // Hide all tabs
-        document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.style.display = 'none';
-        });
+    document.addEventListener('DOMContentLoaded', loadProfile);
 
-        // Remove active from all buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-
-        // Show selected tab
-        document.getElementById('tab-' + tabName).style.display = 'block';
-
-        // Activate button
-        event.target.classList.add('active');
+    async function loadProfile() {
+        try {
+            const response = await fetch('/CustomerPortal/GetProfile');
+            const result = await response.json();
+            if (result.success) {
+                populateProfile(result.data);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('profileContent').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
     }
 
-    // Form submissions
-    document.getElementById('personalForm').addEventListener('submit', function(e) {
+    function populateProfile(data) {
+        const initials = (data.firstName?.[0] || '') + (data.lastName?.[0] || '');
+        document.getElementById('profileAvatar').textContent = initials || 'U';
+        document.getElementById('profileName').textContent = `${data.firstName || ''} ${data.lastName || ''}`;
+        const memberDate = data.createdAt ? new Date(data.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : 'N/A';
+        document.getElementById('memberSince').textContent = `Member since ${memberDate}`;
+        document.getElementById('totalOrders').textContent = data.totalOrders || 0;
+        document.getElementById('loyaltyPoints').textContent = (data.loyaltyPoints || 0).toLocaleString();
+        document.getElementById('totalSpent').textContent = `₱${(data.totalSpent || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
+        document.getElementById('firstName').value = data.firstName || '';
+        document.getElementById('lastName').value = data.lastName || '';
+        document.getElementById('email').value = data.email || '';
+        document.getElementById('phone').value = data.phone || '';
+        document.getElementById('dateOfBirth').value = data.dateOfBirth ? data.dateOfBirth.split('T')[0] : '';
+        document.getElementById('gender').value = data.gender || '';
+        document.getElementById('billingAddress').value = data.billingAddress || '';
+        document.getElementById('billingCity').value = data.billingCity || '';
+        document.getElementById('billingState').value = data.billingState || '';
+        document.getElementById('billingZipCode').value = data.billingZipCode || '';
+        document.getElementById('billingCountry').value = data.billingCountry || 'Philippines';
+        document.getElementById('shippingAddress').value = data.shippingAddress || '';
+        document.getElementById('shippingCity').value = data.shippingCity || '';
+        document.getElementById('shippingState').value = data.shippingState || '';
+        document.getElementById('shippingZipCode').value = data.shippingZipCode || '';
+        document.getElementById('shippingCountry').value = data.shippingCountry || 'Philippines';
+        document.getElementById('sidebarPoints').textContent = (data.loyaltyPoints || 0).toLocaleString();
+        document.getElementById('customerCategory').textContent = data.categoryName || 'Standard Member';
+        document.getElementById('customerId').textContent = data.customerCode || '-';
+        document.getElementById('accountStatus').textContent = data.status || 'Active';
+        document.getElementById('createdAt').textContent = memberDate;
+        document.getElementById('marketingOptIn').checked = data.marketingOptIn;
+    }
+
+    function showTab(tabName, btn) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tabName).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    document.getElementById('personalForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        alert('Profile updated successfully!');
+        await updateProfile({
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            phone: document.getElementById('phone').value,
+            dateOfBirth: document.getElementById('dateOfBirth').value || null,
+            gender: document.getElementById('gender').value,
+            marketingOptIn: document.getElementById('marketingOptIn').checked
+        });
     });
 
-    document.getElementById('passwordForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        alert('Password updated successfully!');
-    });
+    async function saveAddresses() {
+        await updateProfile({
+            billingAddress: document.getElementById('billingAddress').value,
+            billingCity: document.getElementById('billingCity').value,
+            billingState: document.getElementById('billingState').value,
+            billingZipCode: document.getElementById('billingZipCode').value,
+            billingCountry: document.getElementById('billingCountry').value,
+            shippingAddress: document.getElementById('shippingAddress').value,
+            shippingCity: document.getElementById('shippingCity').value,
+            shippingState: document.getElementById('shippingState').value,
+            shippingZipCode: document.getElementById('shippingZipCode').value,
+            shippingCountry: document.getElementById('shippingCountry').value,
+            marketingOptIn: document.getElementById('marketingOptIn').checked
+        });
+    }
+
+    async function savePreferences() {
+        await updateProfile({ marketingOptIn: document.getElementById('marketingOptIn').checked });
+    }
+
+    async function updateProfile(data) {
+        try {
+            const response = await fetch('/CustomerPortal/UpdateProfile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            showAlert(result.success ? 'Profile updated successfully!' : 'Error: ' + result.message, result.success ? 'success' : 'error');
+            if (result.success) loadProfile();
+        } catch (error) {
+            showAlert('Failed to update profile', 'error');
+        }
+    }
+
+    function copyBillingAddress() {
+        if (document.getElementById('sameAsBilling').checked) {
+            document.getElementById('shippingAddress').value = document.getElementById('billingAddress').value;
+            document.getElementById('shippingCity').value = document.getElementById('billingCity').value;
+            document.getElementById('shippingState').value = document.getElementById('billingState').value;
+            document.getElementById('shippingZipCode').value = document.getElementById('billingZipCode').value;
+            document.getElementById('shippingCountry').value = document.getElementById('billingCountry').value;
+        }
+    }
+
+    function showAlert(message, type) {
+        const container = document.getElementById('alertContainer');
+        container.innerHTML = `<div class="alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+        setTimeout(() => container.innerHTML = '', 5000);
+    }
 </script>
 }

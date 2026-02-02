@@ -475,31 +475,59 @@
         button.parentElement.remove();
     }
 
-    document.getElementById('ticketForm').addEventListener('submit', function(e) {
+    document.getElementById('ticketForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
         // Validate
         const ticketType = document.getElementById('ticketType').value;
         const subject = document.getElementById('subject').value;
         const description = document.getElementById('description').value;
+        const priority = document.getElementById('priority').value || 'Medium';
 
         if (!ticketType) {
             alert('Please select a ticket type');
             return;
         }
 
-        if (description.length < 50) {
-            alert('Please provide more details (minimum 50 characters)');
+        if (description.length < 20) {
+            alert('Please provide more details (minimum 20 characters)');
             return;
         }
 
-        // Generate ticket number
-        const ticketNum = 'TKT-2026-' + String(Math.floor(Math.random() * 9000) + 1000);
-        document.getElementById('ticketNumber').textContent = ticketNum;
+        const submitBtn = document.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Submitting...';
 
-        // Show success modal
-        const modal = new bootstrap.Modal(document.getElementById('successModal'));
-        modal.show();
+        try {
+            const response = await fetch('/CustomerPortal/CreateTicket', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    subject: subject || ticketType,
+                    description: description,
+                    priority: priority,
+                    contactName: document.getElementById('contactName')?.value,
+                    contactEmail: document.getElementById('contactEmail')?.value,
+                    contactPhone: document.getElementById('contactPhone')?.value
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                document.getElementById('ticketNumber').textContent = result.data.ticketNumber;
+                const modal = new bootstrap.Modal(document.getElementById('successModal'));
+                modal.show();
+            } else {
+                alert(result.message || 'Failed to create ticket');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = '📤 Submit Ticket';
+        }
     });
 </script>
 }

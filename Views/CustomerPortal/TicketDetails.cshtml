@@ -4,6 +4,20 @@
 }
 
 <style>
+    .ticket-page { padding: 30px 0; background: #f8f9fa; min-height: 100vh; }
+    
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #008080;
+        text-decoration: none;
+        margin-bottom: 20px;
+        font-weight: 500;
+    }
+    
+    .back-link:hover { color: #006666; }
+    
     .ticket-header {
         background: linear-gradient(135deg, #008080, #006666);
         color: white;
@@ -11,372 +25,394 @@
         padding: 30px;
         margin-bottom: 25px;
     }
-
-    .conversation-container {
+    
+    .ticket-header h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 10px 0;
+    }
+    
+    .ticket-number {
+        opacity: 0.9;
+        font-size: 0.9rem;
+    }
+    
+    .status-badge {
+        padding: 8px 18px;
+        border-radius: 25px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .status-badge.Open { background: #dbeafe; color: #1d4ed8; }
+    .status-badge.InProgress { background: #fef3cd; color: #856404; }
+    .status-badge.Resolved { background: #d4edda; color: #155724; }
+    .status-badge.Closed { background: #e5e7eb; color: #6b7280; }
+    
+    .ticket-content {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 25px;
+    }
+    
+    @@media (max-width: 992px) {
+        .ticket-content { grid-template-columns: 1fr; }
+    }
+    
+    .portal-card {
         background: white;
         border-radius: 20px;
         padding: 25px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    }
-
-    .message-bubble {
         margin-bottom: 20px;
     }
-
-    .message-bubble.customer {
-        margin-left: 50px;
-    }
-
-    .message-bubble.support {
-        margin-right: 50px;
-    }
-
-    .message-header {
+    
+    .card-title {
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 20px;
         display: flex;
         align-items: center;
-        gap: 12px;
-        margin-bottom: 10px;
+        gap: 10px;
     }
-
+    
+    .conversation-container {
+        max-height: 500px;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+    
+    .message {
+        margin-bottom: 20px;
+        display: flex;
+        gap: 15px;
+    }
+    
+    .message.customer { flex-direction: row-reverse; }
+    
     .message-avatar {
-        width: 40px;
-        height: 40px;
+        width: 45px;
+        height: 45px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
+        flex-shrink: 0;
         font-size: 1.2rem;
     }
-
-    .message-content-box {
-        padding: 20px;
-        border-radius: 16px;
-        line-height: 1.7;
+    
+    .message.customer .message-avatar { background: linear-gradient(135deg, #008080, #20b2aa); }
+    .message.support .message-avatar { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+    
+    .message-content {
+        max-width: 75%;
+        padding: 18px;
+        border-radius: 18px;
+        line-height: 1.6;
     }
-
-    .message-bubble.customer .message-content-box {
+    
+    .message.customer .message-content {
         background: linear-gradient(135deg, #f0fdfa, #e0f2f1);
-        border-left: 4px solid #008080;
+        border-bottom-right-radius: 5px;
     }
-
-    .message-bubble.support .message-content-box {
-        background: #f8f9fa;
-        border-left: 4px solid #ff6b35;
+    
+    .message.support .message-content {
+        background: #f9fafb;
+        border-bottom-left-radius: 5px;
     }
-
-    .reply-box {
-        background: white;
-        border-radius: 16px;
-        padding: 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    
+    .message-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        font-size: 0.85rem;
     }
-
-    .reply-textarea {
+    
+    .message-sender { font-weight: 600; color: #1f2937; }
+    .message-time { color: #9ca3af; }
+    .message-text { color: #4b5563; }
+    
+    .reply-form {
+        padding-top: 20px;
+        border-top: 1px solid #e5e7eb;
+        margin-top: 20px;
+    }
+    
+    .reply-input {
+        width: 100%;
+        min-height: 100px;
+        padding: 15px;
         border: 2px solid #e5e7eb;
         border-radius: 12px;
-        padding: 15px;
-        width: 100%;
-        min-height: 120px;
         resize: vertical;
         font-size: 0.95rem;
+        margin-bottom: 15px;
+    }
+    
+    .reply-input:focus {
+        outline: none;
+        border-color: #008080;
+    }
+    
+    .reply-btn {
+        padding: 12px 30px;
+        background: linear-gradient(135deg, #008080, #006666);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
         transition: all 0.3s;
     }
-
-    .reply-textarea:focus {
-        border-color: #008080;
-        outline: none;
-        box-shadow: 0 0 0 4px rgba(0,128,128,0.1);
-    }
-
-    .attachment-preview {
+    
+    .reply-btn:hover { transform: translateY(-2px); }
+    .reply-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+    
+    .info-row {
         display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 15px;
-        background: #f3f4f6;
-        border-radius: 10px;
-        margin-top: 15px;
-    }
-
-    .timeline-item {
-        display: flex;
-        gap: 15px;
-        padding: 15px 0;
+        justify-content: space-between;
+        padding: 12px 0;
         border-bottom: 1px solid #f3f4f6;
     }
-
-    .timeline-item:last-child {
-        border-bottom: none;
+    
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: #6b7280; font-size: 0.9rem; }
+    .info-value { font-weight: 600; color: #1f2937; }
+    
+    .original-description {
+        background: #f9fafb;
+        padding: 20px;
+        border-radius: 12px;
+        border-left: 4px solid #008080;
+        color: #4b5563;
+        line-height: 1.7;
     }
-
-    .timeline-dot {
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        margin-top: 5px;
-        flex-shrink: 0;
-    }
-
-    .status-select {
-        background: rgba(255,255,255,0.2);
-        border: 1px solid rgba(255,255,255,0.3);
-        color: white;
-        padding: 8px 15px;
-        border-radius: 10px;
-        font-size: 0.9rem;
-    }
-
-    .status-select option {
-        color: #1f2937;
+    
+    .loading-state {
+        text-align: center;
+        padding: 40px;
+        color: #6b7280;
     }
 </style>
 
-<!-- Breadcrumb -->
-<nav aria-label="breadcrumb" class="mb-4">
-    <ol class="breadcrumb" style="background: none; padding: 0;">
-        <li class="breadcrumb-item"><a href="/CustomerPortal/Support" style="color: #008080; text-decoration: none;">Support Center</a></li>
-        <li class="breadcrumb-item"><a href="/CustomerPortal/MyTickets" style="color: #008080; text-decoration: none;">My Tickets</a></li>
-        <li class="breadcrumb-item active" aria-current="page">TKT-2026-0045</li>
-    </ol>
-</nav>
-
-<!-- Ticket Header -->
-<div class="ticket-header">
-    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-3 mb-2">
-                <span style="background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 8px; font-size: 0.85rem;">TKT-2026-0045</span>
-                <span style="background: #3b82f6; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">OPEN</span>
-                <span style="background: #ef4444; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">🔴 HIGH PRIORITY</span>
-            </div>
-            <h4 style="font-weight: 700; margin: 10px 0 5px;">Gaming headset not working after 2 weeks</h4>
-            <p style="opacity: 0.9; margin: 0; font-size: 0.95rem;">Category: Product Defect • Order: ORD-2026-0892</p>
-        </div>
-        <div class="text-end">
-            <div style="opacity: 0.8; font-size: 0.85rem;">Created</div>
-            <div style="font-weight: 600;">Jan 18, 2026, 10:34 AM</div>
-        </div>
-    </div>
-</div>
-
-<div class="row g-4">
-    <!-- Main Conversation -->
-    <div class="col-lg-8">
-        <div class="conversation-container">
-            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #e5e7eb;">
-                💬 Conversation Thread
-            </h6>
-
-            <!-- Initial Message -->
-            <div class="message-bubble customer">
-                <div class="message-header">
-                    <div class="message-avatar" style="background: linear-gradient(135deg, #008080, #20b2aa); color: white;">JD</div>
-                    <div>
-                        <div style="font-weight: 600; color: #1f2937;">Juan Dela Cruz</div>
-                        <div style="font-size: 0.8rem; color: #6b7280;">Customer • Jan 18, 2026 at 10:34 AM</div>
-                    </div>
-                </div>
-                <div class="message-content-box">
-                    <p style="margin: 0;">Hi, I purchased a HyperX Cloud II gaming headset from your store about 2 weeks ago (Order #ORD-2026-0892). </p>
-                    <p style="margin: 15px 0 0;">The headset was working fine initially, but yesterday the left ear cup suddenly stopped producing any sound. I've tried:</p>
-                    <ul style="margin: 10px 0;">
-                        <li>Connecting to different devices (PC, phone, laptop)</li>
-                        <li>Using different audio cables</li>
-                        <li>Checking audio balance settings</li>
-                    </ul>
-                    <p style="margin: 0;">None of these fixed the issue. The right ear cup works perfectly fine. This seems like a hardware defect. Can I get this replaced under warranty?</p>
-
-                    <div class="attachment-preview">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-                        </svg>
-                        <span style="flex: 1;">headset_issue.jpg</span>
-                        <a href="#" style="color: #008080; font-size: 0.85rem;">View</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Support Response -->
-            <div class="message-bubble support">
-                <div class="message-header">
-                    <div class="message-avatar" style="background: linear-gradient(135deg, #ff6b35, #ff8c42); color: white;">SC</div>
-                    <div>
-                        <div style="font-weight: 600; color: #1f2937;">Sarah Chen <span style="background: #fef3c7; color: #b45309; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; margin-left: 8px;">SUPPORT AGENT</span></div>
-                        <div style="font-size: 0.8rem; color: #6b7280;">Jan 18, 2026 at 11:15 AM</div>
-                    </div>
-                </div>
-                <div class="message-content-box">
-                    <p style="margin: 0;">Hello Juan!</p>
-                    <p style="margin: 15px 0;">Thank you for reaching out to CompuGear Support. I'm sorry to hear that you're experiencing issues with your HyperX Cloud II headset.</p>
-                    <p style="margin: 0;">Based on your description and the troubleshooting steps you've already taken, this does appear to be a hardware defect. The good news is that your purchase is still within the warranty period, so we can process a replacement for you.</p>
-                    <p style="margin: 15px 0 0;">To proceed with the warranty claim, please provide:</p>
-                    <ol style="margin: 10px 0 0;">
-                        <li>A clear photo of the headset's serial number (usually on the headband)</li>
-                        <li>Your original receipt or order confirmation email</li>
-                    </ol>
-                    <p style="margin: 15px 0 0;">Once I receive these, I'll initiate the replacement process right away.</p>
-                </div>
-            </div>
-
-            <!-- Customer Reply -->
-            <div class="message-bubble customer">
-                <div class="message-header">
-                    <div class="message-avatar" style="background: linear-gradient(135deg, #008080, #20b2aa); color: white;">JD</div>
-                    <div>
-                        <div style="font-weight: 600; color: #1f2937;">Juan Dela Cruz</div>
-                        <div style="font-size: 0.8rem; color: #6b7280;">Customer • Jan 18, 2026 at 2:45 PM</div>
-                    </div>
-                </div>
-                <div class="message-content-box">
-                    <p style="margin: 0;">Hi Sarah, thank you for the quick response!</p>
-                    <p style="margin: 15px 0 0;">I've attached the photo of the serial number and the order confirmation. Please let me know the next steps.</p>
-
-                    <div class="attachment-preview">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-                        </svg>
-                        <span style="flex: 1;">serial_number.jpg</span>
-                        <a href="#" style="color: #008080; font-size: 0.85rem;">View</a>
-                    </div>
-                    <div class="attachment-preview">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-                        </svg>
-                        <span style="flex: 1;">order_confirmation.pdf</span>
-                        <a href="#" style="color: #008080; font-size: 0.85rem;">View</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Awaiting Response Notice -->
-            <div style="text-align: center; padding: 20px; background: #fef3c7; border-radius: 12px; margin-top: 20px;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" style="margin-bottom: 10px;">
-                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                </svg>
-                <p style="margin: 0; color: #92400e; font-weight: 500;">Awaiting support response. Average response time: 4-8 hours for high priority tickets.</p>
-            </div>
-        </div>
-
-        <!-- Reply Box -->
-        <div class="reply-box mt-4">
-            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 15px;">
-                ✏️ Add a Reply
-            </h6>
-            <textarea class="reply-textarea" placeholder="Type your message here..."></textarea>
-            <div class="d-flex justify-content-between align-items-center mt-3">
-                <div>
-                    <button class="btn btn-outline-secondary btn-sm" style="border-radius: 10px;" onclick="document.getElementById('replyAttachment').click()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 5px;">
-                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
-                        </svg>
-                        Attach File
-                    </button>
-                    <input type="file" id="replyAttachment" style="display: none;">
-                </div>
-                <button class="btn" style="background: linear-gradient(135deg, #008080, #006666); color: white; border-radius: 10px; padding: 10px 25px; font-weight: 600;">
-                    Send Reply
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Sidebar -->
-    <div class="col-lg-4">
-        <!-- Ticket Info -->
-        <div class="portal-card mb-4">
-            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 20px;">
-                📋 Ticket Information
-            </h6>
-
-            <div class="mb-3">
-                <div style="font-size: 0.8rem; color: #6b7280; margin-bottom: 5px;">Status</div>
-                <span style="background: #dbeafe; color: #1d4ed8; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">Open</span>
-            </div>
-
-            <div class="mb-3">
-                <div style="font-size: 0.8rem; color: #6b7280; margin-bottom: 5px;">Priority</div>
-                <span style="color: #ef4444; font-weight: 600;">🔴 High</span>
-            </div>
-
-            <div class="mb-3">
-                <div style="font-size: 0.8rem; color: #6b7280; margin-bottom: 5px;">Category</div>
-                <div style="font-weight: 500; color: #374151;">Product Defect</div>
-            </div>
-
-            <div class="mb-3">
-                <div style="font-size: 0.8rem; color: #6b7280; margin-bottom: 5px;">Assigned Agent</div>
-                <div class="d-flex align-items-center gap-10">
-                    <div style="width: 30px; height: 30px; background: linear-gradient(135deg, #ff6b35, #ff8c42); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600;">SC</div>
-                    <div style="font-weight: 500; color: #374151; margin-left: 10px;">Sarah Chen</div>
-                </div>
-            </div>
-
-            <div>
-                <div style="font-size: 0.8rem; color: #6b7280; margin-bottom: 5px;">Related Order</div>
-                <a href="/CustomerPortal/OrderDetails?id=ORD-2026-0892" style="color: #008080; font-weight: 500; text-decoration: none;">ORD-2026-0892</a>
-            </div>
-        </div>
-
-        <!-- Timeline -->
-        <div class="portal-card mb-4">
-            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 20px;">
-                📅 Activity Timeline
-            </h6>
-
-            <div class="timeline-item">
-                <div class="timeline-dot" style="background: #3b82f6;"></div>
-                <div>
-                    <div style="font-weight: 500; color: #1f2937; font-size: 0.9rem;">Customer replied</div>
-                    <div style="font-size: 0.8rem; color: #6b7280;">Jan 18, 2:45 PM</div>
-                </div>
-            </div>
-
-            <div class="timeline-item">
-                <div class="timeline-dot" style="background: #ff6b35;"></div>
-                <div>
-                    <div style="font-weight: 500; color: #1f2937; font-size: 0.9rem;">Agent Sarah responded</div>
-                    <div style="font-size: 0.8rem; color: #6b7280;">Jan 18, 11:15 AM</div>
-                </div>
-            </div>
-
-            <div class="timeline-item">
-                <div class="timeline-dot" style="background: #8b5cf6;"></div>
-                <div>
-                    <div style="font-weight: 500; color: #1f2937; font-size: 0.9rem;">Assigned to Sarah Chen</div>
-                    <div style="font-size: 0.8rem; color: #6b7280;">Jan 18, 10:45 AM</div>
-                </div>
-            </div>
-
-            <div class="timeline-item">
-                <div class="timeline-dot" style="background: #10b981;"></div>
-                <div>
-                    <div style="font-weight: 500; color: #1f2937; font-size: 0.9rem;">Ticket created</div>
-                    <div style="font-size: 0.8rem; color: #6b7280;">Jan 18, 10:34 AM</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="portal-card">
-            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 20px;">
-                ⚡ Quick Actions
-            </h6>
-
-            <div class="d-grid gap-2">
-                <button class="btn btn-outline-secondary" style="border-radius: 10px; text-align: left; padding: 12px 15px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
-                    Edit Ticket Details
-                </button>
-                <button class="btn btn-outline-danger" style="border-radius: 10px; text-align: left; padding: 12px 15px;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 10px;">
-                        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
-                    </svg>
-                    Close Ticket
-                </button>
+<div class="ticket-page">
+    <div class="container">
+        <a href="/CustomerPortal/MyTickets" class="back-link">← Back to My Tickets</a>
+        
+        <div id="ticketContent">
+            <div class="loading-state">
+                <div style="font-size: 3rem; margin-bottom: 15px;">⏳</div>
+                <h3>Loading ticket details...</h3>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script>
+    let ticketId = null;
+    let ticketData = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get ticket ID from URL
+        const pathParts = window.location.pathname.split('/');
+        ticketId = pathParts[pathParts.length - 1];
+        
+        // Also check query string
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('id')) {
+            ticketId = urlParams.get('id');
+        }
+        
+        if (ticketId) {
+            loadTicketDetails();
+        } else {
+            document.getElementById('ticketContent').innerHTML = '<div class="loading-state"><h3>Ticket not found</h3></div>';
+        }
+    });
+
+    async function loadTicketDetails() {
+        try {
+            const response = await fetch(`/CustomerPortal/GetTicketDetails?id=${ticketId}`);
+            const result = await response.json();
+            
+            if (result.success) {
+                ticketData = result.data;
+                renderTicket(result.data, result.messages || []);
+            } else {
+                document.getElementById('ticketContent').innerHTML = `
+                    <div class="loading-state">
+                        <div style="font-size: 3rem; margin-bottom: 15px;">❌</div>
+                        <h3>${result.message || 'Ticket not found'}</h3>
+                        <a href="/CustomerPortal/MyTickets" style="color: #008080;">Go back to tickets</a>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('ticketContent').innerHTML = '<div class="loading-state"><h3>Error loading ticket</h3></div>';
+        }
+    }
+
+    function renderTicket(ticket, messages) {
+        const priorityIcons = { 'High': '🔴', 'Medium': '🟡', 'Low': '🟢' };
+        const statusClass = (ticket.status || 'Open').replace(' ', '');
+        
+        document.getElementById('ticketContent').innerHTML = `
+            <div class="ticket-header">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                    <div>
+                        <h1>${ticket.subject}</h1>
+                        <div class="ticket-number">📋 ${ticket.ticketNumber}</div>
+                    </div>
+                    <span class="status-badge ${statusClass}">${ticket.status}</span>
+                </div>
+            </div>
+            
+            <div class="ticket-content">
+                <div>
+                    <!-- Original Description -->
+                    <div class="portal-card">
+                        <h3 class="card-title">📝 Original Request</h3>
+                        <div class="original-description">${ticket.description || 'No description provided'}</div>
+                    </div>
+                    
+                    <!-- Conversation -->
+                    <div class="portal-card">
+                        <h3 class="card-title">💬 Conversation</h3>
+                        <div class="conversation-container" id="conversationContainer">
+                            ${messages.length > 0 ? messages.map(msg => `
+                                <div class="message ${msg.senderType === 'Customer' ? 'customer' : 'support'}">
+                                    <div class="message-avatar">${msg.senderType === 'Customer' ? '👤' : '👨‍💼'}</div>
+                                    <div class="message-content">
+                                        <div class="message-header">
+                                            <span class="message-sender">${msg.senderName || msg.senderType}</span>
+                                            <span class="message-time">${new Date(msg.createdAt).toLocaleString()}</span>
+                                        </div>
+                                        <div class="message-text">${msg.message}</div>
+                                    </div>
+                                </div>
+                            `).join('') : '<div class="text-center py-4 text-muted">No messages yet. Start the conversation below.</div>'}
+                        </div>
+                        
+                        ${ticket.status !== 'Closed' && ticket.status !== 'Resolved' ? `
+                            <div class="reply-form">
+                                <textarea class="reply-input" id="replyMessage" placeholder="Type your reply..."></textarea>
+                                <button class="reply-btn" onclick="sendReply()">📤 Send Reply</button>
+                            </div>
+                        ` : '<div class="text-center py-3 text-muted">This ticket is closed.</div>'}
+                    </div>
+                </div>
+                
+                <div>
+                    <!-- Ticket Info -->
+                    <div class="portal-card">
+                        <h3 class="card-title">📋 Ticket Information</h3>
+                        <div class="info-row">
+                            <span class="info-label">Status</span>
+                            <span class="status-badge ${statusClass}" style="font-size: 0.75rem; padding: 4px 12px;">${ticket.status}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Priority</span>
+                            <span class="info-value">${priorityIcons[ticket.priority] || '🟡'} ${ticket.priority}</span>
+                        </div>
+                        ${ticket.categoryName ? `
+                            <div class="info-row">
+                                <span class="info-label">Category</span>
+                                <span class="info-value">${ticket.categoryName}</span>
+                            </div>
+                        ` : ''}
+                        ${ticket.agentName ? `
+                            <div class="info-row">
+                                <span class="info-label">Assigned To</span>
+                                <span class="info-value">👤 ${ticket.agentName}</span>
+                            </div>
+                        ` : ''}
+                        <div class="info-row">
+                            <span class="info-label">Created</span>
+                            <span class="info-value">${new Date(ticket.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        ${ticket.resolvedAt ? `
+                            <div class="info-row">
+                                <span class="info-label">Resolved</span>
+                                <span class="info-value">${new Date(ticket.resolvedAt).toLocaleDateString()}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <!-- Contact Info -->
+                    <div class="portal-card">
+                        <h3 class="card-title">📞 Contact Details</h3>
+                        ${ticket.contactName ? `
+                            <div class="info-row">
+                                <span class="info-label">Name</span>
+                                <span class="info-value">${ticket.contactName}</span>
+                            </div>
+                        ` : ''}
+                        ${ticket.contactEmail ? `
+                            <div class="info-row">
+                                <span class="info-label">Email</span>
+                                <span class="info-value">${ticket.contactEmail}</span>
+                            </div>
+                        ` : ''}
+                        ${ticket.contactPhone ? `
+                            <div class="info-row">
+                                <span class="info-label">Phone</span>
+                                <span class="info-value">${ticket.contactPhone}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    ${ticket.resolution ? `
+                        <div class="portal-card" style="background: #f0fdf4; border: 2px solid #10b981;">
+                            <h3 class="card-title" style="color: #059669;">✅ Resolution</h3>
+                            <p style="color: #065f46; margin: 0;">${ticket.resolution}</p>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    async function sendReply() {
+        const message = document.getElementById('replyMessage').value.trim();
+        
+        if (!message) {
+            alert('Please enter a message');
+            return;
+        }
+        
+        const btn = document.querySelector('.reply-btn');
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+        
+        try {
+            const response = await fetch('/CustomerPortal/ReplyToTicket', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ticketId: parseInt(ticketId),
+                    message: message
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                // Reload ticket to show new message
+                loadTicketDetails();
+            } else {
+                alert(result.message || 'Failed to send reply');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '📤 Send Reply';
+        }
+    }
+</script>
+}

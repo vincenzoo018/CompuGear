@@ -3,203 +3,249 @@
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
 }
 
-<!-- Welcome Banner -->
-<div class="promo-banner mb-4">
-    <div class="row align-items-center">
-        <div class="col-lg-8">
-            <h2>🎮 Welcome back, Maria!</h2>
-            <p>Check out our latest computer accessories and exclusive deals just for you!</p>
-            <a href="/CustomerPortal/Promotions" class="btn-shop">View Promotions</a>
-        </div>
-        <div class="col-lg-4 text-center d-none d-lg-block">
-            <div style="font-size: 6rem;">🖥️</div>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Stats -->
-<div class="row g-4 mb-4">
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <div class="stat-value">12</div>
-                    <div class="stat-label">Total Orders</div>
-                </div>
-                <div class="stat-icon" style="background: linear-gradient(135deg, #008080, #20b2aa); color: white;">
-                    📦
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <div class="stat-value">2</div>
-                    <div class="stat-label">Pending Orders</div>
-                </div>
-                <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white;">
-                    ⏳
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <div class="stat-value">1,250</div>
-                    <div class="stat-label">Loyalty Points</div>
-                </div>
-                <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #34d399); color: white;">
-                    ⭐
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div class="d-flex align-items-center justify-content-between">
-                <div>
-                    <div class="stat-value">1</div>
-                    <div class="stat-label">Open Tickets</div>
-                </div>
-                <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444, #f87171); color: white;">
-                    🎫
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Main Content Grid -->
-<div class="row g-4">
-    <!-- Recent Orders -->
-    <div class="col-lg-8">
-        <div class="portal-card">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="mb-0" style="font-weight: 600; color: #1f2937;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2" style="margin-right: 10px; vertical-align: middle;">
-                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
-                    </svg>
-                    Recent Orders
-                </h5>
-                <a href="/CustomerPortal/Orders" style="color: #008080; text-decoration: none; font-weight: 500;">View All →</a>
-            </div>
-            
-            <div class="table-responsive">
-                <table class="table" style="margin-bottom: 0;">
-                    <thead style="background: #f8f9fa;">
-                        <tr>
-                            <th style="border: none; padding: 12px; color: #6b7280; font-weight: 600;">Order #</th>
-                            <th style="border: none; padding: 12px; color: #6b7280; font-weight: 600;">Date</th>
-                            <th style="border: none; padding: 12px; color: #6b7280; font-weight: 600;">Items</th>
-                            <th style="border: none; padding: 12px; color: #6b7280; font-weight: 600;">Total</th>
-                            <th style="border: none; padding: 12px; color: #6b7280; font-weight: 600;">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
-                                <strong style="color: #008080;">ORD-2026-0089</strong>
-                            </td>
-                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">Jan 30, 2026</td>
-                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">Razer BlackWidow V4 Pro</td>
-                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; font-weight: 600;">₱11,000.00</td>
-                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
-                                <span style="background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">Processing</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
-                                <strong style="color: #008080;">ORD-2026-0082</strong>
-                            </td>
-                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">Jan 28, 2026</td>
-                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">Logitech G502 X Plus</td>
-                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; font-weight: 600;">₱6,500.00</td>
-                            <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
-                                <span style="background: linear-gradient(135deg, #3b82f6, #60a5fa); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">Shipped</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 15px;">
-                                <strong style="color: #008080;">ORD-2026-0075</strong>
-                            </td>
-                            <td style="padding: 15px;">Jan 25, 2026</td>
-                            <td style="padding: 15px;">Corsair Vengeance 32GB DDR5</td>
-                            <td style="padding: 15px; font-weight: 600;">₱11,500.00</td>
-                            <td style="padding: 15px;">
-                                <span style="background: linear-gradient(135deg, #10b981, #34d399); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500;">Delivered</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions & Notifications -->
-    <div class="col-lg-4">
-        <!-- Quick Actions -->
-        <div class="portal-card mb-4">
-            <h5 class="mb-4" style="font-weight: 600; color: #1f2937;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2" style="margin-right: 10px; vertical-align: middle;">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                </svg>
-                Quick Actions
-            </h5>
-            <div class="d-grid gap-3">
-                <a href="/CustomerPortal/Products" class="btn" style="background: linear-gradient(135deg, #008080, #006666); color: white; padding: 12px; border-radius: 10px; text-decoration: none; display: flex; align-items: center; gap: 10px;">
-                    🛒 Browse Products
-                </a>
-                <a href="/CustomerPortal/SubmitTicket" class="btn" style="background: linear-gradient(135deg, #ff6b35, #ff8c42); color: white; padding: 12px; border-radius: 10px; text-decoration: none; display: flex; align-items: center; gap: 10px;">
-                    🎫 Submit Support Ticket
-                </a>
-                <a href="/CustomerPortal/Support" class="btn" style="background: linear-gradient(135deg, #10b981, #34d399); color: white; padding: 12px; border-radius: 10px; text-decoration: none; display: flex; align-items: center; gap: 10px;">
-                    💬 Chat with Support
-                </a>
-            </div>
-        </div>
-
-        <!-- Active Promotions -->
-        <div class="portal-card">
-            <h5 class="mb-4" style="font-weight: 600; color: #1f2937;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2" style="margin-right: 10px; vertical-align: middle;">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                </svg>
-                Active Promotions
-            </h5>
-            <div class="promo-item p-3 mb-3" style="background: linear-gradient(135deg, #fff5f0, #ffebe0); border-radius: 12px; border-left: 4px solid #ff6b35;">
-                <div style="font-weight: 600; color: #ff6b35;">🔥 Gaming Week Sale!</div>
-                <div style="font-size: 0.85rem; color: #6b7280; margin-top: 5px;">Up to 30% off on gaming peripherals</div>
-                <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 5px;">Valid until Feb 15, 2026</div>
-            </div>
-            <div class="promo-item p-3" style="background: linear-gradient(135deg, #f0fff4, #dcfce7); border-radius: 12px; border-left: 4px solid #10b981;">
-                <div style="font-weight: 600; color: #10b981;">🎁 Free Shipping</div>
-                <div style="font-size: 0.85rem; color: #6b7280; margin-top: 5px;">On orders over ₱5,000</div>
-                <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 5px;">Limited time offer</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Featured Products -->
-<div class="portal-card mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h5 class="mb-0" style="font-weight: 600; color: #1f2937;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff6b35" stroke-width="2" style="margin-right: 10px; vertical-align: middle;">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-            Featured Products
-        </h5>
-        <a href="/CustomerPortal/Products" style="color: #008080; text-decoration: none; font-weight: 500;">View All →</a>
-    </div>
+<style>
+    .dashboard-container { padding: 20px 0; }
     
-    <div class="row g-4" id="featuredProductsGrid">
-        <div class="col-12 text-center py-4">
-            <div class="spinner-border text-primary spinner-border-sm" role="status">
-                <span class="visually-hidden">Loading...</span>
+    .promo-banner {
+        background: linear-gradient(135deg, #008080 0%, #20b2aa 100%);
+        border-radius: 20px;
+        padding: 40px;
+        color: white;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 40px rgba(0, 128, 128, 0.3);
+    }
+    
+    .btn-shop {
+        display: inline-block;
+        padding: 12px 30px;
+        background: white;
+        color: #008080;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .btn-shop:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        color: #006666;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        transition: all 0.3s;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+    
+    .stat-value { font-size: 2rem; font-weight: 800; color: #1f2937; }
+    .stat-label { color: #6b7280; font-size: 0.9rem; }
+    .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    
+    .portal-card {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    
+    .product-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        transition: all 0.3s;
+        height: 100%;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    }
+    
+    .product-image {
+        height: 180px;
+        background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        position: relative;
+    }
+    
+    .product-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #ff6b35;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .product-body { padding: 20px; }
+    .product-title { font-weight: 600; color: #1f2937; margin-bottom: 5px; font-size: 0.95rem; }
+    .product-category { color: #6b7280; font-size: 0.8rem; margin-bottom: 10px; }
+    .product-price { font-size: 1.2rem; font-weight: 700; color: #008080; }
+    .product-old-price { color: #9ca3af; text-decoration: line-through; font-size: 0.9rem; margin-left: 8px; }
+    
+    .btn-add-cart {
+        width: 100%;
+        padding: 10px;
+        background: linear-gradient(135deg, #008080, #006666);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 15px;
+        transition: all 0.3s;
+    }
+    
+    .btn-add-cart:hover {
+        background: linear-gradient(135deg, #006666, #004d4d);
+    }
+    
+    .quick-action {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px 20px;
+        background: linear-gradient(135deg, #008080, #006666);
+        color: white;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    
+    .quick-action:hover {
+        transform: translateX(5px);
+        color: white;
+    }
+    
+    .promo-item {
+        padding: 15px;
+        border-radius: 12px;
+        border-left: 4px solid;
+        margin-bottom: 12px;
+    }
+</style>
+
+<div class="dashboard-container">
+    <!-- Welcome Banner -->
+    <div class="promo-banner">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h2 style="font-weight: 700; margin-bottom: 10px;">🎮 Welcome back, <span id="customerName">Customer</span>!</h2>
+                <p style="margin-bottom: 20px; opacity: 0.9;">Check out our latest computer accessories and exclusive deals just for you!</p>
+                <a href="/CustomerPortal/Promotions" class="btn-shop">🔥 View Promotions</a>
+            </div>
+            <div class="col-lg-4 text-center d-none d-lg-block">
+                <div style="font-size: 6rem;">🖥️</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stat-value" id="statOrders">0</div>
+                        <div class="stat-label">Total Orders</div>
+                    </div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #008080, #20b2aa); color: white;">📦</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stat-value" id="statPending">0</div>
+                        <div class="stat-label">Pending Orders</div>
+                    </div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white;">⏳</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stat-value" id="statPoints">0</div>
+                        <div class="stat-label">Loyalty Points</div>
+                    </div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #34d399); color: white;">⭐</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="stat-value" id="statCart">0</div>
+                        <div class="stat-label">Cart Items</div>
+                    </div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444, #f87171); color: white;">🛒</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <!-- Recent Orders -->
+            <div class="portal-card mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 style="font-weight: 600; color: #1f2937; margin: 0;">📦 Recent Orders</h5>
+                    <a href="/CustomerPortal/Orders" style="color: #008080; text-decoration: none; font-weight: 500;">View All →</a>
+                </div>
+                <div id="recentOrdersContainer">
+                    <div class="text-center py-4 text-muted">Loading orders...</div>
+                </div>
+            </div>
+
+            <!-- Featured Products -->
+            <div class="portal-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 style="font-weight: 600; color: #1f2937; margin: 0;">⭐ Featured Products</h5>
+                    <a href="/CustomerPortal/Products" style="color: #008080; text-decoration: none; font-weight: 500;">View All →</a>
+                </div>
+                <div class="row g-3" id="featuredProductsGrid">
+                    <div class="col-12 text-center py-4 text-muted">Loading products...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="portal-card mb-4">
+                <h5 style="font-weight: 600; color: #1f2937; margin-bottom: 20px;">⚡ Quick Actions</h5>
+                <div class="d-grid gap-3">
+                    <a href="/CustomerPortal/Products" class="quick-action">🛒 Browse Products</a>
+                    <a href="/CustomerPortal/Cart" class="quick-action" style="background: linear-gradient(135deg, #ff6b35, #ff8c42);">🛍️ View Cart</a>
+                    <a href="/CustomerPortal/Support" class="quick-action" style="background: linear-gradient(135deg, #10b981, #34d399);">💬 Get Support</a>
+                </div>
+            </div>
+
+            <!-- Active Promotions -->
+            <div class="portal-card">
+                <h5 style="font-weight: 600; color: #1f2937; margin-bottom: 20px;">🔥 Active Promotions</h5>
+                <div id="activePromotionsContainer">
+                    <div class="text-center py-3 text-muted">Loading promotions...</div>
+                </div>
             </div>
         </div>
     </div>
@@ -208,94 +254,172 @@
 @section Scripts {
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        loadDashboardData();
         loadFeaturedProducts();
+        loadActivePromotions();
+        updateCartCount();
     });
+
+    async function loadDashboardData() {
+        try {
+            // Load profile
+            const profileRes = await fetch('/CustomerPortal/GetProfile');
+            const profileData = await profileRes.json();
+            if (profileData.success) {
+                document.getElementById('customerName').textContent = profileData.data.firstName || 'Customer';
+                document.getElementById('statPoints').textContent = (profileData.data.loyaltyPoints || 0).toLocaleString();
+                document.getElementById('statOrders').textContent = profileData.data.totalOrders || 0;
+            }
+
+            // Load orders
+            const ordersRes = await fetch('/CustomerPortal/GetOrders?pageSize=3');
+            const ordersData = await ordersRes.json();
+            if (ordersData.success) {
+                document.getElementById('statPending').textContent = ordersData.stats?.pending || 0;
+                renderRecentOrders(ordersData.data);
+            }
+        } catch (error) {
+            console.error('Error loading dashboard:', error);
+        }
+    }
 
     async function loadFeaturedProducts() {
         try {
-            const response = await fetch('/api/products');
-            if (response.ok) {
-                const products = await response.json();
-                // Get featured or first 4 products with sale badge
-                const featured = products.filter(p => p.isFeatured || p.isOnSale).slice(0, 4);
-                const displayProducts = featured.length >= 4 ? featured : products.slice(0, 4);
-                renderFeaturedProducts(displayProducts);
+            const response = await fetch('/CustomerPortal/GetFeaturedProducts?count=4');
+            const result = await response.json();
+            if (result.success && result.data.length > 0) {
+                renderFeaturedProducts(result.data);
             } else {
-                showFeaturedError();
+                document.getElementById('featuredProductsGrid').innerHTML = '<div class="col-12 text-center py-4 text-muted">No featured products available</div>';
             }
         } catch (error) {
-            console.error('Error loading featured products:', error);
-            showFeaturedError();
+            console.error('Error:', error);
         }
     }
 
-    function renderFeaturedProducts(products) {
-        const grid = document.getElementById('featuredProductsGrid');
-        
-        if (products.length === 0) {
-            grid.innerHTML = `
-                <div class="col-12 text-center py-4 text-muted">
-                    <p>No products available at the moment.</p>
-                </div>
-            `;
+    async function loadActivePromotions() {
+        try {
+            const response = await fetch('/CustomerPortal/GetPromotions');
+            const result = await response.json();
+            if (result.success) {
+                renderPromotions(result.data.promotions);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    function renderRecentOrders(orders) {
+        const container = document.getElementById('recentOrdersContainer');
+        if (!orders || orders.length === 0) {
+            container.innerHTML = '<div class="text-center py-4 text-muted">No orders yet. <a href="/CustomerPortal/Products">Start shopping!</a></div>';
             return;
         }
 
-        grid.innerHTML = products.map(product => {
-            const imageHtml = product.mainImageUrl 
-                ? `<img src="${product.mainImageUrl}" alt="${product.productName}" class="product-img" onerror="this.parentElement.innerHTML='<div class=\\'product-image-placeholder\\'><svg width=\\'48\\' height=\\'48\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'1.5\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\'/><circle cx=\\'8.5\\' cy=\\'8.5\\' r=\\'1.5\\'/><path d=\\'m21 15-5-5L5 21\\'/></svg></div>'">`
-                : `<div class="product-image-placeholder">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <rect x="3" y="3" width="18" height="18" rx="2"/>
-                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                        <path d="m21 15-5-5L5 21"/>
-                    </svg>
-                </div>`;
+        const statusColors = {
+            'Pending': '#f59e0b', 'Processing': '#3b82f6', 'Shipped': '#8b5cf6',
+            'Delivered': '#10b981', 'Cancelled': '#ef4444'
+        };
 
-            const badge = product.isOnSale 
-                ? '<span class="sale-badge">SALE</span>'
-                : product.isFeatured 
-                    ? '<span class="sale-badge" style="background: #f59e0b;">HOT</span>'
-                    : '';
-
-            const price = product.sellingPrice || product.costPrice || 0;
-            const comparePrice = product.compareAtPrice && product.compareAtPrice > price 
-                ? `<span class="original-price">₱${parseFloat(product.compareAtPrice).toLocaleString('en-PH')}</span>` 
-                : '';
-
-            return `
-                <div class="col-md-3">
-                    <div class="product-card">
-                        <div class="product-image">
-                            ${badge}
-                            ${imageHtml}
-                        </div>
-                        <div class="product-info">
-                            <div class="product-category">${product.categoryName || 'Uncategorized'}</div>
-                            <div class="product-name">${product.productName}</div>
-                            <div class="product-price">
-                                <span class="current-price">₱${parseFloat(price).toLocaleString('en-PH')}</span>
-                                ${comparePrice}
-                            </div>
-                            <button class="btn-add-cart" onclick="addToCart(${product.productId}, '${product.productName.replace(/'/g, "\\'")}', ${price})">Add to Cart</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-
-    function showFeaturedError() {
-        document.getElementById('featuredProductsGrid').innerHTML = `
-            <div class="col-12 text-center py-4 text-muted">
-                <p>Unable to load featured products.</p>
+        container.innerHTML = `
+            <div class="table-responsive">
+                <table class="table" style="margin: 0;">
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th style="border: none; padding: 12px; color: #6b7280;">Order #</th>
+                            <th style="border: none; padding: 12px; color: #6b7280;">Date</th>
+                            <th style="border: none; padding: 12px; color: #6b7280;">Total</th>
+                            <th style="border: none; padding: 12px; color: #6b7280;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${orders.map(order => `
+                            <tr>
+                                <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;"><strong style="color: #008080;">${order.orderNumber}</strong></td>
+                                <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">${new Date(order.orderDate).toLocaleDateString()}</td>
+                                <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; font-weight: 600;">₱${order.totalAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
+                                <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
+                                    <span style="background: ${statusColors[order.orderStatus] || '#6b7280'}; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem;">${order.orderStatus}</span>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
             </div>
         `;
     }
 
-    function addToCart(productId, productName, price) {
-        // TODO: Implement actual cart functionality
-        alert(productName + ' has been added to your cart!');
+    function renderFeaturedProducts(products) {
+        const grid = document.getElementById('featuredProductsGrid');
+        const productIcons = ['🖥️', '⌨️', '🖱️', '🎧', '💾', '🎮', '📱', '🔌'];
+
+        grid.innerHTML = products.map((product, index) => `
+            <div class="col-md-6 col-lg-3">
+                <div class="product-card">
+                    <div class="product-image">
+                        ${productIcons[index % productIcons.length]}
+                        ${product.isOnSale ? '<span class="product-badge">SALE</span>' : ''}
+                    </div>
+                    <div class="product-body">
+                        <div class="product-category">${product.categoryName || 'Accessories'}</div>
+                        <div class="product-title">${product.productName}</div>
+                        <div class="d-flex align-items-center">
+                            <span class="product-price">₱${product.sellingPrice.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                            ${product.compareAtPrice ? `<span class="product-old-price">₱${product.compareAtPrice.toLocaleString()}</span>` : ''}
+                        </div>
+                        <button class="btn-add-cart" onclick="addToCart(${product.productId}, '${product.productName.replace(/'/g, "\\'")}', ${product.sellingPrice}, '${product.sku || ''}')">
+                            🛒 Add to Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderPromotions(promotions) {
+        const container = document.getElementById('activePromotionsContainer');
+        if (!promotions || promotions.length === 0) {
+            container.innerHTML = '<div class="text-center py-3 text-muted">No active promotions</div>';
+            return;
+        }
+
+        container.innerHTML = promotions.slice(0, 3).map(promo => `
+            <div class="promo-item" style="background: linear-gradient(135deg, #fff5f0, #ffebe0); border-color: #ff6b35;">
+                <div style="font-weight: 600; color: #ff6b35;">🔥 ${promo.promotionName}</div>
+                <div style="font-size: 0.85rem; color: #6b7280; margin-top: 5px;">${promo.description || `${promo.discountValue}${promo.discountType === 'Percentage' ? '%' : '₱'} off`}</div>
+                <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 5px;">Code: <strong>${promo.promotionCode}</strong></div>
+            </div>
+        `).join('');
+    }
+
+    function addToCart(productId, productName, price, sku) {
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const existingIndex = cart.findIndex(item => item.productId === productId);
+        
+        if (existingIndex > -1) {
+            cart[existingIndex].quantity += 1;
+        } else {
+            cart.push({ productId, name: productName, price, sku, quantity: 1 });
+        }
+        
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartCount();
+        
+        // Show notification
+        const toast = document.createElement('div');
+        toast.innerHTML = `<div style="position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 9999;">✓ Added to cart!</div>`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+    }
+
+    function updateCartCount() {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+        document.getElementById('statCart').textContent = count;
+        
+        // Update header cart badge if exists
+        const cartBadge = document.querySelector('.cart-count');
+        if (cartBadge) cartBadge.textContent = count;
     }
 </script>
 }

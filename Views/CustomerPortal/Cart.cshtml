@@ -3,195 +3,614 @@
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
 }
 
-<div class="container py-4">
-    <div class="row">
-        <div class="col-12">
-            <h2 class="mb-4">
-                <i class="bi bi-cart3 me-2"></i>Shopping Cart
-            </h2>
-        </div>
-    </div>
+<style>
+    .cart-page {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 40px 20px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+    
+    .cart-container {
+        width: 100%;
+        max-width: 1200px;
+    }
+    
+    .cart-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    
+    .cart-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #1f2937;
+        margin-bottom: 10px;
+    }
+    
+    .cart-header p {
+        color: #6b7280;
+        font-size: 1.1rem;
+    }
+    
+    .cart-content {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 30px;
+    }
+    
+    @@media (max-width: 992px) {
+        .cart-content {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .cart-items-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    
+    .cart-items-header {
+        padding: 25px 30px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .cart-items-header h3 {
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+    
+    .cart-item {
+        padding: 25px 30px;
+        border-bottom: 1px solid #f3f4f6;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        transition: background 0.3s;
+    }
+    
+    .cart-item:hover {
+        background: #fafafa;
+    }
+    
+    .cart-item:last-child {
+        border-bottom: none;
+    }
+    
+    .item-image {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        flex-shrink: 0;
+    }
+    
+    .item-details {
+        flex: 1;
+    }
+    
+    .item-name {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+    }
+    
+    .item-sku {
+        color: #9ca3af;
+        font-size: 0.85rem;
+        margin-bottom: 10px;
+    }
+    
+    .item-price {
+        font-weight: 700;
+        color: #008080;
+        font-size: 1.2rem;
+    }
+    
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #f3f4f6;
+        border-radius: 12px;
+        padding: 5px;
+    }
+    
+    .qty-btn {
+        width: 40px;
+        height: 40px;
+        border: none;
+        background: white;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 1.2rem;
+        color: #008080;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .qty-btn:hover {
+        background: #008080;
+        color: white;
+    }
+    
+    .qty-value {
+        min-width: 40px;
+        text-align: center;
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    .remove-btn {
+        width: 45px;
+        height: 45px;
+        border: none;
+        background: #fef2f2;
+        color: #ef4444;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: all 0.3s;
+    }
+    
+    .remove-btn:hover {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .cart-summary-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        padding: 30px;
+        position: sticky;
+        top: 100px;
+    }
+    
+    .summary-header {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f3f4f6;
+    }
+    
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        font-size: 1rem;
+    }
+    
+    .summary-label {
+        color: #6b7280;
+    }
+    
+    .summary-value {
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    .promo-input {
+        display: flex;
+        gap: 10px;
+        margin: 20px 0;
+    }
+    
+    .promo-input input {
+        flex: 1;
+        padding: 14px 18px;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+    }
+    
+    .promo-input input:focus {
+        outline: none;
+        border-color: #008080;
+    }
+    
+    .promo-input button {
+        padding: 14px 20px;
+        background: linear-gradient(135deg, #008080, #006666);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .promo-input button:hover {
+        transform: translateY(-2px);
+    }
+    
+    .promo-applied {
+        background: #ecfdf5;
+        color: #059669;
+        padding: 12px 15px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+        display: none;
+    }
+    
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        padding-top: 20px;
+        margin-top: 15px;
+        border-top: 2px solid #008080;
+    }
+    
+    .total-label {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+    
+    .total-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #008080;
+    }
+    
+    .checkout-btn {
+        width: 100%;
+        padding: 18px;
+        background: linear-gradient(135deg, #008080 0%, #006666 100%);
+        color: white;
+        border: none;
+        border-radius: 14px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 25px;
+        transition: all 0.3s;
+    }
+    
+    .checkout-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 128, 128, 0.3);
+    }
+    
+    .checkout-btn:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .continue-shopping {
+        display: block;
+        text-align: center;
+        margin-top: 15px;
+        color: #008080;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .empty-cart {
+        text-align: center;
+        padding: 60px 30px;
+    }
+    
+    .empty-cart-icon {
+        font-size: 5rem;
+        margin-bottom: 20px;
+    }
+    
+    .empty-cart h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 10px;
+    }
+    
+    .empty-cart p {
+        color: #6b7280;
+        margin-bottom: 25px;
+    }
+    
+    .shop-now-btn {
+        display: inline-block;
+        padding: 15px 40px;
+        background: linear-gradient(135deg, #008080, #006666);
+        color: white;
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .shop-now-btn:hover {
+        transform: translateY(-3px);
+        color: white;
+        box-shadow: 0 10px 30px rgba(0, 128, 128, 0.3);
+    }
+    
+    .clear-cart-btn {
+        background: none;
+        border: none;
+        color: #ef4444;
+        font-size: 0.9rem;
+        cursor: pointer;
+        padding: 5px 10px;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .clear-cart-btn:hover {
+        background: #fef2f2;
+    }
+    
+    .secure-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 15px;
+        color: #6b7280;
+        font-size: 0.85rem;
+    }
+</style>
 
-    <div class="row">
-        <!-- Cart Items -->
-        <div class="col-lg-8">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Cart Items (<span id="cartItemCount">0</span>)</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div id="cartItemsContainer">
-                        <div class="text-center py-5 text-muted">
-                            <i class="bi bi-cart-x" style="font-size: 4rem;"></i>
-                            <p class="mt-3">Your cart is empty</p>
-                            <a href="/CustomerPortal/Products" class="btn btn-primary">
-                                <i class="bi bi-shop me-2"></i>Continue Shopping
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="cart-page">
+    <div class="cart-container">
+        <div class="cart-header">
+            <h1>🛒 Your Shopping Cart</h1>
+            <p>Review your items before checkout</p>
         </div>
-
-        <!-- Order Summary -->
-        <div class="col-lg-4">
-            <div class="card shadow-sm sticky-top" style="top: 20px;">
-                <div class="card-header bg-teal text-white">
-                    <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>Order Summary</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Subtotal</span>
-                        <span id="subtotal">₱0.00</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Shipping</span>
-                        <span id="shipping">₱0.00</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Tax (12%)</span>
-                        <span id="tax">₱0.00</span>
-                    </div>
-                    <hr>
-                    <div class="d-flex justify-content-between mb-3">
-                        <strong>Total</strong>
-                        <strong class="text-teal fs-5" id="total">₱0.00</strong>
-                    </div>
-                    
-                    <!-- Promo Code -->
-                    <div class="mb-3">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="promoCode" placeholder="Promo code">
-                            <button class="btn btn-outline-secondary" type="button" onclick="applyPromo()">Apply</button>
-                        </div>
-                    </div>
-
-                    <button class="btn btn-primary w-100 btn-lg" onclick="proceedToCheckout()" id="checkoutBtn" disabled>
-                        <i class="bi bi-credit-card me-2"></i>Proceed to Checkout
-                    </button>
-                </div>
-            </div>
-        </div>
+        
+        <div id="cartContent"></div>
     </div>
 </div>
 
-<style>
-    .bg-teal { background-color: #008080 !important; }
-    .text-teal { color: #008080 !important; }
-    .btn-primary { background-color: #008080; border-color: #008080; }
-    .btn-primary:hover { background-color: #006666; border-color: #006666; }
-    .cart-item { border-bottom: 1px solid #eee; padding: 1rem; }
-    .cart-item:last-child { border-bottom: none; }
-    .quantity-control { width: 120px; }
-    .quantity-control input { text-align: center; }
-</style>
-
 @section Scripts {
 <script>
-    // Cart functionality will be implemented with local storage or API
+    let cart = [];
+    let promoDiscount = 0;
+    let promoCode = '';
+    let promoType = '';
+    
+    const productIcons = ['🖥️', '⌨️', '🖱️', '🎧', '💾', '🎮', '📱', '🔌'];
+
     document.addEventListener('DOMContentLoaded', function() {
         loadCart();
     });
 
     function loadCart() {
-        // Load cart from localStorage or API
-        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        renderCart(cart);
+        cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        renderCart();
     }
 
-    function renderCart(items) {
-        const container = document.getElementById('cartItemsContainer');
-        const countEl = document.getElementById('cartItemCount');
+    function renderCart() {
+        const container = document.getElementById('cartContent');
         
-        if (items.length === 0) {
+        if (cart.length === 0) {
             container.innerHTML = `
-                <div class="text-center py-5 text-muted">
-                    <i class="bi bi-cart-x" style="font-size: 4rem;"></i>
-                    <p class="mt-3">Your cart is empty</p>
-                    <a href="/CustomerPortal/Products" class="btn btn-primary">
-                        <i class="bi bi-shop me-2"></i>Continue Shopping
-                    </a>
+                <div class="cart-items-card">
+                    <div class="empty-cart">
+                        <div class="empty-cart-icon">🛒</div>
+                        <h3>Your cart is empty</h3>
+                        <p>Looks like you haven't added any items yet</p>
+                        <a href="/CustomerPortal/Products" class="shop-now-btn">🛍️ Start Shopping</a>
+                    </div>
                 </div>
             `;
-            countEl.textContent = '0';
-            document.getElementById('checkoutBtn').disabled = true;
             return;
         }
 
-        countEl.textContent = items.length;
-        document.getElementById('checkoutBtn').disabled = false;
+        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const shipping = subtotal > 3000 ? 0 : 150;
         
-        container.innerHTML = items.map((item, index) => `
-            <div class="cart-item d-flex align-items-center">
-                <img src="${item.image || '/images/placeholder.png'}" alt="${item.name}" 
-                     class="rounded me-3" style="width: 80px; height: 80px; object-fit: cover;">
-                <div class="flex-grow-1">
-                    <h6 class="mb-1">${item.name}</h6>
-                    <small class="text-muted">${item.sku || ''}</small>
-                    <div class="text-teal fw-bold">₱${parseFloat(item.price).toLocaleString('en-PH', {minimumFractionDigits: 2})}</div>
+        let discount = 0;
+        if (promoDiscount > 0) {
+            discount = promoType === 'Percentage' ? (subtotal * promoDiscount / 100) : promoDiscount;
+        }
+        
+        const total = subtotal + shipping - discount;
+
+        container.innerHTML = `
+            <div class="cart-content">
+                <div class="cart-items-card">
+                    <div class="cart-items-header">
+                        <h3>📦 Cart Items (${cart.length})</h3>
+                        <button class="clear-cart-btn" onclick="clearCart()">🗑️ Clear All</button>
+                    </div>
+                    ${cart.map((item, index) => `
+                        <div class="cart-item">
+                            <div class="item-image">${productIcons[index % productIcons.length]}</div>
+                            <div class="item-details">
+                                <div class="item-name">${item.name}</div>
+                                <div class="item-sku">SKU: ${item.sku || 'N/A'}</div>
+                                <div class="item-price">₱${item.price.toLocaleString('en-PH', {minimumFractionDigits: 2})}</div>
+                            </div>
+                            <div class="quantity-controls">
+                                <button class="qty-btn" onclick="updateQuantity(${item.productId}, -1)">−</button>
+                                <span class="qty-value">${item.quantity}</span>
+                                <button class="qty-btn" onclick="updateQuantity(${item.productId}, 1)">+</button>
+                            </div>
+                            <button class="remove-btn" onclick="removeItem(${item.productId})">🗑️</button>
+                        </div>
+                    `).join('')}
                 </div>
-                <div class="quantity-control input-group me-3">
-                    <button class="btn btn-outline-secondary btn-sm" onclick="updateQuantity(${index}, -1)">-</button>
-                    <input type="number" class="form-control form-control-sm" value="${item.quantity}" min="1" 
-                           onchange="setQuantity(${index}, this.value)">
-                    <button class="btn btn-outline-secondary btn-sm" onclick="updateQuantity(${index}, 1)">+</button>
+                
+                <div class="cart-summary-card">
+                    <div class="summary-header">📋 Order Summary</div>
+                    
+                    <div class="summary-row">
+                        <span class="summary-label">Subtotal (${cart.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
+                        <span class="summary-value">₱${subtotal.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                    </div>
+                    
+                    <div class="summary-row">
+                        <span class="summary-label">Shipping</span>
+                        <span class="summary-value" style="color: ${shipping === 0 ? '#10b981' : '#1f2937'}">
+                            ${shipping === 0 ? 'FREE' : '₱' + shipping.toLocaleString('en-PH', {minimumFractionDigits: 2})}
+                        </span>
+                    </div>
+                    
+                    ${subtotal < 3000 ? `
+                        <div style="background: #fef3cd; color: #856404; padding: 10px 15px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 15px;">
+                            💡 Add ₱${(3000 - subtotal).toLocaleString()} more for FREE shipping!
+                        </div>
+                    ` : ''}
+                    
+                    <div class="promo-input">
+                        <input type="text" id="promoCodeInput" placeholder="Enter promo code" value="${promoCode}">
+                        <button onclick="applyPromo()">Apply</button>
+                    </div>
+                    
+                    <div class="promo-applied" id="promoApplied" ${promoDiscount > 0 ? 'style="display: block;"' : ''}>
+                        ✓ Promo code "${promoCode}" applied! -₱${discount.toLocaleString('en-PH', {minimumFractionDigits: 2})}
+                        <button onclick="removePromo()" style="background: none; border: none; color: #ef4444; cursor: pointer; margin-left: 10px;">Remove</button>
+                    </div>
+                    
+                    ${discount > 0 ? `
+                        <div class="summary-row">
+                            <span class="summary-label">Discount</span>
+                            <span class="summary-value" style="color: #10b981;">-₱${discount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="summary-total">
+                        <span class="total-label">Total</span>
+                        <span class="total-value">₱${total.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                    </div>
+                    
+                    <button class="checkout-btn" onclick="proceedToCheckout()" id="checkoutBtn">
+                        🔒 Proceed to Checkout
+                    </button>
+                    
+                    <a href="/CustomerPortal/Products" class="continue-shopping">← Continue Shopping</a>
+                    
+                    <div class="secure-badge">
+                        🔐 Secure checkout powered by PayMongo
+                    </div>
                 </div>
-                <div class="text-end me-3" style="min-width: 100px;">
-                    <strong>₱${(item.price * item.quantity).toLocaleString('en-PH', {minimumFractionDigits: 2})}</strong>
-                </div>
-                <button class="btn btn-outline-danger btn-sm" onclick="removeItem(${index})">
-                    <i class="bi bi-trash"></i>
-                </button>
             </div>
-        `).join('');
-
-        calculateTotals(items);
+        `;
     }
 
-    function calculateTotals(items) {
-        const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const shipping = subtotal > 5000 ? 0 : 150;
-        const tax = subtotal * 0.12;
-        const total = subtotal + shipping + tax;
-
-        document.getElementById('subtotal').textContent = `₱${subtotal.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
-        document.getElementById('shipping').textContent = shipping === 0 ? 'FREE' : `₱${shipping.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
-        document.getElementById('tax').textContent = `₱${tax.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
-        document.getElementById('total').textContent = `₱${total.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
-    }
-
-    function updateQuantity(index, delta) {
-        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        cart[index].quantity = Math.max(1, cart[index].quantity + delta);
-        localStorage.setItem('cart', JSON.stringify(cart));
-        renderCart(cart);
-    }
-
-    function setQuantity(index, qty) {
-        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        cart[index].quantity = Math.max(1, parseInt(qty) || 1);
-        localStorage.setItem('cart', JSON.stringify(cart));
-        renderCart(cart);
-    }
-
-    function removeItem(index) {
-        if (confirm('Remove this item from cart?')) {
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            cart.splice(index, 1);
-            localStorage.setItem('cart', JSON.stringify(cart));
-            renderCart(cart);
+    function updateQuantity(productId, change) {
+        const item = cart.find(i => i.productId === productId);
+        if (item) {
+            item.quantity += change;
+            if (item.quantity <= 0) {
+                cart = cart.filter(i => i.productId !== productId);
+            }
+            saveCart();
         }
     }
 
-    function applyPromo() {
-        const code = document.getElementById('promoCode').value;
-        if (code) {
-            alert('Promo code functionality coming soon!');
+    function removeItem(productId) {
+        cart = cart.filter(i => i.productId !== productId);
+        saveCart();
+        showToast('Item removed from cart', '#ef4444');
+    }
+
+    function clearCart() {
+        if (confirm('Are you sure you want to clear your cart?')) {
+            cart = [];
+            promoDiscount = 0;
+            promoCode = '';
+            saveCart();
         }
+    }
+
+    function saveCart() {
+        localStorage.setItem('cart', JSON.stringify(cart));
+        renderCart();
+        updateHeaderCart();
+    }
+
+    function updateHeaderCart() {
+        const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+        const cartBadge = document.querySelector('.cart-count');
+        if (cartBadge) cartBadge.textContent = count;
+    }
+
+    async function applyPromo() {
+        const code = document.getElementById('promoCodeInput').value.trim();
+        if (!code) {
+            showToast('Please enter a promo code', '#ef4444');
+            return;
+        }
+
+        try {
+            const response = await fetch('/CustomerPortal/ValidatePromo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ promoCode: code })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                promoCode = code;
+                promoDiscount = result.data.discountValue;
+                promoType = result.data.discountType;
+                renderCart();
+                showToast('Promo code applied!', '#10b981');
+            } else {
+                showToast(result.message || 'Invalid promo code', '#ef4444');
+            }
+        } catch (error) {
+            showToast('Failed to validate promo code', '#ef4444');
+        }
+    }
+
+    function removePromo() {
+        promoCode = '';
+        promoDiscount = 0;
+        promoType = '';
+        renderCart();
     }
 
     function proceedToCheckout() {
+        // Store checkout data
+        const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const shipping = subtotal > 3000 ? 0 : 150;
+        let discount = 0;
+        if (promoDiscount > 0) {
+            discount = promoType === 'Percentage' ? (subtotal * promoDiscount / 100) : promoDiscount;
+        }
+        
+        const checkoutData = {
+            items: cart,
+            subtotal: subtotal,
+            shipping: shipping,
+            discount: discount,
+            promoCode: promoCode,
+            total: subtotal + shipping - discount
+        };
+        
+        localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
         window.location.href = '/CustomerPortal/Checkout';
+    }
+
+    function showToast(message, color) {
+        const toast = document.createElement('div');
+        toast.innerHTML = `<div style="position: fixed; bottom: 20px; right: 20px; background: ${color}; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 9999;">${message}</div>`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
     }
 </script>
 }
