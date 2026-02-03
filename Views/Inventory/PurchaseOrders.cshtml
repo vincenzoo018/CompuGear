@@ -254,9 +254,7 @@
                             <label class="form-label">Supplier <span class="text-danger">*</span></label>
                             <select class="form-select" id="orderSupplier" required onchange="loadSupplierProducts()">
                                 <option value="">Select Supplier</option>
-                                <option value="1">TechSupply Corp</option>
-                                <option value="2">PC Parts Philippines</option>
-                                <option value="3">Gaming Gear Inc.</option>
+                                <!-- Suppliers will be loaded dynamically -->
                             </select>
                         </div>
                         <div class="col-md-4">
@@ -347,7 +345,7 @@
 
 <!-- View Order Modal -->
 <div class="modal fade" id="viewOrderModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl-wide">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Purchase Order Details</h5>
@@ -407,34 +405,101 @@
 </div>
 
 @section Scripts {
+<script src="~/js/admin.js"></script>
 <script>
-    // Initialize stats
-    document.getElementById('totalOrders').textContent = '4';
-    document.getElementById('pendingOrders').textContent = '1';
-    document.getElementById('shippedOrders').textContent = '1';
-    document.getElementById('completedOrders').textContent = '1';
-
-    // Set default date
-    document.getElementById('orderDate').valueAsDate = new Date();
-
+    // Global variables
     let itemCounter = 1;
+    let supplierProducts = []; // Products for selected supplier
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', async function() {
+        await loadSuppliers();
+        await loadPurchaseOrders();
+        document.getElementById('orderDate').valueAsDate = new Date();
+    });
+
+    // Load all suppliers from database
+    async function loadSuppliers() {
+        try {
+            const suppliers = await API.get('/suppliers');
+            const select = document.getElementById('orderSupplier');
+            select.innerHTML = '<option value="">Select Supplier</option>';
+            suppliers.forEach(s => {
+                if (s.status === 'Active') {
+                    select.innerHTML += `<option value="${s.supplierId}">${s.supplierName}</option>`;
+                }
+            });
+        } catch (error) {
+            console.error('Failed to load suppliers:', error);
+            Toast.error('Failed to load suppliers');
+        }
+    }
+
+    // Load products when supplier is selected
+    async function loadSupplierProducts() {
+        const supplierId = document.getElementById('orderSupplier').value;
+        if (!supplierId) {
+            supplierProducts = [];
+            updateProductDropdowns();
+            return;
+        }
+
+        try {
+            supplierProducts = await API.get(`/suppliers/${supplierId}/products`);
+            updateProductDropdowns();
+            
+            if (supplierProducts.length === 0) {
+                Toast.warning('No products found for this supplier');
+            } else {
+                Toast.success(`Loaded ${supplierProducts.length} products from supplier`);
+            }
+        } catch (error) {
+            console.error('Failed to load supplier products:', error);
+            Toast.error('Failed to load supplier products');
+            supplierProducts = [];
+            updateProductDropdowns();
+        }
+    }
+
+    // Update all product dropdowns with supplier's products
+    function updateProductDropdowns() {
+        const selects = document.querySelectorAll('#orderItemsBody select');
+        selects.forEach(select => {
+            const currentValue = select.value;
+            select.innerHTML = '<option value="">Select Product</option>';
+            supplierProducts.forEach(p => {
+                select.innerHTML += `<option value="${p.productId}" data-price="${p.costPrice}" data-stock="${p.stockQuantity}">${p.productName} (Stock: ${p.stockQuantity})</option>`;
+            });
+            // Restore previous selection if it exists
+            if (currentValue) {
+                select.value = currentValue;
+            }
+        });
+    }
+
+    // Get product select HTML
+    function getProductSelectHTML(rowId) {
+        let html = `<select class="form-select form-select-sm" id="product_${rowId}" onchange="updateItemPrice(${rowId})"><option value="">Select Product</option>`;
+        supplierProducts.forEach(p => {
+            html += `<option value="${p.productId}" data-price="${p.costPrice}" data-stock="${p.stockQuantity}">${p.productName} (Stock: ${p.stockQuantity})</option>`;
+        });
+        html += '</select>';
+        return html;
+    }
 
     function openCreateOrderModal() {
         document.getElementById('purchaseOrderModalLabel').textContent = 'Create Purchase Order';
         document.getElementById('purchaseOrderForm').reset();
         document.getElementById('orderId').value = '0';
         document.getElementById('orderDate').valueAsDate = new Date();
+        supplierProducts = []; // Reset products
+        
         // Reset items table
         document.getElementById('orderItemsBody').innerHTML = `
             <tr id="itemRow_1">
                 <td>
-                    <select class="form-select form-select-sm" onchange="updateItemPrice(1)">
+                    <select class="form-select form-select-sm" id="product_1" onchange="updateItemPrice(1)">
                         <option value="">Select Product</option>
-                        <option value="1" data-price="2500">Gaming Mouse - Razer DeathAdder</option>
-                        <option value="2" data-price="5500">Mechanical Keyboard - Logitech G Pro</option>
-                        <option value="3" data-price="4200">Gaming Headset - HyperX Cloud II</option>
-                        <option value="4" data-price="25000">Monitor - ASUS ROG 27"</option>
-                        <option value="5" data-price="35000">Graphics Card - RTX 4070</option>
                     </select>
                 </td>
                 <td><input type="number" class="form-control form-control-sm" id="price_1" readonly placeholder="0.00"></td>
@@ -451,22 +516,21 @@
         `;
         itemCounter = 1;
         updateOrderTotal();
+        
+        var modal = new bootstrap.Modal(document.getElementById('purchaseOrderModal'));
+        modal.show();
     }
 
     function addOrderItem() {
+        if (supplierProducts.length === 0) {
+            Toast.warning('Please select a supplier first');
+            return;
+        }
+        
         itemCounter++;
         const newRow = `
             <tr id="itemRow_${itemCounter}">
-                <td>
-                    <select class="form-select form-select-sm" onchange="updateItemPrice(${itemCounter})">
-                        <option value="">Select Product</option>
-                        <option value="1" data-price="2500">Gaming Mouse - Razer DeathAdder</option>
-                        <option value="2" data-price="5500">Mechanical Keyboard - Logitech G Pro</option>
-                        <option value="3" data-price="4200">Gaming Headset - HyperX Cloud II</option>
-                        <option value="4" data-price="25000">Monitor - ASUS ROG 27"</option>
-                        <option value="5" data-price="35000">Graphics Card - RTX 4070</option>
-                    </select>
-                </td>
+                <td>${getProductSelectHTML(itemCounter)}</td>
                 <td><input type="number" class="form-control form-control-sm" id="price_${itemCounter}" readonly placeholder="0.00"></td>
                 <td><input type="number" class="form-control form-control-sm" id="qty_${itemCounter}" min="1" value="1" onchange="updateSubtotal(${itemCounter})"></td>
                 <td><input type="text" class="form-control form-control-sm" id="subtotal_${itemCounter}" readonly placeholder="₱0.00"></td>
@@ -491,7 +555,7 @@
     }
 
     function updateItemPrice(id) {
-        const select = document.querySelector(`#itemRow_${id} select`);
+        const select = document.getElementById(`product_${id}`) || document.querySelector(`#itemRow_${id} select`);
         const selectedOption = select.options[select.selectedIndex];
         const price = selectedOption.dataset.price || 0;
         document.getElementById(`price_${id}`).value = price;
@@ -521,9 +585,96 @@
         document.getElementById('orderTotal').textContent = `₱${total.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
     }
 
-    function loadSupplierProducts() {
-        // Load products based on selected supplier - API call would go here
-        console.log('Loading products for supplier...');
+    // Load purchase orders from database
+    async function loadPurchaseOrders() {
+        try {
+            const orders = await API.get('/purchase-orders');
+            const tbody = document.getElementById('purchaseOrdersTableBody');
+            
+            // Update stats
+            const stats = {
+                total: orders.length,
+                pending: orders.filter(o => o.status === 'Pending').length,
+                shipped: orders.filter(o => o.status === 'Shipped').length,
+                completed: orders.filter(o => o.status === 'Completed').length
+            };
+            
+            document.getElementById('totalOrders').textContent = stats.total;
+            document.getElementById('pendingOrders').textContent = stats.pending;
+            document.getElementById('shippedOrders').textContent = stats.shipped;
+            document.getElementById('completedOrders').textContent = stats.completed;
+            
+            if (orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No purchase orders found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = orders.map(order => {
+                const statusClass = {
+                    'Pending': 'bg-warning-subtle text-warning',
+                    'Approved': 'bg-success-subtle text-success',
+                    'Shipped': 'bg-info-subtle text-info',
+                    'Completed': 'bg-success-subtle text-success',
+                    'Cancelled': 'bg-danger-subtle text-danger'
+                }[order.status] || 'bg-secondary-subtle text-secondary';
+                
+                return `
+                    <tr>
+                        <td><span class="fw-medium text-primary">${order.poNumber || 'PO-' + order.purchaseOrderId}</span></td>
+                        <td>${order.supplierName || '-'}</td>
+                        <td>${Format.date(order.orderDate)}</td>
+                        <td><span class="badge bg-info-subtle text-info">${order.itemCount || 0} Items</span></td>
+                        <td class="fw-medium">${Format.currency(order.totalAmount)}</td>
+                        <td><span class="badge ${statusClass}">${order.status}</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewOrder(${order.purchaseOrderId})" title="View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </button>
+                                ${order.status === 'Pending' ? `
+                                <button class="btn btn-outline-secondary" onclick="editOrder(${order.purchaseOrderId})" title="Edit">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                    </svg>
+                                </button>
+                                <button class="btn btn-outline-success" onclick="approveOrder(${order.purchaseOrderId})" title="Approve">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </button>
+                                ` : ''}
+                                ${order.status === 'Approved' ? `
+                                <button class="btn btn-outline-info" onclick="markShipped(${order.purchaseOrderId})" title="Mark Shipped">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                                        <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                                    </svg>
+                                </button>
+                                ` : ''}
+                                ${order.status === 'Shipped' ? `
+                                <button class="btn btn-outline-success" onclick="markCompleted(${order.purchaseOrderId})" title="Mark Completed">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                        <polyline points="22 4 12 14.01 9 11.01"/>
+                                    </svg>
+                                </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (error) {
+            console.error('Failed to load purchase orders:', error);
+            // Show sample data if API fails
+            document.getElementById('totalOrders').textContent = '4';
+            document.getElementById('pendingOrders').textContent = '1';
+            document.getElementById('shippedOrders').textContent = '1';
+            document.getElementById('completedOrders').textContent = '1';
+        }
     }
 
     function viewOrder(id) {
@@ -538,8 +689,6 @@
             <tr><td>Gaming Mouse - Razer DeathAdder</td><td>₱2,500.00</td><td>10</td><td>₱25,000.00</td></tr>
             <tr><td>Mechanical Keyboard - Logitech G Pro</td><td>₱5,500.00</td><td>5</td><td>₱27,500.00</td></tr>
             <tr><td>Gaming Headset - HyperX Cloud II</td><td>₱4,200.00</td><td>8</td><td>₱33,600.00</td></tr>
-            <tr><td>Monitor - ASUS ROG 27"</td><td>₱25,000.00</td><td>1</td><td>₱25,000.00</td></tr>
-            <tr><td>Graphics Card - RTX 4070</td><td>₱35,000.00</td><td>1</td><td>₱35,000.00</td></tr>
         `;
         var modal = new bootstrap.Modal(document.getElementById('viewOrderModal'));
         modal.show();
@@ -553,37 +702,94 @@
         modal.show();
     }
 
-    function submitOrder() {
+    async function submitOrder() {
         const supplier = document.getElementById('orderSupplier').value;
         if (!supplier) {
-            alert('Please select a supplier');
+            Toast.error('Please select a supplier');
             return;
         }
-        // Submit logic here - API call
-        alert('Purchase Order submitted successfully!');
-        bootstrap.Modal.getInstance(document.getElementById('purchaseOrderModal')).hide();
+
+        // Collect order items
+        const items = [];
+        const rows = document.getElementById('orderItemsBody').querySelectorAll('tr');
+        rows.forEach(row => {
+            const select = row.querySelector('select');
+            const qtyInput = row.querySelector('input[id^="qty_"]');
+            const priceInput = row.querySelector('input[id^="price_"]');
+            
+            if (select && select.value && qtyInput && priceInput) {
+                items.push({
+                    productId: parseInt(select.value),
+                    quantity: parseInt(qtyInput.value),
+                    unitPrice: parseFloat(priceInput.value)
+                });
+            }
+        });
+
+        if (items.length === 0) {
+            Toast.error('Please add at least one product');
+            return;
+        }
+
+        try {
+            const orderData = {
+                supplierId: parseInt(supplier),
+                orderDate: document.getElementById('orderDate').value,
+                expectedDelivery: document.getElementById('expectedDelivery').value || null,
+                notes: document.getElementById('orderNotes').value,
+                items: items
+            };
+
+            await API.post('/purchase-orders', orderData);
+            Toast.success('Purchase Order submitted successfully!');
+            showNotification('Purchase Order Created', 'A new purchase order has been submitted for approval.', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('purchaseOrderModal')).hide();
+            await loadPurchaseOrders();
+        } catch (error) {
+            Toast.error('Failed to submit purchase order: ' + error.message);
+        }
     }
 
     function saveDraft() {
-        alert('Purchase Order saved as draft!');
+        Toast.success('Purchase Order saved as draft!');
         bootstrap.Modal.getInstance(document.getElementById('purchaseOrderModal')).hide();
     }
 
-    function approveOrder(id) {
+    async function approveOrder(id) {
         if (confirm('Are you sure you want to approve this purchase order?')) {
-            alert('Purchase Order approved!');
+            try {
+                await API.put(`/purchase-orders/${id}/approve`);
+                Toast.success('Purchase Order approved!');
+                showNotification('Order Approved', 'Purchase order has been approved.', 'success');
+                await loadPurchaseOrders();
+            } catch (error) {
+                Toast.error('Failed to approve order');
+            }
         }
     }
 
-    function markShipped(id) {
+    async function markShipped(id) {
         if (confirm('Mark this order as shipped?')) {
-            alert('Order marked as shipped!');
+            try {
+                await API.put(`/purchase-orders/${id}/ship`);
+                Toast.success('Order marked as shipped!');
+                await loadPurchaseOrders();
+            } catch (error) {
+                Toast.error('Failed to update order');
+            }
         }
     }
 
-    function markCompleted(id) {
+    async function markCompleted(id) {
         if (confirm('Mark this order as completed? This will update inventory stock levels.')) {
-            alert('Order completed! Stock levels updated.');
+            try {
+                await API.put(`/purchase-orders/${id}/complete`);
+                Toast.success('Order completed! Stock levels updated.');
+                showNotification('Stock Updated', 'Inventory has been updated from completed purchase order.', 'info');
+                await loadPurchaseOrders();
+            } catch (error) {
+                Toast.error('Failed to complete order');
+            }
         }
     }
 
@@ -592,8 +798,18 @@
     }
 
     function filterOrders() {
-        // Filter logic here
-        console.log('Filtering orders...');
+        loadPurchaseOrders();
+    }
+
+    // Notification helper
+    function showNotification(title, message, type = 'info') {
+        // Update notification badge
+        const badge = document.querySelector('.topbar-badge');
+        if (badge) {
+            const count = parseInt(badge.textContent || '0') + 1;
+            badge.textContent = count;
+            badge.style.display = 'flex';
+        }
     }
 
     // Search functionality

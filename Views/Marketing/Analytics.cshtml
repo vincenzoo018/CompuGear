@@ -2,149 +2,495 @@
     ViewData["Title"] = "Marketing Analytics";
 }
 
-<div class="page-header">
-    <h1 class="page-title">Marketing Analytics</h1>
-    <p class="page-subtitle">Track campaign performance and ROI</p>
-</div>
-
-<div class="stat-cards">
-    <div class="stat-card fade-in">
-        <div class="stat-info">
-            <span class="stat-label">Total Budget</span>
-            <span class="stat-value" id="totalBudget">₱0</span>
-        </div>
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Marketing Analytics</h1>
+        <p class="page-subtitle">Track campaign performance and ROI</p>
     </div>
-    <div class="stat-card fade-in">
-        <div class="stat-info">
-            <span class="stat-label">Active Campaigns</span>
-            <span class="stat-value" id="activeCampaigns">0</span>
-        </div>
-    </div>
-    <div class="stat-card fade-in">
-        <div class="stat-info">
-            <span class="stat-label">Active Promotions</span>
-            <span class="stat-value" id="activePromotions">0</span>
-        </div>
-    </div>
-    <div class="stat-card fade-in">
-        <div class="stat-info">
-            <span class="stat-label">Avg Discount</span>
-            <span class="stat-value" id="avgDiscount">0%</span>
-        </div>
+    <div class="d-flex gap-2">
+        <select class="form-select" id="dateRange" onchange="loadAnalytics()" style="width: auto;">
+            <option value="all">All Time</option>
+            <option value="month">This Month</option>
+            <option value="quarter">This Quarter</option>
+            <option value="year">This Year</option>
+        </select>
+        <button class="btn btn-outline-primary" onclick="exportReport()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export
+        </button>
     </div>
 </div>
 
-<div class="grid grid-2">
-    <div class="card fade-in">
-        <div class="card-header">
-            <h3 class="card-title">Campaign Status</h3>
-        </div>
-        <div class="card-body">
-            <div class="chart-container" style="height: 250px;">
-                <canvas id="channelChart"></canvas>
+<!-- Main Stats -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalBudget">₱0.00</div>
+                <div class="stat-label">Total Budget</div>
             </div>
         </div>
     </div>
-
-    <div class="card fade-in">
-        <div class="card-header">
-            <h3 class="card-title">Budget by Campaign</h3>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="activeCampaigns">0</div>
+                <div class="stat-label">Active Campaigns</div>
+            </div>
         </div>
-        <div class="card-body">
-            <div class="chart-container" style="height: 250px;">
-                <canvas id="roiChart"></canvas>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-info">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="activePromotions">0</div>
+                <div class="stat-label">Active Promotions</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="avgDiscount">0%</div>
+                <div class="stat-label">Avg Discount</div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100 fade-in">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Campaign Status</h5>
+                <span class="badge bg-primary" id="totalCampaignsCount">0 campaigns</span>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="height: 280px;">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100 fade-in">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Budget by Campaign</h5>
+                <span class="badge bg-success" id="totalSpentBadge">₱0 spent</span>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="height: 280px;">
+                    <canvas id="budgetChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Overview -->
+<div class="row mb-4">
+    <div class="col-lg-8 mb-4">
+        <div class="card h-100 fade-in">
+            <div class="card-header">
+                <h5 class="mb-0">ROI Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="roiChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100 fade-in">
+            <div class="card-header">
+                <h5 class="mb-0">Key Metrics</h5>
+            </div>
+            <div class="card-body">
+                <div class="metric-item">
+                    <div class="metric-icon bg-primary-subtle">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                        </svg>
+                    </div>
+                    <div class="metric-info">
+                        <div class="metric-label">Total Campaigns</div>
+                        <div class="metric-value" id="metricTotalCampaigns">0</div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-icon bg-success-subtle">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+                            <polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/>
+                        </svg>
+                    </div>
+                    <div class="metric-info">
+                        <div class="metric-label">Total Promotions</div>
+                        <div class="metric-value" id="metricTotalPromotions">0</div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-icon bg-warning-subtle">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+                            <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                    </div>
+                    <div class="metric-info">
+                        <div class="metric-label">Total Spent</div>
+                        <div class="metric-value" id="metricTotalSpent">₱0</div>
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-icon bg-info-subtle">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                        </svg>
+                    </div>
+                    <div class="metric-info">
+                        <div class="metric-label">Overall ROI</div>
+                        <div class="metric-value" id="metricOverallROI">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Performing -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card fade-in">
+            <div class="card-header">
+                <h5 class="mb-0">🏆 Top Performing Campaigns</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush" id="topCampaignsList">
+                    <div class="list-group-item text-center py-4 text-muted">
+                        No campaigns found
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+        <div class="card fade-in">
+            <div class="card-header">
+                <h5 class="mb-0">🎁 Most Used Promotions</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush" id="topPromotionsList">
+                    <div class="list-group-item text-center py-4 text-muted">
+                        No promotions found
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.metric-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    border-radius: 12px;
+    background: #f9fafb;
+    margin-bottom: 12px;
+    transition: all 0.3s;
+}
+.metric-item:hover { background: #f3f4f6; }
+.metric-item:last-child { margin-bottom: 0; }
+.metric-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.metric-info { flex: 1; }
+.metric-label { font-size: 0.85rem; color: #6b7280; }
+.metric-value { font-size: 1.25rem; font-weight: 700; color: #1f2937; }
+
+.list-group-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 20px;
+}
+.list-group-item .rank {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #008080, #20b2aa);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+.list-group-item .item-info { flex: 1; }
+.list-group-item .item-name { font-weight: 600; color: #1f2937; }
+.list-group-item .item-meta { font-size: 0.85rem; color: #6b7280; }
+.list-group-item .item-value { font-weight: 700; color: #008080; }
+</style>
 
 @section Scripts {
-    <script src="~/js/admin.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        let channelChart = null, roiChart = null;
+<script src="~/js/admin.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let statusChart = null, budgetChart = null, roiChart = null;
+    let campaigns = [], promotions = [];
 
-        document.addEventListener('DOMContentLoaded', async function() {
-            await loadMarketingAnalytics();
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAnalytics();
+    });
+
+    async function loadAnalytics() {
+        try {
+            const [campaignsRes, promotionsRes] = await Promise.all([
+                fetch('/api/campaigns'),
+                fetch('/api/promotions')
+            ]);
+            
+            campaigns = await campaignsRes.json();
+            promotions = await promotionsRes.json();
+            
+            updateStats();
+            renderCharts();
+            renderTopPerformers();
+        } catch (error) {
+            console.error('Failed to load analytics:', error);
+            Toast.error('Failed to load analytics data');
+        }
+    }
+
+    function updateStats() {
+        const totalBudget = campaigns.reduce((sum, c) => sum + (c.budget || 0), 0);
+        const totalSpent = campaigns.reduce((sum, c) => sum + (c.actualSpend || 0), 0);
+        const totalRevenue = campaigns.reduce((sum, c) => sum + (c.revenue || 0), 0);
+        const activeCampaigns = campaigns.filter(c => c.status === 'Active').length;
+        const now = new Date();
+        const activePromotions = promotions.filter(p => p.isActive && new Date(p.startDate) <= now && new Date(p.endDate) >= now).length;
+        
+        const percentageDiscounts = promotions.filter(p => p.discountType === 'Percentage').map(p => p.discountValue);
+        const avgDiscount = percentageDiscounts.length > 0 ? (percentageDiscounts.reduce((a, b) => a + b, 0) / percentageDiscounts.length).toFixed(0) : 0;
+        
+        const overallROI = totalSpent > 0 ? ((totalRevenue - totalSpent) / totalSpent * 100).toFixed(1) : 0;
+
+        document.getElementById('totalBudget').textContent = '₱' + totalBudget.toLocaleString('en-US', { minimumFractionDigits: 2 });
+        document.getElementById('activeCampaigns').textContent = activeCampaigns;
+        document.getElementById('activePromotions').textContent = activePromotions;
+        document.getElementById('avgDiscount').textContent = avgDiscount + '%';
+        
+        document.getElementById('totalCampaignsCount').textContent = campaigns.length + ' campaigns';
+        document.getElementById('totalSpentBadge').textContent = '₱' + totalSpent.toLocaleString() + ' spent';
+        
+        document.getElementById('metricTotalCampaigns').textContent = campaigns.length;
+        document.getElementById('metricTotalPromotions').textContent = promotions.length;
+        document.getElementById('metricTotalSpent').textContent = '₱' + totalSpent.toLocaleString();
+        document.getElementById('metricOverallROI').textContent = overallROI + '%';
+    }
+
+    function renderCharts() {
+        // Status Distribution Chart
+        const statusCounts = {
+            'Draft': campaigns.filter(c => c.status === 'Draft').length,
+            'Active': campaigns.filter(c => c.status === 'Active').length,
+            'Paused': campaigns.filter(c => c.status === 'Paused').length,
+            'Completed': campaigns.filter(c => c.status === 'Completed').length
+        };
+
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        if (statusChart) statusChart.destroy();
+        statusChart = new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(statusCounts),
+                datasets: [{
+                    data: Object.values(statusCounts),
+                    backgroundColor: ['#6B7280', '#10B981', '#F59E0B', '#008080'],
+                    borderWidth: 3,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 20, usePointStyle: true }
+                    }
+                },
+                cutout: '60%'
+            }
         });
 
-        async function loadMarketingAnalytics() {
-            try {
-                const [campaigns, promotions] = await Promise.all([
-                    API.get('/campaigns'),
-                    API.get('/promotions')
-                ]);
-
-                // Calculate stats
-                const totalBudget = campaigns.reduce((sum, c) => sum + (c.budget || 0), 0);
-                const activeCampaigns = campaigns.filter(c => c.status === 'Active').length;
-                const activePromotions = promotions.filter(p => p.isActive).length;
-                const discounts = promotions.filter(p => p.discountPercentage).map(p => p.discountPercentage);
-                const avgDiscount = discounts.length > 0 ? (discounts.reduce((a, b) => a + b, 0) / discounts.length).toFixed(0) : 0;
-
-                // Update stats
-                document.getElementById('totalBudget').textContent = Format.currency(totalBudget);
-                document.getElementById('activeCampaigns').textContent = activeCampaigns;
-                document.getElementById('activePromotions').textContent = activePromotions;
-                document.getElementById('avgDiscount').textContent = avgDiscount + '%';
-
-                // Status distribution chart
-                const statusCounts = { 'Draft': 0, 'Active': 0, 'Paused': 0, 'Completed': 0 };
-                campaigns.forEach(c => {
-                    if (statusCounts.hasOwnProperty(c.status)) statusCounts[c.status]++;
-                });
-
-                const channelCtx = document.getElementById('channelChart').getContext('2d');
-                if (channelChart) channelChart.destroy();
-                channelChart = new Chart(channelCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: Object.keys(statusCounts),
-                        datasets: [{
-                            data: Object.values(statusCounts),
-                            backgroundColor: ['#6B7280', '#10B981', '#F59E0B', '#008080'],
-                            borderWidth: 2,
-                            borderColor: '#fff'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { position: 'bottom' } }
-                    }
-                });
-
-                // Budget chart
-                const budgetData = campaigns.slice(0, 5).map(c => ({ name: c.name, budget: c.budget || 0 }));
-                const roiCtx = document.getElementById('roiChart').getContext('2d');
-                if (roiChart) roiChart.destroy();
-                roiChart = new Chart(roiCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: budgetData.map(c => c.name.substring(0, 15) + (c.name.length > 15 ? '...' : '')),
-                        datasets: [{
-                            label: 'Budget',
-                            data: budgetData.map(c => c.budget),
-                            backgroundColor: '#008080',
-                            borderRadius: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: { 
-                            y: { 
-                                beginAtZero: true, 
-                                ticks: { callback: value => '₱' + (value / 1000).toFixed(0) + 'k' }
-                            }
+        // Budget Chart
+        const topBudgetCampaigns = campaigns.sort((a, b) => (b.budget || 0) - (a.budget || 0)).slice(0, 5);
+        const budgetCtx = document.getElementById('budgetChart').getContext('2d');
+        if (budgetChart) budgetChart.destroy();
+        budgetChart = new Chart(budgetCtx, {
+            type: 'bar',
+            data: {
+                labels: topBudgetCampaigns.map(c => (c.campaignName || 'Unknown').substring(0, 15)),
+                datasets: [{
+                    label: 'Budget',
+                    data: topBudgetCampaigns.map(c => c.budget || 0),
+                    backgroundColor: 'rgba(0, 128, 128, 0.8)',
+                    borderColor: '#008080',
+                    borderWidth: 1,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => '₱' + (value / 1000).toFixed(0) + 'k'
                         }
-                    }
-                });
-            } catch (error) {
-                console.error('Failed to load marketing analytics:', error);
-                Toast.error('Failed to load marketing analytics');
+                    },
+                    x: { grid: { display: false } }
+                }
             }
+        });
+
+        // ROI Chart
+        const roiData = campaigns.filter(c => c.budget > 0).slice(0, 6);
+        const roiCtx = document.getElementById('roiChart').getContext('2d');
+        if (roiChart) roiChart.destroy();
+        roiChart = new Chart(roiCtx, {
+            type: 'line',
+            data: {
+                labels: roiData.map(c => (c.campaignName || 'Campaign').substring(0, 12)),
+                datasets: [
+                    {
+                        label: 'Budget',
+                        data: roiData.map(c => c.budget || 0),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Spent',
+                        data: roiData.map(c => c.actualSpend || 0),
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Revenue',
+                        data: roiData.map(c => c.revenue || 0),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { usePointStyle: true }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: value => '₱' + (value / 1000).toFixed(0) + 'k'
+                        }
+                    },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    function renderTopPerformers() {
+        // Top Campaigns by ROI
+        const topCampaigns = campaigns
+            .map(c => ({
+                ...c,
+                roi: c.actualSpend > 0 ? ((c.revenue - c.actualSpend) / c.actualSpend * 100) : 0
+            }))
+            .sort((a, b) => b.roi - a.roi)
+            .slice(0, 5);
+
+        const campaignsList = document.getElementById('topCampaignsList');
+        if (topCampaigns.length === 0) {
+            campaignsList.innerHTML = '<div class="list-group-item text-center py-4 text-muted">No campaigns found</div>';
+        } else {
+            campaignsList.innerHTML = topCampaigns.map((c, i) => `
+                <div class="list-group-item">
+                    <div class="rank">${i + 1}</div>
+                    <div class="item-info">
+                        <div class="item-name">${c.campaignName || 'Unknown Campaign'}</div>
+                        <div class="item-meta">${c.type || 'General'} • ${c.status}</div>
+                    </div>
+                    <div class="item-value">${c.roi.toFixed(1)}% ROI</div>
+                </div>
+            `).join('');
         }
-    </script>
+
+        // Top Promotions by Usage
+        const topPromotions = promotions
+            .sort((a, b) => (b.timesUsed || 0) - (a.timesUsed || 0))
+            .slice(0, 5);
+
+        const promotionsList = document.getElementById('topPromotionsList');
+        if (topPromotions.length === 0) {
+            promotionsList.innerHTML = '<div class="list-group-item text-center py-4 text-muted">No promotions found</div>';
+        } else {
+            promotionsList.innerHTML = topPromotions.map((p, i) => `
+                <div class="list-group-item">
+                    <div class="rank">${i + 1}</div>
+                    <div class="item-info">
+                        <div class="item-name">${p.promotionName || 'Unknown Promotion'}</div>
+                        <div class="item-meta">${p.promotionCode} • ${p.discountType === 'Percentage' ? p.discountValue + '%' : '₱' + p.discountValue}</div>
+                    </div>
+                    <div class="item-value">${p.timesUsed || 0} uses</div>
+                </div>
+            `).join('');
+        }
+    }
+
+    function exportReport() {
+        Toast.success('Generating report... This feature will be available soon.');
+    }
+</script>
 }

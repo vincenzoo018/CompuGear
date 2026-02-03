@@ -140,6 +140,7 @@ namespace CompuGear.Controllers
                         p.PromotionCode,
                         p.PromotionName,
                         p.Description,
+                        p.ImageUrl,
                         p.DiscountType,
                         p.DiscountValue,
                         p.MinOrderAmount,
@@ -220,6 +221,7 @@ namespace CompuGear.Controllers
                 existing.PromotionCode = promotion.PromotionCode;
                 existing.PromotionName = promotion.PromotionName;
                 existing.Description = promotion.Description;
+                existing.ImageUrl = promotion.ImageUrl;
                 existing.DiscountType = promotion.DiscountType;
                 existing.DiscountValue = promotion.DiscountValue;
                 existing.MinOrderAmount = promotion.MinOrderAmount;
@@ -733,6 +735,263 @@ namespace CompuGear.Controllers
             catch (Exception)
             {
                 return Ok(new List<object>());
+            }
+        }
+
+        [HttpPost("stock-alerts")]
+        public async Task<IActionResult> CreateStockAlert([FromBody] StockAlertRequest request)
+        {
+            try
+            {
+                // Check if alert already exists for this product
+                var existingAlert = await _context.StockAlerts
+                    .FirstOrDefaultAsync(a => a.ProductId == request.ProductId && !a.IsResolved);
+
+                if (existingAlert != null)
+                {
+                    // Update existing alert
+                    existingAlert.CurrentStock = request.CurrentStock;
+                    existingAlert.AlertType = request.AlertType;
+                    await _context.SaveChangesAsync();
+                    return Ok(new { success = true, message = "Alert updated", alertId = existingAlert.AlertId });
+                }
+
+                // Create new alert
+                var alert = new StockAlert
+                {
+                    ProductId = request.ProductId,
+                    AlertType = request.AlertType,
+                    CurrentStock = request.CurrentStock,
+                    ThresholdLevel = request.ThresholdLevel,
+                    IsResolved = false,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.StockAlerts.Add(alert);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Stock alert created", alertId = alert.AlertId });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
+            }
+        }
+
+        [HttpPut("stock-alerts/{id}/resolve")]
+        public async Task<IActionResult> ResolveStockAlert(int id)
+        {
+            try
+            {
+                var alert = await _context.StockAlerts.FindAsync(id);
+                if (alert == null)
+                    return NotFound(new { success = false, message = "Alert not found" });
+
+                alert.IsResolved = true;
+                alert.ResolvedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Alert resolved" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        #endregion
+
+        #region Purchase Orders
+
+        [HttpGet("purchase-orders")]
+        public async Task<IActionResult> GetPurchaseOrders()
+        {
+            try
+            {
+                var orders = await _context.PurchaseOrders
+                    .Include(po => po.Supplier)
+                    .Include(po => po.Items)
+                    .OrderByDescending(po => po.OrderDate)
+                    .Select(po => new
+                    {
+                        po.PurchaseOrderId,
+                        PoNumber = "PO-" + po.PurchaseOrderId.ToString("D4"),
+                        po.SupplierId,
+                        SupplierName = po.Supplier != null ? po.Supplier.SupplierName : "",
+                        po.OrderDate,
+                        po.ExpectedDeliveryDate,
+                        po.Status,
+                        po.TotalAmount,
+                        po.Notes,
+                        ItemCount = po.Items.Count
+                    })
+                    .ToListAsync();
+
+                return Ok(orders);
+            }
+            catch (Exception)
+            {
+                return Ok(new List<object>());
+            }
+        }
+
+        [HttpPost("purchase-orders")]
+        public async Task<IActionResult> CreatePurchaseOrder([FromBody] PurchaseOrderRequest request)
+        {
+            try
+            {
+                var purchaseOrder = new PurchaseOrder
+                {
+                    SupplierId = request.SupplierId,
+                    OrderDate = DateTime.Parse(request.OrderDate),
+                    ExpectedDeliveryDate = !string.IsNullOrEmpty(request.ExpectedDelivery) ? DateTime.Parse(request.ExpectedDelivery) : null,
+                    Status = "Pending",
+                    Notes = request.Notes,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                decimal totalAmount = 0;
+                purchaseOrder.Items = new List<PurchaseOrderItem>();
+
+                foreach (var item in request.Items)
+                {
+                    var product = await _context.Products.FindAsync(item.ProductId);
+                    var unitPrice = item.UnitPrice > 0 ? item.UnitPrice : (product?.CostPrice ?? 0);
+                    var subtotal = unitPrice * item.Quantity;
+                    totalAmount += subtotal;
+
+                    purchaseOrder.Items.Add(new PurchaseOrderItem
+                    {
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        UnitPrice = unitPrice,
+                        Subtotal = subtotal
+                    });
+                }
+
+                purchaseOrder.TotalAmount = totalAmount;
+
+                _context.PurchaseOrders.Add(purchaseOrder);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { 
+                    success = true, 
+                    message = "Purchase order created successfully",
+                    purchaseOrderId = purchaseOrder.PurchaseOrderId
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
+            }
+        }
+
+        [HttpPut("purchase-orders/{id}/approve")]
+        public async Task<IActionResult> ApprovePurchaseOrder(int id)
+        {
+            try
+            {
+                var order = await _context.PurchaseOrders.FindAsync(id);
+                if (order == null)
+                    return NotFound(new { success = false, message = "Purchase order not found" });
+
+                order.Status = "Approved";
+                order.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Purchase order approved" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut("purchase-orders/{id}/ship")]
+        public async Task<IActionResult> ShipPurchaseOrder(int id)
+        {
+            try
+            {
+                var order = await _context.PurchaseOrders.FindAsync(id);
+                if (order == null)
+                    return NotFound(new { success = false, message = "Purchase order not found" });
+
+                order.Status = "Shipped";
+                order.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Purchase order marked as shipped" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut("purchase-orders/{id}/complete")]
+        public async Task<IActionResult> CompletePurchaseOrder(int id)
+        {
+            try
+            {
+                var order = await _context.PurchaseOrders
+                    .Include(po => po.Items)
+                    .FirstOrDefaultAsync(po => po.PurchaseOrderId == id);
+
+                if (order == null)
+                    return NotFound(new { success = false, message = "Purchase order not found" });
+
+                // Update stock levels for each item
+                foreach (var item in order.Items)
+                {
+                    var product = await _context.Products.FindAsync(item.ProductId);
+                    if (product != null)
+                    {
+                        var previousStock = product.StockQuantity;
+                        product.StockQuantity += item.Quantity;
+                        product.UpdatedAt = DateTime.UtcNow;
+
+                        // Create inventory transaction
+                        _context.InventoryTransactions.Add(new InventoryTransaction
+                        {
+                            ProductId = item.ProductId,
+                            TransactionType = "Stock In",
+                            Quantity = item.Quantity,
+                            PreviousStock = previousStock,
+                            NewStock = product.StockQuantity,
+                            UnitCost = item.UnitPrice,
+                            TotalCost = item.Subtotal,
+                            ReferenceType = "Purchase Order",
+                            ReferenceId = order.PurchaseOrderId,
+                            Notes = $"From PO-{order.PurchaseOrderId:D4}",
+                            TransactionDate = DateTime.UtcNow
+                        });
+
+                        // Resolve any stock alerts for this product
+                        var alerts = await _context.StockAlerts
+                            .Where(a => a.ProductId == item.ProductId && !a.IsResolved)
+                            .ToListAsync();
+
+                        foreach (var alert in alerts)
+                        {
+                            if (product.StockQuantity > alert.ThresholdLevel)
+                            {
+                                alert.IsResolved = true;
+                                alert.ResolvedAt = DateTime.UtcNow;
+                            }
+                        }
+                    }
+                }
+
+                order.Status = "Completed";
+                order.ActualDeliveryDate = DateTime.UtcNow;
+                order.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Purchase order completed and stock updated" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
             }
         }
 
@@ -1942,6 +2201,30 @@ namespace CompuGear.Controllers
         public string AdjustmentType { get; set; } = "Add"; // "Add" or "Deduct"
         public int Quantity { get; set; }
         public string? Notes { get; set; }
+    }
+
+    public class StockAlertRequest
+    {
+        public int ProductId { get; set; }
+        public string AlertType { get; set; } = "Low Stock";
+        public int CurrentStock { get; set; }
+        public int ThresholdLevel { get; set; } = 15;
+    }
+
+    public class PurchaseOrderRequest
+    {
+        public int SupplierId { get; set; }
+        public string OrderDate { get; set; } = string.Empty;
+        public string? ExpectedDelivery { get; set; }
+        public string? Notes { get; set; }
+        public List<PurchaseOrderItemRequest> Items { get; set; } = new();
+    }
+
+    public class PurchaseOrderItemRequest
+    {
+        public int ProductId { get; set; }
+        public int Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
     }
 
 }

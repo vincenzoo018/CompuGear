@@ -373,14 +373,21 @@
             
             const discountDisplay = promo.discountType === 'Percentage' 
                 ? `${promo.discountValue}% OFF`
-                : `₱${promo.discountValue} OFF`;
+                : promo.discountType === 'FreeShipping'
+                    ? 'FREE SHIPPING'
+                    : `₱${promo.discountValue} OFF`;
             
             const endDate = new Date(promo.endDate);
             const daysLeft = Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24));
 
+            // Image display - use uploaded image or gradient fallback
+            const headerStyle = promo.imageUrl 
+                ? `background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), url('${promo.imageUrl}'); background-size: cover; background-position: center; min-height: 180px;`
+                : '';
+
             return `
                 <div class="promo-card">
-                    <div class="promo-header ${headerClass}">
+                    <div class="promo-header ${headerClass}" style="${headerStyle}">
                         <span class="promo-badge">${daysLeft > 0 ? `${daysLeft} days left` : 'Ending soon!'}</span>
                         <div class="promo-discount">${discountDisplay}</div>
                         <div class="promo-name">${promo.promotionName}</div>
@@ -400,8 +407,8 @@
                         </div>
                     </div>
                     <div class="promo-footer">
-                        ${promo.minimumPurchase > 0 
-                            ? `<span class="min-purchase">Min. purchase: ₱${promo.minimumPurchase.toLocaleString()}</span>` 
+                        ${promo.minOrderAmount > 0 
+                            ? `<span class="min-purchase">Min. purchase: ₱${promo.minOrderAmount.toLocaleString()}</span>` 
                             : '<span class="min-purchase">No minimum purchase</span>'}
                         <a href="/CustomerPortal/Products" class="shop-btn">Shop Now →</a>
                     </div>

@@ -169,6 +169,9 @@ namespace CompuGear.Models
         [StringLength(500)]
         public string? Description { get; set; }
 
+        [StringLength(500)]
+        public string? ImageUrl { get; set; }
+
         [Required]
         [StringLength(20)]
         public string DiscountType { get; set; } = string.Empty;

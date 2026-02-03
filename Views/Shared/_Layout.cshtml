@@ -253,13 +253,37 @@
                             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
                         </svg>
                     </button>
-                    <button class="topbar-btn" title="Notifications">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                        </svg>
-                        <span class="topbar-badge"></span>
-                    </button>
+                    
+                    <!-- Notifications Dropdown -->
+                    <div class="dropdown">
+                        <button class="topbar-btn position-relative" title="Notifications" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                            </svg>
+                            <span class="topbar-badge notification-badge" id="notificationBadge"></span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end shadow notification-dropdown" aria-labelledby="notificationDropdown" style="width: 360px; max-height: 400px; overflow-y: auto;">
+                            <div class="dropdown-header d-flex justify-content-between align-items-center py-2">
+                                <strong>Notifications</strong>
+                                <a href="#" class="text-primary text-decoration-none small" onclick="markAllRead()">Mark all read</a>
+                            </div>
+                            <div class="dropdown-divider m-0"></div>
+                            <div id="notificationList">
+                                <div class="text-center py-4 text-muted">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mb-2">
+                                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                                    </svg>
+                                    <p class="mb-0">No new notifications</p>
+                                </div>
+                            </div>
+                            <div class="dropdown-divider m-0"></div>
+                            <a href="/Inventory/Alerts" class="dropdown-item text-center py-2 text-primary">
+                                View All Alerts
+                            </a>
+                        </div>
+                    </div>
 
                     <div class="topbar-divider"></div>
 

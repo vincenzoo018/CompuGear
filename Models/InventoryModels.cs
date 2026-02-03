@@ -382,5 +382,68 @@ namespace CompuGear.Models
 
         // Navigation Properties
         public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+        public virtual ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();
+    }
+
+    public class PurchaseOrder
+    {
+        [Key]
+        public int PurchaseOrderId { get; set; }
+
+        [Required]
+        public int SupplierId { get; set; }
+
+        [Required]
+        public DateTime OrderDate { get; set; } = DateTime.UtcNow;
+
+        public DateTime? ExpectedDeliveryDate { get; set; }
+
+        public DateTime? ActualDeliveryDate { get; set; }
+
+        [StringLength(20)]
+        public string Status { get; set; } = "Pending"; // Pending, Approved, Shipped, Completed, Cancelled
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal TotalAmount { get; set; }
+
+        public string? Notes { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime? UpdatedAt { get; set; }
+
+        // Navigation Properties
+        [ForeignKey("SupplierId")]
+        public virtual Supplier? Supplier { get; set; }
+
+        public virtual ICollection<PurchaseOrderItem> Items { get; set; } = new List<PurchaseOrderItem>();
+    }
+
+    public class PurchaseOrderItem
+    {
+        [Key]
+        public int PurchaseOrderItemId { get; set; }
+
+        [Required]
+        public int PurchaseOrderId { get; set; }
+
+        [Required]
+        public int ProductId { get; set; }
+
+        [Required]
+        public int Quantity { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal UnitPrice { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Subtotal { get; set; }
+
+        // Navigation Properties
+        [ForeignKey("PurchaseOrderId")]
+        public virtual PurchaseOrder? PurchaseOrder { get; set; }
+
+        [ForeignKey("ProductId")]
+        public virtual Product? Product { get; set; }
     }
 }

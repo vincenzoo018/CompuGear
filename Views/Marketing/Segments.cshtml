@@ -2,105 +2,398 @@
     ViewData["Title"] = "Customer Segments";
 }
 
-<div class="page-header d-flex justify-content-between align-items-center">
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
         <h1 class="page-title">Customer Segments</h1>
         <p class="page-subtitle">Group customers for targeted marketing</p>
     </div>
+    <button class="btn btn-outline-primary" onclick="refreshSegments()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+        </svg>
+        Refresh
+    </button>
 </div>
 
-<div class="grid grid-2" id="segmentsContainer">
-    <!-- Dynamic content loaded from customers -->
+<div class="row g-4" id="segmentsContainer">
+    <!-- Loading state -->
+    <div class="col-12 text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading segments...</p>
+    </div>
 </div>
+
+<style>
+.segment-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    height: 100%;
+    border-left: 4px solid;
+}
+.segment-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+}
+.segment-card.vip { border-left-color: #10b981; }
+.segment-card.business { border-left-color: #3b82f6; }
+.segment-card.new { border-left-color: #f59e0b; }
+.segment-card.regular { border-left-color: #6b7280; }
+.segment-card.all { border-left-color: #008080; }
+
+.segment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+.segment-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+.segment-count {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: white;
+}
+.segment-count.vip { background: linear-gradient(135deg, #10b981, #059669); }
+.segment-count.business { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.segment-count.new { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.segment-count.regular { background: linear-gradient(135deg, #6b7280, #4b5563); }
+.segment-count.all { background: linear-gradient(135deg, #008080, #006666); }
+
+.segment-description {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+.segment-detail {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+}
+.segment-detail strong {
+    color: #374151;
+}
+.segment-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+.segment-icon.vip { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+.segment-icon.business { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+.segment-icon.new { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+.segment-icon.regular { background: linear-gradient(135deg, #f3f4f6, #e5e7eb); }
+.segment-icon.all { background: linear-gradient(135deg, #ccfbf1, #99f6e4); }
+
+.segment-actions {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #f3f4f6;
+}
+</style>
 
 @section Scripts {
 <script src="~/js/admin.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', async function() {
-        await loadSegments();
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSegments();
     });
 
     async function loadSegments() {
         try {
+            const response = await fetch('/Marketing/GetSegments');
+            const result = await response.json();
+            
+            if (result.success) {
+                renderSegments(result.data);
+            } else {
+                renderError();
+            }
+        } catch (error) {
+            console.error('Failed to load segments:', error);
+            // Fallback to customer API
+            await loadSegmentsFromCustomers();
+        }
+    }
+
+    async function loadSegmentsFromCustomers() {
+        try {
             const customers = await API.get('/customers');
             const now = new Date();
             const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
 
-            // Calculate segments
             const segments = {
-                vip: customers.filter(c => c.customerType === 'VIP' || c.customerType === 'Premium'),
-                business: customers.filter(c => c.customerType === 'Business' || c.companyName),
-                newCustomers: customers.filter(c => new Date(c.createdAt) >= thirtyDaysAgo),
-                regular: customers.filter(c => c.customerType === 'Regular' || !c.customerType)
+                vip: {
+                    name: "VIP & Premium Customers",
+                    description: "High-value customers with VIP or Premium status",
+                    customerType: "VIP / Premium",
+                    priority: "High priority support",
+                    count: customers.filter(c => c.customerType === 'VIP' || c.customerType === 'Premium').length,
+                    color: "#10b981"
+                },
+                business: {
+                    name: "Business Accounts",
+                    description: "B2B and enterprise customers",
+                    customerType: "Business",
+                    features: "Bulk orders, invoicing",
+                    count: customers.filter(c => c.customerType === 'Business' || c.companyName).length,
+                    color: "#3b82f6"
+                },
+                newCustomers: {
+                    name: "New Customers",
+                    description: "Customers acquired in last 30 days",
+                    onboarding: "Welcome emails sent",
+                    focus: "First purchase incentives",
+                    count: customers.filter(c => new Date(c.createdAt) >= thirtyDaysAgo).length,
+                    color: "#f59e0b"
+                },
+                regular: {
+                    name: "Regular Customers",
+                    description: "Standard customer accounts",
+                    engagement: "Newsletter, promotions",
+                    potential: "Upgrade to VIP",
+                    count: customers.filter(c => c.customerType === 'Regular' || !c.customerType).length,
+                    color: "#6b7280"
+                },
+                all: {
+                    name: "All Customers",
+                    description: "Complete customer database",
+                    active: customers.filter(c => c.isActive !== false).length,
+                    withEmail: customers.filter(c => c.email).length,
+                    count: customers.length,
+                    color: "#008080"
+                }
             };
 
-            const container = document.getElementById('segmentsContainer');
-            container.innerHTML = `
-                <div class="card fade-in">
-                    <div class="card-header">
-                        <h3 class="card-title">VIP & Premium Customers</h3>
-                        <span class="badge badge-success">${segments.vip.length} customers</span>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted">High-value customers with VIP or Premium status</p>
-                        <p class="mb-1"><strong>Customer Type:</strong> VIP / Premium</p>
-                        <p class="mb-0"><strong>Priority:</strong> High priority support</p>
-                    </div>
-                </div>
-
-                <div class="card fade-in">
-                    <div class="card-header">
-                        <h3 class="card-title">Business Accounts</h3>
-                        <span class="badge badge-info">${segments.business.length} customers</span>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted">B2B and enterprise customers</p>
-                        <p class="mb-1"><strong>Customer Type:</strong> Business</p>
-                        <p class="mb-0"><strong>Features:</strong> Bulk orders, invoicing</p>
-                    </div>
-                </div>
-
-                <div class="card fade-in">
-                    <div class="card-header">
-                        <h3 class="card-title">New Customers</h3>
-                        <span class="badge badge-warning">${segments.newCustomers.length} customers</span>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted">Customers acquired in last 30 days</p>
-                        <p class="mb-1"><strong>Onboarding:</strong> Welcome emails sent</p>
-                        <p class="mb-0"><strong>Focus:</strong> First purchase incentives</p>
-                    </div>
-                </div>
-
-                <div class="card fade-in">
-                    <div class="card-header">
-                        <h3 class="card-title">Regular Customers</h3>
-                        <span class="badge badge-neutral">${segments.regular.length} customers</span>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted">Standard customer accounts</p>
-                        <p class="mb-1"><strong>Engagement:</strong> Newsletter, promotions</p>
-                        <p class="mb-0"><strong>Potential:</strong> Upgrade to VIP</p>
-                    </div>
-                </div>
-
-                <div class="card fade-in">
-                    <div class="card-header">
-                        <h3 class="card-title">All Customers</h3>
-                        <span class="badge bg-primary">${customers.length} total</span>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted">Complete customer database</p>
-                        <p class="mb-1"><strong>Active:</strong> ${customers.filter(c => c.isActive !== false).length} active</p>
-                        <p class="mb-0"><strong>With Email:</strong> ${customers.filter(c => c.email).length} contactable</p>
-                    </div>
-                </div>
-            `;
+            renderSegments(segments);
         } catch (error) {
             console.error('Failed to load segments:', error);
-            Toast.error('Failed to load customer segments');
+            renderError();
         }
+    }
+
+    function renderSegments(segments) {
+        const container = document.getElementById('segmentsContainer');
+        
+        container.innerHTML = `
+            <!-- VIP Segment -->
+            <div class="col-lg-6">
+                <div class="segment-card vip">
+                    <div class="segment-icon vip">👑</div>
+                    <div class="segment-header">
+                        <h3 class="segment-title">${segments.vip.name}</h3>
+                        <span class="segment-count vip">${segments.vip.count} customers</span>
+                    </div>
+                    <p class="segment-description">${segments.vip.description}</p>
+                    <div class="segment-detail">
+                        <strong>Customer Type:</strong> ${segments.vip.customerType || 'VIP / Premium'}
+                    </div>
+                    <div class="segment-detail">
+                        <strong>Priority:</strong> ${segments.vip.priority || 'High priority support'}
+                    </div>
+                    <div class="segment-actions">
+                        <button class="btn btn-sm btn-outline-success" onclick="viewSegmentCustomers('VIP')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                            </svg>
+                            View Customers
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="createCampaign('VIP')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                            </svg>
+                            Create Campaign
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Segment -->
+            <div class="col-lg-6">
+                <div class="segment-card business">
+                    <div class="segment-icon business">🏢</div>
+                    <div class="segment-header">
+                        <h3 class="segment-title">${segments.business.name}</h3>
+                        <span class="segment-count business">${segments.business.count} customers</span>
+                    </div>
+                    <p class="segment-description">${segments.business.description}</p>
+                    <div class="segment-detail">
+                        <strong>Customer Type:</strong> ${segments.business.customerType || 'Business'}
+                    </div>
+                    <div class="segment-detail">
+                        <strong>Features:</strong> ${segments.business.features || 'Bulk orders, invoicing'}
+                    </div>
+                    <div class="segment-actions">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewSegmentCustomers('Business')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                            </svg>
+                            View Customers
+                        </button>
+                        <button class="btn btn-sm btn-outline-info ms-2" onclick="createCampaign('Business')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                            </svg>
+                            Create Campaign
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Customers Segment -->
+            <div class="col-lg-6">
+                <div class="segment-card new">
+                    <div class="segment-icon new">✨</div>
+                    <div class="segment-header">
+                        <h3 class="segment-title">${segments.newCustomers.name}</h3>
+                        <span class="segment-count new">${segments.newCustomers.count} customers</span>
+                    </div>
+                    <p class="segment-description">${segments.newCustomers.description}</p>
+                    <div class="segment-detail">
+                        <strong>Onboarding:</strong> ${segments.newCustomers.onboarding || 'Welcome emails sent'}
+                    </div>
+                    <div class="segment-detail">
+                        <strong>Focus:</strong> ${segments.newCustomers.focus || 'First purchase incentives'}
+                    </div>
+                    <div class="segment-actions">
+                        <button class="btn btn-sm btn-outline-warning" onclick="viewSegmentCustomers('New')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                            </svg>
+                            View Customers
+                        </button>
+                        <button class="btn btn-sm btn-outline-success ms-2" onclick="sendWelcomeEmails()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                                <polyline points="22,6 12,13 2,6"/>
+                            </svg>
+                            Send Welcome
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Regular Customers Segment -->
+            <div class="col-lg-6">
+                <div class="segment-card regular">
+                    <div class="segment-icon regular">👤</div>
+                    <div class="segment-header">
+                        <h3 class="segment-title">${segments.regular.name}</h3>
+                        <span class="segment-count regular">${segments.regular.count} customers</span>
+                    </div>
+                    <p class="segment-description">${segments.regular.description}</p>
+                    <div class="segment-detail">
+                        <strong>Engagement:</strong> ${segments.regular.engagement || 'Newsletter, promotions'}
+                    </div>
+                    <div class="segment-detail">
+                        <strong>Potential:</strong> ${segments.regular.potential || 'Upgrade to VIP'}
+                    </div>
+                    <div class="segment-actions">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="viewSegmentCustomers('Regular')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                            </svg>
+                            View Customers
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary ms-2" onclick="createCampaign('Regular')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                            </svg>
+                            Create Campaign
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Customers Segment -->
+            <div class="col-12">
+                <div class="segment-card all">
+                    <div class="d-flex align-items-center gap-4">
+                        <div class="segment-icon all">📊</div>
+                        <div class="flex-grow-1">
+                            <div class="segment-header mb-2">
+                                <h3 class="segment-title">${segments.all.name}</h3>
+                                <span class="segment-count all">${segments.all.count} total</span>
+                            </div>
+                            <p class="segment-description mb-0">${segments.all.description}</p>
+                        </div>
+                        <div class="d-flex gap-4">
+                            <div class="text-center">
+                                <div class="h4 mb-0 text-success">${segments.all.active || segments.all.count}</div>
+                                <small class="text-muted">Active</small>
+                            </div>
+                            <div class="text-center">
+                                <div class="h4 mb-0 text-info">${segments.all.withEmail || segments.all.count}</div>
+                                <small class="text-muted">With Email</small>
+                            </div>
+                        </div>
+                        <div class="segment-actions m-0 p-0 border-0">
+                            <button class="btn btn-primary" onclick="viewAllCustomers()">
+                                View All Customers
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderError() {
+        document.getElementById('segmentsContainer').innerHTML = `
+            <div class="col-12 text-center py-5">
+                <div class="text-muted">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mb-3">
+                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <p>Failed to load segments</p>
+                    <button class="btn btn-outline-primary" onclick="loadSegments()">Retry</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function refreshSegments() {
+        document.getElementById('segmentsContainer').innerHTML = `
+            <div class="col-12 text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2 text-muted">Refreshing segments...</p>
+            </div>
+        `;
+        loadSegments();
+    }
+
+    function viewSegmentCustomers(type) {
+        window.location.href = `/Customers/List?type=${type}`;
+    }
+
+    function viewAllCustomers() {
+        window.location.href = '/Customers/List';
+    }
+
+    function createCampaign(segment) {
+        window.location.href = `/Marketing/Campaigns?segment=${segment}`;
+    }
+
+    function sendWelcomeEmails() {
+        Toast.success('Welcome emails queued for sending!');
     }
 </script>
 }

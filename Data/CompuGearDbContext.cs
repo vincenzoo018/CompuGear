@@ -35,6 +35,8 @@ namespace CompuGear.Data
         public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
         public DbSet<StockAlert> StockAlerts { get; set; }
         public DbSet<Supplier> Suppliers { get; set; }
+        public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
+        public DbSet<PurchaseOrderItem> PurchaseOrderItems { get; set; }
 
         // Sales Module
         public DbSet<Lead> Leads { get; set; }

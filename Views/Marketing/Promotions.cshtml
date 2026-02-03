@@ -7,10 +7,9 @@
         <h1 class="page-title">Promotions & Discounts</h1>
         <p class="page-subtitle">Create and manage promotions that can be deployed to the customer portal</p>
     </div>
-    <button class="btn btn-primary" onclick="Marketing.promotions.showModal()">
+    <button class="btn btn-primary" onclick="openCreateModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
         New Promotion
     </button>
@@ -103,7 +102,7 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <button class="btn btn-outline-secondary w-100" onclick="resetPromotionFilters()">
+                <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
                     </svg>
@@ -151,7 +150,7 @@
 
 <!-- Create/Edit Promotion Modal -->
 <div class="modal fade" id="promotionModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl-wide modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header modal-header-primary">
                 <h5 class="modal-title" id="promotionModalTitle">
@@ -165,6 +164,7 @@
             <form id="promotionForm" onsubmit="savePromotion(event)">
                 <div class="modal-body">
                     <input type="hidden" id="promotionId">
+                    <input type="hidden" id="promotionImageUrl">
                     
                     <div class="form-section">
                         <h6 class="form-section-title">
@@ -186,6 +186,46 @@
                             <div class="col-12">
                                 <label class="form-label">Description</label>
                                 <textarea class="form-control" id="promotionDescription" rows="2" placeholder="Brief description of this promotion"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image Upload Section -->
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                            </svg>
+                            Promotion Image
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <div class="image-upload-container" id="imageUploadContainer">
+                                    <input type="file" id="promotionImage" accept="image/*" onchange="previewImage(this)" class="d-none">
+                                    <div class="image-preview" id="imagePreview" onclick="document.getElementById('promotionImage').click()">
+                                        <div class="placeholder" id="imagePlaceholder">
+                                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5">
+                                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                                <polyline points="21 15 16 10 5 21"/>
+                                            </svg>
+                                            <p class="mb-0 mt-2">Click to upload image</p>
+                                            <small class="text-muted">JPG, PNG, GIF (max 5MB)</small>
+                                        </div>
+                                        <img id="previewImg" src="" alt="Preview" class="d-none">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="image-tips">
+                                    <h6 class="mb-2">📷 Image Tips</h6>
+                                    <ul class="small text-muted mb-0">
+                                        <li>Recommended: 800x400px</li>
+                                        <li>Square or 2:1 ratio</li>
+                                        <li>Max file size: 5MB</li>
+                                        <li>Show product or offer</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -252,7 +292,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" id="savePromotionBtn">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
                             <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                             <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
@@ -267,7 +307,7 @@
 
 <!-- View Promotion Modal -->
 <div class="modal fade" id="viewPromotionModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header modal-header-info">
                 <h5 class="modal-title">
@@ -279,7 +319,6 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="viewPromotionContent">
-                <!-- Content loaded dynamically -->
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -293,27 +332,415 @@
 .form-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
 .form-section-title { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: #008080; font-weight: 600; }
 .required::after { content: " *"; color: #dc3545; }
-.deploy-btn { transition: all 0.3s ease; }
+.deploy-btn { transition: all 0.3s ease; padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 500; }
 .deploy-btn:hover { transform: scale(1.05); }
-.deploy-btn.deployed { background: linear-gradient(135deg, #28a745, #20c997); }
-.deploy-btn.not-deployed { background: linear-gradient(135deg, #6c757d, #495057); }
+.deploy-btn.deployed { background: linear-gradient(135deg, #10b981, #059669); border: none; color: white; }
+.deploy-btn.not-deployed { background: linear-gradient(135deg, #6b7280, #4b5563); border: none; color: white; }
+
+.image-upload-container { width: 100%; }
+.image-preview {
+    width: 100%;
+    min-height: 200px;
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: #f9fafb;
+    overflow: hidden;
+}
+.image-preview:hover { border-color: #008080; background: #f0fdfa; }
+.image-preview .placeholder { text-align: center; padding: 20px; }
+.image-preview img { max-width: 100%; max-height: 200px; object-fit: contain; }
+.image-tips {
+    background: #f0f9ff;
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 4px solid #008080;
+}
+.image-tips ul { padding-left: 1rem; }
+
+.promo-image-cell {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: #f3f4f6;
+}
+.promo-image-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
 </style>
 
 @section Scripts {
 <script src="~/js/admin.js"></script>
 <script>
-    // Initialize on page load
+    let promotions = [];
+    let currentPromotionId = null;
+
     document.addEventListener('DOMContentLoaded', function() {
-        Marketing.promotions.load();
+        loadPromotions();
     });
 
-    // Save promotion
-    function savePromotion(event) {
-        event.preventDefault();
-        Marketing.promotions.save();
+    async function loadPromotions() {
+        try {
+            const response = await fetch('/api/promotions');
+            promotions = await response.json();
+            renderPromotions();
+            updateStats();
+        } catch (error) {
+            console.error('Failed to load promotions:', error);
+            Toast.error('Failed to load promotions');
+        }
     }
 
-    // Toggle discount value field based on type
+    function renderPromotions() {
+        const tbody = document.getElementById('promotionsTableBody');
+        
+        if (promotions.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No promotions found. Click "New Promotion" to create one.</td></tr>';
+            document.getElementById('promotionCount').textContent = '0 promotions';
+            return;
+        }
+
+        tbody.innerHTML = promotions.map(p => {
+            const imageHtml = p.imageUrl 
+                ? `<img src="${p.imageUrl}" alt="${p.promotionName}" class="promo-image-cell">`
+                : `<div class="promo-image-placeholder">🎁</div>`;
+            
+            const discountDisplay = p.discountType === 'Percentage' 
+                ? `${p.discountValue}%` 
+                : p.discountType === 'FreeShipping' 
+                    ? '<span class="badge bg-warning text-dark">Free Shipping</span>'
+                    : `₱${p.discountValue.toLocaleString()}`;
+
+            return `
+                <tr data-deployed="${p.isActive}">
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            ${imageHtml}
+                            <div>
+                                <div class="fw-semibold">${p.promotionName}</div>
+                                <code class="small bg-light px-2 py-1 rounded">${p.promotionCode}</code>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge bg-info">${p.discountType}</span></td>
+                    <td class="text-end fw-semibold text-success">${discountDisplay}</td>
+                    <td>
+                        <div>${formatDate(p.startDate)}</div>
+                        <small class="text-muted">to ${formatDate(p.endDate)}</small>
+                    </td>
+                    <td class="text-center">${p.timesUsed || 0} / ${p.usageLimit || '∞'}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm deploy-btn ${p.isActive ? 'deployed' : 'not-deployed'}" 
+                                onclick="toggleDeployment(${p.promotionId})"
+                                title="${p.isActive ? 'Currently visible to customers - Click to hide' : 'Hidden from customers - Click to deploy'}">
+                            ${p.isActive ? '👁️ Deployed' : '🙈 Deploy'}
+                        </button>
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewPromotion(${p.promotionId})" title="View">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                </svg>
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="editPromotion(${p.promotionId})" title="Edit">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deletePromotion(${p.promotionId})" title="Delete">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        document.getElementById('promotionCount').textContent = promotions.length + ' promotions';
+    }
+
+    function updateStats() {
+        const total = promotions.length;
+        const active = promotions.filter(p => p.isActive).length;
+        const deployed = promotions.filter(p => p.isShowInCustomer).length;
+        const totalUsage = promotions.reduce((sum, p) => sum + (p.timesUsed || 0), 0);
+
+        document.getElementById('totalPromotions').textContent = total;
+        document.getElementById('activePromotions').textContent = active;
+        document.getElementById('deployedPromotions').textContent = deployed;
+        document.getElementById('totalUsage').textContent = totalUsage;
+    }
+
+    function openCreateModal() {
+        currentPromotionId = null;
+        document.getElementById('promotionForm').reset();
+        document.getElementById('promotionId').value = '';
+        document.getElementById('promotionImageUrl').value = '';
+        document.getElementById('promotionModalTitle').innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                <polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/>
+            </svg>
+            New Promotion`;
+        
+        document.getElementById('previewImg').classList.add('d-none');
+        document.getElementById('imagePlaceholder').classList.remove('d-none');
+        document.getElementById('previewImg').src = '';
+        
+        const modal = new bootstrap.Modal(document.getElementById('promotionModal'));
+        modal.show();
+    }
+
+    function editPromotion(id) {
+        const p = promotions.find(promo => promo.promotionId === id);
+        if (!p) return;
+
+        currentPromotionId = id;
+        document.getElementById('promotionId').value = p.promotionId;
+        document.getElementById('promotionCode').value = p.promotionCode;
+        document.getElementById('promotionName').value = p.promotionName;
+        document.getElementById('promotionDescription').value = p.description || '';
+        document.getElementById('promotionImageUrl').value = p.imageUrl || '';
+        document.getElementById('discountType').value = p.discountType;
+        document.getElementById('discountValue').value = p.discountValue;
+        document.getElementById('minOrderAmount').value = p.minOrderAmount || '';
+        document.getElementById('maxDiscount').value = p.maxDiscountAmount || '';
+        document.getElementById('promotionStartDate').value = p.startDate?.split('T')[0] || '';
+        document.getElementById('promotionEndDate').value = p.endDate?.split('T')[0] || '';
+        document.getElementById('usageLimit').value = p.usageLimit || '';
+        
+        document.getElementById('promotionModalTitle').innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            Edit Promotion`;
+
+        if (p.imageUrl) {
+            document.getElementById('previewImg').src = p.imageUrl;
+            document.getElementById('previewImg').classList.remove('d-none');
+            document.getElementById('imagePlaceholder').classList.add('d-none');
+        } else {
+            document.getElementById('previewImg').classList.add('d-none');
+            document.getElementById('imagePlaceholder').classList.remove('d-none');
+        }
+
+        toggleDiscountFields();
+        
+        const modal = new bootstrap.Modal(document.getElementById('promotionModal'));
+        modal.show();
+    }
+
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            
+            if (file.size > 5 * 1024 * 1024) {
+                Toast.error('Image size must be less than 5MB');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('previewImg').classList.remove('d-none');
+                document.getElementById('imagePlaceholder').classList.add('d-none');
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    async function uploadImage() {
+        const fileInput = document.getElementById('promotionImage');
+        if (!fileInput.files || !fileInput.files[0]) {
+            return document.getElementById('promotionImageUrl').value || null;
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        try {
+            const response = await fetch('/Marketing/UploadPromotionImage', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                return result.imageUrl;
+            } else {
+                Toast.error(result.message || 'Failed to upload image');
+                return null;
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            return null;
+        }
+    }
+
+    async function savePromotion(event) {
+        event.preventDefault();
+        
+        const btn = document.getElementById('savePromotionBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+
+        try {
+            const imageUrl = await uploadImage();
+            
+            const id = document.getElementById('promotionId').value;
+            const data = {
+                promotionCode: document.getElementById('promotionCode').value.toUpperCase(),
+                promotionName: document.getElementById('promotionName').value,
+                description: document.getElementById('promotionDescription').value,
+                imageUrl: imageUrl,
+                discountType: document.getElementById('discountType').value,
+                discountValue: parseFloat(document.getElementById('discountValue').value) || 0,
+                minOrderAmount: parseFloat(document.getElementById('minOrderAmount').value) || 0,
+                maxDiscountAmount: parseFloat(document.getElementById('maxDiscount').value) || null,
+                startDate: document.getElementById('promotionStartDate').value,
+                endDate: document.getElementById('promotionEndDate').value,
+                usageLimit: parseInt(document.getElementById('usageLimit').value) || null,
+                isActive: true
+            };
+
+            const url = id ? `/api/promotions/${id}` : '/api/promotions';
+            const method = id ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            
+            if (result.success || response.ok) {
+                Toast.success(id ? 'Promotion updated successfully!' : 'Promotion created successfully!');
+                bootstrap.Modal.getInstance(document.getElementById('promotionModal')).hide();
+                loadPromotions();
+            } else {
+                Toast.error(result.message || 'Failed to save promotion');
+            }
+        } catch (error) {
+            console.error('Save error:', error);
+            Toast.error('An error occurred while saving');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                </svg>
+                Save Promotion`;
+        }
+    }
+
+    async function toggleDeployment(id) {
+        try {
+            const response = await fetch(`/api/promotions/${id}/toggle`, { method: 'PUT' });
+            const result = await response.json();
+            
+            if (result.success) {
+                Toast.success(result.isActive ? 'Promotion deployed to customers!' : 'Promotion hidden from customers');
+                loadPromotions();
+            } else {
+                Toast.error(result.message || 'Failed to toggle visibility');
+            }
+        } catch (error) {
+            Toast.error('An error occurred');
+        }
+    }
+
+    function viewPromotion(id) {
+        const p = promotions.find(promo => promo.promotionId === id);
+        if (!p) return;
+
+        const imageHtml = p.imageUrl 
+            ? `<img src="${p.imageUrl}" alt="${p.promotionName}" class="w-100 rounded-3 mb-3" style="max-height: 200px; object-fit: cover;">`
+            : '';
+
+        document.getElementById('viewPromotionContent').innerHTML = `
+            ${imageHtml}
+            <div class="mb-3">
+                <h5 class="fw-bold">${p.promotionName}</h5>
+                <code class="bg-light px-3 py-2 rounded d-inline-block">${p.promotionCode}</code>
+            </div>
+            <p class="text-muted">${p.description || 'No description'}</p>
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="detail-card p-3 bg-light rounded">
+                        <small class="text-muted">Discount</small>
+                        <div class="fw-bold text-success fs-5">
+                            ${p.discountType === 'Percentage' ? p.discountValue + '%' : 
+                              p.discountType === 'FreeShipping' ? 'Free Shipping' : '₱' + p.discountValue.toLocaleString()}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="detail-card p-3 bg-light rounded">
+                        <small class="text-muted">Usage</small>
+                        <div class="fw-bold fs-5">${p.timesUsed || 0} / ${p.usageLimit || '∞'}</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="detail-card p-3 bg-light rounded">
+                        <small class="text-muted">Start Date</small>
+                        <div class="fw-bold">${formatDate(p.startDate)}</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="detail-card p-3 bg-light rounded">
+                        <small class="text-muted">End Date</small>
+                        <div class="fw-bold">${formatDate(p.endDate)}</div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge ${p.isActive ? 'bg-success' : 'bg-secondary'}">${p.isActive ? 'Active' : 'Inactive'}</span>
+                        ${p.minOrderAmount > 0 ? `<span class="badge bg-info">Min: ₱${p.minOrderAmount.toLocaleString()}</span>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const modal = new bootstrap.Modal(document.getElementById('viewPromotionModal'));
+        modal.show();
+    }
+
+    async function deletePromotion(id) {
+        if (!confirm('Are you sure you want to delete this promotion?')) return;
+        
+        try {
+            const response = await fetch(`/api/promotions/${id}`, { method: 'DELETE' });
+            const result = await response.json();
+            
+            if (result.success) {
+                Toast.success('Promotion deleted successfully');
+                loadPromotions();
+            } else {
+                Toast.error(result.message || 'Failed to delete');
+            }
+        } catch (error) {
+            Toast.error('An error occurred');
+        }
+    }
+
     function toggleDiscountFields() {
         const type = document.getElementById('discountType').value;
         const prefix = document.getElementById('discountPrefix');
@@ -333,7 +760,6 @@
         }
     }
 
-    // Filter promotions
     function filterPromotions() {
         const search = document.getElementById('searchPromotions').value.toLowerCase();
         const typeFilter = document.getElementById('filterDiscountType').value.toLowerCase();
@@ -359,12 +785,16 @@
         document.getElementById('promotionCount').textContent = visibleCount + ' promotions';
     }
 
-    function resetPromotionFilters() {
+    function resetFilters() {
         document.getElementById('searchPromotions').value = '';
         document.getElementById('filterDiscountType').value = '';
         document.getElementById('filterPromotionStatus').value = '';
         filterPromotions();
-        Marketing.promotions.load();
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 </script>
 }
