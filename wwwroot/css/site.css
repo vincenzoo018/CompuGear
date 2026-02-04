@@ -53,6 +53,390 @@
 }
 
 /* =====================================================
+   Dark Mode Theme
+   ===================================================== */
+
+body.dark-mode {
+    --white: #1a1a2e;
+    --gray-50: #16213e;
+    --gray-100: #1a1a2e;
+    --gray-200: #2d2d44;
+    --gray-300: #3d3d5c;
+    --gray-400: #6b6b8a;
+    --gray-500: #9999b3;
+    --gray-600: #b3b3cc;
+    --gray-700: #ccccdd;
+    --gray-800: #e6e6f0;
+    --gray-900: #f5f5fa;
+    
+    --primary-light: rgba(0, 128, 128, 0.2);
+    --primary-glow: rgba(0, 128, 128, 0.3);
+    
+    --success-bg: rgba(16, 185, 129, 0.2);
+    --warning-bg: rgba(245, 158, 11, 0.2);
+    --error-bg: rgba(239, 68, 68, 0.2);
+    --info-bg: rgba(59, 130, 246, 0.2);
+    --pending-bg: rgba(249, 115, 22, 0.2);
+    
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    
+    background-color: #0f0f1a;
+    color: var(--gray-800);
+}
+
+/* Dark Mode - Sidebar */
+body.dark-mode .sidebar {
+    background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%);
+    border-right: 1px solid var(--gray-200);
+}
+
+body.dark-mode .sidebar-brand {
+    border-bottom-color: var(--gray-200);
+}
+
+body.dark-mode .nav-link {
+    color: var(--gray-600);
+}
+
+body.dark-mode .nav-link:hover,
+body.dark-mode .nav-link.active {
+    background: rgba(0, 128, 128, 0.2);
+    color: var(--primary);
+}
+
+body.dark-mode .nav-section-title {
+    color: var(--gray-500);
+}
+
+/* Dark Mode - Topbar */
+body.dark-mode .topbar {
+    background: var(--gray-100);
+    border-bottom: 1px solid var(--gray-200);
+}
+
+body.dark-mode .topbar-btn {
+    color: var(--gray-600);
+}
+
+body.dark-mode .topbar-btn:hover {
+    background: var(--gray-200);
+    color: var(--primary);
+}
+
+body.dark-mode .search-wrapper input {
+    background: var(--gray-200);
+    border-color: var(--gray-300);
+    color: var(--gray-800);
+}
+
+body.dark-mode .search-wrapper input::placeholder {
+    color: var(--gray-500);
+}
+
+/* Dark Mode - Content Area */
+body.dark-mode .main-content {
+    background: #0f0f1a;
+}
+
+body.dark-mode .content-area {
+    background: #0f0f1a;
+}
+
+/* Dark Mode - Cards */
+body.dark-mode .card,
+body.dark-mode .stat-card,
+body.dark-mode .action-card,
+body.dark-mode .chart-card,
+body.dark-mode .filter-card {
+    background: var(--gray-100);
+    border-color: var(--gray-200);
+}
+
+body.dark-mode .stat-card .stat-value,
+body.dark-mode .card-title {
+    color: var(--gray-800);
+}
+
+body.dark-mode .stat-card .stat-label {
+    color: var(--gray-500);
+}
+
+/* Dark Mode - Tables */
+body.dark-mode .data-table,
+body.dark-mode .table {
+    background: var(--gray-100);
+}
+
+body.dark-mode .data-table th,
+body.dark-mode .table th {
+    background: var(--gray-50);
+    color: var(--gray-600);
+    border-color: var(--gray-200);
+}
+
+body.dark-mode .data-table td,
+body.dark-mode .table td {
+    border-color: var(--gray-200);
+    color: var(--gray-700);
+}
+
+body.dark-mode .data-table tbody tr:hover,
+body.dark-mode .table tbody tr:hover {
+    background: var(--gray-50);
+}
+
+/* Dark Mode - Forms */
+body.dark-mode .form-control,
+body.dark-mode .form-select,
+body.dark-mode input[type="text"],
+body.dark-mode input[type="email"],
+body.dark-mode input[type="password"],
+body.dark-mode input[type="number"],
+body.dark-mode input[type="date"],
+body.dark-mode input[type="search"],
+body.dark-mode textarea,
+body.dark-mode select {
+    background: var(--gray-200);
+    border-color: var(--gray-300);
+    color: var(--gray-800);
+}
+
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus,
+body.dark-mode input:focus,
+body.dark-mode textarea:focus,
+body.dark-mode select:focus {
+    background: var(--gray-200);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+body.dark-mode .form-control::placeholder,
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+    color: var(--gray-500);
+}
+
+body.dark-mode .form-label,
+body.dark-mode label {
+    color: var(--gray-700);
+}
+
+/* Dark Mode - Modals */
+body.dark-mode .modal-content {
+    background: var(--gray-100);
+    border-color: var(--gray-200);
+}
+
+body.dark-mode .modal-header {
+    border-bottom-color: var(--gray-200);
+}
+
+body.dark-mode .modal-header-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-active));
+}
+
+body.dark-mode .modal-footer {
+    border-top-color: var(--gray-200);
+    background: var(--gray-50);
+}
+
+body.dark-mode .modal-title {
+    color: var(--gray-800);
+}
+
+body.dark-mode .btn-close {
+    filter: invert(1);
+}
+
+/* Dark Mode - Dropdowns */
+body.dark-mode .dropdown-menu {
+    background: var(--gray-100);
+    border-color: var(--gray-200);
+    box-shadow: var(--shadow-lg);
+}
+
+body.dark-mode .dropdown-item {
+    color: var(--gray-700);
+}
+
+body.dark-mode .dropdown-item:hover {
+    background: var(--gray-200);
+    color: var(--primary);
+}
+
+body.dark-mode .dropdown-divider {
+    border-color: var(--gray-200);
+}
+
+/* Dark Mode - Buttons */
+body.dark-mode .btn-outline-secondary {
+    border-color: var(--gray-300);
+    color: var(--gray-600);
+}
+
+body.dark-mode .btn-outline-secondary:hover {
+    background: var(--gray-200);
+    border-color: var(--gray-400);
+    color: var(--gray-800);
+}
+
+body.dark-mode .btn-light {
+    background: var(--gray-200);
+    border-color: var(--gray-300);
+    color: var(--gray-700);
+}
+
+body.dark-mode .btn-light:hover {
+    background: var(--gray-300);
+}
+
+/* Dark Mode - Badges */
+body.dark-mode .badge.bg-light {
+    background: var(--gray-200) !important;
+    color: var(--gray-700) !important;
+}
+
+/* Dark Mode - Status Colors */
+body.dark-mode .status-badge.success,
+body.dark-mode .badge-success {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+body.dark-mode .status-badge.warning,
+body.dark-mode .badge-warning {
+    background: var(--warning-bg);
+    color: var(--warning);
+}
+
+body.dark-mode .status-badge.danger,
+body.dark-mode .badge-danger {
+    background: var(--error-bg);
+    color: var(--error);
+}
+
+/* Dark Mode - Alerts */
+body.dark-mode .alert {
+    border: 1px solid;
+}
+
+body.dark-mode .alert-success {
+    background: var(--success-bg);
+    border-color: var(--success);
+    color: var(--success);
+}
+
+body.dark-mode .alert-warning {
+    background: var(--warning-bg);
+    border-color: var(--warning);
+    color: var(--warning);
+}
+
+body.dark-mode .alert-danger {
+    background: var(--error-bg);
+    border-color: var(--error);
+    color: var(--error);
+}
+
+body.dark-mode .alert-info {
+    background: var(--info-bg);
+    border-color: var(--info);
+    color: var(--info);
+}
+
+/* Dark Mode - Page Headers */
+body.dark-mode .page-header h1,
+body.dark-mode .page-title,
+body.dark-mode h1, body.dark-mode h2, body.dark-mode h3,
+body.dark-mode h4, body.dark-mode h5, body.dark-mode h6 {
+    color: var(--gray-800);
+}
+
+body.dark-mode .page-header .breadcrumb {
+    color: var(--gray-500);
+}
+
+body.dark-mode .text-muted {
+    color: var(--gray-500) !important;
+}
+
+body.dark-mode .text-dark {
+    color: var(--gray-800) !important;
+}
+
+/* Dark Mode - Charts */
+body.dark-mode .chart-card {
+    background: var(--gray-100);
+}
+
+/* Dark Mode - Scrollbar */
+body.dark-mode::-webkit-scrollbar,
+body.dark-mode *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+body.dark-mode::-webkit-scrollbar-track,
+body.dark-mode *::-webkit-scrollbar-track {
+    background: var(--gray-100);
+}
+
+body.dark-mode::-webkit-scrollbar-thumb,
+body.dark-mode *::-webkit-scrollbar-thumb {
+    background: var(--gray-300);
+    border-radius: 4px;
+}
+
+body.dark-mode::-webkit-scrollbar-thumb:hover,
+body.dark-mode *::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-400);
+}
+
+/* Dark Mode - Notification Badge Animation */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.notification-badge.pulse {
+    animation: pulse 0.5s ease-in-out;
+}
+
+/* Dark Mode - Links */
+body.dark-mode a:not(.btn):not(.nav-link):not(.dropdown-item) {
+    color: var(--primary);
+}
+
+body.dark-mode a:not(.btn):not(.nav-link):not(.dropdown-item):hover {
+    color: var(--primary-hover);
+}
+
+/* Dark Mode - Borders */
+body.dark-mode .border,
+body.dark-mode .border-top,
+body.dark-mode .border-bottom,
+body.dark-mode .border-start,
+body.dark-mode .border-end {
+    border-color: var(--gray-200) !important;
+}
+
+/* Dark Mode Transition */
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.card, .stat-card, .modal-content, .dropdown-menu,
+.form-control, .form-select, input, textarea, select,
+.table, .data-table, .topbar, .sidebar {
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* =====================================================
    Base Styles
    ===================================================== */
 
