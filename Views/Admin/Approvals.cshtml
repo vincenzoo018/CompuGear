@@ -1,0 +1,417 @@
+@{
+    ViewData["Title"] = "Approval Requests";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Approval Requests</h1>
+        <p class="page-subtitle">Review and process staff requests requiring admin approval</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary" onclick="refreshRequests()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9"/>
+            </svg>
+            Refresh
+        </button>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="stat-cards mb-4">
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Pending</span>
+            <span class="stat-value text-warning" id="pendingCount">0</span>
+        </div>
+        <div class="stat-icon" style="background: #fef3c7; color: #f59e0b;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Approved</span>
+            <span class="stat-value text-success" id="approvedCount">0</span>
+        </div>
+        <div class="stat-icon green">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Rejected</span>
+            <span class="stat-value text-danger" id="rejectedCount">0</span>
+        </div>
+        <div class="stat-icon" style="background: #fee2e2; color: #ef4444;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Total Requests</span>
+            <span class="stat-value" id="totalCount">0</span>
+        </div>
+        <div class="stat-icon teal">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4 fade-in">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Module</label>
+                <select class="form-select" id="filterModule" onchange="loadRequests()">
+                    <option value="">All Modules</option>
+                    <option value="Inventory">Inventory</option>
+                    <option value="Sales">Sales</option>
+                    <option value="Support">Support</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Billing">Billing</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="filterStatus" onchange="loadRequests()">
+                    <option value="">All Status</option>
+                    <option value="Pending" selected>Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Priority</label>
+                <select class="form-select" id="filterPriority" onchange="loadRequests()">
+                    <option value="">All Priorities</option>
+                    <option value="Urgent">Urgent</option>
+                    <option value="High">High</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Low">Low</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">Reset Filters</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Requests Table -->
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Approval Requests</h5>
+        <span class="badge bg-primary" id="requestCount">0 requests</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Request Code</th>
+                        <th>Type</th>
+                        <th>Module</th>
+                        <th>Title</th>
+                        <th>Requester</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="requestsTableBody">
+                    <tr><td colspan="9" class="text-center py-4">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Request Details Modal -->
+<div class="modal fade" id="requestModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Request Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Request Code:</strong> <code id="detailRequestCode">-</code></p>
+                        <p class="mb-1"><strong>Type:</strong> <span id="detailRequestType">-</span></p>
+                        <p class="mb-1"><strong>Module:</strong> <span id="detailModule">-</span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Requester:</strong> <span id="detailRequester">-</span></p>
+                        <p class="mb-1"><strong>Date:</strong> <span id="detailDate">-</span></p>
+                        <p class="mb-1"><strong>Priority:</strong> <span id="detailPriority" class="badge">-</span></p>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Title</h6>
+                    <p id="detailTitle">-</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Description</h6>
+                    <p id="detailDescription">-</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6>Reason / Justification</h6>
+                    <div class="alert alert-secondary" id="detailReason">-</div>
+                </div>
+                
+                <div class="mb-3" id="requestDataSection" style="display: none;">
+                    <h6>Request Data</h6>
+                    <pre class="bg-light p-3 rounded" id="detailRequestData" style="max-height: 200px; overflow: auto;"></pre>
+                </div>
+                
+                <hr>
+                
+                <div id="approvalSection">
+                    <h6>Admin Response</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Notes (optional)</label>
+                        <textarea class="form-control" id="approvalNotes" rows="2" placeholder="Add notes for the requester..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" id="modalFooter">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" id="btnReject" onclick="processRequest('reject')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                    </svg>
+                    Reject
+                </button>
+                <button type="button" class="btn btn-success" id="btnApprove" onclick="processRequest('approve')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Approve
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .priority-urgent { background: #fee2e2; color: #991b1b; }
+    .priority-high { background: #fef3c7; color: #92400e; }
+    .priority-normal { background: #e0e7ff; color: #3730a3; }
+    .priority-low { background: #e5e7eb; color: #374151; }
+    
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-approved { background: #d1fae5; color: #065f46; }
+    .status-rejected { background: #fee2e2; color: #991b1b; }
+    
+    .module-badge {
+        padding: 4px 10px;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .module-inventory { background: #dbeafe; color: #1e40af; }
+    .module-sales { background: #d1fae5; color: #065f46; }
+    .module-support { background: #fae8ff; color: #86198f; }
+    .module-marketing { background: #ffedd5; color: #c2410c; }
+    .module-billing { background: #fef3c7; color: #92400e; }
+</style>
+
+@section Scripts {
+<script src="~/js/admin.js"></script>
+<script>
+    let allRequests = [];
+    let currentRequest = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadRequests();
+    });
+
+    async function loadRequests() {
+        const module = document.getElementById('filterModule').value;
+        const status = document.getElementById('filterStatus').value;
+        const priority = document.getElementById('filterPriority').value;
+        
+        let url = '/api/approval-requests?';
+        if (module) url += `module=${module}&`;
+        if (status) url += `status=${status}&`;
+        
+        try {
+            const response = await fetch(url);
+            allRequests = await response.json();
+            
+            // Filter by priority client-side
+            let filtered = allRequests;
+            if (priority) {
+                filtered = filtered.filter(r => r.priority === priority);
+            }
+            
+            renderRequests(filtered);
+            updateStats();
+        } catch (error) {
+            console.error('Error loading requests:', error);
+        }
+    }
+
+    function renderRequests(requests) {
+        const tbody = document.getElementById('requestsTableBody');
+        document.getElementById('requestCount').textContent = `${requests.length} requests`;
+        
+        if (requests.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4">No requests found</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = requests.map(r => {
+            const priorityClass = `priority-${r.priority.toLowerCase()}`;
+            const statusClass = `status-${r.status.toLowerCase()}`;
+            const moduleClass = `module-${r.module.toLowerCase()}`;
+            
+            return `
+                <tr class="${!r.isRead && r.status === 'Pending' ? 'table-warning' : ''}">
+                    <td><code>${r.requestCode}</code></td>
+                    <td>${r.requestType}</td>
+                    <td><span class="module-badge ${moduleClass}">${r.module}</span></td>
+                    <td>${r.title}</td>
+                    <td>
+                        <div>${r.requesterName}</div>
+                        <small class="text-muted">${r.requesterRole}</small>
+                    </td>
+                    <td><span class="badge ${priorityClass}">${r.priority}</span></td>
+                    <td><span class="badge ${statusClass}">${r.status}</span></td>
+                    <td>${new Date(r.requestedAt).toLocaleDateString()}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewRequest(${r.requestId})">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            View
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function updateStats() {
+        // Load all requests for stats
+        fetch('/api/approval-requests')
+            .then(r => r.json())
+            .then(all => {
+                document.getElementById('pendingCount').textContent = all.filter(r => r.status === 'Pending').length;
+                document.getElementById('approvedCount').textContent = all.filter(r => r.status === 'Approved').length;
+                document.getElementById('rejectedCount').textContent = all.filter(r => r.status === 'Rejected').length;
+                document.getElementById('totalCount').textContent = all.length;
+            });
+    }
+
+    function resetFilters() {
+        document.getElementById('filterModule').value = '';
+        document.getElementById('filterStatus').value = 'Pending';
+        document.getElementById('filterPriority').value = '';
+        loadRequests();
+    }
+
+    function refreshRequests() {
+        loadRequests();
+    }
+
+    async function viewRequest(requestId) {
+        try {
+            const response = await fetch(`/api/approval-requests/details/${requestId}`);
+            currentRequest = await response.json();
+            
+            document.getElementById('detailRequestCode').textContent = currentRequest.requestCode;
+            document.getElementById('detailRequestType').textContent = currentRequest.requestType;
+            document.getElementById('detailModule').textContent = currentRequest.module;
+            document.getElementById('detailRequester').textContent = `${currentRequest.requesterName} (${currentRequest.requesterEmail})`;
+            document.getElementById('detailDate').textContent = new Date(currentRequest.requestedAt).toLocaleString();
+            
+            const priorityBadge = document.getElementById('detailPriority');
+            priorityBadge.textContent = currentRequest.priority;
+            priorityBadge.className = `badge priority-${currentRequest.priority.toLowerCase()}`;
+            
+            document.getElementById('detailTitle').textContent = currentRequest.title;
+            document.getElementById('detailDescription').textContent = currentRequest.description || 'No description provided';
+            document.getElementById('detailReason').textContent = currentRequest.reason;
+            
+            if (currentRequest.requestData) {
+                document.getElementById('requestDataSection').style.display = 'block';
+                document.getElementById('detailRequestData').textContent = JSON.stringify(JSON.parse(currentRequest.requestData), null, 2);
+            } else {
+                document.getElementById('requestDataSection').style.display = 'none';
+            }
+            
+            // Show/hide approval buttons based on status
+            const isPending = currentRequest.status === 'Pending';
+            document.getElementById('approvalSection').style.display = isPending ? 'block' : 'none';
+            document.getElementById('btnApprove').style.display = isPending ? 'inline-block' : 'none';
+            document.getElementById('btnReject').style.display = isPending ? 'inline-block' : 'none';
+            
+            if (!isPending && currentRequest.approvalNotes) {
+                document.getElementById('approvalNotes').value = currentRequest.approvalNotes;
+                document.getElementById('approvalNotes').readOnly = true;
+            } else {
+                document.getElementById('approvalNotes').value = '';
+                document.getElementById('approvalNotes').readOnly = false;
+            }
+            
+            new bootstrap.Modal(document.getElementById('requestModal')).show();
+        } catch (error) {
+            console.error('Error loading request:', error);
+            Toast.error('Failed to load request details');
+        }
+    }
+
+    async function processRequest(action) {
+        if (!currentRequest) return;
+        
+        const notes = document.getElementById('approvalNotes').value;
+        
+        if (action === 'reject' && !notes) {
+            if (!confirm('Are you sure you want to reject without providing a reason?')) return;
+        }
+        
+        try {
+            const response = await fetch('/api/approval-requests/process', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    requestId: currentRequest.requestId,
+                    action: action,
+                    approvalNotes: notes
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                Toast.success(`Request ${action}d successfully`);
+                bootstrap.Modal.getInstance(document.getElementById('requestModal')).hide();
+                loadRequests();
+            } else {
+                Toast.error(result.message || `Failed to ${action} request`);
+            }
+        } catch (error) {
+            console.error('Error processing request:', error);
+            Toast.error(`Failed to ${action} request`);
+        }
+    }
+</script>
+}

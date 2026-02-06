@@ -1,0 +1,1065 @@
+@{
+    ViewData["Title"] = "Live Chat Support";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Live Chat Support</h1>
+        <p class="page-subtitle">Real-time customer support conversations</p>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+        <span class="badge bg-success d-flex align-items-center gap-2">
+            <span class="status-pulse"></span>
+            Online
+        </span>
+        <button class="btn btn-outline-primary" onclick="refreshChats()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            Refresh
+        </button>
+    </div>
+</div>
+
+<style>
+    .status-pulse {
+        width: 10px;
+        height: 10px;
+        background: #10b981;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+    
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.2); }
+    }
+    
+    .chat-layout {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 20px;
+        height: calc(100vh - 200px);
+        min-height: 600px;
+    }
+    
+    .chat-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .chat-list-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        overflow: hidden;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chat-list-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .chat-list-header h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .chat-list {
+        flex: 1;
+        overflow-y: auto;
+    }
+    
+    .chat-item {
+        padding: 15px 20px;
+        border-bottom: 1px solid #f3f4f6;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .chat-item:hover {
+        background: #f9fafb;
+    }
+    
+    .chat-item.active {
+        background: linear-gradient(135deg, #f0fdfa, #e0f2f1);
+        border-left: 4px solid var(--primary);
+    }
+    
+    .chat-item.pending {
+        background: #fef3cd;
+        border-left: 4px solid #f59e0b;
+    }
+    
+    .chat-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+    
+    .chat-item-name {
+        font-weight: 600;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .chat-item-time {
+        font-size: 0.75rem;
+        color: #9ca3af;
+    }
+    
+    .chat-item-preview {
+        font-size: 0.85rem;
+        color: #6b7280;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .unread-badge {
+        background: #ef4444;
+        color: white;
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    
+    .pending-requests-card {
+        background: linear-gradient(135deg, #fef3cd, #fff8e1);
+        border: 2px solid #f59e0b;
+        border-radius: 12px;
+        padding: 15px;
+    }
+    
+    .pending-requests-card h4 {
+        color: #92400e;
+        font-size: 0.9rem;
+        margin: 0 0 10px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .pending-request {
+        background: white;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .pending-request:last-child {
+        margin-bottom: 0;
+    }
+    
+    .pending-request-info h5 {
+        margin: 0;
+        font-size: 0.9rem;
+        color: #1f2937;
+    }
+    
+    .pending-request-info span {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+    
+    .accept-btn {
+        background: #10b981;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .accept-btn:hover {
+        background: #059669;
+        transform: translateY(-2px);
+    }
+    
+    /* Main Chat Area */
+    .chat-main {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .chat-header {
+        padding: 20px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .chat-customer-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .chat-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+    }
+    
+    .chat-customer-details h4 {
+        margin: 0;
+        font-size: 1.1rem;
+        color: #1f2937;
+    }
+    
+    .chat-customer-details span {
+        font-size: 0.85rem;
+        color: #6b7280;
+    }
+    
+    .chat-actions {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .chat-messages-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background: #f9fafb;
+    }
+    
+    .no-chat-selected {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #6b7280;
+        text-align: center;
+    }
+    
+    .no-chat-selected svg {
+        width: 80px;
+        height: 80px;
+        stroke: #d1d5db;
+        margin-bottom: 20px;
+    }
+    
+    .chat-message {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .chat-message.agent {
+        flex-direction: row-reverse;
+    }
+    
+    .chat-message.system {
+        justify-content: center;
+    }
+    
+    .message-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .chat-message.customer .message-avatar {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    }
+    
+    .chat-message.agent .message-avatar {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    }
+    
+    .chat-message.bot .message-avatar {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    }
+    
+    .message-bubble {
+        max-width: 70%;
+        padding: 12px 18px;
+        border-radius: 18px;
+        line-height: 1.5;
+    }
+    
+    .chat-message.customer .message-bubble {
+        background: white;
+        color: #1f2937;
+        border-bottom-left-radius: 5px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .chat-message.agent .message-bubble {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+        border-bottom-right-radius: 5px;
+    }
+    
+    .chat-message.bot .message-bubble {
+        background: #fef3cd;
+        color: #92400e;
+        border-bottom-left-radius: 5px;
+    }
+    
+    .chat-message.system .message-bubble {
+        background: #e5e7eb;
+        color: #6b7280;
+        font-size: 0.85rem;
+        padding: 8px 16px;
+        border-radius: 20px;
+        max-width: none;
+    }
+    
+    .message-time {
+        font-size: 0.7rem;
+        margin-top: 5px;
+        opacity: 0.7;
+    }
+    
+    .chat-message.agent .message-time {
+        text-align: right;
+    }
+    
+    /* Chat Input */
+    .chat-input-container {
+        padding: 20px;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        gap: 15px;
+    }
+    
+    .chat-input {
+        flex: 1;
+        padding: 12px 20px;
+        border: 2px solid #e5e7eb;
+        border-radius: 25px;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+    }
+    
+    .chat-input:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+    
+    .chat-input:disabled {
+        background: #f3f4f6;
+        cursor: not-allowed;
+    }
+    
+    .send-message-btn {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .send-message-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    .send-message-btn:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    /* Quick Responses */
+    .quick-responses {
+        padding: 10px 20px;
+        border-top: 1px solid #f3f4f6;
+        background: #fafafa;
+    }
+    
+    .quick-responses-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        margin-bottom: 8px;
+    }
+    
+    .quick-response-btns {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .quick-response-btn {
+        padding: 6px 14px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        color: #4b5563;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .quick-response-btn:hover {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6b7280;
+    }
+    
+    .empty-state svg {
+        width: 60px;
+        height: 60px;
+        stroke: #d1d5db;
+        margin-bottom: 15px;
+    }
+</style>
+
+<!-- Chat Stats -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="activeChatsCount">0</div>
+                <div class="stat-label">Active Chats</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="pendingRequestsCount">0</div>
+                <div class="stat-label">Waiting Customers</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="myChatsCount">0</div>
+                <div class="stat-label">My Active Chats</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-info">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="todayResolvedCount">0</div>
+                <div class="stat-label">Resolved Today</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="chat-layout">
+    <!-- Sidebar - Chat List -->
+    <div class="chat-sidebar">
+        <!-- Pending Requests -->
+        <div class="pending-requests-card" id="pendingRequestsCard" style="display: none;">
+            <h4>⏰ Waiting for Agent</h4>
+            <div id="pendingRequestsList">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+        
+        <!-- Active Chats -->
+        <div class="chat-list-card">
+            <div class="chat-list-header">
+                <h3>💬 Active Conversations</h3>
+                <span class="badge bg-primary" id="chatListCount">0</span>
+            </div>
+            <div class="chat-list" id="chatList">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <p>No active chats</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Chat Area -->
+    <div class="chat-main">
+        <div class="no-chat-selected" id="noChatSelected">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                <line x1="9" y1="10" x2="15" y2="10"/>
+                <line x1="12" y1="7" x2="12" y2="13"/>
+            </svg>
+            <h3>Select a conversation</h3>
+            <p>Choose a chat from the list or accept a waiting customer</p>
+        </div>
+        
+        <div id="activeChatContainer" style="display: none; flex-direction: column; height: 100%;">
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <div class="chat-customer-info">
+                    <div class="chat-avatar" id="chatCustomerAvatar">👤</div>
+                    <div class="chat-customer-details">
+                        <h4 id="chatCustomerName">Customer Name</h4>
+                        <span id="chatCustomerEmail">customer@email.com</span>
+                    </div>
+                </div>
+                <div class="chat-actions">
+                    <button class="btn btn-sm btn-outline-primary" onclick="createTicketFromChat()" title="Create Ticket">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/>
+                            <line x1="9" y1="15" x2="15" y2="15"/>
+                        </svg>
+                        Create Ticket
+                    </button>
+                    <button class="btn btn-sm btn-outline-warning" onclick="openTransferModal()" title="Transfer">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="8.5" cy="7" r="4"/><polyline points="17 11 21 7 17 3"/>
+                            <line x1="21" y1="7" x2="12" y2="7"/>
+                        </svg>
+                        Transfer
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="endCurrentChat()" title="End Chat">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                        End
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Chat Messages -->
+            <div class="chat-messages-container" id="chatMessagesContainer">
+                <!-- Messages will be inserted here -->
+            </div>
+            
+            <!-- Quick Responses -->
+            <div class="quick-responses">
+                <div class="quick-responses-label">Quick Responses:</div>
+                <div class="quick-response-btns">
+                    <button class="quick-response-btn" onclick="insertQuickResponse('Hello! How can I help you today?')">👋 Greeting</button>
+                    <button class="quick-response-btn" onclick="insertQuickResponse('Thank you for your patience. Let me check that for you.')">⏳ Please wait</button>
+                    <button class="quick-response-btn" onclick="insertQuickResponse('I understand your concern. Let me assist you with that.')">🤝 Acknowledge</button>
+                    <button class="quick-response-btn" onclick="insertQuickResponse('Is there anything else I can help you with?')">❓ Anything else</button>
+                    <button class="quick-response-btn" onclick="insertQuickResponse('Thank you for contacting CompuGear Support. Have a great day!')">👋 Goodbye</button>
+                </div>
+            </div>
+            
+            <!-- Chat Input -->
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." onkeypress="handleChatKeyPress(event)">
+                <button class="send-message-btn" id="sendMessageBtn" onclick="sendAgentMessage()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transfer Chat Modal -->
+<div class="modal fade" id="transferModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Transfer Chat</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label">Select Agent</label>
+                <select class="form-select" id="transferAgentSelect">
+                    <option value="">Select an agent...</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="transferChat()">Transfer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="successMessage">Success!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="errorMessage">Error!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+    <div id="newChatToast" class="toast align-items-center text-white bg-warning border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body">🔔 New customer waiting for support!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/admin.js"></script>
+<script>
+    let activeSessions = [];
+    let pendingRequests = [];
+    let currentSessionId = null;
+    let currentMessages = [];
+    let pollInterval = null;
+    let messagePollInterval = null;
+    const currentAgentId = 3; // Demo: Mike Chen (Support Staff)
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadChatSessions();
+        loadPendingRequests();
+        loadAvailableAgents();
+        
+        // Poll for updates every 3 seconds
+        pollInterval = setInterval(() => {
+            loadChatSessions();
+            loadPendingRequests();
+        }, 3000);
+    });
+
+    async function loadChatSessions() {
+        try {
+            const response = await fetch('/Support/GetActiveChatSessions');
+            const result = await response.json();
+            
+            if (result.success) {
+                activeSessions = result.data;
+                renderChatList();
+                updateStats();
+            }
+        } catch (error) {
+            console.error('Error loading chat sessions:', error);
+        }
+    }
+
+    async function loadPendingRequests() {
+        try {
+            const response = await fetch('/Support/GetPendingAgentRequests');
+            const result = await response.json();
+            
+            if (result.success) {
+                const previousCount = pendingRequests.length;
+                pendingRequests = result.data;
+                renderPendingRequests();
+                
+                // Show notification for new requests
+                if (pendingRequests.length > previousCount && previousCount > 0) {
+                    new bootstrap.Toast(document.getElementById('newChatToast')).show();
+                    playNotificationSound();
+                }
+            }
+        } catch (error) {
+            console.error('Error loading pending requests:', error);
+        }
+    }
+
+    async function loadAvailableAgents() {
+        try {
+            const response = await fetch('/Support/GetAvailableAgents');
+            const result = await response.json();
+            
+            if (result.success) {
+                const select = document.getElementById('transferAgentSelect');
+                select.innerHTML = '<option value="">Select an agent...</option>' + 
+                    result.data.filter(a => a.userId !== currentAgentId).map(agent => 
+                        `<option value="${agent.userId}">${agent.fullName} (${agent.activeChats} active chats)</option>`
+                    ).join('');
+            }
+        } catch (error) {
+            console.error('Error loading agents:', error);
+        }
+    }
+
+    function renderChatList() {
+        const container = document.getElementById('chatList');
+        document.getElementById('chatListCount').textContent = activeSessions.length;
+        
+        if (activeSessions.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <p>No active chats</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = activeSessions.map(session => `
+            <div class="chat-item ${session.sessionId === currentSessionId ? 'active' : ''} ${session.status === 'Transferred' ? 'pending' : ''}" 
+                 onclick="selectChat(${session.sessionId})">
+                <div class="chat-item-header">
+                    <span class="chat-item-name">
+                        ${session.isAssignedToMe ? '👤' : '👥'} ${session.customerName || 'Guest'}
+                        ${session.unreadCount > 0 ? `<span class="unread-badge">${session.unreadCount}</span>` : ''}
+                    </span>
+                    <span class="chat-item-time">${formatTime(session.lastMessageAt)}</span>
+                </div>
+                <div class="chat-item-preview">
+                    ${session.status === 'Transferred' ? '⏳ Waiting for agent...' : `${session.totalMessages} messages`}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderPendingRequests() {
+        const card = document.getElementById('pendingRequestsCard');
+        const container = document.getElementById('pendingRequestsList');
+        document.getElementById('pendingRequestsCount').textContent = pendingRequests.length;
+        
+        if (pendingRequests.length === 0) {
+            card.style.display = 'none';
+            return;
+        }
+        
+        card.style.display = 'block';
+        container.innerHTML = pendingRequests.map(req => `
+            <div class="pending-request">
+                <div class="pending-request-info">
+                    <h5>${req.customerName || 'Guest'}</h5>
+                    <span>Waiting ${req.waitingMinutes} min</span>
+                </div>
+                <button class="accept-btn" onclick="acceptChat(${req.sessionId})">Accept</button>
+            </div>
+        `).join('');
+    }
+
+    function updateStats() {
+        const myChats = activeSessions.filter(s => s.isAssignedToMe).length;
+        document.getElementById('activeChatsCount').textContent = activeSessions.length;
+        document.getElementById('myChatsCount').textContent = myChats;
+    }
+
+    async function selectChat(sessionId) {
+        currentSessionId = sessionId;
+        const session = activeSessions.find(s => s.sessionId === sessionId);
+        
+        if (!session) return;
+        
+        // Update UI
+        document.getElementById('noChatSelected').style.display = 'none';
+        document.getElementById('activeChatContainer').style.display = 'flex';
+        
+        document.getElementById('chatCustomerName').textContent = session.customerName || 'Guest Visitor';
+        document.getElementById('chatCustomerEmail').textContent = session.customerEmail || 'No email provided';
+        document.getElementById('chatCustomerAvatar').textContent = (session.customerName || 'G')[0];
+        
+        // Load messages
+        await loadChatMessages(sessionId);
+        
+        // Highlight selected chat
+        document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+        event?.target?.closest('.chat-item')?.classList.add('active');
+        
+        // Start polling for new messages
+        if (messagePollInterval) clearInterval(messagePollInterval);
+        messagePollInterval = setInterval(() => loadChatMessages(sessionId), 2000);
+    }
+
+    async function loadChatMessages(sessionId) {
+        try {
+            const response = await fetch(`/Support/GetChatMessages?sessionId=${sessionId}`);
+            const result = await response.json();
+            
+            if (result.success) {
+                const previousCount = currentMessages.length;
+                currentMessages = result.data;
+                renderMessages();
+                
+                // Auto-scroll if new messages
+                if (currentMessages.length > previousCount) {
+                    const container = document.getElementById('chatMessagesContainer');
+                    container.scrollTop = container.scrollHeight;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading messages:', error);
+        }
+    }
+
+    function renderMessages() {
+        const container = document.getElementById('chatMessagesContainer');
+        
+        container.innerHTML = currentMessages.map(msg => {
+            const type = msg.senderType.toLowerCase();
+            const avatar = type === 'customer' ? '👤' : (type === 'agent' ? '👨‍💼' : (type === 'bot' ? '🤖' : '⚙️'));
+            
+            return `
+                <div class="chat-message ${type}">
+                    ${type !== 'system' ? `<div class="message-avatar">${avatar}</div>` : ''}
+                    <div>
+                        <div class="message-bubble">${msg.message}</div>
+                        <div class="message-time">${formatTime(msg.createdAt)}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        container.scrollTop = container.scrollHeight;
+    }
+
+    async function acceptChat(sessionId) {
+        try {
+            const response = await fetch('/Support/AcceptChat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showSuccess('Chat accepted! You can now start chatting.');
+                loadChatSessions();
+                loadPendingRequests();
+                selectChat(sessionId);
+            } else {
+                showError(result.message || 'Failed to accept chat');
+            }
+        } catch (error) {
+            showError('Error accepting chat');
+        }
+    }
+
+    async function sendAgentMessage() {
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+        
+        if (!message || !currentSessionId) return;
+        
+        input.value = '';
+        
+        try {
+            const response = await fetch('/Support/SendChatMessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sessionId: currentSessionId,
+                    message: message
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                loadChatMessages(currentSessionId);
+            } else {
+                showError('Failed to send message');
+            }
+        } catch (error) {
+            showError('Error sending message');
+        }
+    }
+
+    function handleChatKeyPress(event) {
+        if (event.key === 'Enter') {
+            sendAgentMessage();
+        }
+    }
+
+    function insertQuickResponse(text) {
+        document.getElementById('chatInput').value = text;
+        document.getElementById('chatInput').focus();
+    }
+
+    async function endCurrentChat() {
+        if (!currentSessionId) return;
+        
+        if (!confirm('Are you sure you want to end this chat?')) return;
+        
+        try {
+            const response = await fetch('/Support/EndChat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId: currentSessionId })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showSuccess('Chat ended successfully');
+                currentSessionId = null;
+                document.getElementById('noChatSelected').style.display = 'flex';
+                document.getElementById('activeChatContainer').style.display = 'none';
+                loadChatSessions();
+            } else {
+                showError('Failed to end chat');
+            }
+        } catch (error) {
+            showError('Error ending chat');
+        }
+    }
+
+    function openTransferModal() {
+        loadAvailableAgents();
+        new bootstrap.Modal(document.getElementById('transferModal')).show();
+    }
+
+    async function transferChat() {
+        const newAgentId = document.getElementById('transferAgentSelect').value;
+        if (!newAgentId || !currentSessionId) {
+            showError('Please select an agent');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/Support/TransferChat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sessionId: currentSessionId,
+                    newAgentId: parseInt(newAgentId)
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showSuccess('Chat transferred successfully');
+                bootstrap.Modal.getInstance(document.getElementById('transferModal')).hide();
+                currentSessionId = null;
+                document.getElementById('noChatSelected').style.display = 'flex';
+                document.getElementById('activeChatContainer').style.display = 'none';
+                loadChatSessions();
+            } else {
+                showError('Failed to transfer chat');
+            }
+        } catch (error) {
+            showError('Error transferring chat');
+        }
+    }
+
+    function createTicketFromChat() {
+        const session = activeSessions.find(s => s.sessionId === currentSessionId);
+        if (!session) return;
+        
+        // Open ticket creation in new window or redirect
+        window.open(`/Support/Tickets?createFromChat=true&customerId=${session.customerId || ''}&customerName=${encodeURIComponent(session.customerName || '')}&customerEmail=${encodeURIComponent(session.customerEmail || '')}`, '_blank');
+    }
+
+    function refreshChats() {
+        loadChatSessions();
+        loadPendingRequests();
+        showSuccess('Chats refreshed');
+    }
+
+    function formatTime(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diff = now - date;
+        
+        if (diff < 60000) return 'Just now';
+        if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+        if (diff < 86400000) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleDateString();
+    }
+
+    function playNotificationSound() {
+        // Create a simple beep sound
+        try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.2);
+        } catch (e) { }
+    }
+
+    function showSuccess(message) {
+        document.getElementById('successMessage').textContent = message;
+        new bootstrap.Toast(document.getElementById('successToast')).show();
+    }
+
+    function showError(message) {
+        document.getElementById('errorMessage').textContent = message;
+        new bootstrap.Toast(document.getElementById('errorToast')).show();
+    }
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+        if (pollInterval) clearInterval(pollInterval);
+        if (messagePollInterval) clearInterval(messagePollInterval);
+    });
+</script>
+}

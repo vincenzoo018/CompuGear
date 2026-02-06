@@ -1,0 +1,88 @@
+@{
+    ViewData["Title"] = "Customer Segments";
+    Layout = "~/Views/Shared/_MarketingLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Customer Segments</h1>
+            <p class="text-muted mb-0">Manage customer groups for targeted marketing</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#segmentModal">
+            <i class="bi bi-plus-lg me-2"></i>New Segment
+        </button>
+    </div>
+
+    <!-- Segments Grid -->
+    <div class="row g-4" id="segmentsGrid">
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Segment Modal -->
+<div class="modal fade" id="segmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Segment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="segmentForm">
+                <div class="modal-body">
+                    <input type="hidden" id="segmentId">
+                    <div class="mb-3">
+                        <label class="form-label">Segment Name</label>
+                        <input type="text" class="form-control" id="segmentName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="segmentDescription" rows="2"></textarea>
+                    </div>
+                    <hr>
+                    <h6 class="mb-3">Segment Criteria</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Minimum Orders</label>
+                            <input type="number" class="form-control" id="minOrders" min="0">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Minimum Total Spent</label>
+                            <input type="number" class="form-control" id="minSpent" min="0" step="0.01">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Purchase (Days)</label>
+                            <input type="number" class="form-control" id="lastPurchaseDays" placeholder="e.g. 30">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Customer Type</label>
+                            <select class="form-select" id="customerType">
+                                <option value="">Any</option>
+                                <option value="Individual">Individual</option>
+                                <option value="Business">Business</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Segment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/marketing.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Segments.load();
+        });
+    </script>
+}

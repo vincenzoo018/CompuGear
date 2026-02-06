@@ -1,0 +1,360 @@
+@{
+    ViewData["Title"] = "Refund Requests";
+    Layout = "~/Views/Shared/_SalesLayout.cshtml";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Refund Requests</h1>
+        <p class="page-subtitle">Request order refunds - Requires admin approval</p>
+    </div>
+    <button class="btn btn-warning" onclick="openRefundModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.39 0 4.57.94 6.18 2.47"/>
+        </svg>
+        Request Refund
+    </button>
+</div>
+
+<!-- Info Alert -->
+<div class="alert alert-info d-flex align-items-center mb-4">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+    </svg>
+    <strong>Limited Access:</strong>&nbsp;Refund processing requires admin approval. Submit your request with a valid reason.
+</div>
+
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <div class="h3 text-warning mb-1" id="pendingRequests">0</div>
+            <div class="text-muted small">Pending Requests</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <div class="h3 text-success mb-1" id="approvedRequests">0</div>
+            <div class="text-muted small">Approved</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <div class="h3 text-danger mb-1" id="rejectedRequests">0</div>
+            <div class="text-muted small">Rejected</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <div class="h3 text-primary mb-1" id="totalRefundAmount">₱0</div>
+            <div class="text-muted small">Approved Amount</div>
+        </div>
+    </div>
+</div>
+
+<!-- My Requests Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">My Refund Requests</h5>
+        <div class="d-flex gap-2">
+            <select class="form-select form-select-sm" id="statusFilter" style="width: auto;" onchange="filterRequests()">
+                <option value="">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+            </select>
+            <span class="badge bg-primary align-self-center" id="requestCount">0</span>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Request Code</th>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Admin Notes</th>
+                    </tr>
+                </thead>
+                <tbody id="requestsTableBody">
+                    <tr><td colspan="8" class="text-center py-4">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Refund Request Modal -->
+<div class="modal fade" id="refundModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">Request Order Refund</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="refundForm" onsubmit="submitRefundRequest(event)">
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <strong>Note:</strong> This refund request will be sent to an administrator for approval.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Select Order <span class="text-danger">*</span></label>
+                        <select class="form-select" id="orderId" required onchange="loadOrderDetails()">
+                            <option value="">-- Select an Order --</option>
+                        </select>
+                    </div>
+                    
+                    <div id="orderDetails" style="display: none;">
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Order:</strong> <span id="orderNumber">-</span><br>
+                                        <strong>Customer:</strong> <span id="customerName">-</span>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <strong>Total:</strong> <span id="orderTotal" class="text-primary fs-5">₱0</span><br>
+                                        <strong>Paid:</strong> <span id="paidAmount">₱0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Refund Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="refundType" required onchange="updateRefundAmount()">
+                                    <option value="Full">Full Refund</option>
+                                    <option value="Partial">Partial Refund</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Refund Amount <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₱</span>
+                                    <input type="number" class="form-control" id="refundAmount" step="0.01" min="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Priority <span class="text-danger">*</span></label>
+                            <select class="form-select" id="priority" required>
+                                <option value="Normal">Normal</option>
+                                <option value="High">High</option>
+                                <option value="Urgent">Urgent</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Reason for Refund <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="reason" rows="3" required placeholder="Provide a detailed reason for this refund request..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning" id="submitBtn" disabled>Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let allRequests = [];
+    let orders = [];
+    let selectedOrder = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadOrders();
+        loadMyRequests();
+    });
+
+    async function loadOrders() {
+        try {
+            const response = await fetch('/api/orders?status=Delivered,Paid');
+            orders = await response.json();
+            
+            const select = document.getElementById('orderId');
+            select.innerHTML = '<option value="">-- Select an Order --</option>' + 
+                orders.map(o => `<option value="${o.orderId}">${o.orderNumber} - ${o.customerName} (₱${o.totalAmount.toLocaleString()})</option>`).join('');
+        } catch (error) {
+            console.error('Error loading orders:', error);
+        }
+    }
+
+    async function loadMyRequests() {
+        try {
+            const response = await fetch('/api/approval-requests/my-requests?module=Sales&requestType=OrderRefund');
+            allRequests = await response.json();
+            renderRequests();
+            updateStats();
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    function renderRequests() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        let requests = allRequests;
+        
+        if (statusFilter) {
+            requests = requests.filter(r => r.status === statusFilter);
+        }
+
+        document.getElementById('requestCount').textContent = requests.length;
+        const tbody = document.getElementById('requestsTableBody');
+        
+        if (requests.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4">No refund requests found</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = requests.map(r => {
+            const data = r.requestData ? JSON.parse(r.requestData) : {};
+            return `
+                <tr>
+                    <td><code>${r.requestCode}</code></td>
+                    <td>${data.orderNumber || '-'}</td>
+                    <td>${data.customerName || '-'}</td>
+                    <td class="text-danger fw-bold">₱${(data.refundAmount || 0).toLocaleString()}</td>
+                    <td>${r.reason}</td>
+                    <td><span class="badge bg-${r.status === 'Pending' ? 'warning' : r.status === 'Approved' ? 'success' : 'danger'}">${r.status}</span></td>
+                    <td>${new Date(r.requestedAt).toLocaleDateString()}</td>
+                    <td>${r.approvalNotes || '-'}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function filterRequests() {
+        renderRequests();
+    }
+
+    function updateStats() {
+        const pending = allRequests.filter(r => r.status === 'Pending').length;
+        const approved = allRequests.filter(r => r.status === 'Approved').length;
+        const rejected = allRequests.filter(r => r.status === 'Rejected').length;
+        
+        const totalApproved = allRequests
+            .filter(r => r.status === 'Approved')
+            .reduce((sum, r) => {
+                const data = r.requestData ? JSON.parse(r.requestData) : {};
+                return sum + (data.refundAmount || 0);
+            }, 0);
+        
+        document.getElementById('pendingRequests').textContent = pending;
+        document.getElementById('approvedRequests').textContent = approved;
+        document.getElementById('rejectedRequests').textContent = rejected;
+        document.getElementById('totalRefundAmount').textContent = '₱' + totalApproved.toLocaleString();
+    }
+
+    function openRefundModal() {
+        document.getElementById('refundForm').reset();
+        document.getElementById('orderDetails').style.display = 'none';
+        document.getElementById('submitBtn').disabled = true;
+        selectedOrder = null;
+        new bootstrap.Modal(document.getElementById('refundModal')).show();
+    }
+
+    function loadOrderDetails() {
+        const orderId = document.getElementById('orderId').value;
+        if (!orderId) {
+            document.getElementById('orderDetails').style.display = 'none';
+            document.getElementById('submitBtn').disabled = true;
+            selectedOrder = null;
+            return;
+        }
+        
+        selectedOrder = orders.find(o => o.orderId == orderId);
+        if (!selectedOrder) return;
+        
+        document.getElementById('orderNumber').textContent = selectedOrder.orderNumber;
+        document.getElementById('customerName').textContent = selectedOrder.customerName;
+        document.getElementById('orderTotal').textContent = '₱' + selectedOrder.totalAmount.toLocaleString();
+        document.getElementById('paidAmount').textContent = '₱' + (selectedOrder.paidAmount || 0).toLocaleString();
+        document.getElementById('refundAmount').value = selectedOrder.paidAmount || selectedOrder.totalAmount;
+        document.getElementById('refundAmount').max = selectedOrder.paidAmount || selectedOrder.totalAmount;
+        
+        document.getElementById('orderDetails').style.display = 'block';
+        document.getElementById('submitBtn').disabled = false;
+    }
+
+    function updateRefundAmount() {
+        if (!selectedOrder) return;
+        
+        const type = document.getElementById('refundType').value;
+        const amountInput = document.getElementById('refundAmount');
+        
+        if (type === 'Full') {
+            amountInput.value = selectedOrder.paidAmount || selectedOrder.totalAmount;
+            amountInput.readOnly = true;
+        } else {
+            amountInput.readOnly = false;
+        }
+    }
+
+    async function submitRefundRequest(event) {
+        event.preventDefault();
+        
+        if (!selectedOrder) return;
+        
+        const refundAmount = parseFloat(document.getElementById('refundAmount').value);
+        const reason = document.getElementById('reason').value;
+        const priority = document.getElementById('priority').value;
+        
+        if (!reason || reason.length < 10) {
+            alert('Please provide a detailed reason (at least 10 characters)');
+            return;
+        }
+        
+        const data = {
+            requestType: 'OrderRefund',
+            module: 'Sales',
+            title: `Refund Request - Order ${selectedOrder.orderNumber}`,
+            description: `Refund of ₱${refundAmount.toLocaleString()} for order ${selectedOrder.orderNumber}`,
+            reason: reason,
+            entityType: 'Order',
+            entityId: selectedOrder.orderId,
+            entityName: selectedOrder.orderNumber,
+            priority: priority,
+            requestData: JSON.stringify({
+                orderId: selectedOrder.orderId,
+                orderNumber: selectedOrder.orderNumber,
+                customerId: selectedOrder.customerId,
+                customerName: selectedOrder.customerName,
+                orderTotal: selectedOrder.totalAmount,
+                refundAmount: refundAmount,
+                refundType: document.getElementById('refundType').value
+            })
+        };
+        
+        try {
+            const response = await fetch('/api/approval-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Refund request submitted successfully!');
+                bootstrap.Modal.getInstance(document.getElementById('refundModal')).hide();
+                loadMyRequests();
+            } else {
+                alert(result.message || 'Failed to submit request');
+            }
+        } catch (error) {
+            alert('Error submitting request');
+        }
+    }
+</script>
+}

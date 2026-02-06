@@ -1,0 +1,916 @@
+@{
+    ViewData["Title"] = "Stock Adjustment";
+    Layout = "~/Views/Shared/_InventoryLayout.cshtml";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Stock Adjustment</h1>
+        <p class="page-subtitle">Request stock adjustments - Requires admin approval</p>
+    </div>
+    <button class="btn btn-primary" onclick="openAdjustmentModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Request Stock Adjustment
+    </button>
+</div>
+
+<!-- Info Alert for Staff -->
+<div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+    </svg>
+    <div>
+        <strong>Limited Access:</strong> Stock adjustments require admin approval. Your requests will be reviewed by an administrator before being applied.
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="myPendingRequests">0</div>
+                <div class="stat-label">My Pending Requests</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="myApprovedRequests">0</div>
+                <div class="stat-label">Approved Requests</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-danger">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="myRejectedRequests">0</div>
+                <div class="stat-label">Rejected Requests</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-info">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalSuppliers">0</div>
+                <div class="stat-label">Suppliers</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter & Search -->
+<div class="card mb-4 fade-in">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Search Requests</label>
+                <div class="search-input">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" class="form-control" id="searchRequests" placeholder="Search by product name..." oninput="filterRequests()">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="filterStatus" onchange="filterRequests()">
+                    <option value="">All Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date Range</label>
+                <input type="date" class="form-control" id="filterDate" onchange="filterRequests()">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                    </svg>
+                    Reset
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- My Requests Table -->
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">My Stock Adjustment Requests</h5>
+        <span class="badge bg-primary" id="requestCount">0 records</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table" id="requestsTable">
+                <thead>
+                    <tr>
+                        <th>Request Code</th>
+                        <th>Product</th>
+                        <th>Type</th>
+                        <th class="text-center">Quantity</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Requested At</th>
+                        <th>Admin Notes</th>
+                    </tr>
+                </thead>
+                <tbody id="requestsTableBody">
+                    <!-- Dynamic content loaded via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Adjustment Request Modal -->
+<div class="modal fade" id="adjustmentModal" tabindex="-1" aria-labelledby="adjustmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl-wide modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header modal-header-primary">
+                <h5 class="modal-title" id="adjustmentModalLabel">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Request Stock Adjustment
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="adjustmentForm" onsubmit="submitRequest(event)">
+                <div class="modal-body">
+                    <!-- Approval Notice -->
+                    <div class="alert alert-warning mb-4">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        <strong>Note:</strong> This request will be sent to an administrator for approval. Please provide a valid reason.
+                    </div>
+
+                    <!-- Supplier Selection -->
+                    <div class="form-section">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                            Select Supplier
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label required">Supplier</label>
+                                <select class="form-select" id="supplierId" name="supplierId" required onchange="loadSupplierProducts()">
+                                    <option value="">-- Select a Supplier --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Selection Section -->
+                    <div class="form-section" id="productSelectionSection" style="display: none;">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                                <line x1="8" y1="21" x2="16" y2="21"/>
+                                <line x1="12" y1="17" x2="12" y2="21"/>
+                            </svg>
+                            Supplier Products
+                        </h6>
+                        
+                        <!-- Live Search for Products -->
+                        <div class="mb-3">
+                            <label class="form-label">Search Products</label>
+                            <div class="search-input">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                </svg>
+                                <input type="text" class="form-control" id="searchSupplierProducts" placeholder="Search products..." oninput="filterSupplierProducts()">
+                            </div>
+                        </div>
+
+                        <!-- Products List -->
+                        <div id="supplierProductsList" class="product-selection-grid">
+                            <!-- Products will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Selected Product Details -->
+                    <div class="form-section" id="selectedProductSection" style="display: none;">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="16" x2="12" y2="12"/>
+                                <line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                            Selected Product Details
+                        </h6>
+                        <div class="selected-product-card">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <div id="selectedProductImage" class="selected-product-image">
+                                        <!-- Product image -->
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <h5 id="selectedProductName" class="mb-1">-</h5>
+                                    <p id="selectedProductCode" class="text-muted mb-1 small">-</p>
+                                    <div class="d-flex gap-3">
+                                        <span class="badge bg-secondary" id="selectedProductCategory">-</span>
+                                        <span class="badge bg-info" id="selectedProductBrand">-</span>
+                                    </div>
+                                </div>
+                                <div class="col-auto text-end">
+                                    <div class="fw-bold text-primary fs-4" id="selectedProductPrice">₱0.00</div>
+                                    <div class="text-muted small">Current Stock: <strong id="selectedProductStock">0</strong></div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="productId" name="productId">
+                    </div>
+
+                    <!-- Adjustment Details -->
+                    <div class="form-section" id="adjustmentDetailsSection" style="display: none;">
+                        <h6 class="form-section-title">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 20V10"/>
+                                <path d="M18 20V4"/>
+                                <path d="M6 20v-4"/>
+                            </svg>
+                            Adjustment Details
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label required">Adjustment Type</label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="adjustmentType" id="typeAdd" value="Add" checked>
+                                    <label class="btn btn-outline-success" for="typeAdd">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                                            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                                        </svg>
+                                        Add Stock
+                                    </label>
+                                    <input type="radio" class="btn-check" name="adjustmentType" id="typeDeduct" value="Deduct">
+                                    <label class="btn btn-outline-danger" for="typeDeduct">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                                            <line x1="5" y1="12" x2="19" y2="12"/>
+                                        </svg>
+                                        Deduct Stock
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label required">Quantity</label>
+                                <input type="number" class="form-control" id="adjustmentQuantity" name="quantity" min="1" value="1" required oninput="updatePreview()">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label required">Priority</label>
+                                <select class="form-select" id="requestPriority" name="priority" required>
+                                    <option value="Normal">Normal</option>
+                                    <option value="High">High</option>
+                                    <option value="Urgent">Urgent</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label required">Reason for Adjustment</label>
+                                <textarea class="form-control" id="adjustmentReason" name="reason" rows="3" placeholder="Please provide a detailed reason for this stock adjustment request..." required></textarea>
+                                <div class="form-text">A valid reason is required for admin approval.</div>
+                            </div>
+                        </div>
+
+                        <!-- Preview -->
+                        <div class="adjustment-preview mt-3">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div class="preview-label">Current Stock</div>
+                                    <div class="preview-value" id="previewCurrentStock">0</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="preview-label">Requested Adjustment</div>
+                                    <div class="preview-value" id="previewAdjustment">+0</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="preview-label">Expected New Stock</div>
+                                    <div class="preview-value text-primary" id="previewNewStock">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-warning" id="submitBtn" disabled>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        Submit for Approval
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .product-selection-grid {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 10px;
+    }
+
+    .product-select-item {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        border: 2px solid transparent;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        background: #f8f9fa;
+        transition: all 0.2s ease;
+    }
+
+    .product-select-item:hover {
+        background: #e8f5f5;
+        border-color: #20c997;
+    }
+
+    .product-select-item.selected {
+        background: linear-gradient(135deg, #e8f5f5, #d0f0f0);
+        border-color: #008080;
+    }
+
+    .product-select-item .product-img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-right: 15px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .product-select-item .product-placeholder {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        color: #9ca3af;
+    }
+
+    .product-select-item .product-details {
+        flex: 1;
+    }
+
+    .product-select-item .product-name {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 2px;
+    }
+
+    .product-select-item .product-meta {
+        font-size: 0.8rem;
+        color: #6b7280;
+    }
+
+    .product-select-item .product-stock-info {
+        text-align: right;
+    }
+
+    .product-select-item .stock-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .stock-badge.in-stock { background: #d1fae5; color: #065f46; }
+    .stock-badge.low-stock { background: #fef3c7; color: #92400e; }
+    .stock-badge.out-of-stock { background: #fee2e2; color: #991b1b; }
+
+    .selected-product-card {
+        background: linear-gradient(135deg, #f0fdfa, #e8f5f5);
+        border: 2px solid #008080;
+        border-radius: 12px;
+        padding: 20px;
+    }
+
+    .selected-product-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+    }
+
+    .selected-product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .selected-product-image .placeholder-icon {
+        color: #9ca3af;
+    }
+
+    .adjustment-preview {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #f59e0b;
+    }
+
+    .preview-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: #6b7280;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .preview-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .form-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .form-section-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #008080;
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .no-products-message {
+        text-align: center;
+        padding: 30px;
+        color: #6b7280;
+    }
+
+    .no-products-message svg {
+        margin-bottom: 10px;
+        opacity: 0.5;
+    }
+
+    .search-input {
+        position: relative;
+    }
+
+    .search-input svg {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+    }
+
+    .search-input input {
+        padding-left: 40px;
+    }
+
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-approved { background: #d1fae5; color: #065f46; }
+    .status-rejected { background: #fee2e2; color: #991b1b; }
+</style>
+
+@section Scripts {
+<script>
+    let suppliers = [];
+    let supplierProducts = [];
+    let allSupplierProducts = [];
+    let selectedProduct = null;
+    let myRequests = [];
+    let allMyRequests = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSuppliers();
+        loadMyRequests();
+        setupRadioListeners();
+    });
+
+    function setupRadioListeners() {
+        document.querySelectorAll('input[name="adjustmentType"]').forEach(radio => {
+            radio.addEventListener('change', updatePreview);
+        });
+    }
+
+    async function loadSuppliers() {
+        try {
+            const response = await fetch('/api/suppliers');
+            suppliers = await response.json();
+            
+            const select = document.getElementById('supplierId');
+            select.innerHTML = '<option value="">-- Select a Supplier --</option>' + 
+                suppliers.map(s => `<option value="${s.supplierId}">${s.supplierName} ${s.contactPerson ? '(' + s.contactPerson + ')' : ''}</option>`).join('');
+            
+            document.getElementById('totalSuppliers').textContent = suppliers.length;
+        } catch (error) {
+            console.error('Error loading suppliers:', error);
+        }
+    }
+
+    async function loadMyRequests() {
+        try {
+            const response = await fetch('/api/approval-requests/my-requests?module=Inventory&requestType=StockAdjustment');
+            allMyRequests = await response.json();
+            myRequests = [...allMyRequests];
+            renderRequests();
+            updateStats();
+        } catch (error) {
+            console.error('Error loading requests:', error);
+        }
+    }
+
+    function renderRequests() {
+        const tbody = document.getElementById('requestsTableBody');
+        
+        if (myRequests.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-5 text-muted">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mb-2" style="opacity: 0.5;">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        </svg>
+                        <p class="mb-0">No requests found. Click "Request Stock Adjustment" to create one.</p>
+                    </td>
+                </tr>
+            `;
+            document.getElementById('requestCount').textContent = '0 records';
+            return;
+        }
+
+        tbody.innerHTML = myRequests.map(req => {
+            const requestData = req.requestData ? JSON.parse(req.requestData) : {};
+            const isStockIn = requestData.adjustmentType === 'Add';
+            const quantity = requestData.quantity || 0;
+            const quantityDisplay = isStockIn 
+                ? `<span class="text-success fw-bold">+${quantity}</span>` 
+                : `<span class="text-danger fw-bold">-${quantity}</span>`;
+
+            const statusClass = req.status === 'Pending' ? 'status-pending' : 
+                               req.status === 'Approved' ? 'status-approved' : 'status-rejected';
+
+            return `
+                <tr>
+                    <td><code>${req.requestCode}</code></td>
+                    <td>
+                        <div class="fw-semibold">${req.entityName || '-'}</div>
+                    </td>
+                    <td>
+                        <span class="badge ${isStockIn ? 'bg-success' : 'bg-danger'}">
+                            ${isStockIn ? 'Stock In' : 'Stock Out'}
+                        </span>
+                    </td>
+                    <td class="text-center">${quantityDisplay}</td>
+                    <td>${req.reason}</td>
+                    <td>
+                        <span class="status-badge ${statusClass}">${req.status}</span>
+                    </td>
+                    <td>${formatDate(req.requestedAt)}</td>
+                    <td>${req.approvalNotes || '-'}</td>
+                </tr>
+            `;
+        }).join('');
+
+        document.getElementById('requestCount').textContent = `${myRequests.length} records`;
+    }
+
+    function updateStats() {
+        const pending = allMyRequests.filter(r => r.status === 'Pending').length;
+        const approved = allMyRequests.filter(r => r.status === 'Approved').length;
+        const rejected = allMyRequests.filter(r => r.status === 'Rejected').length;
+
+        document.getElementById('myPendingRequests').textContent = pending;
+        document.getElementById('myApprovedRequests').textContent = approved;
+        document.getElementById('myRejectedRequests').textContent = rejected;
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-PH', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    function filterRequests() {
+        const searchTerm = document.getElementById('searchRequests').value.toLowerCase();
+        const statusFilter = document.getElementById('filterStatus').value;
+        const dateFilter = document.getElementById('filterDate').value;
+
+        myRequests = allMyRequests.filter(req => {
+            const matchesSearch = !searchTerm || (req.entityName && req.entityName.toLowerCase().includes(searchTerm));
+            const matchesStatus = !statusFilter || req.status === statusFilter;
+            const matchesDate = !dateFilter || req.requestedAt.startsWith(dateFilter);
+            return matchesSearch && matchesStatus && matchesDate;
+        });
+
+        renderRequests();
+    }
+
+    function resetFilters() {
+        document.getElementById('searchRequests').value = '';
+        document.getElementById('filterStatus').value = '';
+        document.getElementById('filterDate').value = '';
+        myRequests = [...allMyRequests];
+        renderRequests();
+    }
+
+    function openAdjustmentModal() {
+        // Reset form
+        document.getElementById('adjustmentForm').reset();
+        document.getElementById('supplierId').value = '';
+        document.getElementById('productSelectionSection').style.display = 'none';
+        document.getElementById('selectedProductSection').style.display = 'none';
+        document.getElementById('adjustmentDetailsSection').style.display = 'none';
+        document.getElementById('submitBtn').disabled = true;
+        selectedProduct = null;
+        supplierProducts = [];
+        allSupplierProducts = [];
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('adjustmentModal'));
+        modal.show();
+    }
+
+    async function loadSupplierProducts() {
+        const supplierId = document.getElementById('supplierId').value;
+        
+        if (!supplierId) {
+            document.getElementById('productSelectionSection').style.display = 'none';
+            document.getElementById('selectedProductSection').style.display = 'none';
+            document.getElementById('adjustmentDetailsSection').style.display = 'none';
+            document.getElementById('submitBtn').disabled = true;
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/suppliers/${supplierId}/products`);
+            allSupplierProducts = await response.json();
+            supplierProducts = [...allSupplierProducts];
+            renderSupplierProducts();
+            document.getElementById('productSelectionSection').style.display = 'block';
+            document.getElementById('searchSupplierProducts').value = '';
+        } catch (error) {
+            console.error('Error loading supplier products:', error);
+            showToast('Failed to load supplier products', 'error');
+        }
+    }
+
+    function renderSupplierProducts() {
+        const container = document.getElementById('supplierProductsList');
+
+        if (supplierProducts.length === 0) {
+            container.innerHTML = `
+                <div class="no-products-message">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                    <p class="mb-0">No products found for this supplier.</p>
+                    <small class="text-muted">Assign products to this supplier first.</small>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = supplierProducts.map(product => {
+            const imageHtml = product.mainImageUrl 
+                ? `<img src="${product.mainImageUrl}" alt="${product.productName}" class="product-img">`
+                : `<div class="product-placeholder">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                </div>`;
+
+            const stockClass = product.stockQuantity === 0 ? 'out-of-stock' : 
+                              product.stockQuantity <= product.reorderLevel ? 'low-stock' : 'in-stock';
+            const stockLabel = product.stockQuantity === 0 ? 'Out of Stock' : 
+                              product.stockQuantity <= product.reorderLevel ? 'Low Stock' : 'In Stock';
+
+            const isSelected = selectedProduct && selectedProduct.productId === product.productId;
+
+            return `
+                <div class="product-select-item ${isSelected ? 'selected' : ''}" onclick="selectProduct(${JSON.stringify(product).replace(/"/g, '&quot;')})">
+                    ${imageHtml}
+                    <div class="product-details">
+                        <div class="product-name">${product.productName}</div>
+                        <div class="product-meta">
+                            ${product.sku || product.productCode} | ${product.categoryName || 'Uncategorized'}
+                        </div>
+                    </div>
+                    <div class="product-stock-info">
+                        <div class="stock-badge ${stockClass}">${stockLabel}</div>
+                        <div class="mt-1"><strong>${product.stockQuantity}</strong> units</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function filterSupplierProducts() {
+        const searchTerm = document.getElementById('searchSupplierProducts').value.toLowerCase();
+        
+        supplierProducts = allSupplierProducts.filter(p => {
+            return p.productName.toLowerCase().includes(searchTerm) ||
+                   (p.sku && p.sku.toLowerCase().includes(searchTerm)) ||
+                   (p.productCode && p.productCode.toLowerCase().includes(searchTerm));
+        });
+
+        renderSupplierProducts();
+    }
+
+    function selectProduct(product) {
+        selectedProduct = product;
+        
+        // Update product selection UI
+        renderSupplierProducts();
+
+        // Show selected product details
+        const imageSection = document.getElementById('selectedProductImage');
+        if (product.mainImageUrl) {
+            imageSection.innerHTML = `<img src="${product.mainImageUrl}" alt="${product.productName}">`;
+        } else {
+            imageSection.innerHTML = `
+                <svg class="placeholder-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                </svg>
+            `;
+        }
+
+        document.getElementById('selectedProductName').textContent = product.productName;
+        document.getElementById('selectedProductCode').textContent = product.sku || product.productCode;
+        document.getElementById('selectedProductCategory').textContent = product.categoryName || 'Uncategorized';
+        document.getElementById('selectedProductBrand').textContent = product.brandName || 'No Brand';
+        document.getElementById('selectedProductPrice').textContent = '₱' + parseFloat(product.sellingPrice).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        document.getElementById('selectedProductStock').textContent = product.stockQuantity;
+        document.getElementById('productId').value = product.productId;
+
+        // Show sections
+        document.getElementById('selectedProductSection').style.display = 'block';
+        document.getElementById('adjustmentDetailsSection').style.display = 'block';
+        document.getElementById('submitBtn').disabled = false;
+
+        // Update preview
+        updatePreview();
+    }
+
+    function updatePreview() {
+        if (!selectedProduct) return;
+
+        const currentStock = selectedProduct.stockQuantity;
+        const quantity = parseInt(document.getElementById('adjustmentQuantity').value) || 0;
+        const isAdd = document.querySelector('input[name="adjustmentType"]:checked').value === 'Add';
+        
+        const adjustment = isAdd ? quantity : -quantity;
+        const newStock = currentStock + adjustment;
+
+        document.getElementById('previewCurrentStock').textContent = currentStock;
+        document.getElementById('previewAdjustment').textContent = (adjustment >= 0 ? '+' : '') + adjustment;
+        document.getElementById('previewAdjustment').className = 'preview-value ' + (adjustment >= 0 ? 'text-success' : 'text-danger');
+        document.getElementById('previewNewStock').textContent = newStock;
+        document.getElementById('previewNewStock').className = 'preview-value ' + (newStock < 0 ? 'text-danger' : 'text-primary');
+    }
+
+    async function submitRequest(event) {
+        event.preventDefault();
+
+        if (!selectedProduct) {
+            showToast('Please select a product', 'error');
+            return;
+        }
+
+        const quantity = parseInt(document.getElementById('adjustmentQuantity').value);
+        const adjustmentType = document.querySelector('input[name="adjustmentType"]:checked').value;
+        const reason = document.getElementById('adjustmentReason').value;
+        const priority = document.getElementById('requestPriority').value;
+
+        if (!reason || reason.trim().length < 10) {
+            showToast('Please provide a detailed reason (at least 10 characters)', 'error');
+            return;
+        }
+
+        // Validate deduction
+        if (adjustmentType === 'Deduct' && quantity > selectedProduct.stockQuantity) {
+            showToast('Cannot request to deduct more than current stock', 'error');
+            return;
+        }
+
+        const requestData = {
+            requestType: 'StockAdjustment',
+            module: 'Inventory',
+            title: `Stock ${adjustmentType === 'Add' ? 'Addition' : 'Deduction'} Request - ${selectedProduct.productName}`,
+            description: `Request to ${adjustmentType.toLowerCase()} ${quantity} units ${adjustmentType === 'Add' ? 'to' : 'from'} ${selectedProduct.productName}`,
+            reason: reason,
+            entityType: 'Product',
+            entityId: selectedProduct.productId,
+            entityName: selectedProduct.productName,
+            priority: priority,
+            requestData: JSON.stringify({
+                productId: selectedProduct.productId,
+                productName: selectedProduct.productName,
+                productCode: selectedProduct.productCode,
+                adjustmentType: adjustmentType,
+                quantity: quantity,
+                currentStock: selectedProduct.stockQuantity,
+                expectedNewStock: adjustmentType === 'Add' ? selectedProduct.stockQuantity + quantity : selectedProduct.stockQuantity - quantity
+            })
+        };
+
+        try {
+            const response = await fetch('/api/approval-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('Request submitted successfully! Awaiting admin approval.', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('adjustmentModal')).hide();
+                loadMyRequests();
+            } else {
+                showToast(result.message || 'Failed to submit request', 'error');
+            }
+        } catch (error) {
+            console.error('Error submitting request:', error);
+            showToast('Failed to submit request', 'error');
+        }
+    }
+
+    function showToast(message, type = 'info') {
+        // Simple toast implementation
+        const toast = document.createElement('div');
+        toast.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} position-fixed`;
+        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        toast.innerHTML = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+</script>
+}

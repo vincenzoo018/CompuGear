@@ -1,0 +1,445 @@
+@{
+    ViewData["Title"] = "Support Reports";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Support Reports</h1>
+        <p class="page-subtitle">Analyze support performance metrics and team productivity</p>
+    </div>
+    <div class="d-flex gap-2">
+        <select class="form-select" id="dateRange" style="width: 180px;" onchange="loadReports()">
+            <option value="7">Last 7 Days</option>
+            <option value="30" selected>Last 30 Days</option>
+            <option value="90">Last 90 Days</option>
+            <option value="365">Last Year</option>
+        </select>
+        <button class="btn btn-outline-primary" onclick="exportReport()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export
+        </button>
+    </div>
+</div>
+
+<!-- Key Metrics -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalTickets">0</div>
+                <div class="stat-label">Total Tickets</div>
+                <small class="text-muted" id="ticketTrend">+0 this period</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="resolutionRate">0%</div>
+                <div class="stat-label">Resolution Rate</div>
+                <small class="text-muted">Tickets resolved</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="avgResponseTime">-</div>
+                <div class="stat-label">Avg Response Time</div>
+                <small class="text-muted">First response</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-info">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="activeChatSessions">0</div>
+                <div class="stat-label">Active Chat Sessions</div>
+                <small class="text-muted">Currently active</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Tickets Over Time Chart -->
+    <div class="col-lg-8 mb-4">
+        <div class="card fade-in h-100">
+            <div class="card-header">
+                <h5 class="mb-0">📊 Tickets Over Time</h5>
+            </div>
+            <div class="card-body">
+                <div style="height: 300px;">
+                    <canvas id="ticketsTimeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Status Distribution -->
+    <div class="col-lg-4 mb-4">
+        <div class="card fade-in h-100">
+            <div class="card-header">
+                <h5 class="mb-0">📈 Status Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div style="height: 300px;">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Priority Distribution -->
+    <div class="col-lg-4 mb-4">
+        <div class="card fade-in h-100">
+            <div class="card-header">
+                <h5 class="mb-0">⚡ Priority Breakdown</h5>
+            </div>
+            <div class="card-body">
+                <div style="height: 280px;">
+                    <canvas id="priorityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Category Distribution -->
+    <div class="col-lg-4 mb-4">
+        <div class="card fade-in h-100">
+            <div class="card-header">
+                <h5 class="mb-0">📁 By Category</h5>
+            </div>
+            <div class="card-body">
+                <div style="height: 280px;">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Agent Performance -->
+    <div class="col-lg-4 mb-4">
+        <div class="card fade-in h-100">
+            <div class="card-header">
+                <h5 class="mb-0">👥 Agent Performance</h5>
+            </div>
+            <div class="card-body">
+                <div id="agentPerformance" style="max-height: 280px; overflow-y: auto;">
+                    <div class="text-center py-4 text-muted">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity & Pending Tickets -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card fade-in">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">⏳ Pending/Open Tickets</h5>
+                <span class="badge bg-warning" id="pendingCount">0</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                    <table class="data-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Ticket</th>
+                                <th>Priority</th>
+                                <th>Age</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pendingTicketsBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+        <div class="card fade-in">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">🕒 Recent Activity</h5>
+                <a href="/Support/Tickets" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush" id="recentActivity" style="max-height: 350px; overflow-y: auto;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.agent-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
+.agent-item:last-child { border-bottom: none; }
+.agent-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--primary); }
+.agent-stats { display: flex; gap: 15px; font-size: 0.85rem; }
+.priority-low { background: #dcfce7; color: #166534; }
+.priority-medium { background: #fef3cd; color: #92400e; }
+.priority-high { background: #fee2e2; color: #dc2626; }
+.priority-critical { background: #7f1d1d; color: white; }
+</style>
+
+@section Scripts {
+<script src="~/js/admin.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let ticketsTimeChart = null, statusChart = null, priorityChart = null, categoryChart = null;
+    let ticketsData = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadReports();
+    });
+
+    async function loadReports() {
+        try {
+            // Load tickets from API
+            const response = await fetch('/Support/GetTickets');
+            ticketsData = await response.json();
+            
+            // Load stats
+            const statsResponse = await fetch('/Support/GetSupportStats');
+            const stats = await statsResponse.json();
+            
+            updateMetrics(stats);
+            renderCharts();
+            renderPendingTickets();
+            renderRecentActivity();
+            renderAgentPerformance(stats);
+        } catch (error) {
+            console.error('Failed to load reports:', error);
+        }
+    }
+
+    function updateMetrics(stats) {
+        const days = parseInt(document.getElementById('dateRange').value);
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - days);
+        
+        const periodTickets = ticketsData.filter(t => new Date(t.createdAt) >= cutoffDate);
+        const resolved = ticketsData.filter(t => t.status === 'Resolved' || t.status === 'Closed').length;
+        const resolutionRate = ticketsData.length > 0 ? ((resolved / ticketsData.length) * 100).toFixed(1) : 0;
+        
+        document.getElementById('totalTickets').textContent = ticketsData.length;
+        document.getElementById('ticketTrend').textContent = '+' + periodTickets.length + ' this period';
+        document.getElementById('resolutionRate').textContent = resolutionRate + '%';
+        document.getElementById('avgResponseTime').textContent = stats.avgResponseTime || '< 2h';
+        document.getElementById('activeChatSessions').textContent = stats.activeChatSessions || 0;
+    }
+
+    function renderCharts() {
+        const days = parseInt(document.getElementById('dateRange').value);
+        
+        // Tickets over time
+        const timeData = getTicketsOverTime(days);
+        const ctx1 = document.getElementById('ticketsTimeChart').getContext('2d');
+        if (ticketsTimeChart) ticketsTimeChart.destroy();
+        ticketsTimeChart = new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: timeData.labels,
+                datasets: [
+                    { label: 'Created', data: timeData.created, borderColor: '#3B82F6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.3 },
+                    { label: 'Resolved', data: timeData.resolved, borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.3 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+
+        // Status distribution
+        const statusCounts = { 'Open': 0, 'In Progress': 0, 'Pending Customer': 0, 'Resolved': 0, 'Closed': 0 };
+        ticketsData.forEach(t => { if (statusCounts.hasOwnProperty(t.status)) statusCounts[t.status]++; });
+        
+        const ctx2 = document.getElementById('statusChart').getContext('2d');
+        if (statusChart) statusChart.destroy();
+        statusChart = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(statusCounts),
+                datasets: [{ data: Object.values(statusCounts), backgroundColor: ['#3B82F6', '#F59E0B', '#9CA3AF', '#10B981', '#6B7280'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        // Priority distribution
+        const priorityCounts = { 'Low': 0, 'Medium': 0, 'High': 0, 'Critical': 0 };
+        ticketsData.forEach(t => { if (priorityCounts.hasOwnProperty(t.priority)) priorityCounts[t.priority]++; });
+        
+        const ctx3 = document.getElementById('priorityChart').getContext('2d');
+        if (priorityChart) priorityChart.destroy();
+        priorityChart = new Chart(ctx3, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(priorityCounts),
+                datasets: [{ data: Object.values(priorityCounts), backgroundColor: ['#10B981', '#F59E0B', '#EF4444', '#7F1D1D'] }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
+
+        // Category distribution
+        const categoryCounts = {};
+        ticketsData.forEach(t => {
+            const cat = t.category || 'Uncategorized';
+            categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+        });
+        
+        const ctx4 = document.getElementById('categoryChart').getContext('2d');
+        if (categoryChart) categoryChart.destroy();
+        categoryChart = new Chart(ctx4, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(categoryCounts),
+                datasets: [{ data: Object.values(categoryCounts), backgroundColor: '#008080', borderRadius: 4 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: { x: { beginAtZero: true } }
+            }
+        });
+    }
+
+    function getTicketsOverTime(days) {
+        const labels = [];
+        const created = [];
+        const resolved = [];
+        const now = new Date();
+        
+        for (let i = days - 1; i >= 0; i--) {
+            const date = new Date(now);
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            labels.push(dateStr);
+            
+            const dayStart = new Date(date.setHours(0, 0, 0, 0));
+            const dayEnd = new Date(date.setHours(23, 59, 59, 999));
+            
+            created.push(ticketsData.filter(t => {
+                const d = new Date(t.createdAt);
+                return d >= dayStart && d <= dayEnd;
+            }).length);
+            
+            resolved.push(ticketsData.filter(t => {
+                if (t.status !== 'Resolved' && t.status !== 'Closed') return false;
+                const d = new Date(t.updatedAt);
+                return d >= dayStart && d <= dayEnd;
+            }).length);
+        }
+        
+        return { labels, created, resolved };
+    }
+
+    function renderPendingTickets() {
+        const pending = ticketsData.filter(t => t.status === 'Open' || t.status === 'In Progress' || t.status === 'Pending Customer')
+            .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+            .slice(0, 10);
+        
+        document.getElementById('pendingCount').textContent = pending.length;
+        
+        const priorityClasses = { 'Low': 'priority-low', 'Medium': 'priority-medium', 'High': 'priority-high', 'Critical': 'priority-critical' };
+        
+        document.getElementById('pendingTicketsBody').innerHTML = pending.length ? pending.map(t => `
+            <tr>
+                <td>
+                    <a href="javascript:void(0)" onclick="window.location='/Support/Tickets'" class="text-primary fw-bold">${t.ticketNumber}</a>
+                    <div class="small text-muted">${truncate(t.subject, 25)}</div>
+                </td>
+                <td><span class="badge ${priorityClasses[t.priority] || 'bg-secondary'}">${t.priority}</span></td>
+                <td class="small text-muted">${getAge(t.createdAt)}</td>
+                <td><span class="badge bg-secondary">${t.status}</span></td>
+            </tr>
+        `).join('') : '<tr><td colspan="4" class="text-center py-3 text-muted">No pending tickets</td></tr>';
+    }
+
+    function renderRecentActivity() {
+        const recent = ticketsData.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).slice(0, 8);
+        
+        document.getElementById('recentActivity').innerHTML = recent.length ? recent.map(t => `
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="fw-bold">${t.ticketNumber}</div>
+                    <div class="small text-muted">${truncate(t.subject, 30)}</div>
+                </div>
+                <div class="text-end">
+                    <span class="badge ${t.status === 'Resolved' ? 'bg-success' : 'bg-warning'}">${t.status}</span>
+                    <div class="small text-muted">${formatDate(t.updatedAt)}</div>
+                </div>
+            </div>
+        `).join('') : '<div class="text-center py-4 text-muted">No recent activity</div>';
+    }
+
+    function renderAgentPerformance(stats) {
+        const agents = stats.agentStats || [];
+        
+        document.getElementById('agentPerformance').innerHTML = agents.length ? agents.map(a => `
+            <div class="agent-item">
+                <div class="agent-avatar">${getInitials(a.name)}</div>
+                <div class="flex-fill">
+                    <div class="fw-bold">${a.name}</div>
+                    <div class="agent-stats">
+                        <span>📋 ${a.assignedTickets} tickets</span>
+                        <span>✅ ${a.resolvedTickets} resolved</span>
+                    </div>
+                </div>
+            </div>
+        `).join('') : '<div class="text-center py-4 text-muted">No agent data available</div>';
+    }
+
+    function exportReport() {
+        const csv = 'Ticket #,Subject,Status,Priority,Category,Created,Updated\n' +
+            ticketsData.map(t => `"${t.ticketNumber}","${t.subject}","${t.status}","${t.priority}","${t.category || ''}","${formatDate(t.createdAt)}","${formatDate(t.updatedAt)}"`).join('\n');
+        
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'support_report.csv';
+        a.click();
+    }
+
+    function truncate(str, len) { return str && str.length > len ? str.substring(0, len) + '...' : str || ''; }
+    function getInitials(name) { return name ? name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '?'; }
+    function formatDate(d) { return d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '-'; }
+    function getAge(d) {
+        const hours = Math.floor((new Date() - new Date(d)) / (1000 * 60 * 60));
+        if (hours < 24) return hours + 'h';
+        return Math.floor(hours / 24) + 'd';
+    }
+</script>
+}

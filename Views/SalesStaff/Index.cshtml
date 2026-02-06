@@ -1,0 +1,179 @@
+@{
+    ViewData["Title"] = "Sales Dashboard";
+    Layout = "~/Views/Shared/_SalesLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Sales Dashboard</h1>
+            <p class="text-muted mb-0">Welcome back! Here's your sales overview.</p>
+        </div>
+        <div>
+            <a href="/SalesStaff/CreateOrder" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-2"></i>New Order
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">Total Sales (This Month)</p>
+                            <h3 class="mb-0" id="totalSales">₱0.00</h3>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-currency-dollar text-primary fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">Orders Today</p>
+                            <h3 class="mb-0" id="ordersToday">0</h3>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-bag-check text-success fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">Active Leads</p>
+                            <h3 class="mb-0" id="activeLeads">0</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-people text-warning fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">Pending Orders</p>
+                            <h3 class="mb-0" id="pendingOrders">0</h3>
+                        </div>
+                        <div class="bg-info bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-clock text-info fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Sales Chart -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">Sales Overview</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="salesChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">Recent Orders</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" id="recentOrdersList">
+                        <div class="list-group-item text-center py-4">
+                            <span class="text-muted">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0">
+                    <a href="/SalesStaff/Orders" class="btn btn-outline-primary btn-sm w-100">View All Orders</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-2">
+        <!-- Top Customers -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Top Customers</h5>
+                    <a href="/SalesStaff/Customers" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Customer</th>
+                                    <th class="text-center">Orders</th>
+                                    <th class="text-end">Total Spent</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topCustomersTable">
+                                <tr>
+                                    <td colspan="3" class="text-center py-4">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hot Leads -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Hot Leads</h5>
+                    <a href="/SalesStaff/Leads" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Lead</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Value</th>
+                                </tr>
+                            </thead>
+                            <tbody id="hotLeadsTable">
+                                <tr>
+                                    <td colspan="3" class="text-center py-4">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/sales.js"></script>
+}

@@ -1,0 +1,336 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="page-header">
+    <p class="text-muted mb-0">Dashboard</p>
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Welcome back! Here's an overview of your business performance.</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="stat-cards">
+    <div class="stat-card fade-in stagger-1">
+        <div class="stat-info">
+            <span class="stat-label">Total Customers</span>
+            <span class="stat-value">2,847</span>
+            <div class="stat-trend up">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                    <polyline points="17 6 23 6 23 12"/>
+                </svg>
+                <span>12.5% vs last month</span>
+            </div>
+        </div>
+        <div class="stat-icon teal">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+        </div>
+    </div>
+
+    <div class="stat-card fade-in stagger-2">
+        <div class="stat-info">
+            <span class="stat-label">Total Orders</span>
+            <span class="stat-value">1,234</span>
+            <div class="stat-trend up">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                    <polyline points="17 6 23 6 23 12"/>
+                </svg>
+                <span>8.2% vs last month</span>
+            </div>
+        </div>
+        <div class="stat-icon green">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="9" cy="21" r="1"/>
+                <circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+        </div>
+    </div>
+
+    <div class="stat-card fade-in stagger-3">
+        <div class="stat-info">
+            <span class="stat-label">Products in Stock</span>
+            <span class="stat-value">456</span>
+            <div class="stat-trend down">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
+                    <polyline points="17 18 23 18 23 12"/>
+                </svg>
+                <span>3.1% vs last month</span>
+            </div>
+        </div>
+        <div class="stat-icon blue">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+        </div>
+    </div>
+
+    <div class="stat-card fade-in stagger-4">
+        <div class="stat-info">
+            <span class="stat-label">Revenue</span>
+            <span class="stat-value">P128,450</span>
+            <div class="stat-trend up">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                    <polyline points="17 6 23 6 23 12"/>
+                </svg>
+                <span>15.3% vs last month</span>
+            </div>
+        </div>
+        <div class="stat-icon orange">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="grid grid-3" style="grid-template-columns: 2fr 1fr;">
+    <!-- Revenue Chart -->
+    <div class="card fade-in">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Revenue Overview</h3>
+                <p class="card-subtitle">Monthly revenue trend</p>
+            </div>
+            <button class="btn btn-outline btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                View Details
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales by Category -->
+    <div class="card fade-in">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Sales by Category</h3>
+                <p class="card-subtitle">Current month distribution</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="chart-container" style="height: 220px;">
+                <canvas id="categoryChart"></canvas>
+            </div>
+            <div class="chart-legend">
+                <div class="chart-legend-item">
+                    <span class="chart-legend-dot" style="background: #008080;"></span>
+                    Laptops
+                </div>
+                <div class="chart-legend-item">
+                    <span class="chart-legend-dot" style="background: #10B981;"></span>
+                    Desktops
+                </div>
+                <div class="chart-legend-item">
+                    <span class="chart-legend-dot" style="background: #3B82F6;"></span>
+                    Accessories
+                </div>
+                <div class="chart-legend-item">
+                    <span class="chart-legend-dot" style="background: #F59E0B;"></span>
+                    Software
+                </div>
+                <div class="chart-legend-item">
+                    <span class="chart-legend-dot" style="background: #F97316;"></span>
+                    Services
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders & Top Customers -->
+<div class="grid grid-2 mt-3">
+    <!-- Recent Orders -->
+    <div class="card fade-in">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Recent Orders</h3>
+                <p class="card-subtitle">Latest 5 orders</p>
+            </div>
+            <a asp-controller="Sales" asp-action="Orders" class="btn btn-primary btn-sm">View All</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>#ORD-2847</strong></td>
+                            <td>Acme Corporation</td>
+                            <td>$2,450.00</td>
+                            <td><span class="badge badge-success"><span class="badge-dot"></span>Completed</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>#ORD-2846</strong></td>
+                            <td>John Doe</td>
+                            <td>$890.00</td>
+                            <td><span class="badge badge-pending"><span class="badge-dot"></span>Processing</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>#ORD-2845</strong></td>
+                            <td>Tech Solutions Inc</td>
+                            <td>$5,200.00</td>
+                            <td><span class="badge badge-success"><span class="badge-dot"></span>Completed</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>#ORD-2844</strong></td>
+                            <td>Jane Smith</td>
+                            <td>$350.00</td>
+                            <td><span class="badge badge-warning"><span class="badge-dot"></span>Pending</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>#ORD-2843</strong></td>
+                            <td>Global Enterprises</td>
+                            <td>$12,800.00</td>
+                            <td><span class="badge badge-success"><span class="badge-dot"></span>Completed</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Customers -->
+    <div class="card fade-in">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Top Customers</h3>
+                <p class="card-subtitle">By total revenue</p>
+            </div>
+            <a asp-controller="Customers" asp-action="List" class="btn btn-primary btn-sm">View All</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Orders</th>
+                            <th>Total Spent</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Tech Solutions Inc</strong></td>
+                            <td>89</td>
+                            <td>$287,650</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Global Enterprises</strong></td>
+                            <td>156</td>
+                            <td>$542,100</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Acme Corporation</strong></td>
+                            <td>45</td>
+                            <td>$125,430</td>
+                        </tr>
+                        <tr>
+                            <td><strong>StartUp Hub</strong></td>
+                            <td>28</td>
+                            <td>$67,800</td>
+                        </tr>
+                        <tr>
+                            <td><strong>John Doe</strong></td>
+                            <td>12</td>
+                            <td>$3,250</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Revenue Chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(revenueCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                datasets: [{
+                    label: 'Revenue',
+                    data: [12000, 15000, 14500, 16000, 18000, 22000, 24000],
+                    borderColor: '#008080',
+                    backgroundColor: 'rgba(0, 128, 128, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#008080',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#E5E7EB' },
+                        ticks: {
+                            callback: function(value) { return '$' + (value / 1000) + 'k'; }
+                        }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // Category Chart
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Laptops', 'Desktops', 'Accessories', 'Software', 'Services'],
+                datasets: [{
+                    data: [35, 25, 20, 12, 8],
+                    backgroundColor: ['#008080', '#10B981', '#3B82F6', '#F59E0B', '#F97316'],
+                    borderWidth: 0,
+                    cutout: '70%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    </script>
+}

@@ -1,0 +1,354 @@
+@{
+    ViewData["Title"] = "Credit Notes";
+    Layout = "~/Views/Shared/_BillingLayout.cshtml";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Credit Notes</h1>
+        <p class="page-subtitle">Issue and manage credit notes</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#creditNoteRequestModal">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Request Credit Note
+        </button>
+    </div>
+</div>
+
+<!-- Limited Access Alert -->
+<div class="alert alert-info d-flex align-items-center mb-4 fade-in" role="alert">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 flex-shrink-0">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+    </svg>
+    <div>
+        <strong>Limited Access:</strong> Credit note issuance requires admin approval. Submit a request with valid reason and invoice details for review.
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="stat-cards mb-4">
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Pending Requests</span>
+            <span class="stat-value text-warning" id="pendingCount">0</span>
+        </div>
+        <div class="stat-icon" style="background: #fef3c7; color: #f59e0b;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Approved</span>
+            <span class="stat-value text-success" id="approvedCount">0</span>
+        </div>
+        <div class="stat-icon green">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Rejected</span>
+            <span class="stat-value text-danger" id="rejectedCount">0</span>
+        </div>
+        <div class="stat-icon" style="background: #fee2e2; color: #ef4444;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Total Issued</span>
+            <span class="stat-value" id="totalIssued">$0</span>
+        </div>
+        <div class="stat-icon teal">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- My Credit Note Requests -->
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">My Credit Note Requests</h5>
+        <button class="btn btn-sm btn-outline-secondary" onclick="loadMyRequests()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9"/>
+            </svg>
+            Refresh
+        </button>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Request Code</th>
+                        <th>Invoice</th>
+                        <th>Amount</th>
+                        <th>Reason</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Admin Notes</th>
+                    </tr>
+                </thead>
+                <tbody id="requestsTableBody">
+                    <tr><td colspan="8" class="text-center py-4">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Credit Note Request Modal -->
+<div class="modal fade" id="creditNoteRequestModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Request Credit Note</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="creditNoteRequestForm">
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <strong>Note:</strong> Credit note requests require admin approval. Please provide complete details and a valid reason.
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Select Invoice <span class="text-danger">*</span></label>
+                            <select class="form-select" id="invoiceId" name="invoiceId" required>
+                                <option value="">-- Select Invoice --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Credit Amount <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" step="0.01" class="form-control" id="creditAmount" name="creditAmount" required min="0.01">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Credit Note Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="creditType" name="creditType" required>
+                                <option value="">-- Select Type --</option>
+                                <option value="PartialRefund">Partial Refund</option>
+                                <option value="FullRefund">Full Refund</option>
+                                <option value="PricingError">Pricing Error Correction</option>
+                                <option value="ServiceIssue">Service Issue Compensation</option>
+                                <option value="GoodwillGesture">Goodwill Gesture</option>
+                                <option value="ProductReturn">Product Return</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Priority <span class="text-danger">*</span></label>
+                            <select class="form-select" id="priority" name="priority" required>
+                                <option value="Normal" selected>Normal</option>
+                                <option value="Low">Low</option>
+                                <option value="High">High</option>
+                                <option value="Urgent">Urgent</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Customer Name</label>
+                        <input type="text" class="form-control" id="customerName" readonly placeholder="Will be filled when invoice is selected">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Reason for Credit Note <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="reason" name="reason" rows="4" required 
+                            placeholder="Please provide detailed justification for this credit note request..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Additional Notes</label>
+                        <textarea class="form-control" id="additionalNotes" name="additionalNotes" rows="2" 
+                            placeholder="Any additional information (optional)"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadInvoices();
+        loadMyRequests();
+    });
+
+    async function loadInvoices() {
+        try {
+            const response = await fetch('/api/invoices');
+            const invoices = await response.json();
+            
+            const select = document.getElementById('invoiceId');
+            // Keep the default option
+            select.innerHTML = '<option value="">-- Select Invoice --</option>';
+            
+            invoices.forEach(inv => {
+                const option = document.createElement('option');
+                option.value = inv.invoiceId;
+                option.textContent = `${inv.invoiceNumber} - ${inv.customerName} - $${inv.totalAmount?.toFixed(2) || '0.00'}`;
+                option.dataset.customer = inv.customerName;
+                option.dataset.amount = inv.totalAmount;
+                select.appendChild(option);
+            });
+            
+            // Update customer name when invoice is selected
+            select.addEventListener('change', function() {
+                const selected = this.options[this.selectedIndex];
+                document.getElementById('customerName').value = selected.dataset?.customer || '';
+                document.getElementById('creditAmount').max = selected.dataset?.amount || '';
+            });
+        } catch (error) {
+            console.error('Error loading invoices:', error);
+        }
+    }
+
+    async function loadMyRequests() {
+        try {
+            const response = await fetch('/api/approval-requests/my-requests?module=Billing&requestType=CreditNoteIssue');
+            const requests = await response.json();
+            
+            updateStats(requests);
+            renderRequests(requests);
+        } catch (error) {
+            console.error('Error loading requests:', error);
+        }
+    }
+
+    function updateStats(requests) {
+        const pending = requests.filter(r => r.status === 'Pending').length;
+        const approved = requests.filter(r => r.status === 'Approved').length;
+        const rejected = requests.filter(r => r.status === 'Rejected').length;
+        
+        document.getElementById('pendingCount').textContent = pending;
+        document.getElementById('approvedCount').textContent = approved;
+        document.getElementById('rejectedCount').textContent = rejected;
+        
+        // Calculate total issued (approved amounts)
+        let totalIssued = 0;
+        requests.filter(r => r.status === 'Approved').forEach(r => {
+            try {
+                const data = JSON.parse(r.requestData || '{}');
+                totalIssued += parseFloat(data.creditAmount) || 0;
+            } catch (e) {}
+        });
+        document.getElementById('totalIssued').textContent = `$${totalIssued.toFixed(2)}`;
+    }
+
+    function renderRequests(requests) {
+        const tbody = document.getElementById('requestsTableBody');
+        
+        if (requests.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4">No credit note requests found</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = requests.map(r => {
+            let creditAmount = 0;
+            try {
+                const data = JSON.parse(r.requestData || '{}');
+                creditAmount = data.creditAmount || 0;
+            } catch (e) {}
+            
+            const statusClass = r.status === 'Approved' ? 'bg-success' : 
+                               r.status === 'Rejected' ? 'bg-danger' : 'bg-warning text-dark';
+            
+            const priorityClass = r.priority === 'Urgent' ? 'bg-danger' : 
+                                 r.priority === 'High' ? 'bg-warning text-dark' : 
+                                 r.priority === 'Low' ? 'bg-secondary' : 'bg-info';
+            
+            return `
+                <tr>
+                    <td><code>${r.requestCode}</code></td>
+                    <td>${r.entityName || '-'}</td>
+                    <td>$${creditAmount.toFixed(2)}</td>
+                    <td><span class="text-truncate d-inline-block" style="max-width: 200px;" title="${r.reason}">${r.reason}</span></td>
+                    <td><span class="badge ${priorityClass}">${r.priority}</span></td>
+                    <td><span class="badge ${statusClass}">${r.status}</span></td>
+                    <td>${new Date(r.requestedAt).toLocaleDateString()}</td>
+                    <td>${r.approvalNotes || '-'}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    document.getElementById('creditNoteRequestForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const invoiceSelect = document.getElementById('invoiceId');
+        const invoiceId = invoiceSelect.value;
+        const invoiceName = invoiceSelect.options[invoiceSelect.selectedIndex].text;
+        const creditAmount = document.getElementById('creditAmount').value;
+        const creditType = document.getElementById('creditType').value;
+        const reason = document.getElementById('reason').value;
+        const priority = document.getElementById('priority').value;
+        const additionalNotes = document.getElementById('additionalNotes').value;
+        const customerName = document.getElementById('customerName').value;
+        
+        const requestData = {
+            requestType: 'CreditNoteIssue',
+            module: 'Billing',
+            title: `Credit Note Request - ${invoiceName.split(' - ')[0]}`,
+            description: `Credit note of $${creditAmount} for invoice`,
+            reason: reason,
+            entityType: 'Invoice',
+            entityId: parseInt(invoiceId),
+            entityName: invoiceName,
+            priority: priority,
+            requestData: JSON.stringify({
+                invoiceId: parseInt(invoiceId),
+                creditAmount: parseFloat(creditAmount),
+                creditType: creditType,
+                customerName: customerName,
+                additionalNotes: additionalNotes
+            })
+        };
+        
+        try {
+            const response = await fetch('/api/approval-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('Credit note request submitted successfully! An admin will review your request.');
+                bootstrap.Modal.getInstance(document.getElementById('creditNoteRequestModal')).hide();
+                document.getElementById('creditNoteRequestForm').reset();
+                loadMyRequests();
+            } else {
+                alert('Error: ' + (result.message || 'Failed to submit request'));
+            }
+        } catch (error) {
+            console.error('Error submitting request:', error);
+            alert('Failed to submit credit note request');
+        }
+    });
+</script>
+}

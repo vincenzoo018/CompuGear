@@ -1,0 +1,60 @@
+@{
+    ViewData["Title"] = "Customer Profiles";
+    Layout = "~/Views/Shared/_SupportLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Customer Profiles</h1>
+            <p class="text-muted mb-0">View customer information and ticket history</p>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="text" class="form-control form-control-lg" placeholder="Search customers by name, email, or phone..." id="customerSearch">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customers Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Customer</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th class="text-center">Total Tickets</th>
+                            <th class="text-center">Open Tickets</th>
+                            <th>Last Ticket</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customersTableBody">
+                        <tr>
+                            <td colspan="7" class="text-center py-4">Loading customers...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/support.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            SupportCustomers.load();
+        });
+    </script>
+}

@@ -15,18 +15,13 @@
             --success-color: #10b981;
             --warning-color: #f59e0b;
             --danger-color: #ef4444;
-            --dark-bg: #1a1a2e;
             --card-bg: #ffffff;
             --text-primary: #1f2937;
             --text-secondary: #6b7280;
             --border-color: #e5e7eb;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -34,7 +29,7 @@
             min-height: 100vh;
         }
 
-        /* Customer Portal Header - Clean Design */
+        /* Header */
         .customer-header {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
             position: sticky;
@@ -43,64 +38,57 @@
             box-shadow: 0 4px 20px rgba(0, 128, 128, 0.3);
         }
 
-        /* Main Header with horizontal alignment */
-        .header-main {
-            padding: 15px 0;
-        }
+        .header-main { padding: 12px 0; }
 
         .header-container {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 30px;
+            gap: 20px;
         }
 
         .logo {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             text-decoration: none;
             flex-shrink: 0;
         }
 
         .logo-icon {
-            width: 48px;
-            height: 48px;
+            width: 42px;
+            height: 42px;
             background: white;
-            border-radius: 12px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.4rem;
+            font-size: 1.2rem;
         }
 
         .logo-text {
             color: white;
-            font-size: 1.6rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            letter-spacing: -0.5px;
         }
 
-        .logo-text span {
-            color: var(--accent-color);
-        }
+        .logo-text span { color: var(--accent-color); }
 
-        /* Search Bar */
+        /* Search */
         .search-container {
             flex: 1;
-            max-width: 550px;
+            max-width: 500px;
+            min-width: 150px;
         }
 
-        .search-box {
-            position: relative;
-        }
+        .search-box { position: relative; }
 
         .search-box input {
             width: 100%;
-            padding: 12px 20px 12px 50px;
+            padding: 10px 18px 10px 45px;
             border: none;
             border-radius: 50px;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             background: rgba(255, 255, 255, 0.95);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
@@ -112,7 +100,7 @@
 
         .search-box .search-icon {
             position: absolute;
-            left: 18px;
+            left: 15px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--primary-color);
@@ -122,7 +110,7 @@
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
             flex-shrink: 0;
         }
 
@@ -132,9 +120,11 @@
             align-items: center;
             color: white;
             text-decoration: none;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             opacity: 0.9;
             transition: all 0.3s;
+            position: relative;
+            padding: 5px;
         }
 
         .header-btn:hover {
@@ -144,30 +134,68 @@
         }
 
         .header-btn svg {
-            width: 24px;
-            height: 24px;
-            margin-bottom: 4px;
+            width: 22px;
+            height: 22px;
+            margin-bottom: 3px;
         }
 
         .header-btn .badge {
             position: absolute;
-            top: -5px;
-            right: -5px;
+            top: -2px;
+            right: -2px;
             background: var(--accent-color);
             color: white;
-            font-size: 0.7rem;
-            padding: 2px 6px;
+            font-size: 0.65rem;
+            padding: 2px 5px;
             border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
         }
 
-        .cart-btn {
-            position: relative;
+        /* User Dropdown */
+        .user-dropdown .dropdown-toggle::after { display: none; }
+
+        .user-dropdown .dropdown-menu {
+            border: none;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            padding: 10px 0;
+            min-width: 240px;
         }
 
-        /* Navigation - Horizontal alignment */
+        .user-dropdown .dropdown-header {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 8px;
+            margin: 5px 10px;
+        }
+
+        .user-dropdown .dropdown-item {
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+
+        .user-dropdown .dropdown-item:hover {
+            background: rgba(0, 128, 128, 0.1);
+        }
+
+        .user-dropdown .dropdown-item svg {
+            width: 18px;
+            height: 18px;
+            opacity: 0.7;
+        }
+
+        /* Navigation */
         .nav-bar {
             background: rgba(0, 0, 0, 0.15);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
+
+        .nav-bar::-webkit-scrollbar { display: none; }
 
         .nav-container {
             display: flex;
@@ -182,22 +210,17 @@
             list-style: none;
             margin: 0;
             padding: 0;
-            gap: 0;
-        }
-
-        .nav-menu li {
-            display: flex;
-            align-items: center;
         }
 
         .nav-menu li a {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 15px 28px;
+            padding: 12px 24px;
             color: white;
             text-decoration: none;
             font-weight: 500;
+            font-size: 0.9rem;
             transition: all 0.3s;
             border-bottom: 3px solid transparent;
             white-space: nowrap;
@@ -211,73 +234,66 @@
 
         .nav-menu li a svg {
             flex-shrink: 0;
+            width: 18px;
+            height: 18px;
         }
 
-        /* Main Content - Full Width */
+        /* Main Content */
         .main-content {
-            padding: 30px 0;
-            min-height: calc(100vh - 140px);
+            padding: 25px 0;
+            min-height: calc(100vh - 130px);
         }
 
-        .main-content .container {
-            max-width: 1400px;
-        }
+        .main-content .container { max-width: 1400px; }
 
-        /* Portal Cards - Full Width */
+        /* Cards */
         .portal-card {
             background: white;
             border-radius: 16px;
-            padding: 25px;
+            padding: 20px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             transition: all 0.3s;
             height: 100%;
         }
 
         .portal-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-3px);
             box-shadow: 0 10px 40px rgba(0, 128, 128, 0.15);
         }
 
-        .portal-card .card-icon {
-            width: 60px;
-            height: 60px;
+        .stat-card {
+            background: white;
             border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            height: 100%;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-card .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
         }
 
-        .portal-card .card-icon.primary {
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-            color: white;
-        }
-
-        .portal-card .card-icon.accent {
-            background: linear-gradient(135deg, var(--accent-color), #ff8c42);
-            color: white;
-        }
-
-        .portal-card .card-icon.success {
-            background: linear-gradient(135deg, var(--success-color), #34d399);
-            color: white;
-        }
-
-        .portal-card .card-icon.warning {
-            background: linear-gradient(135deg, var(--warning-color), #fbbf24);
-            color: white;
-        }
-
-        .portal-card h4 {
+        .stat-card .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
             color: var(--text-primary);
-            font-weight: 600;
-            margin-bottom: 10px;
         }
 
-        .portal-card p {
+        .stat-card .stat-label {
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         /* Product Cards */
@@ -287,6 +303,7 @@
             overflow: hidden;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             transition: all 0.3s;
+            height: 100%;
         }
 
         .product-card:hover {
@@ -295,7 +312,7 @@
         }
 
         .product-card .product-image {
-            height: 200px;
+            height: 180px;
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             display: flex;
             align-items: center;
@@ -304,87 +321,59 @@
             overflow: hidden;
         }
 
-        .product-card .product-image img {
-            max-height: 180px;
-            max-width: 100%;
-            object-fit: contain;
-            transition: transform 0.3s ease;
-        }
-
-        .product-card:hover .product-image img {
-            transform: scale(1.05);
-        }
-
-        .product-card .product-image-placeholder {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 100%;
-            color: #9ca3af;
-            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
-        }
-
         .product-card .sale-badge {
             position: absolute;
-            top: 15px;
-            left: 15px;
+            top: 12px;
+            left: 12px;
             background: var(--accent-color);
             color: white;
-            padding: 5px 15px;
+            padding: 4px 12px;
             border-radius: 20px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 600;
         }
 
-        .product-card .product-info {
-            padding: 20px;
-        }
+        .product-card .product-info { padding: 15px; }
 
         .product-card .product-category {
             color: var(--primary-color);
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
         .product-card .product-name {
             color: var(--text-primary);
             font-weight: 600;
-            margin: 8px 0;
-            font-size: 1rem;
-        }
-
-        .product-card .product-price {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            margin: 6px 0;
+            font-size: 0.95rem;
         }
 
         .product-card .current-price {
             color: var(--accent-color);
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: 700;
         }
 
         .product-card .original-price {
             color: var(--text-secondary);
             text-decoration: line-through;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            margin-left: 8px;
         }
 
         .product-card .btn-add-cart {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             color: white;
             border: none;
             border-radius: 10px;
             font-weight: 600;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.3s;
-            margin-top: 15px;
+            margin-top: 12px;
         }
 
         .product-card .btn-add-cart:hover {
@@ -392,52 +381,21 @@
             box-shadow: 0 5px 20px rgba(0, 128, 128, 0.4);
         }
 
-        /* Stat Cards for Dashboard */
-        .stat-card {
-            background: white;
-            border-radius: 16px;
-            padding: 25px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            height: 100%;
-        }
-
-        .stat-card .stat-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-        }
-
-        .stat-card .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        .stat-card .stat-label {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
         /* Chat Widget */
         .chat-widget {
             position: fixed;
-            bottom: 30px;
-            right: 30px;
+            bottom: 25px;
+            right: 25px;
             z-index: 9999;
         }
 
         .chat-toggle {
-            width: 65px;
-            height: 65px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
             border: none;
             color: white;
-            font-size: 1.5rem;
             cursor: pointer;
             box-shadow: 0 5px 30px rgba(0, 128, 128, 0.5);
             transition: all 0.3s;
@@ -446,16 +404,14 @@
             justify-content: center;
         }
 
-        .chat-toggle:hover {
-            transform: scale(1.1);
-        }
+        .chat-toggle:hover { transform: scale(1.1); }
 
         .chat-toggle .notification-dot {
             position: absolute;
             top: 5px;
             right: 5px;
-            width: 15px;
-            height: 15px;
+            width: 14px;
+            height: 14px;
             background: var(--accent-color);
             border-radius: 50%;
             border: 2px solid white;
@@ -465,9 +421,9 @@
         .hero-banner {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
             border-radius: 20px;
-            padding: 40px;
+            padding: 30px;
             color: white;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             position: relative;
             overflow: hidden;
         }
@@ -483,75 +439,165 @@
             border-radius: 50%;
         }
 
-        .hero-banner::after {
-            content: '';
-            position: absolute;
-            bottom: -30%;
-            right: 5%;
-            width: 200px;
-            height: 200px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 50%;
-        }
-
         /* Responsive */
-        @@media (max-width: 992px) {
-            .search-container {
-                max-width: 300px;
-            }
-            
-            .nav-menu li a {
-                padding: 12px 18px;
-                font-size: 0.9rem;
-            }
+        @@media (max-width: 1200px) {
+            .search-container { max-width: 400px; }
+            .nav-menu li a { padding: 12px 18px; }
         }
 
-        @@media (max-width: 768px) {
+        @@media (max-width: 992px) {
             .header-container {
                 flex-wrap: wrap;
-                gap: 15px;
+                gap: 12px;
             }
 
             .search-container {
                 order: 3;
                 max-width: 100%;
                 width: 100%;
+                flex: 1 0 100%;
             }
-            
-            .nav-menu {
-                overflow-x: auto;
-                justify-content: flex-start;
-            }
-            
+
             .nav-menu li a {
-                padding: 12px 15px;
+                padding: 10px 14px;
                 font-size: 0.85rem;
             }
 
-            .main-content {
-                padding: 20px 0;
+            .nav-menu li a svg { width: 16px; height: 16px; }
+
+            .stat-card .stat-value { font-size: 1.5rem; }
+        }
+
+        @@media (max-width: 768px) {
+            .header-main { padding: 10px 0; }
+
+            .logo-icon { width: 38px; height: 38px; font-size: 1rem; }
+
+            .logo-text { font-size: 1.2rem; }
+
+            .header-actions { gap: 10px; }
+
+            .header-btn { padding: 3px; }
+
+            .header-btn svg { width: 20px; height: 20px; }
+
+            .header-btn span:not(.badge) { display: none; }
+
+            .nav-container { justify-content: flex-start; }
+
+            .nav-menu {
+                overflow-x: auto;
+                justify-content: flex-start;
+                width: 100%;
             }
+
+            .nav-menu li a {
+                padding: 10px 12px;
+                font-size: 0.8rem;
+            }
+
+            .main-content { padding: 15px 0; }
+
+            .portal-card, .stat-card { padding: 15px; }
+
+            .hero-banner { padding: 20px; border-radius: 16px; }
+
+            .chat-widget { bottom: 15px; right: 15px; }
+
+            .chat-toggle { width: 55px; height: 55px; }
         }
 
         @@media (max-width: 576px) {
-            .header-actions {
-                gap: 12px;
+            .logo-text { font-size: 1.1rem; }
+
+            .search-box input {
+                padding: 8px 15px 8px 40px;
+                font-size: 0.85rem;
             }
 
-            .header-btn span:not(.badge) {
-                display: none;
+            .nav-menu li a {
+                padding: 8px 10px;
+                font-size: 0.75rem;
+                gap: 5px;
             }
 
-            .logo-text {
-                font-size: 1.3rem;
+            .nav-menu li a svg { width: 14px; height: 14px; }
+
+            .stat-card .stat-value { font-size: 1.3rem; }
+
+            .stat-card .stat-label { font-size: 0.75rem; }
+
+            .stat-card .stat-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
             }
+
+            .product-card .product-image { height: 150px; }
+
+            .product-card .product-name { font-size: 0.85rem; }
+
+            .product-card .current-price { font-size: 1rem; }
+
+            .product-card .btn-add-cart {
+                padding: 8px;
+                font-size: 0.8rem;
+            }
+
+            .user-dropdown .dropdown-menu { min-width: 200px; }
+        }
+
+        /* Toast */
+        .toast-notification {
+            position: fixed;
+            bottom: 90px;
+            right: 25px;
+            background: var(--success-color);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @@keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Loading */
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .loading-spinner::after {
+            content: '';
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <!-- Customer Portal Header - Clean Design -->
+    @{
+        var customerName = Context.Session.GetString("CustomerName") ?? "Guest";
+        var customerEmail = Context.Session.GetString("CustomerEmail") ?? "";
+        var firstName = customerName.Split(' ')[0];
+        var isLoggedIn = Context.Session.GetInt32("CustomerId") != null || Context.Session.GetInt32("RoleId") == 7;
+    }
+
     <header class="customer-header">
-        <!-- Main Header -->
         <div class="header-main">
             <div class="container">
                 <div class="header-container">
@@ -562,67 +608,76 @@
 
                     <div class="search-container">
                         <div class="search-box">
-                            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
                             </svg>
-                            <input type="text" placeholder="Search for computer accessories, peripherals, components...">
+                            <input type="text" id="globalSearch" placeholder="Search for computer accessories, peripherals, components..." onkeypress="handleSearch(event)">
                         </div>
                     </div>
 
                     <div class="header-actions">
-                        <div class="dropdown">
-                            <a href="#" class="header-btn" id="accountDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        @if (isLoggedIn)
+                        {
+                            <div class="dropdown user-dropdown">
+                                <a href="#" class="header-btn" id="accountDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                    <span>@firstName</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="accountDropdown">
+                                    <li>
+                                        <div class="dropdown-header">
+                                            <strong>@customerName</strong><br>
+                                            <small class="text-muted">@customerEmail</small>
+                                        </div>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" href="/CustomerPortal/Profile">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                            </svg>
+                                            My Profile
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="/CustomerPortal/Orders">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+                                            </svg>
+                                            My Orders
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="/CustomerPortal/MyTickets">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                            </svg>
+                                            Support Tickets
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="/Auth/Logout">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                                            </svg>
+                                            Logout
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <a href="/Auth/Login" class="header-btn">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
                                 </svg>
-                                <span>@(Context.Session.GetString("CustomerName")?.Split(' ')[0] ?? "Account")</span>
+                                <span>Login</span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="accountDropdown" style="min-width: 220px;">
-                                <li class="dropdown-header" style="color: var(--text-primary);">
-                                    <strong>@(Context.Session.GetString("CustomerName") ?? "Guest")</strong><br>
-                                    <small class="text-muted">@(Context.Session.GetString("CustomerEmail") ?? "")</small>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item" href="/CustomerPortal/Profile" style="color: var(--text-primary);">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
-                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                            <circle cx="12" cy="7" r="4"/>
-                                        </svg>
-                                        My Profile
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="/CustomerPortal/Orders" style="color: var(--text-primary);">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
-                                            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
-                                            <line x1="3" y1="6" x2="21" y2="6"/>
-                                            <path d="M16 10a4 4 0 0 1-8 0"/>
-                                        </svg>
-                                        My Orders
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="/CustomerPortal/MyTickets" style="color: var(--text-primary);">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
-                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                                        </svg>
-                                        Support Tickets
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <a class="dropdown-item text-danger" href="/Auth/Logout">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
-                                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                                            <polyline points="16 17 21 12 16 7"/>
-                                            <line x1="21" y1="12" x2="9" y2="12"/>
-                                        </svg>
-                                        Logout
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
+                        }
                         <a href="/CustomerPortal/Wishlist" class="header-btn">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
@@ -630,7 +685,7 @@
                             <span>Wishlist</span>
                         </a>
                         <a href="/CustomerPortal/Cart" class="header-btn cart-btn">
-                            <span class="badge" id="cartBadge">0</span>
+                            <span class="badge" id="cartBadge" style="display: none;">0</span>
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
                             </svg>
@@ -641,37 +696,36 @@
             </div>
         </div>
 
-        <!-- Navigation - Centered Horizontal -->
         <nav class="nav-bar">
             <div class="container">
                 <div class="nav-container">
                     <ul class="nav-menu">
                         <li><a href="/CustomerPortal" class="@(ViewData["Title"]?.ToString() == "My Dashboard" ? "active" : "")">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
                             </svg>
                             Home
                         </a></li>
                         <li><a href="/CustomerPortal/Products" class="@(ViewData["Title"]?.ToString() == "Browse Products" ? "active" : "")">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
                             </svg>
                             Products
                         </a></li>
                         <li><a href="/CustomerPortal/Promotions" class="@(ViewData["Title"]?.ToString() == "Promotions & Deals" ? "active" : "")">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                             </svg>
                             Deals & Promos
                         </a></li>
                         <li><a href="/CustomerPortal/Orders" class="@(ViewData["Title"]?.ToString() == "My Orders" ? "active" : "")">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
                             </svg>
                             My Orders
                         </a></li>
                         <li><a href="/CustomerPortal/Support" class="@(ViewData["Title"]?.ToString() == "Support Center" ? "active" : "")">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                             </svg>
                             Support
@@ -682,18 +736,16 @@
         </nav>
     </header>
 
-    <!-- Main Content - Full Width -->
     <main class="main-content">
         <div class="container">
             @RenderBody()
         </div>
     </main>
 
-    <!-- Chat Widget -->
     <div class="chat-widget">
         <button class="chat-toggle" onclick="toggleChat()" title="Chat with us">
             <span class="notification-dot"></span>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
         </button>
@@ -706,7 +758,15 @@
             window.location.href = '/CustomerPortal/Support';
         }
 
-        // Update cart badge
+        function handleSearch(event) {
+            if (event.key === 'Enter') {
+                const query = document.getElementById('globalSearch').value.trim();
+                if (query) {
+                    window.location.href = '/CustomerPortal/Products?search=' + encodeURIComponent(query);
+                }
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             updateCartBadge();
         });
@@ -717,8 +777,18 @@
             const badge = document.getElementById('cartBadge');
             if (badge) {
                 badge.textContent = totalItems;
-                badge.style.display = totalItems > 0 ? 'block' : 'none';
+                badge.style.display = totalItems > 0 ? 'flex' : 'none';
             }
+        }
+
+        function showToast(message, type = 'success') {
+            const colors = { success: '#10b981', error: '#ef4444', warning: '#f59e0b', info: '#3b82f6' };
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.style.background = colors[type] || colors.success;
+            toast.innerHTML = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
         }
     </script>
     @await RenderSectionAsync("Scripts", required: false)

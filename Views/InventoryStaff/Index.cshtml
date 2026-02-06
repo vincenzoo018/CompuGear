@@ -1,0 +1,178 @@
+@{
+    ViewData["Title"] = "Inventory Dashboard";
+    Layout = "~/Views/Shared/_InventoryLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Inventory Dashboard</h1>
+            <p class="text-muted mb-0">Welcome back! Here's your inventory overview.</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">Total Products</p>
+                            <h3 class="mb-0" id="totalProducts">0</h3>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-box-seam text-primary fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">Inventory Value</p>
+                            <h3 class="mb-0" id="inventoryValue">₱0</h3>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-currency-dollar text-success fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">Low Stock</p>
+                            <h3 class="mb-0" id="lowStockCount">0</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-exclamation-triangle text-warning fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">Out of Stock</p>
+                            <h3 class="mb-0" id="outOfStockCount">0</h3>
+                        </div>
+                        <div class="bg-danger bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-x-circle text-danger fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Stock Distribution Chart -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">Stock Status</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="stockChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Alerts -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Stock Alerts</h5>
+                    <a href="/InventoryStaff/Alerts" class="btn btn-sm btn-outline-warning">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Product</th>
+                                    <th class="text-center">Current Stock</th>
+                                    <th class="text-center">Reorder Level</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="alertsTable">
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-2">
+        <!-- Category Distribution -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">Products by Category</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <a href="/InventoryStaff/Products" class="btn btn-outline-primary w-100 py-3">
+                                <i class="bi bi-box-seam d-block fs-4 mb-1"></i>
+                                Products
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="/InventoryStaff/Stock" class="btn btn-outline-info w-100 py-3">
+                                <i class="bi bi-bar-chart d-block fs-4 mb-1"></i>
+                                Stock Levels
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="/InventoryStaff/Alerts" class="btn btn-outline-warning w-100 py-3">
+                                <i class="bi bi-exclamation-triangle d-block fs-4 mb-1"></i>
+                                Stock Alerts
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="/InventoryStaff/Suppliers" class="btn btn-outline-success w-100 py-3">
+                                <i class="bi bi-truck d-block fs-4 mb-1"></i>
+                                Suppliers
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/inventory.js"></script>
+}

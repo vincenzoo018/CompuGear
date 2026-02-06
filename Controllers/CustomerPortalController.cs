@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using CompuGear.Data;
 using CompuGear.Models;
@@ -9,6 +10,7 @@ namespace CompuGear.Controllers
     /// <summary>
     /// Customer Portal Controller - For Customer-facing pages
     /// Handles customer dashboard, products, orders, support, and promotions
+    /// Requires Customer role (RoleId = 7) authentication
     /// </summary>
     public class CustomerPortalController : Controller
     {
@@ -21,14 +23,45 @@ namespace CompuGear.Controllers
             _configuration = configuration;
         }
 
-        // Helper method to get current customer
+        // Override OnActionExecuting to check authentication for all actions
+        public override void OnActionExecuting(ActionExecutingContext context)
+        {
+            base.OnActionExecuting(context);
+            
+            // Check if user is logged in as customer (RoleId = 7)
+            var roleId = HttpContext.Session.GetInt32("RoleId");
+            var customerId = HttpContext.Session.GetInt32("CustomerId");
+            
+            // Allow access only for Customer role (RoleId = 7) or users with CustomerId in session
+            if (roleId != 7 && customerId == null)
+            {
+                context.Result = new RedirectToActionResult("Login", "Auth", null);
+                return;
+            }
+        }
+
+        // Helper method to get current customer from session
         private async Task<Customer?> GetCurrentCustomerAsync()
         {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (int.TryParse(userIdClaim, out int userId))
+            var customerId = HttpContext.Session.GetInt32("CustomerId");
+            if (customerId.HasValue)
             {
-                return await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
+                return await _context.Customers
+                    .Include(c => c.Category)
+                    .Include(c => c.Addresses)
+                    .FirstOrDefaultAsync(c => c.CustomerId == customerId.Value);
             }
+            
+            // Fallback: try to get from UserId
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId.HasValue)
+            {
+                return await _context.Customers
+                    .Include(c => c.Category)
+                    .Include(c => c.Addresses)
+                    .FirstOrDefaultAsync(c => c.UserId == userId.Value);
+            }
+            
             return null;
         }
 
@@ -132,24 +165,20 @@ namespace CompuGear.Controllers
         public async Task<IActionResult> GetProfile()
         {
             var customer = await GetCurrentCustomerAsync();
-            if (customer == null)
-            {
-                // For demo, get first customer
-                customer = await _context.Customers
-                    .Include(c => c.Category)
-                    .Include(c => c.Addresses)
-                    .FirstOrDefaultAsync();
-            }
-            else
-            {
-                customer = await _context.Customers
-                    .Include(c => c.Category)
-                    .Include(c => c.Addresses)
-                    .FirstOrDefaultAsync(c => c.CustomerId == customer.CustomerId);
-            }
 
             if (customer == null)
-                return Json(new { success = false, message = "Customer not found" });
+                return Json(new { success = false, message = "Customer not found. Please login again." });
+
+            // Get total orders and spent from orders table
+            var orderStats = await _context.Orders
+                .Where(o => o.CustomerId == customer.CustomerId)
+                .GroupBy(o => o.CustomerId)
+                .Select(g => new
+                {
+                    TotalOrders = g.Count(),
+                    TotalSpent = g.Sum(o => o.TotalAmount)
+                })
+                .FirstOrDefaultAsync();
 
             return Json(new
             {
@@ -165,7 +194,7 @@ namespace CompuGear.Controllers
                     customer.DateOfBirth,
                     customer.Gender,
                     customer.Avatar,
-                    CategoryName = customer.Category?.CategoryName,
+                    CategoryName = customer.Category?.CategoryName ?? "Standard",
                     customer.BillingAddress,
                     customer.BillingCity,
                     customer.BillingState,
@@ -178,12 +207,12 @@ namespace CompuGear.Controllers
                     customer.ShippingCountry,
                     customer.CompanyName,
                     customer.Status,
-                    customer.TotalOrders,
-                    customer.TotalSpent,
+                    TotalOrders = orderStats?.TotalOrders ?? customer.TotalOrders,
+                    TotalSpent = orderStats?.TotalSpent ?? customer.TotalSpent,
                     customer.LoyaltyPoints,
                     customer.MarketingOptIn,
                     customer.CreatedAt,
-                    Addresses = customer.Addresses.Select(a => new
+                    Addresses = customer.Addresses?.Select(a => new
                     {
                         a.AddressId,
                         a.AddressType,
@@ -194,7 +223,7 @@ namespace CompuGear.Controllers
                         a.ZipCode,
                         a.Country,
                         a.IsDefault
-                    })
+                    }) ?? Enumerable.Empty<object>()
                 }
             });
         }
@@ -204,13 +233,9 @@ namespace CompuGear.Controllers
         public async Task<IActionResult> UpdateProfile([FromBody] CustomerProfileUpdateModel model)
         {
             var customer = await GetCurrentCustomerAsync();
-            if (customer == null)
-            {
-                customer = await _context.Customers.FirstOrDefaultAsync();
-            }
 
             if (customer == null)
-                return Json(new { success = false, message = "Customer not found" });
+                return Json(new { success = false, message = "Customer not found. Please login again." });
 
             customer.FirstName = model.FirstName ?? customer.FirstName;
             customer.LastName = model.LastName ?? customer.LastName;
@@ -231,6 +256,9 @@ namespace CompuGear.Controllers
             customer.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+            
+            // Update session with new name if changed
+            HttpContext.Session.SetString("CustomerName", customer.FullName);
 
             return Json(new { success = true, message = "Profile updated successfully" });
         }
@@ -1111,6 +1139,63 @@ namespace CompuGear.Controllers
             return Json(new { success = true, data = chats });
         }
 
+        // POST: /CustomerPortal/SendLiveChatMessage (For Customer to send to Agent)
+        [HttpPost]
+        public async Task<IActionResult> SendLiveChatMessage([FromBody] LiveChatMessageModel model)
+        {
+            var session = await _context.ChatSessions.FindAsync(model.SessionId);
+            if (session == null)
+                return Json(new { success = false, message = "Chat session not found" });
+
+            var customerMessage = new ChatMessage
+            {
+                SessionId = session.SessionId,
+                SenderType = "Customer",
+                SenderId = session.CustomerId,
+                Message = model.Message,
+                MessageType = "Text",
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.ChatMessages.Add(customerMessage);
+            session.TotalMessages += 1;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, messageId = customerMessage.MessageId });
+        }
+
+        // GET: /CustomerPortal/GetChatMessages (For polling new messages)
+        [HttpGet]
+        public async Task<IActionResult> GetChatMessages(int sessionId, int lastMessageId = 0)
+        {
+            var session = await _context.ChatSessions
+                .Include(s => s.Agent)
+                .FirstOrDefaultAsync(s => s.SessionId == sessionId);
+                
+            if (session == null)
+                return Json(new { success = false, message = "Session not found" });
+
+            var messages = await _context.ChatMessages
+                .Where(m => m.SessionId == sessionId && m.MessageId > lastMessageId && m.SenderType == "Agent")
+                .OrderBy(m => m.CreatedAt)
+                .Select(m => new
+                {
+                    m.MessageId,
+                    m.SenderType,
+                    m.Message,
+                    m.CreatedAt
+                })
+                .ToListAsync();
+
+            return Json(new
+            {
+                success = true,
+                messages = messages,
+                agentJoined = session.AgentId != null && session.Status == "Active",
+                agentName = session.Agent != null ? $"{session.Agent.FirstName} {session.Agent.LastName}" : null,
+                chatEnded = session.Status == "Closed" || session.Status == "Ended"
+            });
+        }
+
         private (string Response, string Intent, decimal Confidence, string[] QuickReplies, bool ShouldTransferToAgent) GenerateAIResponse(string message)
         {
             var lowerMessage = message.ToLower();
@@ -1300,6 +1385,12 @@ namespace CompuGear.Controllers
     public class TransferToAgentModel
     {
         public int SessionId { get; set; }
+    }
+
+    public class LiveChatMessageModel
+    {
+        public int SessionId { get; set; }
+        public string Message { get; set; } = string.Empty;
     }
 
     public class AgentChatModel

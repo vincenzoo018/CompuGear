@@ -1,0 +1,163 @@
+@{
+    ViewData["Title"] = "Marketing Dashboard";
+    Layout = "~/Views/Shared/_MarketingLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Marketing Dashboard</h1>
+            <p class="text-muted mb-0">Welcome back! Here's your marketing overview.</p>
+        </div>
+        <div>
+            <a href="/MarketingStaff/CreateCampaign" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-2"></i>New Campaign
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">Active Campaigns</p>
+                            <h3 class="mb-0" id="activeCampaigns">0</h3>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-megaphone text-primary fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">Active Promotions</p>
+                            <h3 class="mb-0" id="activePromotions">0</h3>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-tag text-success fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">Total Reach</p>
+                            <h3 class="mb-0" id="totalReach">0</h3>
+                        </div>
+                        <div class="bg-info bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-people text-info fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <p class="text-muted mb-1">Conversion Rate</p>
+                            <h3 class="mb-0" id="conversionRate">0%</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-graph-up-arrow text-warning fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Campaign Performance Chart -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">Campaign Performance</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Campaigns -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Active Campaigns</h5>
+                    <a href="/MarketingStaff/Campaigns" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" id="activeCampaignsList">
+                        <div class="list-group-item text-center py-4">
+                            <span class="text-muted">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-2">
+        <!-- Current Promotions -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Current Promotions</h5>
+                    <a href="/MarketingStaff/Promotions" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Promotion</th>
+                                    <th>Discount</th>
+                                    <th>End Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="promotionsTable">
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Segments -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Customer Segments</h5>
+                    <a href="/MarketingStaff/Segments" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    <canvas id="segmentsChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/marketing.js"></script>
+}

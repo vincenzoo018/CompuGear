@@ -1,0 +1,153 @@
+@{
+    ViewData["Title"] = "Invoices";
+    Layout = "~/Views/Shared/_BillingLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Invoices</h1>
+            <p class="text-muted mb-0">Manage customer invoices</p>
+        </div>
+        <a href="/BillingStaff/CreateInvoice" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-2"></i>Create Invoice
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h4 class="text-primary mb-0" id="totalInvoiced">₱0</h4>
+                    <small class="text-muted">Total Invoiced</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h4 class="text-success mb-0" id="totalPaid">₱0</h4>
+                    <small class="text-muted">Paid</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h4 class="text-warning mb-0" id="totalPending">₱0</h4>
+                    <small class="text-muted">Pending</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h4 class="text-danger mb-0" id="totalOverdue">₱0</h4>
+                    <small class="text-muted">Overdue</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoices Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" placeholder="Search invoices..." id="invoiceSearch">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="invoiceStatusFilter">
+                        <option value="">All Status</option>
+                        <option value="Draft">Draft</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Partial">Partial</option>
+                        <option value="Overdue">Overdue</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="date" class="form-control" id="invoiceDateFilter">
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Customer</th>
+                            <th>Invoice Date</th>
+                            <th>Due Date</th>
+                            <th class="text-end">Amount</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoicesTableBody">
+                        <tr>
+                            <td colspan="7" class="text-center py-4">Loading invoices...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Record Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="paymentForm" onsubmit="Invoices.savePayment(); return false;">
+                <div class="modal-body">
+                    <input type="hidden" id="paymentInvoiceId">
+                    <div class="mb-3">
+                        <label class="form-label">Amount</label>
+                        <input type="number" class="form-control" id="paymentAmount" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <select class="form-select" id="paymentMethod" required>
+                            <option value="Cash">Cash</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="GCash">GCash</option>
+                            <option value="Maya">Maya</option>
+                            <option value="Check">Check</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reference #</label>
+                        <input type="text" class="form-control" id="paymentReference">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" id="paymentNotes" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Record Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/billing.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Invoices.load();
+        });
+    </script>
+}

@@ -1,0 +1,81 @@
+@{
+    ViewData["Title"] = "Stock Alerts";
+    Layout = "~/Views/Shared/_InventoryLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Stock Alerts</h1>
+            <p class="text-muted mb-0">Products that need attention</p>
+        </div>
+    </div>
+
+    <!-- Alert Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-warning bg-opacity-10">
+                <div class="card-body text-center">
+                    <i class="bi bi-exclamation-triangle text-warning fs-1"></i>
+                    <h3 class="mb-0 mt-2" id="lowStockAlerts">0</h3>
+                    <small class="text-muted">Low Stock Items</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-danger bg-opacity-10">
+                <div class="card-body text-center">
+                    <i class="bi bi-x-circle text-danger fs-1"></i>
+                    <h3 class="mb-0 mt-2" id="outOfStockAlerts">0</h3>
+                    <small class="text-muted">Out of Stock Items</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm bg-primary bg-opacity-10">
+                <div class="card-body text-center">
+                    <i class="bi bi-bell text-primary fs-1"></i>
+                    <h3 class="mb-0 mt-2" id="totalAlerts">0</h3>
+                    <small class="text-muted">Total Alerts</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0">
+            <h5 class="mb-0"><i class="bi bi-exclamation-triangle text-warning me-2"></i>Items Requiring Attention</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>SKU</th>
+                            <th>Product</th>
+                            <th class="text-center">Current Stock</th>
+                            <th class="text-center">Reorder Level</th>
+                            <th>Alert</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alertsTableBody">
+                        <tr>
+                            <td colspan="5" class="text-center py-4">Loading alerts...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/inventory.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            StockAlerts.load();
+        });
+    </script>
+}

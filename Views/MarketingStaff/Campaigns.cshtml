@@ -1,0 +1,114 @@
+@{
+    ViewData["Title"] = "Marketing Campaigns";
+    Layout = "~/Views/Shared/_MarketingLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Marketing Campaigns</h1>
+            <p class="text-muted mb-0">Create and manage marketing campaigns</p>
+        </div>
+        <a href="/MarketingStaff/CreateCampaign" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-2"></i>New Campaign
+        </a>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h4 class="text-primary mb-0" id="totalCampaigns">0</h4>
+                    <small class="text-muted">Total Campaigns</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h4 class="text-success mb-0" id="activeCampaigns">0</h4>
+                    <small class="text-muted">Active</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h4 class="text-warning mb-0" id="draftCampaigns">0</h4>
+                    <small class="text-muted">Draft</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <h4 class="text-secondary mb-0" id="completedCampaigns">0</h4>
+                    <small class="text-muted">Completed</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaigns Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0">
+            <div class="row align-items-center">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" placeholder="Search campaigns..." id="campaignSearch">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="campaignStatusFilter">
+                        <option value="">All Status</option>
+                        <option value="Draft">Draft</option>
+                        <option value="Scheduled">Scheduled</option>
+                        <option value="Active">Active</option>
+                        <option value="Paused">Paused</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="campaignTypeFilter">
+                        <option value="">All Types</option>
+                        <option value="Email">Email</option>
+                        <option value="Social Media">Social Media</option>
+                        <option value="SMS">SMS</option>
+                        <option value="Display">Display</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Campaign</th>
+                            <th>Type</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th class="text-end">Budget</th>
+                            <th>Status</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="campaignsTableBody">
+                        <tr>
+                            <td colspan="7" class="text-center py-4">Loading campaigns...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/marketing.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Campaigns.load();
+        });
+    </script>
+}

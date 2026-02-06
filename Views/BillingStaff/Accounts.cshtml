@@ -1,0 +1,59 @@
+@{
+    ViewData["Title"] = "Customer Accounts";
+    Layout = "~/Views/Shared/_BillingLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Customer Accounts</h1>
+            <p class="text-muted mb-0">View customer account balances and history</p>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="text" class="form-control form-control-lg" placeholder="Search customers by name, email, or account..." id="accountSearch">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accounts Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Account #</th>
+                            <th>Customer</th>
+                            <th class="text-center">Orders</th>
+                            <th class="text-end">Total Spent</th>
+                            <th class="text-end">Balance</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accountsTableBody">
+                        <tr>
+                            <td colspan="6" class="text-center py-4">Loading accounts...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/billing.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            CustomerAccounts.load();
+        });
+    </script>
+}

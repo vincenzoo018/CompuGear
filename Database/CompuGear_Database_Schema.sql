@@ -47,12 +47,13 @@ CREATE TABLE Roles (
 
 -- Insert Default Roles
 INSERT INTO Roles (RoleName, Description, AccessLevel) VALUES
-('Super Admin', 'Full system access with all privileges', 7),
-('Company Admin', 'Company-wide administrative access', 6),
-('Sales Staff', 'Sales and order management access', 5),
-('Customer Support Staff', 'Customer support and ticket management', 4),
-('Marketing Staff', 'Marketing campaigns and promotions management', 3),
-('Accounting & Billing Staff', 'Financial and billing management', 2),
+('Super Admin', 'Full system access with all privileges', 8),
+('Company Admin', 'Company-wide administrative access', 7),
+('Sales Staff', 'Sales and order management access', 6),
+('Customer Support Staff', 'Customer support and ticket management', 5),
+('Marketing Staff', 'Marketing campaigns and promotions management', 4),
+('Accounting & Billing Staff', 'Financial and billing management', 3),
+('Inventory Staff', 'Inventory and stock management', 2),
 ('Customer', 'Customer portal access', 1);
 
 -- Companies Table
@@ -1101,16 +1102,28 @@ GO
 -- INSERT SAMPLE DATA
 -- =====================================================
 
--- Insert Sample Admin User (Password: Admin@123 - Note: Use proper hashing in production)
+-- Insert Sample Admin User (Password: password123 for all users)
+-- Password hash is generated using SHA256(password + salt) encoded as Base64
+-- This matches the C# hashing: Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(password + salt)))
+DECLARE @Salt NVARCHAR(255) = 'CompuGearSalt2024';
+-- Pre-computed Base64 hash for 'password123' + 'CompuGearSalt2024'
+DECLARE @PasswordHash NVARCHAR(255) = 'LLa6ziN2IFID4vOA6XxZAPHaPMdthL5I4QbicaqplE0=';
+
+-- Super Admin (RoleId: 1)
 INSERT INTO Users (Username, Email, PasswordHash, Salt, FirstName, LastName, RoleId, CompanyId, IsActive, IsEmailVerified)
-VALUES ('admin', 'admin@compugear.com', 'hashed_password_here', 'salt_here', 'System', 'Administrator', 1, 1, 1, 1);
+VALUES ('admin', 'admin@compugear.com', @PasswordHash, @Salt, 'System', 'Administrator', 1, 1, 1, 1);
+
+-- Company Admin (RoleId: 2)
+INSERT INTO Users (Username, Email, PasswordHash, Salt, FirstName, LastName, RoleId, CompanyId, IsActive, IsEmailVerified)
+VALUES ('company.admin', 'companyadmin@compugear.com', @PasswordHash, @Salt, 'Company', 'Admin', 2, 1, 1, 1);
 
 -- Insert Sample Staff Users
 INSERT INTO Users (Username, Email, PasswordHash, Salt, FirstName, LastName, RoleId, CompanyId, IsActive, IsEmailVerified) VALUES
-('sarah.johnson', 'sarah.j@compugear.com', 'hashed_password', 'salt', 'Sarah', 'Johnson', 3, 1, 1, 1), -- Sales Staff
-('mike.chen', 'mike.c@compugear.com', 'hashed_password', 'salt', 'Mike', 'Chen', 4, 1, 1, 1), -- Support Staff
-('emily.brown', 'emily.b@compugear.com', 'hashed_password', 'salt', 'Emily', 'Brown', 5, 1, 1, 1), -- Marketing Staff
-('john.doe', 'john.d@compugear.com', 'hashed_password', 'salt', 'John', 'Doe', 6, 1, 1, 1); -- Billing Staff
+('sarah.johnson', 'sales@compugear.com', @PasswordHash, @Salt, 'Sarah', 'Johnson', 3, 1, 1, 1), -- Sales Staff
+('mike.chen', 'support@compugear.com', @PasswordHash, @Salt, 'Mike', 'Chen', 4, 1, 1, 1), -- Support Staff
+('emily.brown', 'marketing@compugear.com', @PasswordHash, @Salt, 'Emily', 'Brown', 5, 1, 1, 1), -- Marketing Staff
+('john.doe', 'billing@compugear.com', @PasswordHash, @Salt, 'John', 'Doe', 6, 1, 1, 1), -- Billing Staff
+('james.wilson', 'inventory@compugear.com', @PasswordHash, @Salt, 'James', 'Wilson', 7, 1, 1, 1); -- Inventory Staff
 
 -- Insert Sample Customers
 INSERT INTO Customers (CustomerCode, FirstName, LastName, Email, Phone, CategoryId, Status, BillingAddress, BillingCity, BillingCountry)

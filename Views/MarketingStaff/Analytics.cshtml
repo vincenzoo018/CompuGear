@@ -1,0 +1,176 @@
+@{
+    ViewData["Title"] = "Marketing Analytics";
+    Layout = "~/Views/Shared/_MarketingLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Marketing Analytics</h1>
+            <p class="text-muted mb-0">Track and analyze marketing performance</p>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-outline-primary active" data-period="week">This Week</button>
+            <button class="btn btn-outline-primary" data-period="month">This Month</button>
+            <button class="btn btn-outline-primary" data-period="quarter">This Quarter</button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">Total Campaigns</p>
+                            <h3 class="mb-0" id="totalCampaigns">0</h3>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-megaphone text-primary fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">Total Reach</p>
+                            <h3 class="mb-0" id="totalReach">0</h3>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-eye text-success fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">Engagement Rate</p>
+                            <h3 class="mb-0" id="engagementRate">0%</h3>
+                        </div>
+                        <div class="bg-info bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-hand-thumbs-up text-info fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">ROI</p>
+                            <h3 class="mb-0" id="roi">0%</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-graph-up-arrow text-warning fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Performance Over Time -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">Performance Over Time</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Campaign Types -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">By Campaign Type</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="campaignTypeChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-2">
+        <!-- Top Campaigns -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">Top Performing Campaigns</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Campaign</th>
+                                    <th class="text-center">Reach</th>
+                                    <th class="text-center">Conversions</th>
+                                    <th class="text-end">ROI</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topCampaignsTable">
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Promotions -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">Top Promotions</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Promotion</th>
+                                    <th class="text-center">Uses</th>
+                                    <th class="text-end">Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topPromotionsTable">
+                                <tr>
+                                    <td colspan="3" class="text-center py-4">Loading...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/marketing.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Analytics.load();
+        });
+    </script>
+}

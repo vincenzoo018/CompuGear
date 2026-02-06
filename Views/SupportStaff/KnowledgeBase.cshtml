@@ -1,0 +1,100 @@
+@{
+    ViewData["Title"] = "Knowledge Base";
+    Layout = "~/Views/Shared/_SupportLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Knowledge Base</h1>
+            <p class="text-muted mb-0">Articles and solutions for common issues</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#articleModal">
+            <i class="bi bi-plus-lg me-2"></i>Add Article
+        </button>
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" class="form-control form-control-lg" placeholder="Search articles..." id="articleSearch">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select form-select-lg" id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <option value="Getting Started">Getting Started</option>
+                        <option value="Troubleshooting">Troubleshooting</option>
+                        <option value="FAQ">FAQ</option>
+                        <option value="Technical">Technical</option>
+                        <option value="Billing">Billing</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Articles Grid -->
+    <div class="row g-4" id="articlesGrid">
+        <div class="col-12 text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Article Modal -->
+<div class="modal fade" id="articleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Article</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="articleForm">
+                <div class="modal-body">
+                    <input type="hidden" id="articleId">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" class="form-control" id="articleTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" id="articleCategory" required>
+                            <option value="">Select Category</option>
+                            <option value="Getting Started">Getting Started</option>
+                            <option value="Troubleshooting">Troubleshooting</option>
+                            <option value="FAQ">FAQ</option>
+                            <option value="Technical">Technical</option>
+                            <option value="Billing">Billing</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Content</label>
+                        <textarea class="form-control" id="articleContent" rows="10" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tags (comma separated)</label>
+                        <input type="text" class="form-control" id="articleTags" placeholder="e.g. login, password, reset">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Article</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/support.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            KnowledgeBase.load();
+        });
+    </script>
+}

@@ -741,7 +741,7 @@
                 if (result.success) {
                     showSuccess(result.message);
                     setTimeout(() => {
-                        window.location.href = result.redirectUrl || '/CustomerPortal';
+                        window.location.href = result.redirectUrl || '/CustomerPortal/Index';
                     }, 1000);
                 } else {
                     showError(result.message || 'Login failed. Please try again.');

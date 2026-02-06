@@ -17,6 +17,74 @@ namespace CompuGear.Controllers
             _context = context;
         }
 
+        // Debug: Check current session (useful for troubleshooting)
+        [HttpGet]
+        public IActionResult CheckSession()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var roleId = HttpContext.Session.GetInt32("RoleId");
+            var userName = HttpContext.Session.GetString("UserName");
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+            var roleName = HttpContext.Session.GetString("RoleName");
+
+            return Json(new
+            {
+                isLoggedIn = userId.HasValue,
+                userId,
+                roleId,
+                userName,
+                userEmail,
+                roleName,
+                expectedDashboard = roleId switch
+                {
+                    1 or 2 => "/Home (Admin Dashboard)",
+                    3 => "/SalesStaff (Sales Dashboard)",
+                    4 => "/SupportStaff (Support Dashboard)",
+                    5 => "/MarketingStaff (Marketing Dashboard)",
+                    6 => "/BillingStaff (Billing Dashboard)",
+                    7 => "/InventoryStaff (Inventory Dashboard)",
+                    8 => "/CustomerPortal (Customer Dashboard)",
+                    _ => "Not logged in"
+                }
+            });
+        }
+
+        // Debug: Update user role (for testing purposes)
+        [HttpGet]
+        public async Task<IActionResult> SetUserRole(string email, int roleId)
+        {
+            if (string.IsNullOrEmpty(email) || roleId < 1 || roleId > 8)
+            {
+                return Json(new { success = false, message = "Invalid email or roleId (1-8)" });
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+            {
+                return Json(new { success = false, message = $"User not found: {email}" });
+            }
+
+            user.RoleId = roleId;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Json(new { 
+                success = true, 
+                message = $"User {email} role updated to {roleId}",
+                redirectUrl = roleId switch
+                {
+                    1 or 2 => "/Home/Index",
+                    3 => "/SalesStaff/Index",
+                    4 => "/SupportStaff/Index",
+                    5 => "/MarketingStaff/Index",
+                    6 => "/BillingStaff/Index",
+                    7 => "/InventoryStaff/Index",
+                    8 => "/CustomerPortal/Index",
+                    _ => "/Home/Index"
+                }
+            });
+        }
+
         // Login Page
         public IActionResult Login()
         {
@@ -53,12 +121,13 @@ namespace CompuGear.Controllers
         {
             return roleId switch
             {
-                1 or 2 => RedirectToAction("Index", "Home"), // Super Admin, Company Admin
-                3 => RedirectToAction("Orders", "Sales"), // Sales Staff
-                4 => RedirectToAction("Tickets", "Support"), // Customer Support
-                5 => RedirectToAction("Campaigns", "Marketing"), // Marketing Staff
-                6 => RedirectToAction("Summary", "Billing"), // Accounting & Billing
-                7 => RedirectToAction("Index", "CustomerPortal"), // Customer
+                1 or 2 => RedirectToAction("Index", "Home"), // Super Admin, Company Admin -> Admin Portal
+                3 => RedirectToAction("Index", "SalesStaff"), // Sales Staff -> Sales Portal
+                4 => RedirectToAction("Index", "SupportStaff"), // Customer Support -> Support Portal
+                5 => RedirectToAction("Index", "MarketingStaff"), // Marketing Staff -> Marketing Portal
+                6 => RedirectToAction("Index", "BillingStaff"), // Accounting & Billing -> Billing Portal
+                7 => RedirectToAction("Index", "CustomerPortal"), // Customer -> Customer Portal
+                8 => RedirectToAction("Index", "InventoryStaff"), // Inventory Staff -> Inventory Portal
                 _ => RedirectToAction("Index", "Home")
             };
         }
@@ -81,7 +150,7 @@ namespace CompuGear.Controllers
 
                 if (user != null)
                 {
-                    // Verify password
+                    // Verify password using the stored salt
                     var hashedPassword = Convert.ToBase64String(
                         System.Security.Cryptography.SHA256.HashData(
                             System.Text.Encoding.UTF8.GetBytes(request.Password + user.Salt)));
@@ -109,18 +178,20 @@ namespace CompuGear.Controllers
                                 HttpContext.Session.SetString("CustomerName", customer.FullName);
                                 HttpContext.Session.SetString("CustomerEmail", customer.Email);
                             }
-                            return Json(new { success = true, message = "Login successful", redirectUrl = "/CustomerPortal" });
+                            return Json(new { success = true, message = "Login successful", redirectUrl = "/CustomerPortal/Index" });
                         }
 
                         // Redirect based on role
                         var redirectUrl = user.RoleId switch
                         {
-                            1 or 2 => "/Home", // Super Admin, Company Admin
-                            3 => "/Sales/Orders", // Sales Staff
-                            4 => "/Support/Tickets", // Customer Support
-                            5 => "/Marketing/Campaigns", // Marketing Staff
-                            6 => "/Billing/Summary", // Accounting & Billing
-                            _ => "/Home"
+                            1 or 2 => "/Home/Index", // Super Admin, Company Admin -> Admin Portal
+                            3 => "/SalesStaff/Index", // Sales Staff -> Sales Portal
+                            4 => "/SupportStaff/Index", // Customer Support -> Support Portal
+                            5 => "/MarketingStaff/Index", // Marketing Staff -> Marketing Portal
+                            6 => "/BillingStaff/Index", // Accounting & Billing -> Billing Portal
+                            7 => "/InventoryStaff/Index", // Inventory Staff -> Inventory Portal
+                            8 => "/CustomerPortal/Index", // Customer -> Customer Portal
+                            _ => "/Home/Index"
                         };
 
                         return Json(new { success = true, message = "Login successful", redirectUrl });
@@ -150,9 +221,9 @@ namespace CompuGear.Controllers
                             HttpContext.Session.SetString("CustomerName", customer2.FullName);
                             HttpContext.Session.SetString("CustomerEmail", customer2.Email);
                             HttpContext.Session.SetInt32("UserId", customerUser.UserId);
-                            HttpContext.Session.SetInt32("RoleId", 7);
+                            HttpContext.Session.SetInt32("RoleId", 8); // Customer role
 
-                            return Json(new { success = true, message = "Login successful", redirectUrl = "/CustomerPortal" });
+                            return Json(new { success = true, message = "Login successful", redirectUrl = "/CustomerPortal/Index" });
                         }
                     }
                 }

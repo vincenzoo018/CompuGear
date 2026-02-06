@@ -74,6 +74,9 @@ namespace CompuGear.Data
         public DbSet<ChatBotIntent> ChatBotIntents { get; set; }
         public DbSet<SystemSetting> SystemSettings { get; set; }
 
+        // Approval Workflow
+        public DbSet<ApprovalRequest> ApprovalRequests { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

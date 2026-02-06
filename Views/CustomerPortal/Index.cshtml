@@ -4,58 +4,160 @@
 }
 
 <style>
-    .dashboard-container { padding: 20px 0; }
-    
+    .dashboard-container { padding: 10px 0; }
+
     .promo-banner {
-        background: linear-gradient(135deg, #008080 0%, #20b2aa 100%);
+        background: linear-gradient(135deg, #008080 0%, #006666 100%);
         border-radius: 20px;
-        padding: 40px;
+        padding: 35px;
         color: white;
-        margin-bottom: 30px;
+        margin-bottom: 25px;
         box-shadow: 0 10px 40px rgba(0, 128, 128, 0.3);
+        position: relative;
+        overflow: hidden;
     }
-    
+
+    .promo-banner::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 350px;
+        height: 350px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+    }
+
+    .promo-banner::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        right: 5%;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+
+    .promo-content { position: relative; z-index: 1; }
+
+    .promo-banner h2 {
+        font-weight: 700;
+        margin-bottom: 10px;
+        font-size: 1.8rem;
+    }
+
+    .promo-banner p {
+        margin-bottom: 20px;
+        opacity: 0.9;
+        font-size: 1rem;
+    }
+
+    .promo-image {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+    }
+
+    .promo-image-display {
+        font-size: 6rem;
+        filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));
+    }
+
     .btn-shop {
-        display: inline-block;
-        padding: 12px 30px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 28px;
         background: white;
         color: #008080;
         border-radius: 50px;
         text-decoration: none;
         font-weight: 600;
         transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
-    
+
     .btn-shop:hover {
         transform: translateY(-3px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
         color: #006666;
     }
-    
+
     .stat-card {
         background: white;
         border-radius: 16px;
-        padding: 25px;
+        padding: 22px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.05);
         transition: all 0.3s;
+        height: 100%;
     }
-    
+
     .stat-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 40px rgba(0,0,0,0.1);
     }
-    
-    .stat-value { font-size: 2rem; font-weight: 800; color: #1f2937; }
-    .stat-label { color: #6b7280; font-size: 0.9rem; }
-    .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
-    
+
+    .stat-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #1f2937;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
     .portal-card {
         background: white;
         border-radius: 16px;
         padding: 25px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        height: 100%;
     }
-    
+
+    .card-header-custom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .card-title {
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .view-all {
+        color: #008080;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .view-all:hover { text-decoration: underline; }
+
     .product-card {
         background: white;
         border-radius: 16px;
@@ -64,22 +166,22 @@
         transition: all 0.3s;
         height: 100%;
     }
-    
+
     .product-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 15px 40px rgba(0,0,0,0.15);
     }
-    
+
     .product-image {
-        height: 180px;
+        height: 160px;
         background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 4rem;
+        font-size: 3.5rem;
         position: relative;
     }
-    
+
     .product-badge {
         position: absolute;
         top: 10px;
@@ -88,16 +190,43 @@
         color: white;
         padding: 4px 12px;
         border-radius: 20px;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: 600;
     }
-    
-    .product-body { padding: 20px; }
-    .product-title { font-weight: 600; color: #1f2937; margin-bottom: 5px; font-size: 0.95rem; }
-    .product-category { color: #6b7280; font-size: 0.8rem; margin-bottom: 10px; }
-    .product-price { font-size: 1.2rem; font-weight: 700; color: #008080; }
-    .product-old-price { color: #9ca3af; text-decoration: line-through; font-size: 0.9rem; margin-left: 8px; }
-    
+
+    .product-body { padding: 15px; }
+
+    .product-title {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .product-category {
+        color: #008080;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .product-price {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #ff6b35;
+    }
+
+    .product-old-price {
+        color: #9ca3af;
+        text-decoration: line-through;
+        font-size: 0.85rem;
+        margin-left: 8px;
+    }
+
     .btn-add-cart {
         width: 100%;
         padding: 10px;
@@ -107,36 +236,191 @@
         border-radius: 10px;
         font-weight: 600;
         cursor: pointer;
-        margin-top: 15px;
+        margin-top: 12px;
         transition: all 0.3s;
+        font-size: 0.85rem;
     }
-    
+
     .btn-add-cart:hover {
         background: linear-gradient(135deg, #006666, #004d4d);
     }
-    
+
     .quick-action {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 15px 20px;
+        padding: 15px 18px;
         background: linear-gradient(135deg, #008080, #006666);
         color: white;
         border-radius: 12px;
         text-decoration: none;
         transition: all 0.3s;
+        font-weight: 500;
     }
-    
+
     .quick-action:hover {
         transform: translateX(5px);
         color: white;
+        box-shadow: 0 5px 20px rgba(0,128,128,0.3);
     }
-    
+
+    .quick-action.accent {
+        background: linear-gradient(135deg, #ff6b35, #ff8c42);
+    }
+
+    .quick-action.success {
+        background: linear-gradient(135deg, #10b981, #34d399);
+    }
+
     .promo-item {
         padding: 15px;
         border-radius: 12px;
-        border-left: 4px solid;
+        background: linear-gradient(135deg, #fff5f0, #ffebe0);
+        border-left: 4px solid #ff6b35;
         margin-bottom: 12px;
+    }
+
+    .promo-item:last-child { margin-bottom: 0; }
+
+    .promo-item-title {
+        font-weight: 600;
+        color: #ff6b35;
+        margin-bottom: 5px;
+    }
+
+    .promo-item-desc {
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin-bottom: 5px;
+    }
+
+    .promo-item-code {
+        font-size: 0.75rem;
+        color: #9ca3af;
+    }
+
+    .promo-item-code strong {
+        color: #1f2937;
+    }
+
+    .order-table {
+        margin: 0;
+    }
+
+    .order-table thead th {
+        border: none;
+        padding: 12px;
+        color: #6b7280;
+        font-weight: 500;
+        background: #f8f9fa;
+        font-size: 0.85rem;
+    }
+
+    .order-table tbody td {
+        padding: 15px 12px;
+        border-bottom: 1px solid #e5e7eb;
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+
+    .order-number {
+        color: #008080;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .order-number:hover { text-decoration: underline; }
+
+    .status-badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    /* Responsive */
+    @@media (max-width: 1200px) {
+        .promo-banner h2 { font-size: 1.6rem; }
+        .promo-image-display { font-size: 5rem; }
+    }
+
+    @@media (max-width: 992px) {
+        .promo-banner { padding: 25px; }
+        .promo-banner h2 { font-size: 1.4rem; }
+        .promo-image { display: none; }
+        .stat-value { font-size: 1.6rem; }
+    }
+
+    @@media (max-width: 768px) {
+        .promo-banner {
+            padding: 20px;
+            border-radius: 16px;
+        }
+        
+        .promo-banner h2 { font-size: 1.3rem; }
+        
+        .promo-banner p { font-size: 0.9rem; }
+        
+        .btn-shop {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+        }
+        
+        .stat-card { padding: 18px; }
+        
+        .stat-value { font-size: 1.4rem; }
+        
+        .stat-icon {
+            width: 42px;
+            height: 42px;
+            font-size: 1.3rem;
+        }
+        
+        .portal-card { padding: 20px; }
+        
+        .product-image { height: 140px; font-size: 3rem; }
+    }
+
+    @@media (max-width: 576px) {
+        .promo-banner h2 { font-size: 1.1rem; }
+        
+        .stat-value { font-size: 1.2rem; }
+        
+        .stat-label { font-size: 0.8rem; }
+        
+        .stat-icon {
+            width: 38px;
+            height: 38px;
+            font-size: 1.1rem;
+        }
+        
+        .product-image { height: 120px; font-size: 2.5rem; }
+        
+        .product-title { font-size: 0.85rem; }
+        
+        .product-price { font-size: 1rem; }
+        
+        .btn-add-cart {
+            padding: 8px;
+            font-size: 0.8rem;
+        }
+        
+        .quick-action {
+            padding: 12px 15px;
+            font-size: 0.9rem;
+        }
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 30px 20px;
+        color: #6b7280;
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 10px;
+        opacity: 0.5;
     }
 </style>
 
@@ -145,21 +429,25 @@
     <div class="promo-banner">
         <div class="row align-items-center">
             <div class="col-lg-8">
-                <h2 style="font-weight: 700; margin-bottom: 10px;">🎮 Welcome back, <span id="customerName">Customer</span>!</h2>
-                <p style="margin-bottom: 20px; opacity: 0.9;">Check out our latest computer accessories and exclusive deals just for you!</p>
-                <a href="/CustomerPortal/Promotions" class="btn-shop">🔥 View Promotions</a>
+                <div class="promo-content">
+                    <h2>🎮 Welcome back, <span id="customerName">Customer</span>!</h2>
+                    <p>Check out our latest computer accessories and exclusive deals just for you!</p>
+                    <a href="/CustomerPortal/Promotions" class="btn-shop">🔥 View Promotions</a>
+                </div>
             </div>
-            <div class="col-lg-4 text-center d-none d-lg-block">
-                <div style="font-size: 6rem;">🖥️</div>
+            <div class="col-lg-4 d-none d-lg-block">
+                <div class="promo-image">
+                    <div class="promo-image-display">🖥️</div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Quick Stats -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
+    <div class="row g-3 g-md-4 mb-4">
+        <div class="col-6 col-md-3">
             <div class="stat-card">
-                <div class="d-flex align-items-center justify-content-between">
+                <div class="stat-content">
                     <div>
                         <div class="stat-value" id="statOrders">0</div>
                         <div class="stat-label">Total Orders</div>
@@ -168,9 +456,9 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="stat-card">
-                <div class="d-flex align-items-center justify-content-between">
+                <div class="stat-content">
                     <div>
                         <div class="stat-value" id="statPending">0</div>
                         <div class="stat-label">Pending Orders</div>
@@ -179,9 +467,9 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="stat-card">
-                <div class="d-flex align-items-center justify-content-between">
+                <div class="stat-content">
                     <div>
                         <div class="stat-value" id="statPoints">0</div>
                         <div class="stat-label">Loyalty Points</div>
@@ -190,9 +478,9 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             <div class="stat-card">
-                <div class="d-flex align-items-center justify-content-between">
+                <div class="stat-content">
                     <div>
                         <div class="stat-value" id="statCart">0</div>
                         <div class="stat-label">Cart Items</div>
@@ -208,23 +496,31 @@
         <div class="col-lg-8">
             <!-- Recent Orders -->
             <div class="portal-card mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 style="font-weight: 600; color: #1f2937; margin: 0;">📦 Recent Orders</h5>
-                    <a href="/CustomerPortal/Orders" style="color: #008080; text-decoration: none; font-weight: 500;">View All →</a>
+                <div class="card-header-custom">
+                    <h5 class="card-title">📦 Recent Orders</h5>
+                    <a href="/CustomerPortal/Orders" class="view-all">View All →</a>
                 </div>
                 <div id="recentOrdersContainer">
-                    <div class="text-center py-4 text-muted">Loading orders...</div>
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <p>Loading orders...</p>
+                    </div>
                 </div>
             </div>
 
             <!-- Featured Products -->
             <div class="portal-card">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 style="font-weight: 600; color: #1f2937; margin: 0;">⭐ Featured Products</h5>
-                    <a href="/CustomerPortal/Products" style="color: #008080; text-decoration: none; font-weight: 500;">View All →</a>
+                <div class="card-header-custom">
+                    <h5 class="card-title">⭐ Featured Products</h5>
+                    <a href="/CustomerPortal/Products" class="view-all">View All →</a>
                 </div>
                 <div class="row g-3" id="featuredProductsGrid">
-                    <div class="col-12 text-center py-4 text-muted">Loading products...</div>
+                    <div class="col-12">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🛍️</div>
+                            <p>Loading products...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -232,19 +528,22 @@
         <div class="col-lg-4">
             <!-- Quick Actions -->
             <div class="portal-card mb-4">
-                <h5 style="font-weight: 600; color: #1f2937; margin-bottom: 20px;">⚡ Quick Actions</h5>
+                <h5 class="card-title mb-4">⚡ Quick Actions</h5>
                 <div class="d-grid gap-3">
                     <a href="/CustomerPortal/Products" class="quick-action">🛒 Browse Products</a>
-                    <a href="/CustomerPortal/Cart" class="quick-action" style="background: linear-gradient(135deg, #ff6b35, #ff8c42);">🛍️ View Cart</a>
-                    <a href="/CustomerPortal/Support" class="quick-action" style="background: linear-gradient(135deg, #10b981, #34d399);">💬 Get Support</a>
+                    <a href="/CustomerPortal/Cart" class="quick-action accent">🛍️ View Cart</a>
+                    <a href="/CustomerPortal/Support" class="quick-action success">💬 Get Support</a>
                 </div>
             </div>
 
             <!-- Active Promotions -->
             <div class="portal-card">
-                <h5 style="font-weight: 600; color: #1f2937; margin-bottom: 20px;">🔥 Active Promotions</h5>
+                <h5 class="card-title mb-4">🔥 Active Promotions</h5>
                 <div id="activePromotionsContainer">
-                    <div class="text-center py-3 text-muted">Loading promotions...</div>
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🏷️</div>
+                        <p>Loading promotions...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -265,6 +564,7 @@
             // Load profile
             const profileRes = await fetch('/CustomerPortal/GetProfile');
             const profileData = await profileRes.json();
+            
             if (profileData.success) {
                 document.getElementById('customerName').textContent = profileData.data.firstName || 'Customer';
                 document.getElementById('statPoints').textContent = (profileData.data.loyaltyPoints || 0).toLocaleString();
@@ -272,14 +572,21 @@
             }
 
             // Load orders
-            const ordersRes = await fetch('/CustomerPortal/GetOrders?pageSize=3');
+            const ordersRes = await fetch('/CustomerPortal/GetOrders?pageSize=5');
             const ordersData = await ordersRes.json();
+            
             if (ordersData.success) {
                 document.getElementById('statPending').textContent = ordersData.stats?.pending || 0;
                 renderRecentOrders(ordersData.data);
             }
         } catch (error) {
             console.error('Error loading dashboard:', error);
+            document.getElementById('recentOrdersContainer').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📦</div>
+                    <p>No orders yet. <a href="/CustomerPortal/Products">Start shopping!</a></p>
+                </div>
+            `;
         }
     }
 
@@ -287,13 +594,21 @@
         try {
             const response = await fetch('/CustomerPortal/GetFeaturedProducts?count=4');
             const result = await response.json();
+            
             if (result.success && result.data.length > 0) {
                 renderFeaturedProducts(result.data);
             } else {
-                document.getElementById('featuredProductsGrid').innerHTML = '<div class="col-12 text-center py-4 text-muted">No featured products available</div>';
+                document.getElementById('featuredProductsGrid').innerHTML = `
+                    <div class="col-12">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🛍️</div>
+                            <p>No featured products available</p>
+                        </div>
+                    </div>
+                `;
             }
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Error loading products:', error);
         }
     }
 
@@ -301,45 +616,67 @@
         try {
             const response = await fetch('/CustomerPortal/GetPromotions');
             const result = await response.json();
-            if (result.success) {
+            
+            if (result.success && result.data.promotions && result.data.promotions.length > 0) {
                 renderPromotions(result.data.promotions);
+            } else {
+                document.getElementById('activePromotionsContainer').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🏷️</div>
+                        <p>No active promotions</p>
+                    </div>
+                `;
             }
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Error loading promotions:', error);
         }
     }
 
     function renderRecentOrders(orders) {
         const container = document.getElementById('recentOrdersContainer');
+        
         if (!orders || orders.length === 0) {
-            container.innerHTML = '<div class="text-center py-4 text-muted">No orders yet. <a href="/CustomerPortal/Products">Start shopping!</a></div>';
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">📦</div>
+                    <p>No orders yet. <a href="/CustomerPortal/Products">Start shopping!</a></p>
+                </div>
+            `;
             return;
         }
 
         const statusColors = {
-            'Pending': '#f59e0b', 'Processing': '#3b82f6', 'Shipped': '#8b5cf6',
-            'Delivered': '#10b981', 'Cancelled': '#ef4444'
+            'Pending': '#f59e0b',
+            'Confirmed': '#3b82f6',
+            'Processing': '#8b5cf6',
+            'Shipped': '#06b6d4',
+            'Delivered': '#10b981',
+            'Cancelled': '#ef4444'
         };
 
         container.innerHTML = `
             <div class="table-responsive">
-                <table class="table" style="margin: 0;">
-                    <thead style="background: #f8f9fa;">
+                <table class="table order-table">
+                    <thead>
                         <tr>
-                            <th style="border: none; padding: 12px; color: #6b7280;">Order #</th>
-                            <th style="border: none; padding: 12px; color: #6b7280;">Date</th>
-                            <th style="border: none; padding: 12px; color: #6b7280;">Total</th>
-                            <th style="border: none; padding: 12px; color: #6b7280;">Status</th>
+                            <th>Order #</th>
+                            <th>Date</th>
+                            <th>Total</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${orders.map(order => `
                             <tr>
-                                <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;"><strong style="color: #008080;">${order.orderNumber}</strong></td>
-                                <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">${new Date(order.orderDate).toLocaleDateString()}</td>
-                                <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; font-weight: 600;">₱${order.totalAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
-                                <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
-                                    <span style="background: ${statusColors[order.orderStatus] || '#6b7280'}; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem;">${order.orderStatus}</span>
+                                <td>
+                                    <a href="/CustomerPortal/OrderDetails/${order.orderId}" class="order-number">${order.orderNumber}</a>
+                                </td>
+                                <td>${new Date(order.orderDate).toLocaleDateString()}</td>
+                                <td style="font-weight: 600;">₱${order.totalAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
+                                <td>
+                                    <span class="status-badge" style="background: ${statusColors[order.orderStatus] || '#6b7280'}; color: white;">
+                                        ${order.orderStatus}
+                                    </span>
                                 </td>
                             </tr>
                         `).join('')}
@@ -354,7 +691,7 @@
         const productIcons = ['🖥️', '⌨️', '🖱️', '🎧', '💾', '🎮', '📱', '🔌'];
 
         grid.innerHTML = products.map((product, index) => `
-            <div class="col-md-6 col-lg-3">
+            <div class="col-6 col-md-6 col-lg-3">
                 <div class="product-card">
                     <div class="product-image">
                         ${productIcons[index % productIcons.length]}
@@ -362,8 +699,8 @@
                     </div>
                     <div class="product-body">
                         <div class="product-category">${product.categoryName || 'Accessories'}</div>
-                        <div class="product-title">${product.productName}</div>
-                        <div class="d-flex align-items-center">
+                        <div class="product-title" title="${product.productName}">${product.productName}</div>
+                        <div class="d-flex align-items-center flex-wrap">
                             <span class="product-price">₱${product.sellingPrice.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
                             ${product.compareAtPrice ? `<span class="product-old-price">₱${product.compareAtPrice.toLocaleString()}</span>` : ''}
                         </div>
@@ -378,16 +715,22 @@
 
     function renderPromotions(promotions) {
         const container = document.getElementById('activePromotionsContainer');
+        
         if (!promotions || promotions.length === 0) {
-            container.innerHTML = '<div class="text-center py-3 text-muted">No active promotions</div>';
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🏷️</div>
+                    <p>No active promotions</p>
+                </div>
+            `;
             return;
         }
 
         container.innerHTML = promotions.slice(0, 3).map(promo => `
-            <div class="promo-item" style="background: linear-gradient(135deg, #fff5f0, #ffebe0); border-color: #ff6b35;">
-                <div style="font-weight: 600; color: #ff6b35;">🔥 ${promo.promotionName}</div>
-                <div style="font-size: 0.85rem; color: #6b7280; margin-top: 5px;">${promo.description || `${promo.discountValue}${promo.discountType === 'Percentage' ? '%' : '₱'} off`}</div>
-                <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 5px;">Code: <strong>${promo.promotionCode}</strong></div>
+            <div class="promo-item">
+                <div class="promo-item-title">🔥 ${promo.promotionName}</div>
+                <div class="promo-item-desc">${promo.description || `${promo.discountValue}${promo.discountType === 'Percentage' ? '%' : '₱'} off`}</div>
+                <div class="promo-item-code">Code: <strong>${promo.promotionCode}</strong></div>
             </div>
         `).join('');
     }
@@ -406,10 +749,15 @@
         updateCartCount();
         
         // Show notification
-        const toast = document.createElement('div');
-        toast.innerHTML = `<div style="position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 9999;">✓ Added to cart!</div>`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2000);
+        if (typeof showToast === 'function') {
+            showToast('✓ Added to cart!');
+        } else {
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:100px;right:25px;background:#10b981;color:white;padding:12px 20px;border-radius:10px;box-shadow:0 5px 20px rgba(0,0,0,0.2);z-index:9999;animation:slideIn 0.3s ease;';
+            toast.innerHTML = '✓ Added to cart!';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
     }
 
     function updateCartCount() {
@@ -417,9 +765,12 @@
         const count = cart.reduce((sum, item) => sum + item.quantity, 0);
         document.getElementById('statCart').textContent = count;
         
-        // Update header cart badge if exists
-        const cartBadge = document.querySelector('.cart-count');
-        if (cartBadge) cartBadge.textContent = count;
+        // Update header cart badge
+        const cartBadge = document.getElementById('cartBadge');
+        if (cartBadge) {
+            cartBadge.textContent = count;
+            cartBadge.style.display = count > 0 ? 'flex' : 'none';
+        }
     }
 </script>
 }

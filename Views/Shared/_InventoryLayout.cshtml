@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CompuGear Inventory</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="/InventoryStaff" class="sidebar-brand">
+                    <div class="sidebar-brand-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;color:#008080">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                            <line x1="12" y1="22.08" x2="12" y2="12"/>
+                        </svg>
+                    </div>
+                    <div class="sidebar-brand-text">
+                        <span class="sidebar-brand-name">CompuGear</span>
+                        <span class="sidebar-brand-subtitle">Inventory Portal</span>
+                    </div>
+                </a>
+                <button class="sidebar-toggle" id="sidebarToggle" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Dashboard -->
+                <div class="nav-item">
+                    <a href="/InventoryStaff" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7" rx="1"/>
+                                <rect x="14" y="3" width="7" height="7" rx="1"/>
+                                <rect x="3" y="14" width="7" height="7" rx="1"/>
+                                <rect x="14" y="14" width="7" height="7" rx="1"/>
+                            </svg>
+                        </span>
+                        <span class="nav-item-text">Dashboard</span>
+                    </a>
+                </div>
+
+                <!-- Products -->
+                <div class="nav-item">
+                    <a href="/InventoryStaff/Products" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Products" ? "active" : "")">
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                                <line x1="12" y1="22.08" x2="12" y2="12"/>
+                            </svg>
+                        </span>
+                        <span class="nav-item-text">Products</span>
+                    </a>
+                </div>
+
+                <!-- Stock Levels -->
+                <div class="nav-item">
+                    <a href="/InventoryStaff/Stock" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Stock" ? "active" : "")">
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                            </svg>
+                        </span>
+                        <span class="nav-item-text">Stock Levels</span>
+                    </a>
+                </div>
+
+                <!-- Stock Alerts -->
+                <div class="nav-item">
+                    <a href="/InventoryStaff/Alerts" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Alerts" ? "active" : "")">
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                <line x1="12" y1="9" x2="12" y2="13"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                        </span>
+                        <span class="nav-item-text">Stock Alerts</span>
+                    </a>
+                </div>
+
+                <!-- Suppliers -->
+                <div class="nav-item">
+                    <a href="/InventoryStaff/Suppliers" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Suppliers" ? "active" : "")">
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="1" y="3" width="15" height="13"/>
+                                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                                <circle cx="5.5" cy="18.5" r="2.5"/>
+                                <circle cx="18.5" cy="18.5" r="2.5"/>
+                            </svg>
+                        </span>
+                        <span class="nav-item-text">Suppliers</span>
+                    </a>
+                </div>
+
+                <!-- Inventory Reports -->
+                <div class="nav-item">
+                    <a href="/InventoryStaff/Reports" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Reports" ? "active" : "")">
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10"/>
+                                <line x1="12" y1="20" x2="12" y2="4"/>
+                                <line x1="6" y1="20" x2="6" y2="14"/>
+                            </svg>
+                        </span>
+                        <span class="nav-item-text">Inventory Reports</span>
+                    </a>
+                </div>
+
+                <div class="nav-section-title">Approval Required</div>
+
+                <!-- Stock Adjustment -->
+                <div class="nav-item">
+                    <a href="/InventoryStaff/StockAdjustment" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "StockAdjustment" ? "active" : "")">
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 20V10"/>
+                                <path d="M18 20V4"/>
+                                <path d="M6 20v-4"/>
+                            </svg>
+                        </span>
+                        <span class="nav-item-text">Stock Adjustment</span>
+                    </a>
+                </div>
+
+                <!-- Categories -->
+                <div class="nav-item">
+                    <a href="/InventoryStaff/Categories" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Categories" ? "active" : "")">
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                            </svg>
+                        </span>
+                        <span class="nav-item-text">Categories</span>
+                    </a>
+                </div>
+            </nav>
+
+            <!-- Sidebar Footer -->
+            <div class="sidebar-footer">
+                <div class="nav-item">
+                    <a href="/Auth/Logout" class="nav-link text-danger">
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16 17 21 12 16 7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                        </span>
+                        <span class="nav-item-text">Logout</span>
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <div class="topbar-search">
+                    <svg class="topbar-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="text" placeholder="Search products, suppliers...">
+                </div>
+
+                <div class="topbar-actions">
+                    <button class="topbar-btn" id="darkModeToggle" title="Dark Mode">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                        </svg>
+                    </button>
+
+                    <div class="topbar-divider"></div>
+
+                    <div class="topbar-user dropdown">
+                        <a href="#" class="d-flex align-items-center text-decoration-none" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="topbar-user-info">
+                                <div class="topbar-user-name">@(Context.Session.GetString("UserName") ?? "Inventory Staff")</div>
+                                <div class="topbar-user-role">Inventory Staff</div>
+                            </div>
+                            <div class="topbar-avatar">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                            </div>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+                            <li class="dropdown-header">
+                                <strong>@(Context.Session.GetString("UserName") ?? "Inventory Staff")</strong><br>
+                                <small class="text-muted">@(Context.Session.GetString("UserEmail") ?? "inventory@compugear.com")</small>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="/Auth/Logout">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                        <polyline points="16 17 21 12 16 7"/>
+                                        <line x1="21" y1="12" x2="9" y2="12"/>
+                                    </svg>
+                                    Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="page-content">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/inventory.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -4,35 +4,87 @@
 }
 
 <style>
-    .profile-container {
-        min-height: 100vh;
-        padding: 20px 0;
-    }
+    .profile-container { padding: 10px 0; }
 
     .profile-header {
         background: linear-gradient(135deg, #008080, #006666);
         border-radius: 20px;
-        padding: 40px;
+        padding: 35px 30px;
         color: white;
-        text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 25px;
         box-shadow: 0 10px 40px rgba(0, 128, 128, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 400px;
+        height: 400px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+    }
+
+    .profile-header-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 25px;
+        flex-wrap: wrap;
     }
 
     .profile-avatar {
-        width: 120px;
-        height: 120px;
+        width: 100px;
+        height: 100px;
         border-radius: 50%;
         background: white;
         color: #008080;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 3rem;
+        font-size: 2.5rem;
         font-weight: 700;
-        margin: 0 auto 20px;
         border: 4px solid rgba(255,255,255,0.3);
         box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        flex-shrink: 0;
+    }
+
+    .profile-info { flex: 1; min-width: 200px; }
+
+    .profile-info h3 {
+        font-weight: 700;
+        margin-bottom: 5px;
+        font-size: 1.5rem;
+    }
+
+    .profile-info p {
+        opacity: 0.9;
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+    }
+
+    .profile-stats {
+        display: flex;
+        gap: 30px;
+        flex-wrap: wrap;
+    }
+
+    .profile-stat {
+        text-align: center;
+    }
+
+    .profile-stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .profile-stat-label {
+        font-size: 0.8rem;
+        opacity: 0.9;
     }
 
     .profile-card {
@@ -41,6 +93,7 @@
         padding: 25px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.05);
         margin-bottom: 20px;
+        height: 100%;
     }
 
     .profile-card h6 {
@@ -49,10 +102,20 @@
         margin-bottom: 20px;
         padding-bottom: 15px;
         border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .tab-nav {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
     }
 
     .tab-btn {
-        padding: 12px 25px;
+        padding: 12px 20px;
         border-radius: 10px;
         border: none;
         background: #f3f4f6;
@@ -60,6 +123,14 @@
         font-weight: 500;
         cursor: pointer;
         transition: all 0.3s;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .tab-btn:hover {
+        background: #e5e7eb;
     }
 
     .tab-btn.active {
@@ -71,11 +142,19 @@
         border: 2px solid #e5e7eb;
         border-radius: 10px;
         padding: 12px 15px;
+        font-size: 0.95rem;
+        transition: all 0.3s;
     }
 
     .form-control:focus {
         border-color: #008080;
         box-shadow: 0 0 0 4px rgba(0,128,128,0.1);
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 8px;
     }
 
     .btn-save {
@@ -86,18 +165,46 @@
         border-radius: 10px;
         font-weight: 600;
         cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(0,128,128,0.4);
     }
 
     .loyalty-card {
         background: linear-gradient(135deg, #ff6b35, #ff8c42);
-        border-radius: 20px;
+        border-radius: 16px;
         padding: 25px;
         color: white;
+        margin-bottom: 20px;
     }
+
+    .loyalty-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 15px;
+    }
+
+    .loyalty-icon { font-size: 2rem; }
+
+    .loyalty-title { font-weight: 700; font-size: 1.1rem; }
+
+    .loyalty-tier { font-size: 0.85rem; opacity: 0.9; }
 
     .loyalty-points {
         font-size: 2.5rem;
         font-weight: 800;
+    }
+
+    .loyalty-label {
+        font-size: 0.85rem;
+        opacity: 0.9;
     }
 
     .tab-content { display: none; }
@@ -106,43 +213,126 @@
     .info-row {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         padding: 12px 0;
         border-bottom: 1px solid #f3f4f6;
     }
+
     .info-row:last-child { border-bottom: none; }
-    .info-label { color: #6b7280; }
+
+    .info-label { color: #6b7280; font-size: 0.9rem; }
+
     .info-value { font-weight: 500; color: #1f2937; }
+
+    .alert {
+        border-radius: 10px;
+        padding: 15px 20px;
+        margin-bottom: 20px;
+    }
+
+    /* Responsive */
+    @@media (max-width: 992px) {
+        .profile-header { padding: 25px 20px; }
+        .profile-avatar { width: 80px; height: 80px; font-size: 2rem; }
+        .profile-info h3 { font-size: 1.3rem; }
+        .profile-stats { gap: 20px; }
+        .profile-stat-value { font-size: 1.3rem; }
+    }
+
+    @@media (max-width: 768px) {
+        .profile-header-content {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .profile-stats { justify-content: center; }
+        
+        .tab-nav { justify-content: center; }
+        
+        .tab-btn {
+            padding: 10px 15px;
+            font-size: 0.85rem;
+        }
+        
+        .profile-card { padding: 20px; }
+    }
+
+    @@media (max-width: 576px) {
+        .profile-header { padding: 20px 15px; border-radius: 16px; }
+        
+        .profile-avatar { width: 70px; height: 70px; font-size: 1.8rem; }
+        
+        .profile-info h3 { font-size: 1.2rem; }
+        
+        .profile-stats { gap: 15px; }
+        
+        .profile-stat-value { font-size: 1.1rem; }
+        
+        .profile-stat-label { font-size: 0.75rem; }
+        
+        .tab-btn {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+        }
+        
+        .btn-save {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .loyalty-points { font-size: 2rem; }
+    }
 </style>
 
 <div class="profile-container">
-    <div id="loadingState" style="text-align: center; padding: 50px;">
-        <div class="spinner-border text-primary"></div>
-        <p class="mt-2">Loading profile...</p>
+    <div id="loadingState" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 text-muted">Loading your profile...</p>
     </div>
 
     <div id="profileContent" style="display: none;">
+        <!-- Profile Header -->
         <div class="profile-header">
-            <div class="profile-avatar" id="profileAvatar">U</div>
-            <h3 id="profileName" style="font-weight: 700; margin-bottom: 5px;">Loading...</h3>
-            <p id="memberSince" style="opacity: 0.9; margin-bottom: 15px;">Member since...</p>
-            <div class="d-flex justify-content-center gap-4 flex-wrap">
-                <div><div style="font-size: 1.5rem; font-weight: 700;" id="totalOrders">0</div><div style="font-size: 0.85rem; opacity: 0.9;">Orders</div></div>
-                <div><div style="font-size: 1.5rem; font-weight: 700;" id="loyaltyPoints">0</div><div style="font-size: 0.85rem; opacity: 0.9;">Loyalty Points</div></div>
-                <div><div style="font-size: 1.5rem; font-weight: 700;" id="totalSpent">₱0</div><div style="font-size: 0.85rem; opacity: 0.9;">Total Spent</div></div>
+            <div class="profile-header-content">
+                <div class="profile-avatar" id="profileAvatar">U</div>
+                <div class="profile-info">
+                    <h3 id="profileName">Loading...</h3>
+                    <p id="profileEmail">loading@email.com</p>
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <div class="profile-stat-value" id="totalOrders">0</div>
+                            <div class="profile-stat-label">Orders</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-value" id="loyaltyPoints">0</div>
+                            <div class="profile-stat-label">Loyalty Points</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="profile-stat-value" id="totalSpent">₱0</div>
+                            <div class="profile-stat-label">Total Spent</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
+        <!-- Alert Container -->
         <div id="alertContainer"></div>
 
-        <div class="d-flex gap-2 mb-4 flex-wrap">
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
             <button class="tab-btn active" onclick="showTab('personal', this)">👤 Personal Info</button>
             <button class="tab-btn" onclick="showTab('addresses', this)">📍 Addresses</button>
             <button class="tab-btn" onclick="showTab('security', this)">🔒 Security</button>
             <button class="tab-btn" onclick="showTab('preferences', this)">⚙️ Preferences</button>
         </div>
 
-        <div class="row">
+        <div class="row g-4">
+            <!-- Main Content -->
             <div class="col-lg-8">
+                <!-- Personal Info Tab -->
                 <div id="tab-personal" class="tab-content active">
                     <div class="profile-card">
                         <h6>👤 Personal Information</h6>
@@ -158,11 +348,11 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Email Address</label>
-                                    <input type="email" class="form-control" id="email" readonly style="background: #f3f4f6;">
+                                    <input type="email" class="form-control" id="email" readonly style="background: #f9fafb; cursor: not-allowed;">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Phone Number</label>
-                                    <input type="tel" class="form-control" id="phone">
+                                    <input type="tel" class="form-control" id="phone" placeholder="+63 XXX XXX XXXX">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Date of Birth</label>
@@ -171,13 +361,14 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Gender</label>
                                     <select class="form-control" id="gender">
-                                        <option value="">Select...</option>
+                                        <option value="">Select gender...</option>
                                         <option value="Male">Male</option>
                                         <option value="Female">Female</option>
                                         <option value="Other">Other</option>
+                                        <option value="Prefer not to say">Prefer not to say</option>
                                     </select>
                                 </div>
-                                <div class="col-12 mt-3">
+                                <div class="col-12 mt-4">
                                     <button type="submit" class="btn-save">💾 Save Changes</button>
                                 </div>
                             </div>
@@ -185,15 +376,31 @@
                     </div>
                 </div>
 
+                <!-- Addresses Tab -->
                 <div id="tab-addresses" class="tab-content">
-                    <div class="profile-card">
+                    <div class="profile-card mb-4">
                         <h6>🏠 Billing Address</h6>
                         <div class="row g-3">
-                            <div class="col-12"><input type="text" class="form-control" id="billingAddress" placeholder="Street Address"></div>
-                            <div class="col-md-6"><input type="text" class="form-control" id="billingCity" placeholder="City"></div>
-                            <div class="col-md-6"><input type="text" class="form-control" id="billingState" placeholder="State/Province"></div>
-                            <div class="col-md-6"><input type="text" class="form-control" id="billingZipCode" placeholder="ZIP Code"></div>
-                            <div class="col-md-6"><input type="text" class="form-control" id="billingCountry" placeholder="Country" value="Philippines"></div>
+                            <div class="col-12">
+                                <label class="form-label">Street Address</label>
+                                <input type="text" class="form-control" id="billingAddress" placeholder="Enter your street address">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">City</label>
+                                <input type="text" class="form-control" id="billingCity" placeholder="City">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">State/Province</label>
+                                <input type="text" class="form-control" id="billingState" placeholder="State/Province">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">ZIP Code</label>
+                                <input type="text" class="form-control" id="billingZipCode" placeholder="ZIP Code">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Country</label>
+                                <input type="text" class="form-control" id="billingCountry" value="Philippines">
+                            </div>
                         </div>
                     </div>
                     <div class="profile-card">
@@ -203,64 +410,137 @@
                             <label class="form-check-label" for="sameAsBilling">Same as billing address</label>
                         </div>
                         <div class="row g-3">
-                            <div class="col-12"><input type="text" class="form-control" id="shippingAddress" placeholder="Street Address"></div>
-                            <div class="col-md-6"><input type="text" class="form-control" id="shippingCity" placeholder="City"></div>
-                            <div class="col-md-6"><input type="text" class="form-control" id="shippingState" placeholder="State/Province"></div>
-                            <div class="col-md-6"><input type="text" class="form-control" id="shippingZipCode" placeholder="ZIP Code"></div>
-                            <div class="col-md-6"><input type="text" class="form-control" id="shippingCountry" placeholder="Country" value="Philippines"></div>
+                            <div class="col-12">
+                                <label class="form-label">Street Address</label>
+                                <input type="text" class="form-control" id="shippingAddress" placeholder="Enter your street address">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">City</label>
+                                <input type="text" class="form-control" id="shippingCity" placeholder="City">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">State/Province</label>
+                                <input type="text" class="form-control" id="shippingState" placeholder="State/Province">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">ZIP Code</label>
+                                <input type="text" class="form-control" id="shippingZipCode" placeholder="ZIP Code">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Country</label>
+                                <input type="text" class="form-control" id="shippingCountry" value="Philippines">
+                            </div>
                         </div>
-                        <div class="mt-3">
+                        <div class="mt-4">
                             <button type="button" class="btn-save" onclick="saveAddresses()">💾 Save Addresses</button>
                         </div>
                     </div>
                 </div>
 
+                <!-- Security Tab -->
                 <div id="tab-security" class="tab-content">
                     <div class="profile-card">
                         <h6>🔒 Change Password</h6>
                         <div class="row g-3">
-                            <div class="col-12"><input type="password" class="form-control" id="currentPassword" placeholder="Current Password"></div>
-                            <div class="col-md-6"><input type="password" class="form-control" id="newPassword" placeholder="New Password"></div>
-                            <div class="col-md-6"><input type="password" class="form-control" id="confirmPassword" placeholder="Confirm Password"></div>
-                            <div class="col-12 mt-3"><button type="button" class="btn-save">🔒 Update Password</button></div>
+                            <div class="col-12">
+                                <label class="form-label">Current Password</label>
+                                <input type="password" class="form-control" id="currentPassword" placeholder="Enter current password">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="newPassword" placeholder="Enter new password">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm new password">
+                            </div>
+                            <div class="col-12 mt-4">
+                                <button type="button" class="btn-save" onclick="changePassword()">🔒 Update Password</button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
+                <!-- Preferences Tab -->
                 <div id="tab-preferences" class="tab-content">
                     <div class="profile-card">
                         <h6>⚙️ Notification Preferences</h6>
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="marketingOptIn" checked style="width: 3em; height: 1.5em;">
-                            <label class="form-check-label" for="marketingOptIn">Marketing Communications</label>
-                        </div>
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="orderUpdates" checked style="width: 3em; height: 1.5em;">
-                            <label class="form-check-label" for="orderUpdates">Order Updates</label>
+                        <div class="mb-4">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="marketingOptIn" checked style="width: 3em; height: 1.5em;">
+                                <label class="form-check-label" for="marketingOptIn">
+                                    <strong>Marketing Communications</strong><br>
+                                    <small class="text-muted">Receive promotional emails and offers</small>
+                                </label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="orderUpdates" checked style="width: 3em; height: 1.5em;">
+                                <label class="form-check-label" for="orderUpdates">
+                                    <strong>Order Updates</strong><br>
+                                    <small class="text-muted">Notifications about your order status</small>
+                                </label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="newsletterOptIn" checked style="width: 3em; height: 1.5em;">
+                                <label class="form-check-label" for="newsletterOptIn">
+                                    <strong>Newsletter</strong><br>
+                                    <small class="text-muted">Weekly newsletter with tech tips and deals</small>
+                                </label>
+                            </div>
                         </div>
                         <button type="button" class="btn-save" onclick="savePreferences()">💾 Save Preferences</button>
                     </div>
                 </div>
             </div>
 
+            <!-- Sidebar -->
             <div class="col-lg-4">
-                <div class="loyalty-card mb-4">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <span style="font-size: 2rem;">⭐</span>
+                <!-- Loyalty Card -->
+                <div class="loyalty-card">
+                    <div class="loyalty-header">
+                        <span class="loyalty-icon">⭐</span>
                         <div>
-                            <div style="font-weight: 700;">Loyalty Rewards</div>
-                            <div id="customerCategory" style="opacity: 0.9; font-size: 0.9rem;">Standard Member</div>
+                            <div class="loyalty-title">Loyalty Rewards</div>
+                            <div class="loyalty-tier" id="customerCategory">Standard Member</div>
                         </div>
                     </div>
                     <div class="loyalty-points" id="sidebarPoints">0</div>
-                    <div style="opacity: 0.9; font-size: 0.9rem;">Available Points</div>
+                    <div class="loyalty-label">Available Points</div>
                 </div>
 
+                <!-- Account Info -->
                 <div class="profile-card">
-                    <h6>📋 Account Info</h6>
-                    <div class="info-row"><span class="info-label">Customer ID</span><span class="info-value" id="customerId">-</span></div>
-                    <div class="info-row"><span class="info-label">Status</span><span class="info-value"><span class="badge bg-success" id="accountStatus">Active</span></span></div>
-                    <div class="info-row"><span class="info-label">Member Since</span><span class="info-value" id="createdAt">-</span></div>
+                    <h6>📋 Account Information</h6>
+                    <div class="info-row">
+                        <span class="info-label">Customer ID</span>
+                        <span class="info-value" id="customerId">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Account Status</span>
+                        <span class="info-value">
+                            <span class="badge bg-success" id="accountStatus">Active</span>
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Member Since</span>
+                        <span class="info-value" id="createdAt">-</span>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="profile-card">
+                    <h6>🔗 Quick Links</h6>
+                    <div class="d-grid gap-2">
+                        <a href="/CustomerPortal/Orders" class="btn btn-outline-primary d-flex align-items-center gap-2">
+                            📦 View My Orders
+                        </a>
+                        <a href="/CustomerPortal/MyTickets" class="btn btn-outline-primary d-flex align-items-center gap-2">
+                            🎫 Support Tickets
+                        </a>
+                        <a href="/CustomerPortal/Wishlist" class="btn btn-outline-primary d-flex align-items-center gap-2">
+                            ❤️ My Wishlist
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -275,31 +555,44 @@
         try {
             const response = await fetch('/CustomerPortal/GetProfile');
             const result = await response.json();
+            
             if (result.success) {
                 populateProfile(result.data);
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('profileContent').style.display = 'block';
+            } else {
+                showAlert(result.message || 'Failed to load profile', 'error');
+                // Redirect to login if not authenticated
+                setTimeout(() => window.location.href = '/Auth/Login', 2000);
             }
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Error loading profile:', error);
+            showAlert('Failed to load profile. Please try again.', 'error');
         }
     }
 
     function populateProfile(data) {
-        const initials = (data.firstName?.[0] || '') + (data.lastName?.[0] || '');
+        // Avatar and name
+        const initials = ((data.firstName?.[0] || '') + (data.lastName?.[0] || '')).toUpperCase();
         document.getElementById('profileAvatar').textContent = initials || 'U';
-        document.getElementById('profileName').textContent = `${data.firstName || ''} ${data.lastName || ''}`;
+        document.getElementById('profileName').textContent = `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'User';
+        document.getElementById('profileEmail').textContent = data.email || '';
+        
+        // Stats
         const memberDate = data.createdAt ? new Date(data.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : 'N/A';
-        document.getElementById('memberSince').textContent = `Member since ${memberDate}`;
-        document.getElementById('totalOrders').textContent = data.totalOrders || 0;
+        document.getElementById('totalOrders').textContent = (data.totalOrders || 0).toLocaleString();
         document.getElementById('loyaltyPoints').textContent = (data.loyaltyPoints || 0).toLocaleString();
         document.getElementById('totalSpent').textContent = `₱${(data.totalSpent || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
+        
+        // Form fields
         document.getElementById('firstName').value = data.firstName || '';
         document.getElementById('lastName').value = data.lastName || '';
         document.getElementById('email').value = data.email || '';
         document.getElementById('phone').value = data.phone || '';
         document.getElementById('dateOfBirth').value = data.dateOfBirth ? data.dateOfBirth.split('T')[0] : '';
         document.getElementById('gender').value = data.gender || '';
+        
+        // Addresses
         document.getElementById('billingAddress').value = data.billingAddress || '';
         document.getElementById('billingCity').value = data.billingCity || '';
         document.getElementById('billingState').value = data.billingState || '';
@@ -310,21 +603,30 @@
         document.getElementById('shippingState').value = data.shippingState || '';
         document.getElementById('shippingZipCode').value = data.shippingZipCode || '';
         document.getElementById('shippingCountry').value = data.shippingCountry || 'Philippines';
+        
+        // Sidebar
         document.getElementById('sidebarPoints').textContent = (data.loyaltyPoints || 0).toLocaleString();
         document.getElementById('customerCategory').textContent = data.categoryName || 'Standard Member';
         document.getElementById('customerId').textContent = data.customerCode || '-';
         document.getElementById('accountStatus').textContent = data.status || 'Active';
+        document.getElementById('accountStatus').className = `badge bg-${data.status === 'Active' ? 'success' : 'warning'}`;
         document.getElementById('createdAt').textContent = memberDate;
-        document.getElementById('marketingOptIn').checked = data.marketingOptIn;
+        
+        // Preferences
+        document.getElementById('marketingOptIn').checked = data.marketingOptIn !== false;
     }
 
     function showTab(tabName, btn) {
+        // Hide all tabs
         document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        
+        // Show selected tab
         document.getElementById('tab-' + tabName).classList.add('active');
         btn.classList.add('active');
     }
 
+    // Personal form submit
     document.getElementById('personalForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         await updateProfile({
@@ -354,7 +656,50 @@
     }
 
     async function savePreferences() {
-        await updateProfile({ marketingOptIn: document.getElementById('marketingOptIn').checked });
+        await updateProfile({ 
+            marketingOptIn: document.getElementById('marketingOptIn').checked 
+        });
+    }
+
+    async function changePassword() {
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            showAlert('Please fill in all password fields', 'error');
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            showAlert('New passwords do not match', 'error');
+            return;
+        }
+        
+        if (newPassword.length < 6) {
+            showAlert('Password must be at least 6 characters', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/CustomerPortal/ChangePassword', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPassword, newPassword })
+            });
+            const result = await response.json();
+            
+            if (result.success) {
+                showAlert('Password updated successfully!', 'success');
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            } else {
+                showAlert(result.message || 'Failed to update password', 'error');
+            }
+        } catch (error) {
+            showAlert('Failed to update password', 'error');
+        }
     }
 
     async function updateProfile(data) {
@@ -365,8 +710,13 @@
                 body: JSON.stringify(data)
             });
             const result = await response.json();
-            showAlert(result.success ? 'Profile updated successfully!' : 'Error: ' + result.message, result.success ? 'success' : 'error');
-            if (result.success) loadProfile();
+            
+            if (result.success) {
+                showAlert('Profile updated successfully!', 'success');
+                loadProfile(); // Reload to show updated data
+            } else {
+                showAlert(result.message || 'Failed to update profile', 'error');
+            }
         } catch (error) {
             showAlert('Failed to update profile', 'error');
         }
@@ -384,7 +734,17 @@
 
     function showAlert(message, type) {
         const container = document.getElementById('alertContainer');
-        container.innerHTML = `<div class="alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const icon = type === 'success' ? '✓' : '⚠';
+        
+        container.innerHTML = `
+            <div class="alert ${alertClass} alert-dismissible fade show d-flex align-items-center" role="alert">
+                <span class="me-2">${icon}</span>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        
         setTimeout(() => container.innerHTML = '', 5000);
     }
 </script>

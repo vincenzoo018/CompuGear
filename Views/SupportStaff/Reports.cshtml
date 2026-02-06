@@ -1,0 +1,140 @@
+@{
+    ViewData["Title"] = "Support Reports";
+    Layout = "~/Views/Shared/_SupportLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">Support Reports</h1>
+            <p class="text-muted mb-0">Analyze support performance and metrics</p>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-outline-primary active" data-period="week">This Week</button>
+            <button class="btn btn-outline-primary" data-period="month">This Month</button>
+            <button class="btn btn-outline-primary" data-period="year">This Year</button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">Total Tickets</p>
+                            <h3 class="mb-0" id="totalTickets">0</h3>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-ticket text-primary fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">Resolved</p>
+                            <h3 class="mb-0" id="resolvedTickets">0</h3>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-check-circle text-success fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">Avg. Resolution Time</p>
+                            <h3 class="mb-0" id="avgResolutionTime">0h</h3>
+                        </div>
+                        <div class="bg-info bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-clock text-info fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">Satisfaction Rate</p>
+                            <h3 class="mb-0" id="satisfactionRate">0%</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 p-2 rounded">
+                            <i class="bi bi-star text-warning fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Tickets Trend -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">Ticket Trend</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="ticketTrendChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tickets by Category -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">By Category</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-2">
+        <!-- Priority Distribution -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">Priority Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="priorityChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resolution Time by Category -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">Avg. Resolution Time by Category</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="resolutionTimeChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/support.js"></script>
+}
