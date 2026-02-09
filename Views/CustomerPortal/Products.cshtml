@@ -689,7 +689,7 @@
         }
 
         grid.innerHTML = products.map((product, index) => {
-            const inWishlist = wishlist.some(w => w.productId === product.productId);
+            const inWishlist = wishlist.includes(product.productId) || wishlist.some(w => w && w.productId === product.productId);
             const rating = Math.floor(3 + Math.random() * 2);
             const reviewCount = Math.floor(10 + Math.random() * 200);
             const stockStatus = product.stockQuantity > 10 ? 'in-stock' : product.stockQuantity > 0 ? 'low-stock' : 'out-of-stock';
@@ -772,16 +772,20 @@
     function toggleWishlist(event, productId, productName, price) {
         event.stopPropagation();
         let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-        const index = wishlist.findIndex(w => w.productId === productId);
+        // Store as plain productId integers for consistency
+        const index = wishlist.indexOf(productId);
+        // Also check old object format
+        const objIndex = wishlist.findIndex(w => w && w.productId === productId);
         const btn = event.currentTarget;
 
-        if (index > -1) {
-            wishlist.splice(index, 1);
+        if (index > -1 || objIndex > -1) {
+            if (index > -1) wishlist.splice(index, 1);
+            else wishlist.splice(objIndex, 1);
             btn.classList.remove('active');
             btn.innerHTML = '🤍';
             showToast('Removed from wishlist', 'info');
         } else {
-            wishlist.push({ productId, name: productName, price });
+            wishlist.push(productId);
             btn.classList.add('active');
             btn.innerHTML = '❤️';
             showToast('Added to wishlist!', 'success');
@@ -793,8 +797,11 @@
         let cart = JSON.parse(localStorage.getItem('cart') || '[]');
         const existingIndex = cart.findIndex(item => item.productId === productId);
 
-        if (existingIndex > -1) { cart[existingIndex].quantity += 1; }
-        else { cart.push({ productId, name: productName, price, sku, quantity: 1 }); }
+        if (existingIndex > -1) {
+            cart[existingIndex].quantity += 1;
+        } else {
+            cart.push({ productId, name: productName, price, sku: sku || '', quantity: 1 });
+        }
 
         localStorage.setItem('cart', JSON.stringify(cart));
         updateCartBadge();

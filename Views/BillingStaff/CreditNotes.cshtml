@@ -66,7 +66,7 @@
     <div class="stat-card fade-in">
         <div class="stat-info">
             <span class="stat-label">Total Issued</span>
-            <span class="stat-value" id="totalIssued">$0</span>
+            <span class="stat-value" id="totalIssued">₱0</span>
         </div>
         <div class="stat-icon teal">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -135,7 +135,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Credit Amount <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">₱</span>
                                 <input type="number" step="0.01" class="form-control" id="creditAmount" name="creditAmount" required min="0.01">
                             </div>
                         </div>
@@ -210,7 +210,7 @@
             invoices.forEach(inv => {
                 const option = document.createElement('option');
                 option.value = inv.invoiceId;
-                option.textContent = `${inv.invoiceNumber} - ${inv.customerName} - $${inv.totalAmount?.toFixed(2) || '0.00'}`;
+                option.textContent = `${inv.invoiceNumber} - ${inv.customerName} - ₱${inv.totalAmount?.toFixed(2) || '0.00'}`;
                 option.dataset.customer = inv.customerName;
                 option.dataset.amount = inv.totalAmount;
                 select.appendChild(option);
@@ -256,7 +256,7 @@
                 totalIssued += parseFloat(data.creditAmount) || 0;
             } catch (e) {}
         });
-        document.getElementById('totalIssued').textContent = `$${totalIssued.toFixed(2)}`;
+        document.getElementById('totalIssued').textContent = `₱${totalIssued.toFixed(2)}`;
     }
 
     function renderRequests(requests) {
@@ -285,7 +285,7 @@
                 <tr>
                     <td><code>${r.requestCode}</code></td>
                     <td>${r.entityName || '-'}</td>
-                    <td>$${creditAmount.toFixed(2)}</td>
+                    <td>₱${creditAmount.toFixed(2)}</td>
                     <td><span class="text-truncate d-inline-block" style="max-width: 200px;" title="${r.reason}">${r.reason}</span></td>
                     <td><span class="badge ${priorityClass}">${r.priority}</span></td>
                     <td><span class="badge ${statusClass}">${r.status}</span></td>
@@ -313,7 +313,7 @@
             requestType: 'CreditNoteIssue',
             module: 'Billing',
             title: `Credit Note Request - ${invoiceName.split(' - ')[0]}`,
-            description: `Credit note of $${creditAmount} for invoice`,
+            description: `Credit note of ₱${creditAmount} for invoice`,
             reason: reason,
             entityType: 'Invoice',
             entityId: parseInt(invoiceId),

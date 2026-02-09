@@ -482,6 +482,7 @@ namespace CompuGear.Controllers
                     o.OrderDate,
                     o.OrderStatus,
                     o.PaymentStatus,
+                    o.PaymentMethod,
                     o.TotalAmount,
                     o.ShippingMethod,
                     o.TrackingNumber,
@@ -578,12 +579,18 @@ namespace CompuGear.Controllers
 
                     if (promo.MaxDiscountAmount.HasValue && discountAmount > promo.MaxDiscountAmount)
                         discountAmount = promo.MaxDiscountAmount.Value;
+
+                    // Increment promo usage
+                    promo.TimesUsed += 1;
                 }
             }
 
-            var shippingAmount = subtotal > 5000 ? 0 : 150;
-            var taxAmount = (subtotal - discountAmount) * 0.12m;
-            var totalAmount = subtotal - discountAmount + taxAmount + shippingAmount;
+            // VAT calculation (12% VAT inclusive in the Philippines)
+            // Subtotal is VAT-inclusive, so: VAT = subtotal / 1.12 * 0.12
+            var vatableAmount = (subtotal - discountAmount) / 1.12m;
+            var taxAmount = vatableAmount * 0.12m;
+            var shippingAmount = subtotal > 5000 ? 0 : 150m;
+            var totalAmount = subtotal - discountAmount + shippingAmount;
 
             // Generate order number
             var orderCount = await _context.Orders.CountAsync() + 1;
@@ -623,6 +630,63 @@ namespace CompuGear.Controllers
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
+            // ===== AUTO-GENERATE INVOICE =====
+            try
+            {
+                var invoiceCount = await _context.Invoices.CountAsync() + 1;
+                var invoiceNumber = $"INV-{DateTime.Now:yyyyMMdd}-{invoiceCount:D4}";
+
+                var invoice = new Invoice
+                {
+                    InvoiceNumber = invoiceNumber,
+                    OrderId = order.OrderId,
+                    CustomerId = customerId,
+                    InvoiceDate = DateTime.UtcNow,
+                    DueDate = DateTime.UtcNow.AddDays(30),
+                    Subtotal = subtotal,
+                    DiscountAmount = discountAmount,
+                    TaxAmount = taxAmount,
+                    ShippingAmount = shippingAmount,
+                    TotalAmount = totalAmount,
+                    PaidAmount = 0,
+                    BalanceDue = totalAmount,
+                    Status = "Pending",
+                    BillingName = customer != null ? $"{customer.FirstName} {customer.LastName}" : "Customer",
+                    BillingAddress = model.ShippingAddress,
+                    BillingCity = model.ShippingCity,
+                    BillingState = model.ShippingState,
+                    BillingZipCode = model.ShippingZipCode,
+                    BillingCountry = model.ShippingCountry ?? "Philippines",
+                    BillingEmail = customer?.Email,
+                    PaymentTerms = "Due on Receipt",
+                    Notes = $"Auto-generated from Order #{orderNumber}",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                // Create invoice items from order items
+                foreach (var oi in orderItems)
+                {
+                    invoice.Items.Add(new InvoiceItem
+                    {
+                        ProductId = oi.ProductId,
+                        Description = oi.ProductName,
+                        Quantity = oi.Quantity,
+                        UnitPrice = oi.UnitPrice,
+                        TaxAmount = (oi.TotalPrice / 1.12m) * 0.12m,
+                        TotalPrice = oi.TotalPrice
+                    });
+                }
+
+                _context.Invoices.Add(invoice);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                // Log but don't fail the order if invoice generation fails
+                System.Diagnostics.Debug.WriteLine($"Invoice auto-generation failed: {ex.Message}");
+            }
+
             return Json(new
             {
                 success = true,
@@ -637,114 +701,309 @@ namespace CompuGear.Controllers
             });
         }
 
-        // POST: /CustomerPortal/ProcessPayment (PayMongo Integration)
+        // POST: /CustomerPortal/ProcessPayment (PayMongo Payment Intent + GCash)
         [HttpPost]
         public async Task<IActionResult> ProcessPayment([FromBody] PaymentRequestModel model)
         {
-            var order = await _context.Orders.FindAsync(model.OrderId);
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.OrderId == model.OrderId);
+
             if (order == null)
                 return Json(new { success = false, message = "Order not found" });
 
-            // PayMongo API integration
-            var paymongoSecretKey = _configuration["PayMongo:SecretKey"];
-            
-            if (string.IsNullOrEmpty(paymongoSecretKey))
-            {
-                // Demo mode - simulate successful payment
-                order.PaymentStatus = "Paid";
-                order.PaidAmount = order.TotalAmount;
-                order.OrderStatus = "Confirmed";
-                order.ConfirmedAt = DateTime.UtcNow;
-                order.PaymentReference = $"PAY-{DateTime.Now:yyyyMMddHHmmss}";
-                
-                await _context.SaveChangesAsync();
+            var paymongoSecretKey = _configuration["PayMongo:SecretKey"] ?? "sk_test_SakyRyg4R6hXeni4x5EaNUow";
 
-                return Json(new
-                {
-                    success = true,
-                    message = "Payment processed successfully (Demo Mode)",
-                    data = new
-                    {
-                        order.OrderId,
-                        order.OrderNumber,
-                        order.PaymentStatus,
-                        order.PaymentReference
-                    }
-                });
-            }
-
-            // Real PayMongo integration
             try
             {
                 using var httpClient = new HttpClient();
                 var authToken = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{paymongoSecretKey}:"));
                 httpClient.DefaultRequestHeaders.Add("Authorization", $"Basic {authToken}");
 
-                // Create PayMongo checkout session
-                var checkoutRequest = new
+                // Step 1: Create Payment Intent
+                var amountInCentavos = (int)(order.TotalAmount * 100);
+                var paymentIntentRequest = new
                 {
                     data = new
                     {
                         attributes = new
                         {
-                            billing = new
-                            {
-                                name = model.CustomerName,
-                                email = model.CustomerEmail,
-                                phone = model.CustomerPhone
-                            },
-                            send_email_receipt = true,
-                            show_description = true,
-                            show_line_items = true,
-                            description = $"Order {order.OrderNumber}",
-                            line_items = new[]
-                            {
-                                new
-                                {
-                                    currency = "PHP",
-                                    amount = (int)(order.TotalAmount * 100),
-                                    name = $"Order {order.OrderNumber}",
-                                    quantity = 1
-                                }
-                            },
-                            payment_method_types = new[] { "gcash", "grab_pay", "paymaya", "card" },
-                            success_url = $"{Request.Scheme}://{Request.Host}/CustomerPortal/Orders?payment=success&orderId={order.OrderId}",
-                            cancel_url = $"{Request.Scheme}://{Request.Host}/CustomerPortal/Checkout?payment=cancelled&orderId={order.OrderId}"
+                            amount = amountInCentavos,
+                            currency = "PHP",
+                            payment_method_allowed = new[] { model.PaymentMethod ?? "gcash" },
+                            description = $"CompuGear Order {order.OrderNumber}",
+                            statement_descriptor = "CompuGear",
+                            capture_type = "automatic"
                         }
                     }
                 };
 
-                var content = new StringContent(
-                    System.Text.Json.JsonSerializer.Serialize(checkoutRequest),
+                var piContent = new StringContent(
+                    System.Text.Json.JsonSerializer.Serialize(paymentIntentRequest),
                     System.Text.Encoding.UTF8,
                     "application/json"
                 );
 
-                var response = await httpClient.PostAsync("https://api.paymongo.com/v1/checkout_sessions", content);
-                var responseContent = await response.Content.ReadAsStringAsync();
+                var piResponse = await httpClient.PostAsync("https://api.paymongo.com/v1/payment_intents", piContent);
+                var piResponseContent = await piResponse.Content.ReadAsStringAsync();
 
-                if (response.IsSuccessStatusCode)
+                if (!piResponse.IsSuccessStatusCode)
                 {
-                    var jsonResponse = System.Text.Json.JsonDocument.Parse(responseContent);
-                    var checkoutUrl = jsonResponse.RootElement.GetProperty("data").GetProperty("attributes").GetProperty("checkout_url").GetString();
-                    var sessionId = jsonResponse.RootElement.GetProperty("data").GetProperty("id").GetString();
-
-                    order.PaymentReference = sessionId;
-                    await _context.SaveChangesAsync();
-
-                    return Json(new
-                    {
-                        success = true,
-                        checkoutUrl,
-                        sessionId
-                    });
+                    return Json(new { success = false, message = "Failed to create payment intent", details = piResponseContent });
                 }
 
-                return Json(new { success = false, message = "Payment processing failed", details = responseContent });
+                var piJson = System.Text.Json.JsonDocument.Parse(piResponseContent);
+                var paymentIntentId = piJson.RootElement.GetProperty("data").GetProperty("id").GetString();
+                var clientKey = piJson.RootElement.GetProperty("data").GetProperty("attributes").GetProperty("client_key").GetString();
+
+                // Step 2: Create Payment Method
+                var paymentMethodRequest = new
+                {
+                    data = new
+                    {
+                        attributes = new
+                        {
+                            type = model.PaymentMethod ?? "gcash",
+                            billing = new
+                            {
+                                name = model.CustomerName ?? "Customer",
+                                email = model.CustomerEmail ?? "",
+                                phone = model.CustomerPhone ?? ""
+                            }
+                        }
+                    }
+                };
+
+                var pmContent = new StringContent(
+                    System.Text.Json.JsonSerializer.Serialize(paymentMethodRequest),
+                    System.Text.Encoding.UTF8,
+                    "application/json"
+                );
+
+                var pmResponse = await httpClient.PostAsync("https://api.paymongo.com/v1/payment_methods", pmContent);
+                var pmResponseContent = await pmResponse.Content.ReadAsStringAsync();
+
+                if (!pmResponse.IsSuccessStatusCode)
+                {
+                    return Json(new { success = false, message = "Failed to create payment method", details = pmResponseContent });
+                }
+
+                var pmJson = System.Text.Json.JsonDocument.Parse(pmResponseContent);
+                var paymentMethodId = pmJson.RootElement.GetProperty("data").GetProperty("id").GetString();
+
+                // Step 3: Attach Payment Method to Payment Intent
+                var attachRequest = new
+                {
+                    data = new
+                    {
+                        attributes = new
+                        {
+                            payment_method = paymentMethodId,
+                            client_key = clientKey,
+                            return_url = $"{Request.Scheme}://{Request.Host}/CustomerPortal/PaymentCallback?orderId={order.OrderId}"
+                        }
+                    }
+                };
+
+                var attachContent = new StringContent(
+                    System.Text.Json.JsonSerializer.Serialize(attachRequest),
+                    System.Text.Encoding.UTF8,
+                    "application/json"
+                );
+
+                var attachResponse = await httpClient.PostAsync($"https://api.paymongo.com/v1/payment_intents/{paymentIntentId}/attach", attachContent);
+                var attachResponseContent = await attachResponse.Content.ReadAsStringAsync();
+
+                if (!attachResponse.IsSuccessStatusCode)
+                {
+                    return Json(new { success = false, message = "Failed to attach payment method", details = attachResponseContent });
+                }
+
+                var attachJson = System.Text.Json.JsonDocument.Parse(attachResponseContent);
+                var status = attachJson.RootElement.GetProperty("data").GetProperty("attributes").GetProperty("status").GetString();
+
+                // Save payment reference
+                order.PaymentReference = paymentIntentId;
+                order.PaymentMethod = model.PaymentMethod ?? "gcash";
+                order.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                // Check if redirect is needed (for e-wallets like GCash)
+                string? checkoutUrl = null;
+                if (status == "awaiting_next_action")
+                {
+                    var nextAction = attachJson.RootElement.GetProperty("data").GetProperty("attributes").GetProperty("next_action");
+                    checkoutUrl = nextAction.GetProperty("redirect").GetProperty("url").GetString();
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    paymentIntentId,
+                    clientKey,
+                    status,
+                    checkoutUrl,
+                    message = status == "succeeded" ? "Payment successful!" : "Redirecting to payment..."
+                });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "Payment error", details = ex.Message });
+                return Json(new { success = false, message = "Payment error: " + ex.Message });
+            }
+        }
+
+        // GET: /CustomerPortal/PaymentCallback
+        [HttpGet]
+        public async Task<IActionResult> PaymentCallback(int orderId)
+        {
+            var order = await _context.Orders.FindAsync(orderId);
+            if (order == null)
+                return RedirectToAction("Orders");
+
+            // Check payment status with PayMongo
+            if (!string.IsNullOrEmpty(order.PaymentReference))
+            {
+                try
+                {
+                    var paymongoSecretKey = _configuration["PayMongo:SecretKey"] ?? "sk_test_SakyRyg4R6hXeni4x5EaNUow";
+                    using var httpClient = new HttpClient();
+                    var authToken = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{paymongoSecretKey}:"));
+                    httpClient.DefaultRequestHeaders.Add("Authorization", $"Basic {authToken}");
+
+                    var response = await httpClient.GetAsync($"https://api.paymongo.com/v1/payment_intents/{order.PaymentReference}");
+                    var content = await response.Content.ReadAsStringAsync();
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var json = System.Text.Json.JsonDocument.Parse(content);
+                        var status = json.RootElement.GetProperty("data").GetProperty("attributes").GetProperty("status").GetString();
+
+                        if (status == "succeeded")
+                        {
+                            order.PaymentStatus = "Paid";
+                            order.PaidAmount = order.TotalAmount;
+                            order.OrderStatus = "Confirmed";
+                            order.ConfirmedAt = DateTime.UtcNow;
+                            order.UpdatedAt = DateTime.UtcNow;
+
+                            // Deduct stock
+                            var orderItems = await _context.OrderItems.Where(oi => oi.OrderId == orderId).ToListAsync();
+                            foreach (var item in orderItems)
+                            {
+                                var product = await _context.Products.FindAsync(item.ProductId);
+                                if (product != null)
+                                {
+                                    product.StockQuantity -= item.Quantity;
+                                }
+                            }
+
+                            // Update customer stats
+                            var customer = await _context.Customers.FindAsync(order.CustomerId);
+                            if (customer != null)
+                            {
+                                customer.TotalOrders += 1;
+                                customer.TotalSpent += order.TotalAmount;
+                            }
+
+                            // Update linked invoice to Paid
+                            var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.OrderId == orderId);
+                            if (invoice != null)
+                            {
+                                invoice.Status = "Paid";
+                                invoice.PaidAmount = invoice.TotalAmount;
+                                invoice.BalanceDue = 0;
+                                invoice.PaidAt = DateTime.UtcNow;
+                                invoice.UpdatedAt = DateTime.UtcNow;
+
+                                // Create payment record
+                                var paymentRecord = new Payment
+                                {
+                                    PaymentNumber = $"PAY-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}",
+                                    InvoiceId = invoice.InvoiceId,
+                                    OrderId = orderId,
+                                    CustomerId = order.CustomerId,
+                                    PaymentDate = DateTime.UtcNow,
+                                    Amount = order.TotalAmount,
+                                    PaymentMethodType = order.PaymentMethod ?? "gcash",
+                                    Status = "Completed",
+                                    TransactionId = order.PaymentReference,
+                                    ReferenceNumber = order.PaymentReference,
+                                    PayMongoPaymentId = order.PaymentReference,
+                                    Currency = "PHP",
+                                    Notes = $"Auto-recorded from Order #{order.OrderNumber}",
+                                    ProcessedAt = DateTime.UtcNow,
+                                    CreatedAt = DateTime.UtcNow,
+                                    UpdatedAt = DateTime.UtcNow
+                                };
+                                _context.Payments.Add(paymentRecord);
+                            }
+
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+                }
+                catch { /* Log error */ }
+            }
+
+            return Redirect($"/CustomerPortal/Orders?payment=success&orderId={orderId}");
+        }
+
+        // GET: /CustomerPortal/CheckPaymentStatus
+        [HttpGet]
+        public async Task<IActionResult> CheckPaymentStatus(int orderId)
+        {
+            var order = await _context.Orders.FindAsync(orderId);
+            if (order == null)
+                return Json(new { success = false, message = "Order not found" });
+
+            return Json(new
+            {
+                success = true,
+                data = new
+                {
+                    order.OrderId,
+                    order.OrderNumber,
+                    order.OrderStatus,
+                    order.PaymentStatus,
+                    order.TotalAmount,
+                    order.PaidAmount
+                }
+            });
+        }
+
+        // POST: /CustomerPortal/GetCartProducts - Fetch real product data for cart items
+        [HttpPost]
+        public async Task<IActionResult> GetCartProducts([FromBody] List<int> productIds)
+        {
+            try
+            {
+                var products = await _context.Products
+                    .Include(p => p.Category)
+                    .Include(p => p.Brand)
+                    .Where(p => productIds.Contains(p.ProductId))
+                    .Select(p => new
+                    {
+                        p.ProductId,
+                        p.ProductCode,
+                        p.SKU,
+                        p.ProductName,
+                        p.ShortDescription,
+                        CategoryName = p.Category != null ? p.Category.CategoryName : null,
+                        BrandName = p.Brand != null ? p.Brand.BrandName : null,
+                        p.SellingPrice,
+                        p.CompareAtPrice,
+                        p.StockQuantity,
+                        p.MainImageUrl,
+                        p.IsOnSale,
+                        p.StockStatus
+                    })
+                    .ToListAsync();
+
+                return Json(new { success = true, data = products });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
             }
         }
 

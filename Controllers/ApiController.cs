@@ -10,10 +10,12 @@ namespace CompuGear.Controllers
     public class ApiController : ControllerBase
     {
         private readonly CompuGearDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public ApiController(CompuGearDbContext context)
+        public ApiController(CompuGearDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         #region Marketing - Campaigns
@@ -1022,9 +1024,23 @@ namespace CompuGear.Controllers
                         o.TaxAmount,
                         o.ShippingAmount,
                         o.TotalAmount,
+                        o.PaidAmount,
                         o.PaymentMethod,
+                        o.PaymentReference,
+                        o.ShippingAddress,
                         o.ShippingCity,
+                        o.ShippingMethod,
+                        o.TrackingNumber,
+                        o.Notes,
+                        o.ConfirmedAt,
                         ItemCount = o.OrderItems.Count,
+                        Items = o.OrderItems.Select(i => new {
+                            i.ProductName,
+                            i.Quantity,
+                            i.UnitPrice,
+                            i.TotalPrice,
+                            i.ProductCode
+                        }),
                         o.CreatedAt
                     })
                     .ToListAsync();
@@ -1125,6 +1141,16 @@ namespace CompuGear.Controllers
                 order.OrderStatus = request.Status;
                 order.UpdatedAt = DateTime.UtcNow;
 
+                // Update status timestamps
+                if (request.Status == "Confirmed" && !order.ConfirmedAt.HasValue)
+                    order.ConfirmedAt = DateTime.UtcNow;
+                if (request.Status == "Shipped" && !order.ShippedAt.HasValue)
+                    order.ShippedAt = DateTime.UtcNow;
+                if (request.Status == "Delivered" && !order.DeliveredAt.HasValue)
+                    order.DeliveredAt = DateTime.UtcNow;
+                if (request.Status == "Cancelled" && !order.CancelledAt.HasValue)
+                    order.CancelledAt = DateTime.UtcNow;
+
                 // Create status history
                 var history = new OrderStatusHistory
                 {
@@ -1139,6 +1165,235 @@ namespace CompuGear.Controllers
                 await _context.SaveChangesAsync();
 
                 return Ok(new { success = true, message = "Order status updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
+            }
+        }
+
+        [HttpPut("orders/{id}/approve")]
+        public async Task<IActionResult> ApproveOrder(int id)
+        {
+            try
+            {
+                var order = await _context.Orders
+                    .Include(o => o.OrderItems)
+                    .Include(o => o.Customer)
+                    .FirstOrDefaultAsync(o => o.OrderId == id);
+
+                if (order == null) return NotFound(new { success = false, message = "Order not found" });
+
+                if (order.OrderStatus != "Pending")
+                    return BadRequest(new { success = false, message = "Only pending orders can be approved" });
+
+                var previousStatus = order.OrderStatus;
+                order.OrderStatus = "Confirmed";
+                order.ConfirmedAt = DateTime.UtcNow;
+                order.UpdatedAt = DateTime.UtcNow;
+
+                // Create status history
+                _context.OrderStatusHistory.Add(new OrderStatusHistory
+                {
+                    OrderId = id,
+                    PreviousStatus = previousStatus,
+                    NewStatus = "Confirmed",
+                    Notes = "Order approved by admin",
+                    ChangedAt = DateTime.UtcNow
+                });
+
+                // Auto-generate invoice if one doesn't already exist
+                var existingInvoice = await _context.Invoices.FirstOrDefaultAsync(i => i.OrderId == id);
+                if (existingInvoice == null)
+                {
+                    var invoiceCount = await _context.Invoices.CountAsync() + 1;
+                    var invoiceNumber = $"INV-{DateTime.Now:yyyyMMdd}-{invoiceCount:D4}";
+
+                    var invoice = new Invoice
+                    {
+                        InvoiceNumber = invoiceNumber,
+                        OrderId = order.OrderId,
+                        CustomerId = order.CustomerId,
+                        InvoiceDate = DateTime.UtcNow,
+                        DueDate = DateTime.UtcNow.AddDays(30),
+                        Subtotal = order.Subtotal,
+                        DiscountAmount = order.DiscountAmount,
+                        TaxAmount = order.TaxAmount,
+                        ShippingAmount = order.ShippingAmount,
+                        TotalAmount = order.TotalAmount,
+                        PaidAmount = order.PaidAmount,
+                        BalanceDue = order.TotalAmount - order.PaidAmount,
+                        Status = order.PaymentStatus == "Paid" ? "Paid" : "Pending",
+                        BillingName = order.Customer != null ? $"{order.Customer.FirstName} {order.Customer.LastName}" : "Customer",
+                        BillingAddress = order.BillingAddress ?? order.ShippingAddress,
+                        BillingCity = order.BillingCity ?? order.ShippingCity,
+                        BillingState = order.BillingState ?? order.ShippingState,
+                        BillingZipCode = order.BillingZipCode ?? order.ShippingZipCode,
+                        BillingCountry = order.BillingCountry ?? order.ShippingCountry ?? "Philippines",
+                        BillingEmail = order.Customer?.Email,
+                        PaymentTerms = "Due on Receipt",
+                        Notes = $"Auto-generated from approved Order #{order.OrderNumber}",
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+
+                    foreach (var oi in order.OrderItems)
+                    {
+                        invoice.Items.Add(new InvoiceItem
+                        {
+                            ProductId = oi.ProductId,
+                            Description = oi.ProductName,
+                            Quantity = oi.Quantity,
+                            UnitPrice = oi.UnitPrice,
+                            TaxAmount = (oi.TotalPrice / 1.12m) * 0.12m,
+                            TotalPrice = oi.TotalPrice
+                        });
+                    }
+
+                    _context.Invoices.Add(invoice);
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Create PayMongo Checkout Session for unpaid orders
+                string? checkoutUrl = null;
+                string? checkoutSessionId = null;
+                if (order.PaymentStatus != "Paid")
+                {
+                    try
+                    {
+                        var paymongoSecretKey = _configuration["PayMongo:SecretKey"] ?? "sk_test_SakyRyg4R6hXeni4x5EaNUow";
+                        using var httpClient = new HttpClient();
+                        var authToken = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{paymongoSecretKey}:"));
+                        httpClient.DefaultRequestHeaders.Add("Authorization", $"Basic {authToken}");
+
+                        var amountInCentavos = (int)(order.TotalAmount * 100);
+                        var lineItems = order.OrderItems.Select(oi => new
+                        {
+                            name = oi.ProductName ?? "Product",
+                            quantity = oi.Quantity,
+                            amount = (int)(oi.UnitPrice * 100),
+                            currency = "PHP",
+                            description = $"SKU: {oi.ProductCode ?? "N/A"}"
+                        }).ToArray();
+
+                        var callbackUrl = $"{Request.Scheme}://{Request.Host}/CustomerPortal/PaymentCallback?orderId={order.OrderId}";
+
+                        var checkoutRequest = new
+                        {
+                            data = new
+                            {
+                                attributes = new
+                                {
+                                    send_email_receipt = true,
+                                    show_description = true,
+                                    show_line_items = true,
+                                    description = $"CompuGear Order {order.OrderNumber}",
+                                    line_items = lineItems,
+                                    payment_method_types = new[] { "gcash", "card", "grab_pay", "paymaya" },
+                                    success_url = callbackUrl,
+                                    cancel_url = $"{Request.Scheme}://{Request.Host}/CustomerPortal/Orders"
+                                }
+                            }
+                        };
+
+                        var content = new StringContent(
+                            System.Text.Json.JsonSerializer.Serialize(checkoutRequest),
+                            System.Text.Encoding.UTF8,
+                            "application/json"
+                        );
+
+                        var response = await httpClient.PostAsync("https://api.paymongo.com/v1/checkout_sessions", content);
+                        var responseContent = await response.Content.ReadAsStringAsync();
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var json = System.Text.Json.JsonDocument.Parse(responseContent);
+                            checkoutSessionId = json.RootElement.GetProperty("data").GetProperty("id").GetString();
+                            checkoutUrl = json.RootElement.GetProperty("data").GetProperty("attributes").GetProperty("checkout_url").GetString();
+
+                            // Save reference
+                            order.PaymentReference = checkoutSessionId;
+                            order.UpdatedAt = DateTime.UtcNow;
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+                    catch (Exception payEx)
+                    {
+                        // PayMongo error is non-fatal — order is still approved
+                        return Ok(new { 
+                            success = true, 
+                            message = $"Order approved and invoice generated. PayMongo checkout could not be created: {payEx.Message}",
+                            paymongoError = true 
+                        });
+                    }
+                }
+
+                return Ok(new { 
+                    success = true, 
+                    message = order.PaymentStatus == "Paid" 
+                        ? "Order approved and invoice generated successfully" 
+                        : "Order approved! PayMongo checkout link generated.",
+                    checkoutUrl,
+                    checkoutSessionId,
+                    orderNumber = order.OrderNumber,
+                    isPaid = order.PaymentStatus == "Paid"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
+            }
+        }
+
+        [HttpPut("orders/{id}/reject")]
+        public async Task<IActionResult> RejectOrder(int id, [FromBody] StatusUpdateRequest? request)
+        {
+            try
+            {
+                var order = await _context.Orders.FindAsync(id);
+                if (order == null) return NotFound(new { success = false, message = "Order not found" });
+
+                if (order.OrderStatus != "Pending")
+                    return BadRequest(new { success = false, message = "Only pending orders can be rejected" });
+
+                var previousStatus = order.OrderStatus;
+                order.OrderStatus = "Cancelled";
+                order.CancelledAt = DateTime.UtcNow;
+                order.UpdatedAt = DateTime.UtcNow;
+
+                // Restore stock
+                var orderItems = await _context.OrderItems.Where(oi => oi.OrderId == id).ToListAsync();
+                foreach (var item in orderItems)
+                {
+                    var product = await _context.Products.FindAsync(item.ProductId);
+                    if (product != null)
+                    {
+                        product.StockQuantity += item.Quantity;
+                    }
+                }
+
+                // Create status history
+                _context.OrderStatusHistory.Add(new OrderStatusHistory
+                {
+                    OrderId = id,
+                    PreviousStatus = previousStatus,
+                    NewStatus = "Cancelled",
+                    Notes = request?.Notes ?? "Order rejected by admin",
+                    ChangedAt = DateTime.UtcNow
+                });
+
+                // Void linked invoice if exists
+                var invoice = await _context.Invoices.FirstOrDefaultAsync(i => i.OrderId == id);
+                if (invoice != null)
+                {
+                    invoice.Status = "Void";
+                    invoice.UpdatedAt = DateTime.UtcNow;
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Order rejected and stock restored" });
             }
             catch (Exception ex)
             {
@@ -1851,6 +2106,202 @@ namespace CompuGear.Controllers
                 await _context.SaveChangesAsync();
 
                 return Ok(new { success = true, message = "Invoice deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        // PUT: /api/invoices/{id}/status - Toggle invoice status (Activate/Void/Cancel)
+        [HttpPut("invoices/{id}/status")]
+        public async Task<IActionResult> ToggleInvoiceStatus(int id, [FromBody] InvoiceStatusModel model)
+        {
+            try
+            {
+                var invoice = await _context.Invoices.FindAsync(id);
+                if (invoice == null) return NotFound(new { success = false, message = "Invoice not found" });
+
+                invoice.Status = model.Status;
+                invoice.UpdatedAt = DateTime.UtcNow;
+
+                // If reactivating, recalculate balance
+                if (model.Status != "Cancelled" && model.Status != "Void")
+                {
+                    invoice.BalanceDue = invoice.TotalAmount - invoice.PaidAmount;
+                    if (invoice.PaidAmount >= invoice.TotalAmount)
+                        invoice.Status = "Paid";
+                    else if (invoice.PaidAmount > 0)
+                        invoice.Status = "Partial";
+                }
+
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true, message = $"Invoice status updated to {model.Status}" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        // GET: /api/invoices/{id}/pdf - Generate PDF-ready HTML for invoice
+        [HttpGet("invoices/{id}/pdf")]
+        public async Task<IActionResult> GetInvoicePdf(int id)
+        {
+            try
+            {
+                var invoice = await _context.Invoices
+                    .Include(i => i.Customer)
+                    .Include(i => i.Items)
+                        .ThenInclude(item => item.Product)
+                    .Include(i => i.Order)
+                    .FirstOrDefaultAsync(i => i.InvoiceId == id);
+
+                if (invoice == null) return NotFound(new { success = false, message = "Invoice not found" });
+
+                // Get payments for this invoice
+                var payments = await _context.Payments
+                    .Where(p => p.InvoiceId == id)
+                    .OrderBy(p => p.PaymentDate)
+                    .Select(p => new
+                    {
+                        p.PaymentNumber,
+                        p.PaymentDate,
+                        p.Amount,
+                        p.PaymentMethodType,
+                        p.ReferenceNumber,
+                        p.Status
+                    })
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        invoice.InvoiceId,
+                        invoice.InvoiceNumber,
+                        invoice.InvoiceDate,
+                        invoice.DueDate,
+                        invoice.Status,
+                        invoice.Subtotal,
+                        invoice.DiscountAmount,
+                        invoice.TaxAmount,
+                        invoice.ShippingAmount,
+                        invoice.TotalAmount,
+                        invoice.PaidAmount,
+                        invoice.BalanceDue,
+                        invoice.BillingName,
+                        invoice.BillingAddress,
+                        invoice.BillingCity,
+                        invoice.BillingState,
+                        invoice.BillingZipCode,
+                        invoice.BillingCountry,
+                        invoice.BillingEmail,
+                        invoice.PaymentTerms,
+                        invoice.Notes,
+                        OrderNumber = invoice.Order?.OrderNumber,
+                        CustomerName = invoice.Customer != null
+                            ? invoice.Customer.FirstName + " " + invoice.Customer.LastName
+                            : invoice.BillingName,
+                        CustomerEmail = invoice.Customer?.Email ?? invoice.BillingEmail,
+                        CustomerPhone = invoice.Customer?.Phone,
+                        Items = invoice.Items.Select(item => new
+                        {
+                            item.Description,
+                            item.Quantity,
+                            item.UnitPrice,
+                            item.DiscountAmount,
+                            item.TaxAmount,
+                            item.TotalPrice,
+                            ProductCode = item.Product?.ProductCode
+                        }),
+                        Payments = payments
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        // GET: /api/reports/financial - Financial report data
+        [HttpGet("reports/financial")]
+        public async Task<IActionResult> GetFinancialReport(string period = "month")
+        {
+            try
+            {
+                var now = DateTime.UtcNow;
+                DateTime startDate = period switch
+                {
+                    "week" => now.AddDays(-7),
+                    "year" => new DateTime(now.Year, 1, 1),
+                    _ => new DateTime(now.Year, now.Month, 1) // month
+                };
+
+                var invoices = await _context.Invoices
+                    .Where(i => i.InvoiceDate >= startDate)
+                    .ToListAsync();
+
+                var payments = await _context.Payments
+                    .Where(p => p.PaymentDate >= startDate && p.Status == "Completed")
+                    .ToListAsync();
+
+                var orders = await _context.Orders
+                    .Where(o => o.OrderDate >= startDate)
+                    .ToListAsync();
+
+                // Monthly breakdown (12 months)
+                var monthlyRevenue = new decimal[12];
+                var monthlyInvoiced = new decimal[12];
+                var monthlyCollected = new decimal[12];
+
+                foreach (var o in await _context.Orders.Where(o => o.OrderDate.Year == now.Year).ToListAsync())
+                    monthlyRevenue[o.OrderDate.Month - 1] += o.TotalAmount;
+
+                foreach (var i in await _context.Invoices.Where(i => i.InvoiceDate.Year == now.Year).ToListAsync())
+                    monthlyInvoiced[i.InvoiceDate.Month - 1] += i.TotalAmount;
+
+                foreach (var p in await _context.Payments.Where(p => p.PaymentDate.Year == now.Year && p.Status == "Completed").ToListAsync())
+                    monthlyCollected[p.PaymentDate.Month - 1] += p.Amount;
+
+                // Payment method breakdown
+                var paymentMethods = payments
+                    .GroupBy(p => p.PaymentMethodType)
+                    .Select(g => new { Method = g.Key, Amount = g.Sum(p => p.Amount), Count = g.Count() })
+                    .ToList();
+
+                // Invoice status breakdown
+                var allInvoices = await _context.Invoices.ToListAsync();
+                var invoiceStatusBreakdown = allInvoices
+                    .GroupBy(i => i.Status)
+                    .Select(g => new { Status = g.Key, Count = g.Count(), Amount = g.Sum(i => i.TotalAmount) })
+                    .ToList();
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        totalRevenue = orders.Sum(o => o.TotalAmount),
+                        totalInvoiced = invoices.Sum(i => i.TotalAmount),
+                        totalCollected = payments.Sum(p => p.Amount),
+                        outstanding = allInvoices.Where(i => i.Status != "Paid" && i.Status != "Cancelled").Sum(i => i.BalanceDue),
+                        invoiceCount = allInvoices.Count,
+                        paymentCount = payments.Count,
+                        monthlyRevenue,
+                        monthlyInvoiced,
+                        monthlyCollected,
+                        paymentMethods,
+                        invoiceStatusBreakdown,
+                        topCustomers = await _context.Customers
+                            .OrderByDescending(c => c.TotalSpent)
+                            .Take(5)
+                            .Select(c => new { c.CustomerId, Name = c.FirstName + " " + c.LastName, c.TotalSpent, c.TotalOrders })
+                            .ToListAsync()
+                    }
+                });
             }
             catch (Exception ex)
             {
@@ -2719,6 +3170,11 @@ namespace CompuGear.Controllers
     }
 
     // Request DTOs
+    public class InvoiceStatusModel
+    {
+        public string Status { get; set; } = string.Empty;
+    }
+
     public class StockUpdateRequest
     {
         public int NewQuantity { get; set; }

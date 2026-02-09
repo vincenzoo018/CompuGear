@@ -419,64 +419,68 @@
 
     document.addEventListener('DOMContentLoaded', loadWishlist);
 
-    function loadWishlist() {
-        // Get wishlist from localStorage
-        const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    function getWishlistIds() {
+        // Normalize wishlist: support both [1, 2, 3] and [{productId: 1}, ...] formats
+        const raw = JSON.parse(localStorage.getItem('wishlist') || '[]');
+        return raw.map(item => typeof item === 'object' && item !== null ? item.productId : item).filter(id => id);
+    }
 
-        if (wishlist.length === 0) {
+    function loadWishlist() {
+        const wishlistIds = getWishlistIds();
+
+        if (wishlistIds.length === 0) {
             showEmptyState();
             return;
         }
 
-        // Fetch product details for wishlist items
-        fetchWishlistProducts(wishlist);
+        fetchWishlistProducts(wishlistIds);
     }
 
     async function fetchWishlistProducts(wishlistIds) {
         try {
-            // Try to fetch actual products
-            const response = await fetch('/CustomerPortal/GetProducts?pageSize=100');
+            // Fetch actual product data from DB via the cart products endpoint
+            const response = await fetch('/CustomerPortal/GetCartProducts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(wishlistIds)
+            });
             const result = await response.json();
 
-            if (result.success) {
-                // Filter products that are in wishlist
-                wishlistItems = result.data.filter(p => wishlistIds.includes(p.productId));
+            if (result.success && result.data.length > 0) {
+                wishlistItems = result.data.map(p => ({
+                    productId: p.productId,
+                    productName: p.name,
+                    sellingPrice: p.price,
+                    compareAtPrice: p.compareAtPrice || null,
+                    categoryName: p.categoryName || 'Accessories',
+                    brandName: p.brandName || 'Generic',
+                    sku: p.sku || '',
+                    stockQuantity: p.stock || 0,
+                    discountPercent: p.compareAtPrice ? Math.round((1 - p.price / p.compareAtPrice) * 100) : 0
+                }));
 
-                // If no matches, create mock data
-                if (wishlistItems.length === 0) {
-                    wishlistItems = wishlistIds.map((id, i) => ({
-                        productId: id,
-                        productName: `Product ${id}`,
-                        sellingPrice: 1500 + (i * 500),
-                        compareAtPrice: 2000 + (i * 500),
-                        categoryName: 'Accessories',
-                        stockQuantity: Math.random() > 0.2 ? 10 : 0,
-                        discountPercent: Math.floor(Math.random() * 30)
-                    }));
+                // Remove wishlist items that no longer exist in DB
+                const validIds = wishlistItems.map(w => w.productId);
+                const cleaned = wishlistIds.filter(id => validIds.includes(id));
+                if (cleaned.length !== wishlistIds.length) {
+                    localStorage.setItem('wishlist', JSON.stringify(cleaned));
                 }
 
                 renderWishlist();
             } else {
-                showEmptyState();
+                // Fallback: fetch from products endpoint
+                const fallback = await fetch('/CustomerPortal/GetProducts?pageSize=100');
+                const fallbackResult = await fallback.json();
+                if (fallbackResult.success) {
+                    wishlistItems = fallbackResult.data.filter(p => wishlistIds.includes(p.productId));
+                    renderWishlist();
+                } else {
+                    showEmptyState();
+                }
             }
         } catch (error) {
             console.error('Error fetching wishlist:', error);
-            // Create mock data from localStorage wishlist
-            const wishlistIds = JSON.parse(localStorage.getItem('wishlist') || '[]');
-            if (wishlistIds.length > 0) {
-                wishlistItems = wishlistIds.map((id, i) => ({
-                    productId: id,
-                    productName: `Product ${id}`,
-                    sellingPrice: 1500 + (i * 500),
-                    compareAtPrice: 2000 + (i * 500),
-                    categoryName: 'Accessories',
-                    stockQuantity: Math.random() > 0.2 ? 10 : 0,
-                    discountPercent: Math.floor(Math.random() * 30)
-                }));
-                renderWishlist();
-            } else {
-                showEmptyState();
-            }
+            showEmptyState();
         }
     }
 
@@ -504,8 +508,8 @@
         });
 
         document.getElementById('totalItems').textContent = wishlistItems.length;
-        document.getElementById('totalValue').textContent = '₱' + totalValue.toLocaleString();
-        document.getElementById('totalSavings').textContent = '₱' + totalSavings.toLocaleString();
+        document.getElementById('totalValue').textContent = '₱' + totalValue.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+        document.getElementById('totalSavings').textContent = '₱' + totalSavings.toLocaleString('en-PH', { minimumFractionDigits: 2 });
 
         grid.innerHTML = wishlistItems.map((product, index) => {
             const isOutOfStock = product.stockQuantity <= 0;
@@ -547,7 +551,7 @@
                         <div class="card-actions">
                             <button class="btn-add-cart" id="cart-btn-${product.productId}" 
                                 ${isOutOfStock ? 'disabled' : ''} 
-                                onclick="addToCart(${product.productId}, '${product.productName.replace(/'/g, "\\'")}', ${product.sellingPrice})">
+                                onclick="addToCart(${product.productId}, '${product.productName.replace(/'/g, "\\'")}', ${product.sellingPrice}, '${product.sku || ''}')">
                                 🛒 ${isOutOfStock ? 'Unavailable' : 'Add to Cart'}
                             </button>
                             <button class="btn-view" onclick="viewProduct(${product.productId})" title="View Details">👁️</button>
@@ -575,12 +579,15 @@
 
     function removeFromWishlist(productId) {
         const card = document.getElementById('card-' + productId);
-        card.classList.add('removing');
+        if (card) card.classList.add('removing');
 
         setTimeout(() => {
-            // Remove from localStorage
+            // Remove from localStorage (handle both integer and object formats)
             let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-            wishlist = wishlist.filter(id => id !== productId);
+            wishlist = wishlist.filter(item => {
+                if (typeof item === 'object' && item !== null) return item.productId !== productId;
+                return item !== productId;
+            });
             localStorage.setItem('wishlist', JSON.stringify(wishlist));
 
             // Remove from array
@@ -605,14 +612,14 @@
         showToast('Wishlist cleared', 'info');
     }
 
-    function addToCart(productId, productName, price) {
+    function addToCart(productId, productName, price, sku) {
         let cart = JSON.parse(localStorage.getItem('cart') || '[]');
         const existingIndex = cart.findIndex(item => item.productId === productId);
 
         if (existingIndex > -1) {
             cart[existingIndex].quantity += 1;
         } else {
-            cart.push({ productId, name: productName, price, quantity: 1 });
+            cart.push({ productId, name: productName, price, sku: sku || '', quantity: 1 });
         }
 
         localStorage.setItem('cart', JSON.stringify(cart));
@@ -620,13 +627,14 @@
 
         // Visual feedback
         const btn = document.getElementById('cart-btn-' + productId);
-        btn.classList.add('added');
-        btn.innerHTML = '✓ Added!';
-
-        setTimeout(() => {
-            btn.classList.remove('added');
-            btn.innerHTML = '🛒 Add to Cart';
-        }, 1500);
+        if (btn) {
+            btn.classList.add('added');
+            btn.innerHTML = '✓ Added!';
+            setTimeout(() => {
+                btn.classList.remove('added');
+                btn.innerHTML = '🛒 Add to Cart';
+            }, 1500);
+        }
 
         showToast('✓ Added to cart!', 'success');
     }
@@ -650,6 +658,7 @@
                     productId: item.productId,
                     name: item.productName,
                     price: item.sellingPrice,
+                    sku: item.sku || '',
                     quantity: 1
                 });
             }

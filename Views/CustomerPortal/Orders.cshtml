@@ -550,16 +550,90 @@
         'Refunded': { emoji: '↩️', badge: 'badge-cancelled', step: -1 }
     };
 
-    document.addEventListener('DOMContentLoaded', loadOrders);
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if returning from payment
+        const urlParams = new URLSearchParams(window.location.search);
+        const paymentStatus = urlParams.get('payment');
+        const orderId = urlParams.get('orderId');
 
-    async function loadOrders() {
+        if (paymentStatus === 'success' && orderId) {
+            showPaymentSuccessToast(orderId);
+            // Clean URL
+            window.history.replaceState({}, document.title, '/CustomerPortal/Orders');
+        }
+
+        loadOrders();
+    });
+
+    async function showPaymentSuccessToast(orderId) {
+        // Check payment status from server
         try {
-            const response = await fetch('/CustomerPortal/GetOrders');
+            const response = await fetch(`/CustomerPortal/CheckPaymentStatus?orderId=${orderId}`);
             const result = await response.json();
 
             if (result.success) {
-                allOrders = result.data.orders || [];
-                updateStats(result.data);
+                const order = result.data;
+                const isPaid = order.paymentStatus === 'Paid';
+
+                // Show success overlay
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(4px);';
+                overlay.innerHTML = `
+                    <div style="background: white; border-radius: 20px; padding: 50px; max-width: 450px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: scaleIn 0.3s ease;">
+                        <div style="font-size: 5rem; margin-bottom: 16px;">${isPaid ? '🎉' : '⏱️'}</div>
+                        <h2 style="font-size: 1.8rem; font-weight: 800; color: #1f2937; margin-bottom: 8px;">${isPaid ? 'Payment Successful!' : 'Order Created!'}</h2>
+                        <p style="color: #6b7280; margin-bottom: 8px;">Order <strong>#${order.orderNumber}</strong></p>
+                        <p style="color: ${isPaid ? '#10b981' : '#f59e0b'}; font-weight: 600; margin-bottom: 8px;">
+                            ${isPaid ? '✅ Payment confirmed' : '⏳ Payment pending'}
+                        </p>
+                        <p style="color: #008080; font-size: 1.3rem; font-weight: 800; margin-bottom: 24px;">₱${order.totalAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</p>
+                        <button onclick="this.closest('div').parentElement.remove()" 
+                            style="padding: 14px 40px; background: linear-gradient(135deg, #008080, #006666); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(0,128,128,0.3);">
+                            👍 Got It!
+                        </button>
+                    </div>`;
+                document.body.appendChild(overlay);
+
+                // Auto-dismiss after 8 seconds
+                setTimeout(() => overlay.remove(), 8000);
+            }
+        } catch (error) {
+            console.error('Error checking payment:', error);
+        }
+    }
+
+    async function loadOrders() {
+        try {
+            const response = await fetch('/CustomerPortal/GetOrders?pageSize=50');
+            const result = await response.json();
+
+            if (result.success) {
+                allOrders = result.data || [];
+
+                // Update stats from server
+                if (result.stats) {
+                    document.getElementById('statTotal').textContent = result.stats.total || 0;
+                    document.getElementById('statProcessing').textContent = result.stats.pending || 0;
+                    
+                    // Count shipped from orders
+                    const shippedCount = allOrders.filter(o => o.orderStatus === 'Shipped').length;
+                    document.getElementById('statShipped').textContent = shippedCount;
+                    document.getElementById('statDelivered').textContent = result.stats.delivered || 0;
+
+                    // Tab counts
+                    document.getElementById('countAll').textContent = result.stats.total || 0;
+                    const pendingCount = allOrders.filter(o => o.orderStatus === 'Pending').length;
+                    const processingCount = allOrders.filter(o => o.orderStatus === 'Processing' || o.orderStatus === 'Confirmed').length;
+                    const deliveredCount = allOrders.filter(o => o.orderStatus === 'Delivered').length;
+                    const cancelledCount = allOrders.filter(o => o.orderStatus === 'Cancelled').length;
+                    
+                    document.getElementById('countPending').textContent = pendingCount;
+                    document.getElementById('countProcessing').textContent = processingCount;
+                    document.getElementById('countShipped').textContent = shippedCount;
+                    document.getElementById('countDelivered').textContent = deliveredCount;
+                    document.getElementById('countCancelled').textContent = cancelledCount;
+                }
+
                 renderOrders(allOrders);
             } else {
                 showEmptyState();
@@ -570,21 +644,6 @@
         }
     }
 
-    function updateStats(data) {
-        document.getElementById('statTotal').textContent = data.total || 0;
-        document.getElementById('statProcessing').textContent = data.processing || 0;
-        document.getElementById('statShipped').textContent = data.shipped || 0;
-        document.getElementById('statDelivered').textContent = data.delivered || 0;
-
-        // Update tab counts
-        document.getElementById('countAll').textContent = data.total || 0;
-        document.getElementById('countPending').textContent = data.pending || 0;
-        document.getElementById('countProcessing').textContent = data.processing || 0;
-        document.getElementById('countShipped').textContent = data.shipped || 0;
-        document.getElementById('countDelivered').textContent = data.delivered || 0;
-        document.getElementById('countCancelled').textContent = data.cancelled || 0;
-    }
-
     function filterOrders(status, btn) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
@@ -592,7 +651,11 @@
 
         let filtered = allOrders;
         if (status !== 'all') {
-            filtered = allOrders.filter(o => o.status.toLowerCase() === status.toLowerCase());
+            filtered = allOrders.filter(o => {
+                const orderStatus = (o.orderStatus || '').toLowerCase();
+                if (status === 'processing') return orderStatus === 'processing' || orderStatus === 'confirmed';
+                return orderStatus === status.toLowerCase();
+            });
         }
         renderOrders(filtered);
     }
@@ -613,24 +676,30 @@
         }
 
         container.innerHTML = orders.map((order, index) => {
-            const config = statusConfig[order.status] || statusConfig['Pending'];
+            const config = statusConfig[order.orderStatus] || statusConfig['Pending'];
             const orderDate = new Date(order.orderDate).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
             const itemCount = order.itemCount || (order.items ? order.items.length : 0);
+            const paymentBadge = order.paymentStatus === 'Paid' 
+                ? '<span style="background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; margin-left: 8px;">PAID</span>'
+                : order.paymentStatus === 'Pending'
+                ? '<span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; margin-left: 8px;">UNPAID</span>'
+                : '';
 
             return `
                 <div class="order-row animate-fade-in" style="animation-delay: ${index * 0.05}s" onclick="viewOrderDetail(${order.orderId})">
                     <div class="order-icon">${config.emoji}</div>
                     <div class="order-info">
                         <div class="order-number">
-                            #${order.orderNumber || order.orderId}
+                            #${order.orderNumber || order.orderId} ${paymentBadge}
                         </div>
                         <div class="order-meta">
                             <span class="order-meta-item">📅 ${orderDate}</span>
                             <span class="order-meta-item">📦 ${itemCount} item${itemCount !== 1 ? 's' : ''}</span>
+                            ${order.paymentMethod ? `<span class="order-meta-item">💳 ${order.paymentMethod}</span>` : ''}
                         </div>
                     </div>
                     <div class="order-status">
-                        <span class="status-badge ${config.badge}">${order.status}</span>
+                        <span class="status-badge ${config.badge}">${order.orderStatus}</span>
                     </div>
                     <div class="order-amount">₱${order.totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
                     <div class="order-arrow">→</div>
@@ -653,7 +722,7 @@
         const order = allOrders.find(o => o.orderId === orderId);
         if (!order) return;
 
-        const config = statusConfig[order.status] || statusConfig['Pending'];
+        const config = statusConfig[order.orderStatus] || statusConfig['Pending'];
         const orderDate = new Date(order.orderDate).toLocaleDateString('en-PH', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
         document.getElementById('modalTitle').textContent = `Order #${order.orderNumber || order.orderId}`;
@@ -683,15 +752,23 @@
                 <div class="item-icon">${productIcons[i % productIcons.length]}</div>
                 <div class="item-info">
                     <div class="item-name">${item.productName}</div>
-                    <div class="item-meta">Qty: ${item.quantity}</div>
+                    <div class="item-meta">Qty: ${item.quantity} × ₱${item.unitPrice.toLocaleString('en-PH', {minimumFractionDigits: 2})}</div>
                 </div>
-                <div class="item-price">₱${(item.unitPrice * item.quantity).toLocaleString()}</div>
+                <div class="item-price">₱${item.totalPrice.toLocaleString('en-PH', {minimumFractionDigits: 2})}</div>
             </div>`).join('');
+
+        // VAT breakdown
+        const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0) || order.totalAmount;
+        const vatableSales = subtotal / 1.12;
+        const vatAmount = subtotal - vatableSales;
 
         document.getElementById('modalBody').innerHTML = `
             <div class="order-detail-status">
                 <div class="detail-status-emoji">${config.emoji}</div>
-                <div class="detail-status-text">${order.status}</div>
+                <div class="detail-status-text">${order.orderStatus}</div>
+                <div style="margin-top: 4px; font-size: 0.85rem; color: ${order.paymentStatus === 'Paid' ? '#10b981' : '#f59e0b'};">
+                    Payment: ${order.paymentStatus} ${order.paymentStatus === 'Paid' ? '✅' : '⏳'}
+                </div>
             </div>
 
             <div class="order-timeline">
@@ -706,18 +783,39 @@
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Payment Method</span>
-                    <span class="detail-value">${order.paymentMethod || 'Cash on Delivery'}</span>
+                    <span class="detail-value">${order.paymentMethod || 'N/A'}</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Shipping Address</span>
-                    <span class="detail-value">${order.shippingAddress || 'N/A'}</span>
+                    <span class="detail-label">Payment Status</span>
+                    <span class="detail-value" style="color: ${order.paymentStatus === 'Paid' ? '#10b981' : '#f59e0b'}">${order.paymentStatus}</span>
                 </div>
+                ${order.shippingMethod ? `
+                <div class="detail-row">
+                    <span class="detail-label">Shipping Method</span>
+                    <span class="detail-value">${order.shippingMethod}</span>
+                </div>` : ''}
+                ${order.trackingNumber ? `
+                <div class="detail-row">
+                    <span class="detail-label">Tracking Number</span>
+                    <span class="detail-value">${order.trackingNumber}</span>
+                </div>` : ''}
             </div>
 
             <div class="detail-section">
                 <div class="detail-section-title">Items (${items.length})</div>
                 <div class="order-items-list">
                     ${itemsHtml || '<p style="color: var(--muted-foreground); font-size: 0.9rem;">Item details not available</p>'}
+                </div>
+            </div>
+
+            <div class="detail-section" style="background: #f0fdf4; border-radius: 12px; padding: 16px; margin-top: 16px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="color: #6b7280;">VATable Sales</span>
+                    <span>₱${vatableSales.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="color: #6b7280;">VAT (12%)</span>
+                    <span>₱${vatAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
                 </div>
             </div>
 

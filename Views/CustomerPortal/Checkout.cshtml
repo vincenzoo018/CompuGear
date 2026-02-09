@@ -456,6 +456,14 @@
                                 <span class="summary-row-label">Discount</span>
                                 <span class="summary-row-value discount" id="summaryDiscount">-₱0.00</span>
                             </div>
+                            <div class="summary-row" id="vatableSalesRow" style="display: none;">
+                                <span class="summary-row-label">VATable Sales</span>
+                                <span class="summary-row-value" id="summaryVatable">₱0.00</span>
+                            </div>
+                            <div class="summary-row" id="vatRow" style="display: none;">
+                                <span class="summary-row-label">VAT (12%)</span>
+                                <span class="summary-row-value" id="summaryVat">₱0.00</span>
+                            </div>
                             <div class="summary-total">
                                 <span class="total-label">Total</span>
                                 <span class="total-value" id="summaryTotal">₱0.00</span>
@@ -488,20 +496,45 @@
 @section Scripts {
 <script>
     let checkoutData = null;
-    let selectedPayment = 'card';
+    let selectedPayment = 'gcash';
     const productIcons = ['🖥️', '⌨️', '🖱️', '🎧', '💾', '🎮', '📱', '🔌'];
+    const VAT_RATE = 0.12;
 
     document.addEventListener('DOMContentLoaded', function() {
         loadCheckoutData();
         loadCustomerInfo();
+        
+        // Select GCash by default
+        selectPayment('gcash');
     });
 
     function loadCheckoutData() {
         checkoutData = JSON.parse(localStorage.getItem('checkoutData') || 'null');
         
         if (!checkoutData || !checkoutData.items || checkoutData.items.length === 0) {
-            window.location.href = '/CustomerPortal/Cart';
-            return;
+            // Try loading from cart directly
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            if (cart.length === 0) {
+                window.location.href = '/CustomerPortal/Cart';
+                return;
+            }
+            
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const shipping = subtotal >= 2000 ? 0 : 150;
+            const afterDiscount = subtotal;
+            const vatableSales = afterDiscount / (1 + VAT_RATE);
+            const vatAmount = afterDiscount - vatableSales;
+            
+            checkoutData = {
+                items: cart,
+                subtotal: subtotal,
+                discount: 0,
+                vatableSales: vatableSales,
+                vatAmount: vatAmount,
+                shipping: shipping,
+                total: subtotal + shipping,
+                promoCode: null
+            };
         }
         
         renderSummary();
@@ -518,10 +551,10 @@
                 document.getElementById('lastName').value = data.lastName || '';
                 document.getElementById('email').value = data.email || '';
                 document.getElementById('phone').value = data.phone || '';
-                document.getElementById('address').value = data.address || '';
-                document.getElementById('city').value = data.city || '';
-                document.getElementById('province').value = data.province || '';
-                document.getElementById('zipCode').value = data.postalCode || '';
+                document.getElementById('address').value = data.shippingAddress || data.billingAddress || '';
+                document.getElementById('city').value = data.shippingCity || data.billingCity || '';
+                document.getElementById('province').value = data.shippingState || data.billingState || '';
+                document.getElementById('zipCode').value = data.shippingZipCode || data.billingZipCode || '';
             }
         } catch (error) {
             console.error('Error loading customer info:', error);
@@ -542,8 +575,18 @@
             </div>
         `).join('');
         
+        // VAT breakdown
+        const vatableSales = checkoutData.vatableSales || (checkoutData.subtotal - checkoutData.discount) / (1 + VAT_RATE);
+        const vatAmount = checkoutData.vatAmount || (checkoutData.subtotal - checkoutData.discount) - vatableSales;
+        
         document.getElementById('summarySubtotal').textContent = `₱${checkoutData.subtotal.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
         document.getElementById('summaryShipping').textContent = checkoutData.shipping === 0 ? 'FREE' : `₱${checkoutData.shipping.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
+        
+        // Show VAT row
+        document.getElementById('vatRow').style.display = 'flex';
+        document.getElementById('summaryVat').textContent = `₱${vatAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
+        document.getElementById('vatableSalesRow').style.display = 'flex';
+        document.getElementById('summaryVatable').textContent = `₱${vatableSales.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
         
         if (checkoutData.discount > 0) {
             document.getElementById('discountRow').style.display = 'flex';
@@ -556,10 +599,14 @@
     function selectPayment(method) {
         selectedPayment = method;
         document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
-        document.querySelector(`input[value="${method}"]`).closest('.payment-option').classList.add('selected');
+        const radio = document.querySelector(`input[value="${method}"]`);
+        if (radio) {
+            radio.closest('.payment-option').classList.add('selected');
+            radio.checked = true;
+        }
     }
 
-    async function placeOrder() {
+    function placeOrder() {
         // Validate form
         const firstName = document.getElementById('firstName').value.trim();
         const lastName = document.getElementById('lastName').value.trim();
@@ -574,21 +621,84 @@
             showToast('Please fill in all required fields', '#ef4444');
             return;
         }
+
+        // Show confirmation dialog
+        showConfirmationDialog(firstName, lastName, email, phone, address, city, province, zipCode);
+    }
+
+    function showConfirmationDialog(firstName, lastName, email, phone, address, city, province, zipCode) {
+        const paymentLabels = {
+            'gcash': 'GCash',
+            'card': 'Credit/Debit Card',
+            'grab_pay': 'GrabPay',
+            'paymaya': 'Maya'
+        };
         
+        // Create confirmation overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'confirmOverlay';
+        overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(4px);';
+        
+        overlay.innerHTML = `
+            <div style="background: white; border-radius: 20px; padding: 40px; max-width: 500px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: scaleIn 0.3s ease;">
+                <div style="font-size: 4rem; margin-bottom: 16px;">🛒</div>
+                <h2 style="font-size: 1.5rem; font-weight: 800; color: #1f2937; margin-bottom: 8px;">Confirm Your Order?</h2>
+                <p style="color: #6b7280; margin-bottom: 24px;">You are about to place an order for <strong>₱${checkoutData.total.toLocaleString('en-PH', {minimumFractionDigits: 2})}</strong></p>
+                
+                <div style="background: #f9fafb; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: #6b7280;">Items:</span>
+                        <span style="font-weight: 600;">${checkoutData.items.reduce((s, i) => s + i.quantity, 0)} product(s)</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: #6b7280;">Payment:</span>
+                        <span style="font-weight: 600;">${paymentLabels[selectedPayment] || selectedPayment}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: #6b7280;">VAT (12%):</span>
+                        <span style="font-weight: 600;">₱${(checkoutData.vatAmount || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-top: 1px solid #e5e7eb; padding-top: 8px;">
+                        <span style="font-weight: 700; color: #1f2937;">Total:</span>
+                        <span style="font-weight: 800; color: #008080; font-size: 1.2rem;">₱${checkoutData.total.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 12px;">
+                    <button onclick="document.getElementById('confirmOverlay').remove()" 
+                        style="flex: 1; padding: 14px; border: 2px solid #e5e7eb; background: white; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 1rem; color: #6b7280; transition: all 0.2s;">
+                        ❌ Cancel
+                    </button>
+                    <button onclick="document.getElementById('confirmOverlay').remove(); executeOrder('${firstName}', '${lastName}', '${email}', '${phone}', '${address.replace(/'/g, "\\'")}', '${city}', '${province}', '${zipCode}')" 
+                        style="flex: 1; padding: 14px; border: none; background: linear-gradient(135deg, #008080, #006666); color: white; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1rem; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,128,128,0.3);">
+                        ✅ Yes, Place Order
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+    }
+
+    async function executeOrder(firstName, lastName, email, phone, address, city, province, zipCode) {
         // Show loading
         document.getElementById('loadingOverlay').classList.add('active');
         document.getElementById('placeOrderBtn').disabled = true;
         
         try {
-            // Create order
+            // Step 1: Create the order in the database
             const orderData = {
                 items: checkoutData.items.map(item => ({
                     productId: item.productId,
-                    quantity: item.quantity,
-                    unitPrice: item.price
+                    quantity: item.quantity
                 })),
                 promoCode: checkoutData.promoCode || null,
-                shippingAddress: `${address}, ${city}, ${province} ${zipCode}`,
+                paymentMethod: selectedPayment,
+                shippingAddress: address,
+                shippingCity: city,
+                shippingState: province,
+                shippingZipCode: zipCode,
+                shippingCountry: 'Philippines',
                 notes: ''
             };
             
@@ -604,13 +714,12 @@
                 throw new Error(orderResult.message || 'Failed to create order');
             }
             
-            // Process payment
+            // Step 2: Process payment with PayMongo
             const paymentData = {
                 orderId: orderResult.data.orderId,
-                amount: checkoutData.total,
                 paymentMethod: selectedPayment,
-                customerEmail: email,
                 customerName: `${firstName} ${lastName}`,
+                customerEmail: email,
                 customerPhone: phone
             };
             
@@ -622,15 +731,32 @@
             
             const paymentResult = await paymentResponse.json();
             
-            if (paymentResult.success && paymentResult.checkoutUrl) {
+            if (paymentResult.success) {
                 // Clear cart and checkout data
                 localStorage.removeItem('cart');
                 localStorage.removeItem('checkoutData');
                 
-                // Redirect to PayMongo checkout
-                window.location.href = paymentResult.checkoutUrl;
+                if (paymentResult.checkoutUrl) {
+                    // Redirect to PayMongo payment page (GCash, GrabPay, etc.)
+                    showToast('✅ Order created! Redirecting to payment...', '#10b981');
+                    setTimeout(() => {
+                        window.location.href = paymentResult.checkoutUrl;
+                    }, 1500);
+                } else if (paymentResult.status === 'succeeded') {
+                    // Payment already succeeded (card)
+                    showSuccessAndRedirect(orderResult.data.orderNumber);
+                } else {
+                    // Fallback - redirect to orders
+                    showSuccessAndRedirect(orderResult.data.orderNumber);
+                }
             } else {
-                throw new Error(paymentResult.message || 'Payment processing failed');
+                // Payment failed but order was created - still redirect to orders
+                localStorage.removeItem('cart');
+                localStorage.removeItem('checkoutData');
+                showToast('⚠️ Order created but payment pending. You can pay later from your orders.', '#f59e0b');
+                setTimeout(() => {
+                    window.location.href = `/CustomerPortal/Orders?orderId=${orderResult.data.orderId}`;
+                }, 3000);
             }
         } catch (error) {
             console.error('Error:', error);
@@ -640,9 +766,29 @@
         }
     }
 
+    function showSuccessAndRedirect(orderNumber) {
+        document.getElementById('loadingOverlay').classList.remove('active');
+        
+        // Show success overlay
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(4px);';
+        overlay.innerHTML = `
+            <div style="background: white; border-radius: 20px; padding: 50px; max-width: 450px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: scaleIn 0.3s ease;">
+                <div style="font-size: 5rem; margin-bottom: 16px;">🎉</div>
+                <h2 style="font-size: 1.8rem; font-weight: 800; color: #1f2937; margin-bottom: 8px;">Order Placed!</h2>
+                <p style="color: #6b7280; margin-bottom: 8px;">Your order <strong>#${orderNumber}</strong> has been placed successfully!</p>
+                <p style="color: #10b981; font-weight: 600; margin-bottom: 24px;">Payment received ✓</p>
+                <button onclick="window.location.href='/CustomerPortal/Orders'" 
+                    style="padding: 14px 32px; background: linear-gradient(135deg, #008080, #006666); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(0,128,128,0.3);">
+                    📦 View My Orders
+                </button>
+            </div>`;
+        document.body.appendChild(overlay);
+    }
+
     function showToast(message, color) {
         const toast = document.createElement('div');
-        toast.innerHTML = `<div style="position: fixed; bottom: 20px; right: 20px; background: ${color}; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 9999;">${message}</div>`;
+        toast.innerHTML = `<div style="position: fixed; bottom: 20px; right: 20px; background: ${color}; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 9999; font-weight: 500; max-width: 400px;">${message}</div>`;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 4000);
     }

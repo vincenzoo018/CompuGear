@@ -457,13 +457,56 @@
 <script>
     const productIcons = ['🖥️', '⌨️', '🖱️', '🎧', '💾', '🎮', '📱', '🔌', '💻', '🖨️'];
     let cartItems = [];
+    let productDetails = {};
     let appliedCoupon = null;
     const freeShippingThreshold = 2000;
+    const VAT_RATE = 0.12; // 12% VAT
 
     document.addEventListener('DOMContentLoaded', loadCart);
 
-    function loadCart() {
+    async function loadCart() {
         cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
+
+        if (cartItems.length === 0) {
+            showEmptyState();
+            return;
+        }
+
+        // Fetch real product data from database
+        try {
+            const productIds = cartItems.map(item => item.productId);
+            const response = await fetch('/CustomerPortal/GetCartProducts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(productIds)
+            });
+            const result = await response.json();
+
+            if (result.success && result.data) {
+                // Update cart items with real product data
+                result.data.forEach(product => {
+                    productDetails[product.productId] = product;
+                    const cartItem = cartItems.find(c => c.productId === product.productId);
+                    if (cartItem) {
+                        cartItem.name = product.productName;
+                        cartItem.price = product.sellingPrice;
+                        cartItem.sku = product.sku || cartItem.sku;
+                        cartItem.stock = product.stockQuantity;
+                        cartItem.categoryName = product.categoryName;
+                        cartItem.brandName = product.brandName;
+                        cartItem.imageUrl = product.mainImageUrl;
+                        cartItem.compareAtPrice = product.compareAtPrice;
+                        cartItem.isOnSale = product.isOnSale;
+                    }
+                });
+
+                // Remove cart items that no longer exist in the database
+                cartItems = cartItems.filter(item => productDetails[item.productId]);
+                localStorage.setItem('cart', JSON.stringify(cartItems));
+            }
+        } catch (error) {
+            console.error('Error fetching product details:', error);
+        }
 
         if (cartItems.length === 0) {
             showEmptyState();
@@ -474,12 +517,30 @@
 
     function renderCart() {
         const container = document.getElementById('cartContent');
-        document.getElementById('headerItemCount').textContent = cartItems.length;
+        document.getElementById('headerItemCount').textContent = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
         const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const discount = appliedCoupon ? (appliedCoupon.type === 'percent' ? subtotal * (appliedCoupon.value / 100) : appliedCoupon.value) : 0;
+        
+        // Calculate discount
+        let discount = 0;
+        if (appliedCoupon) {
+            discount = appliedCoupon.discountType === 'Percentage' 
+                ? subtotal * (appliedCoupon.discountValue / 100) 
+                : appliedCoupon.discountValue;
+            if (appliedCoupon.maxDiscountAmount && discount > appliedCoupon.maxDiscountAmount) {
+                discount = appliedCoupon.maxDiscountAmount;
+            }
+        }
+
+        const afterDiscount = subtotal - discount;
+        
+        // VAT Calculation (12% VAT inclusive in Philippines)
+        // Price already includes VAT, so: VATable Sales = Amount / 1.12, VAT = VATable Sales * 0.12
+        const vatableSales = afterDiscount / (1 + VAT_RATE);
+        const vatAmount = afterDiscount - vatableSales;
+        
         const shipping = subtotal >= freeShippingThreshold ? 0 : 150;
-        const total = subtotal - discount + shipping;
+        const total = afterDiscount + shipping;
         const shippingProgress = Math.min((subtotal / freeShippingThreshold) * 100, 100);
         const amountToFreeShipping = Math.max(freeShippingThreshold - subtotal, 0);
 
@@ -495,26 +556,34 @@
                         <span></span>
                     </div>
                     <div class="cart-list" id="cartList">
-                        ${cartItems.map((item, index) => `
+                        ${cartItems.map((item, index) => {
+                            const stockStatus = item.stock > 10 ? 'in-stock' : item.stock > 0 ? 'low-stock' : 'out-of-stock';
+                            const stockText = item.stock > 10 ? '✓ In Stock' : item.stock > 0 ? `⚠ Only ${item.stock} left` : '✕ Out of Stock';
+                            const stockColor = item.stock > 10 ? 'var(--success)' : item.stock > 0 ? 'var(--warning)' : 'var(--error)';
+                            return `
                             <div class="cart-item" id="item-${item.productId}">
                                 <div class="item-info">
                                     <div class="item-image">${productIcons[index % productIcons.length]}</div>
                                     <div class="item-details">
                                         <div class="item-name">${item.name}</div>
                                         ${item.sku ? `<div class="item-sku">SKU: ${item.sku}</div>` : ''}
-                                        <div class="item-stock">✓ In Stock</div>
+                                        ${item.brandName ? `<div class="item-sku">${item.brandName}</div>` : ''}
+                                        <div class="item-stock" style="color: ${stockColor}">${stockText}</div>
                                     </div>
                                 </div>
-                                <div class="item-price">₱${item.price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
+                                <div class="item-price">
+                                    ₱${item.price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                                    ${item.compareAtPrice ? `<br><small style="text-decoration: line-through; color: var(--muted-foreground); font-size: 0.75rem;">₱${item.compareAtPrice.toLocaleString()}</small>` : ''}
+                                </div>
                                 <div class="qty-control">
                                     <button class="qty-btn" onclick="updateQuantity(${item.productId}, -1)" ${item.quantity <= 1 ? 'disabled' : ''}>−</button>
                                     <div class="qty-value">${item.quantity}</div>
-                                    <button class="qty-btn" onclick="updateQuantity(${item.productId}, 1)">+</button>
+                                    <button class="qty-btn" onclick="updateQuantity(${item.productId}, 1)" ${item.stock && item.quantity >= item.stock ? 'disabled' : ''}>+</button>
                                 </div>
                                 <div class="item-total">₱${(item.price * item.quantity).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
                                 <button class="btn-remove" onclick="removeItem(${item.productId})" title="Remove item">🗑️</button>
-                            </div>
-                        `).join('')}
+                            </div>`;
+                        }).join('')}
                     </div>
                 </div>
 
@@ -529,7 +598,7 @@
                         </div>
                         ${appliedCoupon ? `
                             <div class="coupon-applied">
-                                <span class="coupon-code">✓ ${appliedCoupon.code} applied</span>
+                                <span class="coupon-code">✓ ${appliedCoupon.promotionCode} applied (-${appliedCoupon.discountType === 'Percentage' ? appliedCoupon.discountValue + '%' : '₱' + appliedCoupon.discountValue.toLocaleString()})</span>
                                 <button class="coupon-remove" onclick="removeCoupon()">×</button>
                             </div>
                         ` : ''}
@@ -539,18 +608,26 @@
                     <div class="order-summary animate-fade-in" style="animation-delay: 0.15s">
                         <h3 class="summary-title">Order Summary</h3>
                         <div class="summary-row">
-                            <span class="summary-label">Subtotal (${cartItems.length} items)</span>
+                            <span class="summary-label">Subtotal (${cartItems.reduce((s, i) => s + i.quantity, 0)} items)</span>
                             <span class="summary-value">₱${subtotal.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
                         </div>
                         ${appliedCoupon ? `
                             <div class="summary-row discount">
-                                <span class="summary-label">Discount (${appliedCoupon.code})</span>
+                                <span class="summary-label">Discount (${appliedCoupon.promotionCode})</span>
                                 <span class="summary-value">-₱${discount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
                             </div>
                         ` : ''}
                         <div class="summary-row">
+                            <span class="summary-label">VATable Sales</span>
+                            <span class="summary-value">₱${vatableSales.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">VAT (12%)</span>
+                            <span class="summary-value">₱${vatAmount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div class="summary-row">
                             <span class="summary-label">Shipping</span>
-                            <span class="summary-value">${shipping === 0 ? '<span style="color: var(--success)">FREE</span>' : '₱' + shipping.toLocaleString()}</span>
+                            <span class="summary-value">${shipping === 0 ? '<span style="color: var(--success)">FREE</span>' : '₱' + shipping.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
                         </div>
 
                         ${amountToFreeShipping > 0 ? `
@@ -575,6 +652,13 @@
                             <span class="total-value">₱${total.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
                         </div>
 
+                        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px; font-size: 0.82rem; color: #166534;">
+                            <strong>VAT Breakdown:</strong><br>
+                            VATable Sales: ₱${vatableSales.toLocaleString('en-PH', { minimumFractionDigits: 2 })}<br>
+                            12% VAT: ₱${vatAmount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}<br>
+                            VAT-Inclusive Total: ₱${afterDiscount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                        </div>
+
                         <button class="btn-checkout" onclick="proceedToCheckout()">
                             🔒 Proceed to Checkout
                         </button>
@@ -586,7 +670,7 @@
                             </div>
                             <div class="trust-badge">
                                 <span class="trust-icon">↩️</span>
-                                <span>30-Day Returns</span>
+                                <span>7-Day Returns</span>
                             </div>
                             <div class="trust-badge">
                                 <span class="trust-icon">🛡️</span>
@@ -617,9 +701,16 @@
         const item = cartItems.find(i => i.productId === productId);
         if (!item) return;
 
-        item.quantity += change;
-        if (item.quantity < 1) item.quantity = 1;
+        const newQty = item.quantity + change;
+        if (newQty < 1) return;
+        
+        // Check stock limit
+        if (item.stock && newQty > item.stock) {
+            showToast(`Only ${item.stock} available in stock`, 'warning');
+            return;
+        }
 
+        item.quantity = newQty;
         localStorage.setItem('cart', JSON.stringify(cartItems));
         updateCartBadge();
         renderCart();
@@ -644,27 +735,32 @@
         }, 300);
     }
 
-    function applyCoupon() {
-        const code = document.getElementById('couponInput').value.trim().toUpperCase();
+    async function applyCoupon() {
+        const code = document.getElementById('couponInput').value.trim();
         if (!code) {
             showToast('Please enter a promo code', 'warning');
             return;
         }
 
-        // Mock coupon validation
-        const validCoupons = {
-            'SAVE10': { code: 'SAVE10', type: 'percent', value: 10 },
-            'SAVE20': { code: 'SAVE20', type: 'percent', value: 20 },
-            'FLAT500': { code: 'FLAT500', type: 'fixed', value: 500 },
-            'WELCOME': { code: 'WELCOME', type: 'percent', value: 15 }
-        };
+        const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-        if (validCoupons[code]) {
-            appliedCoupon = validCoupons[code];
-            showToast('✓ Coupon applied successfully!', 'success');
-            renderCart();
-        } else {
-            showToast('Invalid promo code', 'error');
+        try {
+            const response = await fetch('/CustomerPortal/ValidatePromo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ promoCode: code, subtotal: subtotal })
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                appliedCoupon = result.data;
+                showToast(`✓ Promo "${result.data.promotionCode}" applied! You save ₱${result.data.discountAmount.toLocaleString()}`, 'success');
+                renderCart();
+            } else {
+                showToast(result.message || 'Invalid promo code', 'error');
+            }
+        } catch (error) {
+            showToast('Failed to validate promo code', 'error');
         }
     }
 
@@ -679,6 +775,45 @@
             showToast('Your cart is empty', 'warning');
             return;
         }
+
+        // Check stock availability
+        const outOfStock = cartItems.filter(item => item.stock !== undefined && item.stock <= 0);
+        if (outOfStock.length > 0) {
+            showToast(`Please remove out-of-stock items: ${outOfStock.map(i => i.name).join(', ')}`, 'error');
+            return;
+        }
+
+        const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        let discount = 0;
+        if (appliedCoupon) {
+            discount = appliedCoupon.discountType === 'Percentage' 
+                ? subtotal * (appliedCoupon.discountValue / 100) 
+                : appliedCoupon.discountValue;
+            if (appliedCoupon.maxDiscountAmount && discount > appliedCoupon.maxDiscountAmount) {
+                discount = appliedCoupon.maxDiscountAmount;
+            }
+        }
+
+        const afterDiscount = subtotal - discount;
+        const vatableSales = afterDiscount / (1 + VAT_RATE);
+        const vatAmount = afterDiscount - vatableSales;
+        const shipping = subtotal >= freeShippingThreshold ? 0 : 150;
+        const total = afterDiscount + shipping;
+
+        // Store checkout data
+        const checkoutData = {
+            items: cartItems,
+            subtotal,
+            discount,
+            vatableSales,
+            vatAmount,
+            shipping,
+            total,
+            promoCode: appliedCoupon?.promotionCode || null,
+            promoDetails: appliedCoupon || null
+        };
+        
+        localStorage.setItem('checkoutData', JSON.stringify(checkoutData));
         window.location.href = '/CustomerPortal/Checkout';
     }
 </script>

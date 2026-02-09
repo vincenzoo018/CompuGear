@@ -3,86 +3,102 @@
     Layout = "~/Views/Shared/_BillingLayout.cshtml";
 }
 
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">Payments</h1>
-            <p class="text-muted mb-0">View and track payment transactions</p>
-        </div>
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Payments</h1>
+        <p class="page-subtitle">View and track payment transactions</p>
     </div>
+    <button class="btn btn-outline-primary" onclick="exportPayments()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Export
+    </button>
+</div>
 
-    <!-- Stats Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-success mb-0" id="todayPayments">₱0</h4>
-                    <small class="text-muted">Today's Payments</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-primary mb-0" id="totalPayments">₱0</h4>
-                    <small class="text-muted">Total Payments</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-info mb-0" id="paymentCount">0</h4>
-                    <small class="text-muted">Transaction Count</small>
-                </div>
+<!-- Stats Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h4 class="text-success mb-0" id="todayPayments">₱0</h4>
+                <small class="text-muted">Today's Payments</small>
             </div>
         </div>
     </div>
-
-    <!-- Payments Table -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-0">
-            <div class="row align-items-center">
-                <div class="col-md-4">
-                    <input type="text" class="form-control" placeholder="Search payments..." id="paymentSearch">
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select" id="paymentMethodFilter">
-                        <option value="">All Methods</option>
-                        <option value="Cash">Cash</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                        <option value="Credit Card">Credit Card</option>
-                        <option value="GCash">GCash</option>
-                        <option value="Maya">Maya</option>
-                        <option value="Check">Check</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <input type="date" class="form-control" id="paymentDateFilter">
-                </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h4 class="text-primary mb-0" id="totalPayments">₱0</h4>
+                <small class="text-muted">Total Payments</small>
             </div>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Payment #</th>
-                            <th>Invoice #</th>
-                            <th>Customer</th>
-                            <th>Date</th>
-                            <th class="text-end">Amount</th>
-                            <th>Method</th>
-                        </tr>
-                    </thead>
-                    <tbody id="paymentsTableBody">
-                        <tr>
-                            <td colspan="6" class="text-center py-4">Loading payments...</td>
-                        </tr>
-                    </tbody>
-                </table>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h4 class="text-info mb-0" id="paymentCount">0</h4>
+                <small class="text-muted">Transaction Count</small>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter & Search -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Search Payments</label>
+                <input type="text" class="form-control" placeholder="Search by payment #, invoice #, customer..." id="paymentSearch">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Method</label>
+                <select class="form-select" id="paymentMethodFilter">
+                    <option value="">All Methods</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Credit Card">Credit Card</option>
+                    <option value="GCash">GCash</option>
+                    <option value="Maya">Maya</option>
+                    <option value="Check">Check</option>
+                    <option value="PayMongo">PayMongo</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-control" id="paymentDateFilter">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" onclick="resetPaymentFilters()">Reset</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payments Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Payment Records</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Payment #</th>
+                        <th>Invoice #</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th class="text-end">Amount</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="paymentsTableBody">
+                    <tr><td colspan="7" class="text-center py-4">Loading payments...</td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -92,6 +108,46 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             Payments.load();
+
+            const searchInput = document.getElementById('paymentSearch');
+            const methodFilter = document.getElementById('paymentMethodFilter');
+
+            function filterPayments() {
+                Payments.filter(searchInput?.value || '', methodFilter?.value || '');
+            }
+
+            if (searchInput) searchInput.addEventListener('input', filterPayments);
+            if (methodFilter) methodFilter.addEventListener('change', filterPayments);
         });
+
+        function resetPaymentFilters() {
+            document.getElementById('paymentSearch').value = '';
+            document.getElementById('paymentMethodFilter').value = '';
+            document.getElementById('paymentDateFilter').value = '';
+            Payments.load();
+        }
+
+        function exportPayments() {
+            const data = Payments.data;
+            if (!data || data.length === 0) { Toast.error('No payments to export'); return; }
+            const csv = [
+                ['Payment #', 'Invoice #', 'Customer', 'Date', 'Amount', 'Method', 'Status'].join(','),
+                ...data.map(p => [
+                    p.paymentNumber || p.paymentId,
+                    p.invoiceNumber || '',
+                    `"${p.customerName || ''}"`,
+                    Format.date(p.paymentDate),
+                    p.amount?.toFixed(2),
+                    p.paymentMethod,
+                    p.status || 'Completed'
+                ].join(','))
+            ].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `payments_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click(); URL.revokeObjectURL(url);
+            Toast.success('Payments exported successfully');
+        }
     </script>
 }

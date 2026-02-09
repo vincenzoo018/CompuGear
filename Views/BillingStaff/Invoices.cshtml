@@ -3,97 +3,139 @@
     Layout = "~/Views/Shared/_BillingLayout.cshtml";
 }
 
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">Invoices</h1>
-            <p class="text-muted mb-0">Manage customer invoices</p>
-        </div>
-        <a href="/BillingStaff/CreateInvoice" class="btn btn-primary">
-            <i class="bi bi-plus-lg me-2"></i>Create Invoice
-        </a>
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Invoices</h1>
+        <p class="page-subtitle">View and manage customer invoices</p>
     </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" onclick="exportInvoices()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export
+        </button>
+    </div>
+</div>
 
-    <!-- Stats Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-primary mb-0" id="totalInvoiced">₱0</h4>
-                    <small class="text-muted">Total Invoiced</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-success mb-0" id="totalPaid">₱0</h4>
-                    <small class="text-muted">Paid</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-warning mb-0" id="totalPending">₱0</h4>
-                    <small class="text-muted">Pending</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-danger mb-0" id="totalOverdue">₱0</h4>
-                    <small class="text-muted">Overdue</small>
-                </div>
+<!-- Invoice Stats -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h4 class="text-primary mb-0" id="totalInvoiced">₱0</h4>
+                <small class="text-muted">Total Invoiced</small>
             </div>
         </div>
     </div>
-
-    <!-- Invoices Table -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-0">
-            <div class="row align-items-center">
-                <div class="col-md-4">
-                    <input type="text" class="form-control" placeholder="Search invoices..." id="invoiceSearch">
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select" id="invoiceStatusFilter">
-                        <option value="">All Status</option>
-                        <option value="Draft">Draft</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Partial">Partial</option>
-                        <option value="Overdue">Overdue</option>
-                        <option value="Cancelled">Cancelled</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <input type="date" class="form-control" id="invoiceDateFilter">
-                </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h4 class="text-success mb-0" id="totalPaid">₱0</h4>
+                <small class="text-muted">Paid</small>
             </div>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Invoice #</th>
-                            <th>Customer</th>
-                            <th>Invoice Date</th>
-                            <th>Due Date</th>
-                            <th class="text-end">Amount</th>
-                            <th>Status</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="invoicesTableBody">
-                        <tr>
-                            <td colspan="7" class="text-center py-4">Loading invoices...</td>
-                        </tr>
-                    </tbody>
-                </table>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h4 class="text-warning mb-0" id="totalPending">₱0</h4>
+                <small class="text-muted">Pending</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h4 class="text-danger mb-0" id="totalOverdue">₱0</h4>
+                <small class="text-muted">Overdue</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter & Search -->
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Search Invoices</label>
+                <input type="text" class="form-control" id="invoiceSearch" placeholder="Search by invoice #, customer...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="invoiceStatusFilter">
+                    <option value="">All Status</option>
+                    <option value="Draft">Draft</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Partial">Partial</option>
+                    <option value="Overdue">Overdue</option>
+                    <option value="Cancelled">Cancelled</option>
+                    <option value="Void">Void</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date</label>
+                <input type="date" class="form-control" id="invoiceDateFilter">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">Reset</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Invoices Table -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Invoice List</h5>
+        <span class="badge bg-primary" id="invoiceCount">0 invoices</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Customer</th>
+                        <th>Due Date</th>
+                        <th class="text-end">Amount</th>
+                        <th class="text-end">Paid</th>
+                        <th class="text-end">Balance</th>
+                        <th>Status</th>
+                        <th class="text-center" style="width: 140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="invoicesTableBody">
+                    <tr><td colspan="8" class="text-center py-4">Loading invoices...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- View Invoice Modal -->
+<div class="modal fade" id="viewInvoiceModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #008080; color: white;">
+                <h5 class="modal-title">Invoice Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewInvoiceContent">
+                <div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-info" onclick="Invoices.print(Invoices.currentId)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    Print
+                </button>
+                <button type="button" class="btn btn-success" onclick="Invoices.recordPayment(Invoices.currentId)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    Record Payment
+                </button>
             </div>
         </div>
     </div>
@@ -101,44 +143,50 @@
 
 <!-- Payment Modal -->
 <div class="modal fade" id="paymentModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header" style="background: #10B981; color: white;">
                 <h5 class="modal-title">Record Payment</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form id="paymentForm" onsubmit="Invoices.savePayment(); return false;">
-                <div class="modal-body">
-                    <input type="hidden" id="paymentInvoiceId">
-                    <div class="mb-3">
-                        <label class="form-label">Amount</label>
+            <div class="modal-body">
+                <p>Recording payment for invoice <strong id="paymentInvoiceNumber"></strong></p>
+                <input type="hidden" id="paymentInvoiceId">
+                <div class="mb-3">
+                    <label class="form-label">Amount Received</label>
+                    <div class="input-group">
+                        <span class="input-group-text">₱</span>
                         <input type="number" class="form-control" id="paymentAmount" step="0.01" required>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Payment Method</label>
-                        <select class="form-select" id="paymentMethod" required>
-                            <option value="Cash">Cash</option>
-                            <option value="Bank Transfer">Bank Transfer</option>
-                            <option value="Credit Card">Credit Card</option>
-                            <option value="GCash">GCash</option>
-                            <option value="Maya">Maya</option>
-                            <option value="Check">Check</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Reference #</label>
-                        <input type="text" class="form-control" id="paymentReference">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Notes</label>
-                        <textarea class="form-control" id="paymentNotes" rows="2"></textarea>
-                    </div>
+                    <div class="form-text">Outstanding: <span id="outstandingBalance">₱0.00</span></div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Record Payment</button>
+                <div class="mb-3">
+                    <label class="form-label">Payment Method</label>
+                    <select class="form-select" id="paymentMethod" required>
+                        <option value="Cash">Cash</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Credit Card">Credit Card</option>
+                        <option value="GCash">GCash</option>
+                        <option value="Maya">Maya</option>
+                        <option value="Check">Check</option>
+                    </select>
                 </div>
-            </form>
+                <div class="mb-3">
+                    <label class="form-label">Reference #</label>
+                    <input type="text" class="form-control" id="paymentReference" placeholder="Transaction/Check number">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Notes</label>
+                    <textarea class="form-control" id="paymentNotes" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="Invoices.savePayment()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><polyline points="20 6 9 17 4 12"/></svg>
+                    Record Payment
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -149,45 +197,49 @@
         document.addEventListener('DOMContentLoaded', function() {
             Invoices.load();
             
-            // Filter functionality
             const searchInput = document.getElementById('invoiceSearch');
             const statusFilter = document.getElementById('invoiceStatusFilter');
             
             function filterInvoices() {
-                Invoices.filter(
-                    searchInput?.value || '',
-                    statusFilter?.value || ''
-                );
+                Invoices.filter(searchInput?.value || '', statusFilter?.value || '');
             }
             
             if (searchInput) searchInput.addEventListener('input', filterInvoices);
             if (statusFilter) statusFilter.addEventListener('change', filterInvoices);
         });
+
+        function resetFilters() {
+            document.getElementById('invoiceSearch').value = '';
+            document.getElementById('invoiceStatusFilter').value = '';
+            document.getElementById('invoiceDateFilter').value = '';
+            Invoices.load();
+        }
+
+        function exportInvoices() {
+            // Export all invoices to CSV
+            const data = Invoices.data;
+            if (!data || data.length === 0) { Toast.error('No invoices to export'); return; }
+            
+            const csv = [
+                ['Invoice #', 'Customer', 'Invoice Date', 'Due Date', 'Amount', 'Paid', 'Balance', 'Status'].join(','),
+                ...data.map(i => [
+                    i.invoiceNumber,
+                    `"${i.customerName || ''}"`,
+                    Format.date(i.invoiceDate),
+                    Format.date(i.dueDate),
+                    i.totalAmount?.toFixed(2),
+                    (i.paidAmount || 0).toFixed(2),
+                    (i.balance || (i.totalAmount - (i.paidAmount || 0))).toFixed(2),
+                    i.status
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `invoices_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click(); URL.revokeObjectURL(url);
+            Toast.success('Invoices exported successfully');
+        }
     </script>
 }
-
-<!-- View Invoice Modal -->
-<div class="modal fade view-modal" id="viewInvoiceModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title">Invoice Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="viewInvoiceContent">
-                <div class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status"></div>
-                </div>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-info" onclick="Invoices.print(Invoices.currentId)">
-                    <i class="bi bi-printer me-1"></i>Print
-                </button>
-                <button type="button" class="btn btn-success" onclick="Invoices.recordPayment(Invoices.currentId)">
-                    <i class="bi bi-credit-card me-1"></i>Record Payment
-                </button>
-            </div>
-        </div>
-    </div>
-</div>

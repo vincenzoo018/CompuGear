@@ -3,105 +3,150 @@
     Layout = "~/Views/Shared/_BillingLayout.cshtml";
 }
 
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">Financial Reports</h1>
-            <p class="text-muted mb-0">Analyze revenue and financial performance</p>
-        </div>
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Financial Reports</h1>
+        <p class="page-subtitle">Analyze revenue and financial performance</p>
+    </div>
+    <div class="d-flex gap-2">
         <div class="btn-group">
-            <button class="btn btn-outline-primary active" data-period="week">This Week</button>
-            <button class="btn btn-outline-primary" data-period="month">This Month</button>
-            <button class="btn btn-outline-primary" data-period="year">This Year</button>
+            <button class="btn btn-outline-primary active" data-period="week" onclick="changePeriod('week', this)">This Week</button>
+            <button class="btn btn-outline-primary" data-period="month" onclick="changePeriod('month', this)">This Month</button>
+            <button class="btn btn-outline-primary" data-period="year" onclick="changePeriod('year', this)">This Year</button>
         </div>
+        <button class="btn btn-primary" onclick="FinancialReports.exportPDF()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+            </svg>
+            Export PDF
+        </button>
     </div>
+</div>
 
-    <!-- Summary Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="text-muted mb-1">Total Revenue</p>
-                            <h3 class="mb-0" id="totalRevenue">₱0.00</h3>
-                        </div>
-                        <div class="bg-primary bg-opacity-10 p-2 rounded">
-                            <i class="bi bi-currency-dollar text-primary fs-4"></i>
-                        </div>
+<!-- Summary Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Total Revenue</p>
+                        <h3 class="mb-0" id="totalRevenue">₱0.00</h3>
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="text-muted mb-1">Total Invoiced</p>
-                            <h3 class="mb-0" id="totalInvoiced">₱0.00</h3>
-                        </div>
-                        <div class="bg-info bg-opacity-10 p-2 rounded">
-                            <i class="bi bi-receipt text-info fs-4"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="text-muted mb-1">Collected</p>
-                            <h3 class="mb-0" id="totalCollected">₱0.00</h3>
-                        </div>
-                        <div class="bg-success bg-opacity-10 p-2 rounded">
-                            <i class="bi bi-check-circle text-success fs-4"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="text-muted mb-1">Outstanding</p>
-                            <h3 class="mb-0" id="outstanding">₱0.00</h3>
-                        </div>
-                        <div class="bg-warning bg-opacity-10 p-2 rounded">
-                            <i class="bi bi-clock text-warning fs-4"></i>
-                        </div>
+                    <div class="bg-primary bg-opacity-10 p-2 rounded">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="row g-4">
-        <!-- Revenue Chart -->
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0">
-                    <h5 class="mb-0">Monthly Revenue</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="revenueChart" height="300"></canvas>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Total Invoiced</p>
+                        <h3 class="mb-0" id="totalInvoiced">₱0.00</h3>
+                    </div>
+                    <div class="bg-info bg-opacity-10 p-2 rounded">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- Payment Methods -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0">
-                    <h5 class="mb-0">Payment Methods</h5>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Collected</p>
+                        <h3 class="mb-0" id="totalCollected">₱0.00</h3>
+                    </div>
+                    <div class="bg-success bg-opacity-10 p-2 rounded">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <canvas id="paymentMethodsChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Outstanding</p>
+                        <h3 class="mb-0" id="outstanding">₱0.00</h3>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 p-2 rounded">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Revenue Chart -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">Monthly Revenue vs Collections</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Methods -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">Payment Methods</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="paymentMethodsChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Invoice Status -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">Invoice Status Breakdown</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="invoiceStatusChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Customers -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">Top Customers</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Rank</th>
+                                <th>Customer</th>
+                                <th class="text-center">Orders</th>
+                                <th class="text-end">Total Spent</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topCustomersBody">
+                            <tr><td colspan="4" class="text-center py-3">Loading...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -113,7 +158,13 @@
     <script src="~/js/billing.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            FinancialReports.load();
+            FinancialReports.load('month');
         });
+
+        function changePeriod(period, btn) {
+            document.querySelectorAll('[data-period]').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            FinancialReports.load(period);
+        }
     </script>
 }
