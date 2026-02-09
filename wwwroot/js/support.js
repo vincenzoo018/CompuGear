@@ -174,7 +174,61 @@ const SupportTickets = {
     },
 
     view(id) {
-        window.location.href = `/SupportStaff/TicketDetails/${id}`;
+        const t = this.data.find(ticket => ticket.ticketId === id);
+        if (!t) {
+            Toast.error('Ticket not found');
+            return;
+        }
+        
+        this.currentId = id;
+        const content = document.getElementById('viewTicketContent');
+        if (content) {
+            content.innerHTML = `
+                <div class="row g-4">
+                    <div class="col-12 d-flex justify-content-between align-items-start border-bottom pb-3">
+                        <div>
+                            <h5 class="mb-1">${t.ticketNumber}</h5>
+                            <small class="text-muted">${Format.date(t.createdAt, true)}</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            ${Format.priorityBadge(t.priority)}
+                            ${Format.statusBadge(t.status)}
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="detail-label">Subject</div>
+                        <div class="detail-value fw-semibold">${t.subject}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Customer</div>
+                        <div class="detail-value">${t.customerName || t.contactName || 'N/A'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Assigned To</div>
+                        <div class="detail-value">${t.assignedToName || 'Unassigned'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Category</div>
+                        <div class="detail-value">${t.categoryName || 'General'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Channel</div>
+                        <div class="detail-value">${t.channel || 'Web'}</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="detail-label">Description</div>
+                        <div class="detail-value p-3 bg-light rounded">${t.description || 'No description provided'}</div>
+                    </div>
+                    ${t.resolution ? `
+                    <div class="col-12">
+                        <div class="detail-label">Resolution</div>
+                        <div class="detail-value p-3 bg-success bg-opacity-10 rounded">${t.resolution}</div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        Modal.show('viewTicketModal');
     },
 
     edit(id) {
@@ -250,6 +304,60 @@ const SupportTickets = {
         } catch (error) {
             console.error('Failed to load messages:', error);
         }
+    },
+
+    filter(search = '', status = '', priority = '') {
+        let filtered = this.data;
+        
+        if (search) {
+            const s = search.toLowerCase();
+            filtered = filtered.filter(t => 
+                t.ticketNumber?.toLowerCase().includes(s) ||
+                t.subject?.toLowerCase().includes(s) ||
+                t.customerName?.toLowerCase().includes(s)
+            );
+        }
+        
+        if (status) {
+            filtered = filtered.filter(t => t.status === status);
+        }
+        
+        if (priority) {
+            filtered = filtered.filter(t => t.priority === priority);
+        }
+        
+        this.renderFiltered(filtered);
+    },
+
+    renderFiltered(data) {
+        const tbody = document.getElementById('ticketsTableBody');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4">No tickets found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(t => `
+            <tr>
+                <td><strong>${t.ticketNumber}</strong></td>
+                <td>
+                    <div class="fw-semibold text-truncate" style="max-width: 200px;">${t.subject}</div>
+                </td>
+                <td>${t.customerName || t.contactName || 'N/A'}</td>
+                <td>${Format.priorityBadge(t.priority)}</td>
+                <td>${Format.statusBadge(t.status)}</td>
+                <td>${t.assignedToName || 'Unassigned'}</td>
+                <td>${Format.date(t.createdAt)}</td>
+                <td class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="SupportTickets.view(${t.ticketId})">${Icons.view}</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="SupportTickets.edit(${t.ticketId})">${Icons.edit}</button>
+                        ${t.status !== 'Resolved' && t.status !== 'Closed' ? `<button class="btn btn-sm btn-outline-success" onclick="SupportTickets.resolve(${t.ticketId})">${Icons.resolve}</button>` : ''}
+                    </div>
+                </td>
+            </tr>
+        `).join('');
     }
 };
 
@@ -295,7 +403,97 @@ const SupportCustomers = {
     },
 
     view(id) {
-        window.location.href = `/SupportStaff/CustomerProfile/${id}`;
+        const c = this.data.find(customer => customer.customerId === id);
+        if (!c) {
+            Toast.error('Customer not found');
+            return;
+        }
+        
+        const content = document.getElementById('viewCustomerContent');
+        if (content) {
+            content.innerHTML = `
+                <div class="row g-4">
+                    <div class="col-12 text-center border-bottom pb-3">
+                        <div class="avatar-circle mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem; background: linear-gradient(135deg, #008080, #006666); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            ${(c.firstName?.[0] || '') + (c.lastName?.[0] || '')}
+                        </div>
+                        <h5 class="mb-1">${c.firstName} ${c.lastName}</h5>
+                        <small class="text-muted">${c.customerCode}</small>
+                        <div class="mt-2">${Format.statusBadge(c.status)}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Email</div>
+                        <div class="detail-value">${c.email}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Phone</div>
+                        <div class="detail-value">${c.phone || '-'}</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-3">
+                                        <div class="small text-muted">Total Orders</div>
+                                        <h4 class="mb-0 text-primary">${c.totalOrders || 0}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-3">
+                                        <div class="small text-muted">Open Tickets</div>
+                                        <h4 class="mb-0 text-warning">${c.openTickets || 0}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        Modal.show('viewCustomerModal');
+    },
+
+    filter(search = '') {
+        let filtered = this.data;
+        
+        if (search) {
+            const s = search.toLowerCase();
+            filtered = filtered.filter(c => 
+                (c.firstName + ' ' + c.lastName).toLowerCase().includes(s) ||
+                c.email?.toLowerCase().includes(s) ||
+                c.customerCode?.toLowerCase().includes(s)
+            );
+        }
+        
+        this.renderFiltered(filtered);
+    },
+
+    renderFiltered(data) {
+        const tbody = document.getElementById('customersTableBody');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No customers found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(c => `
+            <tr>
+                <td><strong>${c.customerCode}</strong></td>
+                <td>
+                    <div class="fw-semibold">${c.firstName} ${c.lastName}</div>
+                    <small class="text-muted">${c.email}</small>
+                </td>
+                <td>${c.phone || '-'}</td>
+                <td>${c.totalOrders || 0} orders</td>
+                <td>${Format.statusBadge(c.status)}</td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-primary" onclick="SupportCustomers.view(${c.customerId})">${Icons.view}</button>
+                </td>
+            </tr>
+        `).join('');
     }
 };
 

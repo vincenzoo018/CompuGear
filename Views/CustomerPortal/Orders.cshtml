@@ -4,261 +4,219 @@
 }
 
 <style>
-    .orders-page { padding: 30px 0; background: #f8f9fa; min-height: 100vh; }
-    
+    .orders-page { min-height: 100vh; }
+
+    /* Page Header */
     .page-header {
-        background: linear-gradient(135deg, #008080 0%, #20b2aa 100%);
-        color: white;
-        padding: 40px;
-        border-radius: 20px;
-        margin-bottom: 30px;
+        margin-bottom: 32px;
     }
-    
-    .page-header h1 { font-weight: 800; margin-bottom: 10px; font-size: 2.2rem; }
-    .page-header p { opacity: 0.9; margin: 0; }
-    
-    .stats-row {
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--foreground);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .page-subtitle {
+        color: var(--muted-foreground);
+    }
+
+    /* Stat Cards */
+    .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 20px;
-        margin-bottom: 30px;
+        margin-bottom: 32px;
     }
-    
-    @@media (max-width: 768px) {
-        .stats-row { grid-template-columns: repeat(2, 1fr); }
-    }
-    
+
     .stat-card {
-        background: white;
-        border-radius: 16px;
-        padding: 25px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        text-align: center;
-    }
-    
-    .stat-icon { font-size: 2rem; margin-bottom: 10px; }
-    .stat-value { font-size: 2rem; font-weight: 800; color: #1f2937; }
-    .stat-label { color: #6b7280; font-size: 0.9rem; }
-    
-    .orders-container {
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        background: var(--card);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        padding: 24px;
+        position: relative;
         overflow: hidden;
     }
-    
-    .orders-header {
-        padding: 25px 30px;
-        border-bottom: 1px solid #e5e7eb;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-    
-    .orders-header h3 { font-weight: 700; color: #1f2937; margin: 0; }
-    
-    .filter-tabs {
-        display: flex;
-        gap: 10px;
-    }
-    
-    .filter-tab {
-        padding: 10px 20px;
-        border: none;
-        background: #f3f4f6;
-        border-radius: 10px;
-        cursor: pointer;
-        font-weight: 500;
-        color: #6b7280;
-        transition: all 0.3s;
-    }
-    
-    .filter-tab:hover, .filter-tab.active {
-        background: #008080;
-        color: white;
-    }
-    
-    .order-item {
-        padding: 25px 30px;
-        border-bottom: 1px solid #f3f4f6;
-        transition: background 0.3s;
-    }
-    
-    .order-item:hover { background: #fafafa; }
-    .order-item:last-child { border-bottom: none; }
-    
-    .order-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-        gap: 15px;
-    }
-    
-    .order-info h4 {
-        font-weight: 700;
-        color: #008080;
-        margin: 0 0 5px 0;
-        font-size: 1.1rem;
-    }
-    
-    .order-date { color: #6b7280; font-size: 0.9rem; }
-    
-    .order-status {
-        padding: 8px 18px;
-        border-radius: 25px;
-        font-size: 0.85rem;
-        font-weight: 600;
-    }
-    
-    .status-pending { background: #fef3cd; color: #856404; }
-    .status-processing { background: #cce5ff; color: #004085; }
-    .status-shipped { background: #e2d5f1; color: #5a2d82; }
-    .status-delivered { background: #d4edda; color: #155724; }
-    .status-cancelled { background: #f8d7da; color: #721c24; }
-    
-    .order-products {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 20px;
-        overflow-x: auto;
-        padding-bottom: 10px;
-    }
-    
-    .product-thumbnail {
-        min-width: 80px;
-        height: 80px;
-        background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        position: relative;
-    }
-    
-    .product-qty {
+
+    .stat-card::before {
+        content: '';
         position: absolute;
-        bottom: -5px;
-        right: -5px;
-        background: #008080;
-        color: white;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        font-size: 0.75rem;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+
+    .stat-card.total::before { background: var(--primary); }
+    .stat-card.processing::before { background: var(--warning); }
+    .stat-card.shipped::before { background: var(--info); }
+    .stat-card.delivered::before { background: var(--success); }
+
+    .stat-icon {
+        font-size: 1.5rem;
+        margin-bottom: 12px;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--foreground);
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: var(--muted-foreground);
+        margin-top: 4px;
+    }
+
+    /* Tabs Section */
+    .tabs-section {
+        background: var(--card);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    .tabs-header {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
+        border-bottom: 1px solid var(--border);
+        padding: 0 24px;
+        gap: 8px;
+        overflow-x: auto;
     }
-    
-    .more-products {
-        min-width: 80px;
-        height: 80px;
-        background: #e5e7eb;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #6b7280;
-        font-weight: 600;
-    }
-    
-    .order-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-top: 15px;
-        border-top: 1px dashed #e5e7eb;
-    }
-    
-    .order-total {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: #1f2937;
-    }
-    
-    .order-actions {
-        display: flex;
-        gap: 10px;
-    }
-    
-    .btn-view {
-        padding: 10px 20px;
-        background: linear-gradient(135deg, #008080, #006666);
-        color: white;
+
+    .tab-btn {
+        padding: 16px 20px;
+        background: none;
         border: none;
-        border-radius: 10px;
-        cursor: pointer;
+        color: var(--muted-foreground);
         font-weight: 500;
-        transition: all 0.3s;
-    }
-    
-    .btn-view:hover { transform: translateY(-2px); }
-    
-    .btn-reorder {
-        padding: 10px 20px;
-        background: white;
-        color: #008080;
-        border: 2px solid #008080;
-        border-radius: 10px;
         cursor: pointer;
-        font-weight: 500;
-        transition: all 0.3s;
-    }
-    
-    .btn-reorder:hover { background: #f0f9f9; }
-    
-    .empty-orders {
-        text-align: center;
-        padding: 60px 30px;
-    }
-    
-    .empty-orders-icon { font-size: 5rem; margin-bottom: 20px; }
-    .empty-orders h3 { font-size: 1.5rem; font-weight: 700; color: #1f2937; margin-bottom: 10px; }
-    .empty-orders p { color: #6b7280; margin-bottom: 25px; }
-    
-    .shop-now-btn {
-        display: inline-block;
-        padding: 15px 40px;
-        background: linear-gradient(135deg, #008080, #006666);
-        color: white;
-        text-decoration: none;
-        border-radius: 12px;
-        font-weight: 600;
-        transition: all 0.3s;
-    }
-    
-    .shop-now-btn:hover { transform: translateY(-3px); color: white; }
-    
-    .pagination {
+        position: relative;
+        white-space: nowrap;
         display: flex;
-        justify-content: center;
-        gap: 10px;
-        padding: 30px;
+        align-items: center;
+        gap: 8px;
+        transition: color 0.2s;
     }
-    
-    .page-btn {
-        padding: 10px 16px;
-        border: 2px solid #e5e7eb;
-        background: white;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s;
+
+    .tab-btn:hover { color: var(--foreground); }
+
+    .tab-btn.active {
+        color: var(--primary);
+        font-weight: 600;
     }
-    
-    .page-btn:hover, .page-btn.active {
-        background: #008080;
+
+    .tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--primary);
+    }
+
+    .tab-count {
+        background: var(--muted);
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .tab-btn.active .tab-count {
+        background: var(--primary);
         color: white;
-        border-color: #008080;
     }
-    
-    /* Order Details Modal */
-    .modal-overlay {
+
+    /* Orders List */
+    .orders-content { padding: 24px; }
+
+    .order-row {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 20px;
+        background: var(--background);
+        border-radius: 12px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+
+    .order-row:hover {
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px rgba(0,128,128,0.1);
+    }
+
+    .order-icon { font-size: 2rem; }
+
+    .order-info { flex: 1; }
+
+    .order-number {
+        font-weight: 700;
+        color: var(--foreground);
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .order-meta {
+        display: flex;
+        gap: 16px;
+        font-size: 0.85rem;
+        color: var(--muted-foreground);
+    }
+
+    .order-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .order-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .status-emoji { font-size: 1.2rem; }
+
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-pending { background: var(--pending-light); color: var(--pending-fg); }
+    .badge-processing { background: var(--warning-light); color: var(--warning-fg); }
+    .badge-shipped { background: var(--info-light); color: var(--info-fg); }
+    .badge-delivered { background: var(--success-light); color: var(--success-fg); }
+    .badge-cancelled { background: var(--error-light); color: var(--error-fg); }
+
+    .order-amount {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--primary);
+        text-align: right;
+    }
+
+    .order-arrow {
+        color: var(--muted-foreground);
+        font-size: 1.2rem;
+    }
+
+    /* Modal */
+    .modal-backdrop {
         position: fixed;
         top: 0;
         left: 0;
@@ -269,392 +227,520 @@
         align-items: center;
         justify-content: center;
         z-index: 1000;
+        padding: 20px;
     }
-    
-    .modal-overlay.active { display: flex; }
-    
-    .modal-content {
-        background: white;
+
+    .modal-backdrop.active { display: flex; }
+
+    .modal {
+        background: var(--card);
         border-radius: 20px;
-        width: 90%;
-        max-width: 700px;
+        width: 100%;
+        max-width: 600px;
         max-height: 90vh;
         overflow-y: auto;
-        box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+        animation: scaleIn 0.2s ease;
     }
-    
+
+    @@keyframes scaleIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
     .modal-header {
-        padding: 25px 30px;
-        border-bottom: 1px solid #e5e7eb;
+        padding: 24px;
+        border-bottom: 1px solid var(--border);
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
-    
-    .modal-header h3 { font-weight: 700; color: #1f2937; margin: 0; }
-    
+
+    .modal-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--foreground);
+    }
+
     .modal-close {
-        width: 40px;
-        height: 40px;
+        background: none;
         border: none;
-        background: #f3f4f6;
-        border-radius: 10px;
+        font-size: 1.5rem;
+        color: var(--muted-foreground);
         cursor: pointer;
-        font-size: 1.2rem;
+        padding: 8px;
+        line-height: 1;
     }
-    
-    .modal-body { padding: 30px; }
-    
-    .detail-section { margin-bottom: 25px; }
-    .detail-title { font-weight: 600; color: #6b7280; margin-bottom: 10px; font-size: 0.9rem; }
-    
-    .detail-item-row {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        padding: 15px;
-        background: #f9fafb;
+
+    .modal-close:hover { color: var(--foreground); }
+
+    .modal-body { padding: 24px; }
+
+    /* Order Detail */
+    .order-detail-status {
+        text-align: center;
+        padding: 20px;
+        background: var(--muted);
         border-radius: 12px;
-        margin-bottom: 10px;
+        margin-bottom: 24px;
     }
-    
-    .detail-item-icon {
-        width: 50px;
-        height: 50px;
-        background: linear-gradient(135deg, #e5e7eb, #d1d5db);
-        border-radius: 10px;
+
+    .detail-status-emoji { font-size: 3rem; margin-bottom: 12px; }
+
+    .detail-status-text {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--foreground);
+    }
+
+    .order-timeline {
+        display: flex;
+        justify-content: space-between;
+        padding: 20px 0;
+        margin-bottom: 24px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .timeline-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        position: relative;
+    }
+
+    .timeline-step::after {
+        content: '';
+        position: absolute;
+        top: 16px;
+        left: 60%;
+        right: -40%;
+        height: 2px;
+        background: var(--border);
+    }
+
+    .timeline-step:last-child::after { display: none; }
+
+    .timeline-step.completed::after { background: var(--success); }
+
+    .timeline-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--muted);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: 1rem;
+        z-index: 1;
+        border: 2px solid var(--border);
     }
-    
-    .detail-item-info { flex: 1; }
-    .detail-item-name { font-weight: 600; color: #1f2937; }
-    .detail-item-meta { color: #6b7280; font-size: 0.85rem; }
-    .detail-item-price { font-weight: 700; color: #008080; }
+
+    .timeline-step.completed .timeline-icon {
+        background: var(--success-light);
+        border-color: var(--success);
+    }
+
+    .timeline-step.current .timeline-icon {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+
+    .timeline-label {
+        font-size: 0.7rem;
+        color: var(--muted-foreground);
+        margin-top: 8px;
+        text-align: center;
+    }
+
+    .detail-section {
+        margin-bottom: 20px;
+    }
+
+    .detail-section-title {
+        font-weight: 700;
+        color: var(--foreground);
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        font-size: 0.9rem;
+    }
+
+    .detail-label { color: var(--muted-foreground); }
+    .detail-value { color: var(--foreground); font-weight: 500; }
+
+    .order-items-list { margin-top: 12px; }
+
+    .order-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: var(--background);
+        border-radius: 8px;
+        margin-bottom: 8px;
+    }
+
+    .item-icon { font-size: 1.5rem; }
+    .item-info { flex: 1; }
+    .item-name { font-weight: 500; color: var(--foreground); }
+    .item-meta { font-size: 0.8rem; color: var(--muted-foreground); }
+    .item-price { font-weight: 600; color: var(--primary); }
+
+    .order-total-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 16px;
+        background: var(--primary);
+        color: white;
+        border-radius: 8px;
+        margin-top: 16px;
+        font-weight: 700;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-icon { font-size: 4rem; opacity: 0.5; margin-bottom: 16px; }
+    .empty-text { color: var(--muted-foreground); font-size: 1.1rem; margin-bottom: 20px; }
+
+    .btn-shop {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .btn-shop:hover { color: white; transform: translateY(-2px); }
+
+    /* Responsive */
+    @@media (max-width: 1024px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @@media (max-width: 768px) {
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .stat-card { padding: 16px; }
+        .stat-value { font-size: 1.5rem; }
+        .order-row { flex-wrap: wrap; padding: 16px; }
+        .order-status { order: 3; width: 100%; margin-top: 12px; }
+        .order-amount { order: 2; }
+        .order-arrow { display: none; }
+        .tabs-header { padding: 0 12px; }
+        .tab-btn { padding: 12px; font-size: 0.9rem; }
+        .order-timeline { display: none; }
+    }
+
+    @@media (max-width: 576px) {
+        .stats-grid { grid-template-columns: 1fr 1fr; }
+        .page-title { font-size: 1.5rem; }
+    }
 </style>
 
 <div class="orders-page">
-    <div class="container">
-        <div class="page-header">
-            <h1>📦 My Orders</h1>
-            <p>Track and manage your orders</p>
+    <!-- Page Header -->
+    <div class="page-header animate-fade-in">
+        <h1 class="page-title">📦 My Orders</h1>
+        <p class="page-subtitle">Track and manage your orders</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card total animate-fade-in" style="animation-delay: 0.05s">
+            <div class="stat-icon">📦</div>
+            <div class="stat-value" id="statTotal">0</div>
+            <div class="stat-label">Total Orders</div>
         </div>
-        
-        <div class="stats-row">
-            <div class="stat-card">
-                <div class="stat-icon">📦</div>
-                <div class="stat-value" id="totalOrders">0</div>
-                <div class="stat-label">Total Orders</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">⏳</div>
-                <div class="stat-value" id="pendingOrders">0</div>
-                <div class="stat-label">Pending</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">🚚</div>
-                <div class="stat-value" id="shippedOrders">0</div>
-                <div class="stat-label">Shipped</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">✅</div>
-                <div class="stat-value" id="deliveredOrders">0</div>
-                <div class="stat-label">Delivered</div>
-            </div>
+        <div class="stat-card processing animate-fade-in" style="animation-delay: 0.1s">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-value" id="statProcessing">0</div>
+            <div class="stat-label">Processing</div>
         </div>
-        
-        <div class="orders-container">
-            <div class="orders-header">
-                <h3>🛒 Order History</h3>
-                <div class="filter-tabs">
-                    <button class="filter-tab active" data-status="">All</button>
-                    <button class="filter-tab" data-status="Pending">Pending</button>
-                    <button class="filter-tab" data-status="Processing">Processing</button>
-                    <button class="filter-tab" data-status="Shipped">Shipped</button>
-                    <button class="filter-tab" data-status="Delivered">Delivered</button>
-                </div>
+        <div class="stat-card shipped animate-fade-in" style="animation-delay: 0.15s">
+            <div class="stat-icon">🚚</div>
+            <div class="stat-value" id="statShipped">0</div>
+            <div class="stat-label">Shipped</div>
+        </div>
+        <div class="stat-card delivered animate-fade-in" style="animation-delay: 0.2s">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value" id="statDelivered">0</div>
+            <div class="stat-label">Delivered</div>
+        </div>
+    </div>
+
+    <!-- Orders Tabs -->
+    <div class="tabs-section animate-fade-in" style="animation-delay: 0.25s">
+        <div class="tabs-header">
+            <button class="tab-btn active" data-status="all" onclick="filterOrders('all', this)">
+                All
+                <span class="tab-count" id="countAll">0</span>
+            </button>
+            <button class="tab-btn" data-status="pending" onclick="filterOrders('pending', this)">
+                Pending
+                <span class="tab-count" id="countPending">0</span>
+            </button>
+            <button class="tab-btn" data-status="processing" onclick="filterOrders('processing', this)">
+                Processing
+                <span class="tab-count" id="countProcessing">0</span>
+            </button>
+            <button class="tab-btn" data-status="shipped" onclick="filterOrders('shipped', this)">
+                Shipped
+                <span class="tab-count" id="countShipped">0</span>
+            </button>
+            <button class="tab-btn" data-status="delivered" onclick="filterOrders('delivered', this)">
+                Delivered
+                <span class="tab-count" id="countDelivered">0</span>
+            </button>
+            <button class="tab-btn" data-status="cancelled" onclick="filterOrders('cancelled', this)">
+                Cancelled
+                <span class="tab-count" id="countCancelled">0</span>
+            </button>
+        </div>
+        <div class="orders-content" id="ordersContent">
+            <div class="empty-state">
+                <div class="empty-icon">🔄</div>
+                <p class="empty-text">Loading orders...</p>
             </div>
-            
-            <div id="ordersContent">
-                <div class="empty-orders">
-                    <div class="empty-orders-icon">📭</div>
-                    <h3>Loading orders...</h3>
-                </div>
-            </div>
-            
-            <div class="pagination" id="pagination"></div>
         </div>
     </div>
 </div>
 
-<!-- Order Details Modal -->
-<div class="modal-overlay" id="orderModal">
-    <div class="modal-content">
+<!-- Order Detail Modal -->
+<div class="modal-backdrop" id="orderModal" onclick="closeModalOnBackdrop(event)">
+    <div class="modal" onclick="event.stopPropagation()">
         <div class="modal-header">
-            <h3>📋 Order Details</h3>
-            <button class="modal-close" onclick="closeModal()">✕</button>
+            <span class="modal-title" id="modalTitle">Order Details</span>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
         </div>
-        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-body" id="modalBody">
+            <!-- Content loaded dynamically -->
+        </div>
     </div>
 </div>
 
 @section Scripts {
 <script>
-    let orders = [];
-    let currentPage = 1;
-    let totalPages = 1;
-    let currentStatus = '';
-    const pageSize = 10;
-    const productIcons = ['🖥️', '⌨️', '🖱️', '🎧', '💾', '🎮', '📱', '🔌'];
+    const productIcons = ['🖥️', '⌨️', '🖱️', '🎧', '💾', '🎮', '📱', '🔌', '💻', '🖨️'];
+    let allOrders = [];
+    let currentFilter = 'all';
 
-    document.addEventListener('DOMContentLoaded', function() {
-        loadOrders();
-        setupFilterTabs();
-    });
+    const statusConfig = {
+        'Pending': { emoji: '⏱️', badge: 'badge-pending', step: 0 },
+        'Confirmed': { emoji: '✓', badge: 'badge-processing', step: 1 },
+        'Processing': { emoji: '⚙️', badge: 'badge-processing', step: 1 },
+        'Shipped': { emoji: '🚚', badge: 'badge-shipped', step: 2 },
+        'Out for Delivery': { emoji: '📍', badge: 'badge-shipped', step: 2 },
+        'Delivered': { emoji: '✅', badge: 'badge-delivered', step: 3 },
+        'Cancelled': { emoji: '❌', badge: 'badge-cancelled', step: -1 },
+        'Refunded': { emoji: '↩️', badge: 'badge-cancelled', step: -1 }
+    };
 
-    function setupFilterTabs() {
-        document.querySelectorAll('.filter-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-                currentStatus = this.dataset.status;
-                currentPage = 1;
-                loadOrders();
-            });
-        });
-    }
+    document.addEventListener('DOMContentLoaded', loadOrders);
 
-    async function loadOrders(page = 1) {
-        currentPage = page;
-        
+    async function loadOrders() {
         try {
-            const params = new URLSearchParams({
-                page: page,
-                pageSize: pageSize,
-                status: currentStatus
-            });
-            
-            const response = await fetch(`/CustomerPortal/GetOrders?${params}`);
+            const response = await fetch('/CustomerPortal/GetOrders');
             const result = await response.json();
-            
+
             if (result.success) {
-                orders = result.data;
-                updateStats(result.stats);
-                renderOrders();
-                totalPages = Math.ceil(result.totalCount / pageSize);
-                renderPagination();
+                allOrders = result.data.orders || [];
+                updateStats(result.data);
+                renderOrders(allOrders);
             } else {
-                renderEmpty();
+                showEmptyState();
             }
         } catch (error) {
             console.error('Error loading orders:', error);
-            renderEmpty();
+            showEmptyState();
         }
     }
 
-    function updateStats(stats) {
-        if (stats) {
-            document.getElementById('totalOrders').textContent = stats.total || 0;
-            document.getElementById('pendingOrders').textContent = stats.pending || 0;
-            document.getElementById('shippedOrders').textContent = stats.shipped || 0;
-            document.getElementById('deliveredOrders').textContent = stats.delivered || 0;
-        }
+    function updateStats(data) {
+        document.getElementById('statTotal').textContent = data.total || 0;
+        document.getElementById('statProcessing').textContent = data.processing || 0;
+        document.getElementById('statShipped').textContent = data.shipped || 0;
+        document.getElementById('statDelivered').textContent = data.delivered || 0;
+
+        // Update tab counts
+        document.getElementById('countAll').textContent = data.total || 0;
+        document.getElementById('countPending').textContent = data.pending || 0;
+        document.getElementById('countProcessing').textContent = data.processing || 0;
+        document.getElementById('countShipped').textContent = data.shipped || 0;
+        document.getElementById('countDelivered').textContent = data.delivered || 0;
+        document.getElementById('countCancelled').textContent = data.cancelled || 0;
     }
 
-    function renderOrders() {
+    function filterOrders(status, btn) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = status;
+
+        let filtered = allOrders;
+        if (status !== 'all') {
+            filtered = allOrders.filter(o => o.status.toLowerCase() === status.toLowerCase());
+        }
+        renderOrders(filtered);
+    }
+
+    function renderOrders(orders) {
         const container = document.getElementById('ordersContent');
-        
+
         if (!orders || orders.length === 0) {
-            renderEmpty();
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📦</div>
+                    <p class="empty-text">${currentFilter === 'all' ? "You haven't placed any orders yet" : `No ${currentFilter} orders found`}</p>
+                    <a href="/CustomerPortal/Products" class="btn-shop">
+                        🛒 Start Shopping
+                    </a>
+                </div>`;
             return;
         }
 
-        container.innerHTML = orders.map(order => {
-            const statusClass = `status-${order.orderStatus.toLowerCase()}`;
-            const displayItems = order.items?.slice(0, 4) || [];
-            const moreCount = (order.items?.length || 0) - 4;
+        container.innerHTML = orders.map((order, index) => {
+            const config = statusConfig[order.status] || statusConfig['Pending'];
+            const orderDate = new Date(order.orderDate).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+            const itemCount = order.itemCount || (order.items ? order.items.length : 0);
 
             return `
-                <div class="order-item">
-                    <div class="order-header">
-                        <div class="order-info">
-                            <h4>Order #${order.orderNumber}</h4>
-                            <div class="order-date">📅 ${new Date(order.orderDate).toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                <div class="order-row animate-fade-in" style="animation-delay: ${index * 0.05}s" onclick="viewOrderDetail(${order.orderId})">
+                    <div class="order-icon">${config.emoji}</div>
+                    <div class="order-info">
+                        <div class="order-number">
+                            #${order.orderNumber || order.orderId}
                         </div>
-                        <span class="order-status ${statusClass}">${order.orderStatus}</span>
-                    </div>
-                    
-                    <div class="order-products">
-                        ${displayItems.map((item, i) => `
-                            <div class="product-thumbnail">
-                                ${productIcons[i % productIcons.length]}
-                                <span class="product-qty">${item.quantity}</span>
-                            </div>
-                        `).join('')}
-                        ${moreCount > 0 ? `<div class="more-products">+${moreCount}</div>` : ''}
-                    </div>
-                    
-                    <div class="order-footer">
-                        <div class="order-total">Total: ₱${order.totalAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</div>
-                        <div class="order-actions">
-                            <button class="btn-view" onclick="viewOrderDetails(${order.orderId})">📋 View Details</button>
-                            ${order.orderStatus === 'Delivered' ? `<button class="btn-reorder" onclick="reorder(${order.orderId})">🔄 Reorder</button>` : ''}
+                        <div class="order-meta">
+                            <span class="order-meta-item">📅 ${orderDate}</span>
+                            <span class="order-meta-item">📦 ${itemCount} item${itemCount !== 1 ? 's' : ''}</span>
                         </div>
                     </div>
-                </div>
-            `;
+                    <div class="order-status">
+                        <span class="status-badge ${config.badge}">${order.status}</span>
+                    </div>
+                    <div class="order-amount">₱${order.totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
+                    <div class="order-arrow">→</div>
+                </div>`;
         }).join('');
     }
 
-    function renderEmpty() {
+    function showEmptyState() {
         document.getElementById('ordersContent').innerHTML = `
-            <div class="empty-orders">
-                <div class="empty-orders-icon">📭</div>
-                <h3>No orders found</h3>
-                <p>You haven't placed any orders yet. Start shopping now!</p>
-                <a href="/CustomerPortal/Products" class="shop-now-btn">🛍️ Browse Products</a>
-            </div>
-        `;
+            <div class="empty-state">
+                <div class="empty-icon">📦</div>
+                <p class="empty-text">You haven't placed any orders yet</p>
+                <a href="/CustomerPortal/Products" class="btn-shop">
+                    🛒 Start Shopping
+                </a>
+            </div>`;
     }
 
-    function renderPagination() {
-        const pagination = document.getElementById('pagination');
-        if (totalPages <= 1) {
-            pagination.innerHTML = '';
-            return;
-        }
-
-        let html = '';
-        
-        if (currentPage > 1) {
-            html += `<button class="page-btn" onclick="loadOrders(${currentPage - 1})">← Prev</button>`;
-        }
-        
-        for (let i = 1; i <= totalPages; i++) {
-            if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="loadOrders(${i})">${i}</button>`;
-            } else if (i === currentPage - 3 || i === currentPage + 3) {
-                html += '<span style="padding: 10px;">...</span>';
-            }
-        }
-        
-        if (currentPage < totalPages) {
-            html += `<button class="page-btn" onclick="loadOrders(${currentPage + 1})">Next →</button>`;
-        }
-        
-        pagination.innerHTML = html;
-    }
-
-    function viewOrderDetails(orderId) {
-        const order = orders.find(o => o.orderId === orderId);
+    async function viewOrderDetail(orderId) {
+        const order = allOrders.find(o => o.orderId === orderId);
         if (!order) return;
 
-        const statusClass = `status-${order.orderStatus.toLowerCase()}`;
-        
+        const config = statusConfig[order.status] || statusConfig['Pending'];
+        const orderDate = new Date(order.orderDate).toLocaleDateString('en-PH', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+        document.getElementById('modalTitle').textContent = `Order #${order.orderNumber || order.orderId}`;
+
+        // Build timeline HTML
+        const steps = ['Confirmed', 'Processing', 'Shipped', 'Delivered'];
+        const currentStep = config.step;
+
+        const timelineHtml = steps.map((step, i) => {
+            let stepClass = '';
+            if (currentStep === -1) stepClass = ''; // Cancelled
+            else if (i < currentStep) stepClass = 'completed';
+            else if (i === currentStep) stepClass = 'current';
+
+            const stepEmojis = ['✓', '⚙️', '🚚', '✅'];
+            return `
+                <div class="timeline-step ${stepClass}">
+                    <div class="timeline-icon">${stepEmojis[i]}</div>
+                    <div class="timeline-label">${step}</div>
+                </div>`;
+        }).join('');
+
+        // Build items list
+        const items = order.items || [];
+        const itemsHtml = items.map((item, i) => `
+            <div class="order-item">
+                <div class="item-icon">${productIcons[i % productIcons.length]}</div>
+                <div class="item-info">
+                    <div class="item-name">${item.productName}</div>
+                    <div class="item-meta">Qty: ${item.quantity}</div>
+                </div>
+                <div class="item-price">₱${(item.unitPrice * item.quantity).toLocaleString()}</div>
+            </div>`).join('');
+
         document.getElementById('modalBody').innerHTML = `
+            <div class="order-detail-status">
+                <div class="detail-status-emoji">${config.emoji}</div>
+                <div class="detail-status-text">${order.status}</div>
+            </div>
+
+            <div class="order-timeline">
+                ${timelineHtml}
+            </div>
+
             <div class="detail-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <div>
-                        <h4 style="margin: 0; color: #008080;">Order #${order.orderNumber}</h4>
-                        <div style="color: #6b7280; font-size: 0.9rem;">${new Date(order.orderDate).toLocaleDateString()}</div>
-                    </div>
-                    <span class="order-status ${statusClass}">${order.orderStatus}</span>
+                <div class="detail-section-title">Order Information</div>
+                <div class="detail-row">
+                    <span class="detail-label">Order Date</span>
+                    <span class="detail-value">${orderDate}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Method</span>
+                    <span class="detail-value">${order.paymentMethod || 'Cash on Delivery'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Shipping Address</span>
+                    <span class="detail-value">${order.shippingAddress || 'N/A'}</span>
                 </div>
             </div>
-            
+
             <div class="detail-section">
-                <div class="detail-title">📦 ORDER ITEMS</div>
-                ${order.items?.map((item, i) => `
-                    <div class="detail-item-row">
-                        <div class="detail-item-icon">${productIcons[i % productIcons.length]}</div>
-                        <div class="detail-item-info">
-                            <div class="detail-item-name">${item.productName}</div>
-                            <div class="detail-item-meta">Qty: ${item.quantity} × ₱${item.unitPrice?.toLocaleString() || '0'}</div>
-                        </div>
-                        <div class="detail-item-price">₱${((item.quantity || 0) * (item.unitPrice || 0)).toLocaleString()}</div>
-                    </div>
-                `).join('') || '<div style="color: #6b7280;">No items</div>'}
-            </div>
-            
-            <div class="detail-section" style="background: #f9fafb; padding: 20px; border-radius: 12px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                    <span style="color: #6b7280;">Subtotal</span>
-                    <span>₱${order.subtotal?.toLocaleString() || order.totalAmount?.toLocaleString() || '0'}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                    <span style="color: #6b7280;">Shipping</span>
-                    <span>₱${order.shippingFee?.toLocaleString() || '0'}</span>
-                </div>
-                ${order.discount > 0 ? `
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #6b7280;">Discount</span>
-                        <span style="color: #10b981;">-₱${order.discount?.toLocaleString() || '0'}</span>
-                    </div>
-                ` : ''}
-                <div style="display: flex; justify-content: space-between; padding-top: 15px; border-top: 2px solid #008080;">
-                    <span style="font-weight: 700;">Total</span>
-                    <span style="font-weight: 800; color: #008080; font-size: 1.2rem;">₱${order.totalAmount?.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                <div class="detail-section-title">Items (${items.length})</div>
+                <div class="order-items-list">
+                    ${itemsHtml || '<p style="color: var(--muted-foreground); font-size: 0.9rem;">Item details not available</p>'}
                 </div>
             </div>
-            
-            ${order.shippingAddress ? `
-                <div class="detail-section">
-                    <div class="detail-title">📍 SHIPPING ADDRESS</div>
-                    <div style="background: #f9fafb; padding: 15px; border-radius: 12px;">
-                        ${order.shippingAddress}
-                    </div>
-                </div>
-            ` : ''}
-        `;
-        
+
+            <div class="order-total-row">
+                <span>Total Amount</span>
+                <span>₱${order.totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
+            </div>`;
+
         document.getElementById('orderModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
 
     function closeModal() {
         document.getElementById('orderModal').classList.remove('active');
+        document.body.style.overflow = '';
     }
 
-    function reorder(orderId) {
-        const order = orders.find(o => o.orderId === orderId);
-        if (!order || !order.items) return;
-
-        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        
-        order.items.forEach(item => {
-            const existingIndex = cart.findIndex(c => c.productId === item.productId);
-            if (existingIndex > -1) {
-                cart[existingIndex].quantity += item.quantity;
-            } else {
-                cart.push({
-                    productId: item.productId,
-                    name: item.productName,
-                    price: item.unitPrice,
-                    quantity: item.quantity,
-                    sku: ''
-                });
-            }
-        });
-        
-        localStorage.setItem('cart', JSON.stringify(cart));
-        showToast('✓ Items added to cart!', '#10b981');
-        
-        setTimeout(() => {
-            window.location.href = '/CustomerPortal/Cart';
-        }, 1000);
+    function closeModalOnBackdrop(event) {
+        if (event.target.id === 'orderModal') closeModal();
     }
 
-    function showToast(message, color) {
-        const toast = document.createElement('div');
-        toast.innerHTML = `<div style="position: fixed; bottom: 20px; right: 20px; background: ${color}; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 9999;">${message}</div>`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2500);
-    }
-
-    // Close modal on outside click
-    document.getElementById('orderModal').addEventListener('click', function(e) {
-        if (e.target === this) closeModal();
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
     });
 </script>
 }

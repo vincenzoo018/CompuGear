@@ -75,6 +75,20 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             StockLevels.load();
+            
+            // Filter functionality
+            const searchInput = document.getElementById('stockSearch');
+            const stockFilter = document.getElementById('stockFilter');
+            
+            function filterStock() {
+                StockLevels.filter(
+                    searchInput?.value || '',
+                    stockFilter?.value || ''
+                );
+            }
+            
+            if (searchInput) searchInput.addEventListener('input', filterStock);
+            if (stockFilter) stockFilter.addEventListener('change', filterStock);
         });
     </script>
 }

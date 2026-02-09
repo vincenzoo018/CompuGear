@@ -4,7 +4,7 @@
 
 <div class="page-header">
     <p class="text-muted mb-0">Dashboard</p>
-    <h1 class="page-title">Dashboard</h1>
+    <h1 class="page-title">Admin Dashboard</h1>
     <p class="page-subtitle">Welcome back! Here's an overview of your business performance.</p>
 </div>
 
@@ -13,13 +13,13 @@
     <div class="stat-card fade-in stagger-1">
         <div class="stat-info">
             <span class="stat-label">Total Customers</span>
-            <span class="stat-value">2,847</span>
-            <div class="stat-trend up">
+            <span class="stat-value" id="totalCustomers">0</span>
+            <div class="stat-trend up" id="customersTrend">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
                     <polyline points="17 6 23 6 23 12"/>
                 </svg>
-                <span>12.5% vs last month</span>
+                <span>Loading...</span>
             </div>
         </div>
         <div class="stat-icon teal">
@@ -35,13 +35,13 @@
     <div class="stat-card fade-in stagger-2">
         <div class="stat-info">
             <span class="stat-label">Total Orders</span>
-            <span class="stat-value">1,234</span>
-            <div class="stat-trend up">
+            <span class="stat-value" id="totalOrders">0</span>
+            <div class="stat-trend up" id="ordersTrend">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
                     <polyline points="17 6 23 6 23 12"/>
                 </svg>
-                <span>8.2% vs last month</span>
+                <span>Loading...</span>
             </div>
         </div>
         <div class="stat-icon green">
@@ -56,13 +56,13 @@
     <div class="stat-card fade-in stagger-3">
         <div class="stat-info">
             <span class="stat-label">Products in Stock</span>
-            <span class="stat-value">456</span>
-            <div class="stat-trend down">
+            <span class="stat-value" id="totalProducts">0</span>
+            <div class="stat-trend" id="productsTrend">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
-                    <polyline points="17 18 23 18 23 12"/>
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                    <polyline points="17 6 23 6 23 12"/>
                 </svg>
-                <span>3.1% vs last month</span>
+                <span>Loading...</span>
             </div>
         </div>
         <div class="stat-icon blue">
@@ -76,14 +76,14 @@
 
     <div class="stat-card fade-in stagger-4">
         <div class="stat-info">
-            <span class="stat-label">Revenue</span>
-            <span class="stat-value">P128,450</span>
-            <div class="stat-trend up">
+            <span class="stat-label">Total Revenue</span>
+            <span class="stat-value" id="totalRevenue">₱0</span>
+            <div class="stat-trend up" id="revenueTrend">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
                     <polyline points="17 6 23 6 23 12"/>
                 </svg>
-                <span>15.3% vs last month</span>
+                <span>Loading...</span>
             </div>
         </div>
         <div class="stat-icon orange">
@@ -104,13 +104,7 @@
                 <h3 class="card-title">Revenue Overview</h3>
                 <p class="card-subtitle">Monthly revenue trend</p>
             </div>
-            <button class="btn btn-outline btn-sm">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
-                </svg>
-                View Details
-            </button>
+            <a href="/Admin/Sales/Orders" class="btn btn-outline btn-sm">View Details</a>
         </div>
         <div class="card-body">
             <div class="chart-container">
@@ -124,35 +118,14 @@
         <div class="card-header">
             <div>
                 <h3 class="card-title">Sales by Category</h3>
-                <p class="card-subtitle">Current month distribution</p>
+                <p class="card-subtitle">Product distribution</p>
             </div>
         </div>
         <div class="card-body">
             <div class="chart-container" style="height: 220px;">
                 <canvas id="categoryChart"></canvas>
             </div>
-            <div class="chart-legend">
-                <div class="chart-legend-item">
-                    <span class="chart-legend-dot" style="background: #008080;"></span>
-                    Laptops
-                </div>
-                <div class="chart-legend-item">
-                    <span class="chart-legend-dot" style="background: #10B981;"></span>
-                    Desktops
-                </div>
-                <div class="chart-legend-item">
-                    <span class="chart-legend-dot" style="background: #3B82F6;"></span>
-                    Accessories
-                </div>
-                <div class="chart-legend-item">
-                    <span class="chart-legend-dot" style="background: #F59E0B;"></span>
-                    Software
-                </div>
-                <div class="chart-legend-item">
-                    <span class="chart-legend-dot" style="background: #F97316;"></span>
-                    Services
-                </div>
-            </div>
+            <div class="chart-legend" id="categoryLegend"></div>
         </div>
     </div>
 </div>
@@ -164,52 +137,23 @@
         <div class="card-header">
             <div>
                 <h3 class="card-title">Recent Orders</h3>
-                <p class="card-subtitle">Latest 5 orders</p>
+                <p class="card-subtitle">Latest transactions</p>
             </div>
-            <a asp-controller="Sales" asp-action="Orders" class="btn btn-primary btn-sm">View All</a>
+            <a href="/Admin/Sales/Orders" class="btn btn-primary btn-sm">View All</a>
         </div>
         <div class="card-body" style="padding: 0;">
             <div class="data-table-wrapper">
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Order ID</th>
+                            <th>Order #</th>
                             <th>Customer</th>
                             <th>Amount</th>
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>#ORD-2847</strong></td>
-                            <td>Acme Corporation</td>
-                            <td>$2,450.00</td>
-                            <td><span class="badge badge-success"><span class="badge-dot"></span>Completed</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>#ORD-2846</strong></td>
-                            <td>John Doe</td>
-                            <td>$890.00</td>
-                            <td><span class="badge badge-pending"><span class="badge-dot"></span>Processing</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>#ORD-2845</strong></td>
-                            <td>Tech Solutions Inc</td>
-                            <td>$5,200.00</td>
-                            <td><span class="badge badge-success"><span class="badge-dot"></span>Completed</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>#ORD-2844</strong></td>
-                            <td>Jane Smith</td>
-                            <td>$350.00</td>
-                            <td><span class="badge badge-warning"><span class="badge-dot"></span>Pending</span></td>
-                        </tr>
-                        <tr>
-                            <td><strong>#ORD-2843</strong></td>
-                            <td>Global Enterprises</td>
-                            <td>$12,800.00</td>
-                            <td><span class="badge badge-success"><span class="badge-dot"></span>Completed</span></td>
-                        </tr>
+                    <tbody id="recentOrdersTable">
+                        <tr><td colspan="4" class="text-center py-4">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -223,7 +167,7 @@
                 <h3 class="card-title">Top Customers</h3>
                 <p class="card-subtitle">By total revenue</p>
             </div>
-            <a asp-controller="Customers" asp-action="List" class="btn btn-primary btn-sm">View All</a>
+            <a href="/Admin/Customers/List" class="btn btn-primary btn-sm">View All</a>
         </div>
         <div class="card-body" style="padding: 0;">
             <div class="data-table-wrapper">
@@ -231,36 +175,12 @@
                     <thead>
                         <tr>
                             <th>Customer</th>
-                            <th>Orders</th>
-                            <th>Total Spent</th>
+                            <th class="text-center">Orders</th>
+                            <th class="text-end">Total Spent</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Tech Solutions Inc</strong></td>
-                            <td>89</td>
-                            <td>$287,650</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Global Enterprises</strong></td>
-                            <td>156</td>
-                            <td>$542,100</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Acme Corporation</strong></td>
-                            <td>45</td>
-                            <td>$125,430</td>
-                        </tr>
-                        <tr>
-                            <td><strong>StartUp Hub</strong></td>
-                            <td>28</td>
-                            <td>$67,800</td>
-                        </tr>
-                        <tr>
-                            <td><strong>John Doe</strong></td>
-                            <td>12</td>
-                            <td>$3,250</td>
-                        </tr>
+                    <tbody id="topCustomersTable">
+                        <tr><td colspan="3" class="text-center py-4">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -268,69 +188,260 @@
     </div>
 </div>
 
+<!-- Additional Metrics Row -->
+<div class="grid grid-3 mt-3">
+    <!-- Support Tickets -->
+    <div class="card fade-in">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Support Overview</h3>
+                <p class="card-subtitle">Ticket status</p>
+            </div>
+            <a href="/Admin/Support/Tickets" class="btn btn-outline btn-sm">Manage</a>
+        </div>
+        <div class="card-body">
+            <div class="d-flex justify-content-between mb-3">
+                <div class="text-center flex-grow-1">
+                    <h3 class="mb-0 text-warning" id="openTickets">0</h3>
+                    <small class="text-muted">Open</small>
+                </div>
+                <div class="text-center flex-grow-1">
+                    <h3 class="mb-0 text-info" id="inProgressTickets">0</h3>
+                    <small class="text-muted">In Progress</small>
+                </div>
+                <div class="text-center flex-grow-1">
+                    <h3 class="mb-0 text-success" id="resolvedTickets">0</h3>
+                    <small class="text-muted">Resolved</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Alerts -->
+    <div class="card fade-in">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Inventory Alerts</h3>
+                <p class="card-subtitle">Stock warnings</p>
+            </div>
+            <a href="/Admin/Inventory/Products" class="btn btn-outline btn-sm">Manage</a>
+        </div>
+        <div class="card-body">
+            <div class="d-flex justify-content-between mb-3">
+                <div class="text-center flex-grow-1">
+                    <h3 class="mb-0 text-warning" id="lowStockCount">0</h3>
+                    <small class="text-muted">Low Stock</small>
+                </div>
+                <div class="text-center flex-grow-1">
+                    <h3 class="mb-0 text-danger" id="outOfStockCount">0</h3>
+                    <small class="text-muted">Out of Stock</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Campaigns -->
+    <div class="card fade-in">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Marketing</h3>
+                <p class="card-subtitle">Active campaigns</p>
+            </div>
+            <a href="/Admin/Marketing/Campaigns" class="btn btn-outline btn-sm">Manage</a>
+        </div>
+        <div class="card-body">
+            <div class="d-flex justify-content-between mb-3">
+                <div class="text-center flex-grow-1">
+                    <h3 class="mb-0 text-primary" id="activeCampaigns">0</h3>
+                    <small class="text-muted">Campaigns</small>
+                </div>
+                <div class="text-center flex-grow-1">
+                    <h3 class="mb-0 text-success" id="activePromotions">0</h3>
+                    <small class="text-muted">Promotions</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/admin.js"></script>
     <script>
-        // Revenue Chart
-        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-        new Chart(revenueCtx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-                datasets: [{
-                    label: 'Revenue',
-                    data: [12000, 15000, 14500, 16000, 18000, 22000, 24000],
-                    borderColor: '#008080',
-                    backgroundColor: 'rgba(0, 128, 128, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#008080',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: { color: '#E5E7EB' },
-                        ticks: {
-                            callback: function(value) { return '$' + (value / 1000) + 'k'; }
-                        }
-                    },
-                    x: {
-                        grid: { display: false }
-                    }
-                }
-            }
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadDashboardData();
         });
 
-        // Category Chart
-        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-        new Chart(categoryCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Laptops', 'Desktops', 'Accessories', 'Software', 'Services'],
-                datasets: [{
-                    data: [35, 25, 20, 12, 8],
-                    backgroundColor: ['#008080', '#10B981', '#3B82F6', '#F59E0B', '#F97316'],
-                    borderWidth: 0,
-                    cutout: '70%'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                }
+        async function loadDashboardData() {
+            try {
+                const [customers, orders, products, tickets, campaigns, promotions] = await Promise.all([
+                    fetch('/api/customers').then(r => r.json()).catch(() => []),
+                    fetch('/api/orders').then(r => r.json()).catch(() => []),
+                    fetch('/api/products').then(r => r.json()).catch(() => []),
+                    fetch('/api/support/tickets').then(r => r.json()).catch(() => []),
+                    fetch('/api/campaigns').then(r => r.json()).catch(() => []),
+                    fetch('/api/promotions').then(r => r.json()).catch(() => [])
+                ]);
+
+                // Update Stats Cards
+                document.getElementById('totalCustomers').textContent = customers.length.toLocaleString();
+                document.getElementById('totalOrders').textContent = orders.length.toLocaleString();
+                document.getElementById('totalProducts').textContent = products.length.toLocaleString();
+                
+                const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+                document.getElementById('totalRevenue').textContent = '₱' + totalRevenue.toLocaleString('en-PH', {minimumFractionDigits: 2});
+
+                // Update trends
+                document.getElementById('customersTrend').querySelector('span:last-child').textContent = `${customers.filter(c => c.status === 'Active').length} active`;
+                document.getElementById('ordersTrend').querySelector('span:last-child').textContent = `${orders.filter(o => o.orderStatus === 'Pending').length} pending`;
+                document.getElementById('productsTrend').querySelector('span:last-child').textContent = `${products.filter(p => p.stockQuantity > 0).length} in stock`;
+                document.getElementById('revenueTrend').querySelector('span:last-child').textContent = 'This month';
+
+                // Update Support Stats
+                document.getElementById('openTickets').textContent = tickets.filter(t => t.status === 'Open').length;
+                document.getElementById('inProgressTickets').textContent = tickets.filter(t => t.status === 'In Progress').length;
+                document.getElementById('resolvedTickets').textContent = tickets.filter(t => t.status === 'Resolved').length;
+
+                // Update Inventory Stats
+                document.getElementById('lowStockCount').textContent = products.filter(p => p.stockQuantity > 0 && p.stockQuantity <= (p.reorderLevel || 10)).length;
+                document.getElementById('outOfStockCount').textContent = products.filter(p => (p.stockQuantity || 0) <= 0).length;
+
+                // Update Marketing Stats
+                document.getElementById('activeCampaigns').textContent = campaigns.filter(c => c.status === 'Active').length;
+                document.getElementById('activePromotions').textContent = promotions.filter(p => p.isActive).length;
+
+                // Render Recent Orders
+                renderRecentOrders(orders.slice(0, 5));
+                renderTopCustomers(customers.sort((a, b) => (b.totalSpent || 0) - (a.totalSpent || 0)).slice(0, 5));
+
+                // Render Charts
+                renderRevenueChart(orders);
+                renderCategoryChart(products);
+
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
             }
-        });
+        }
+
+        function renderRecentOrders(orders) {
+            const tbody = document.getElementById('recentOrdersTable');
+            if (orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4">No orders found</td></tr>';
+                return;
+            }
+            tbody.innerHTML = orders.map(o => `
+                <tr>
+                    <td><strong>${o.orderNumber || '#' + o.orderId}</strong></td>
+                    <td>${o.customerName || 'N/A'}</td>
+                    <td>₱${(o.totalAmount || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
+                    <td><span class="badge ${o.orderStatus === 'Completed' ? 'badge-success' : o.orderStatus === 'Pending' ? 'badge-warning' : 'badge-info'}">${o.orderStatus}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function renderTopCustomers(customers) {
+            const tbody = document.getElementById('topCustomersTable');
+            if (customers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4">No customers found</td></tr>';
+                return;
+            }
+            tbody.innerHTML = customers.map(c => `
+                <tr>
+                    <td><strong>${c.firstName} ${c.lastName}</strong></td>
+                    <td class="text-center">${c.totalOrders || 0}</td>
+                    <td class="text-end">₱${(c.totalSpent || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderRevenueChart(orders) {
+            const ctx = document.getElementById('revenueChart')?.getContext('2d');
+            if (!ctx) return;
+
+            const monthlyData = Array(12).fill(0);
+            const currentYear = new Date().getFullYear();
+
+            orders.forEach(o => {
+                const date = new Date(o.orderDate);
+                if (date.getFullYear() === currentYear) {
+                    monthlyData[date.getMonth()] += o.totalAmount || 0;
+                }
+            });
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Revenue',
+                        data: monthlyData,
+                        borderColor: '#008080',
+                        backgroundColor: 'rgba(0, 128, 128, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#008080',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#E5E7EB' },
+                            ticks: { callback: v => '₱' + (v / 1000).toFixed(0) + 'k' }
+                        },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderCategoryChart(products) {
+            const ctx = document.getElementById('categoryChart')?.getContext('2d');
+            if (!ctx) return;
+
+            const categories = {};
+            products.forEach(p => {
+                const cat = p.categoryName || 'Other';
+                categories[cat] = (categories[cat] || 0) + 1;
+            });
+
+            const labels = Object.keys(categories);
+            const data = Object.values(categories);
+            const colors = ['#008080', '#10B981', '#3B82F6', '#F59E0B', '#F97316', '#EF4444', '#8B5CF6'];
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderWidth: 0,
+                        cutout: '70%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            const legendContainer = document.getElementById('categoryLegend');
+            if (legendContainer) {
+                legendContainer.innerHTML = labels.map((label, i) => `
+                    <div class="chart-legend-item">
+                        <span class="chart-legend-dot" style="background: ${colors[i % colors.length]};"></span>
+                        ${label}
+                    </div>
+                `).join('');
+            }
+        }
     </script>
 }

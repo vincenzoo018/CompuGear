@@ -102,6 +102,43 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             SalesOrders.load();
+            
+            // Filter functionality
+            const searchInput = document.getElementById('orderSearch');
+            const statusFilter = document.getElementById('orderStatusFilter');
+            
+            function filterOrders() {
+                SalesOrders.filter(
+                    searchInput?.value || '',
+                    statusFilter?.value || ''
+                );
+            }
+            
+            if (searchInput) searchInput.addEventListener('input', filterOrders);
+            if (statusFilter) statusFilter.addEventListener('change', filterOrders);
         });
     </script>
 }
+
+<!-- View Order Modal -->
+<div class="modal fade view-modal" id="viewOrderModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewOrderContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning" onclick="SalesOrders.edit(SalesOrders.currentId)">
+                    <i class="bi bi-pencil me-1"></i>Update Status
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

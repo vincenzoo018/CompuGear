@@ -166,7 +166,73 @@ const Invoices = {
     },
 
     view(id) {
-        window.location.href = `/BillingStaff/InvoiceDetails/${id}`;
+        const inv = this.data.find(i => i.invoiceId === id);
+        if (!inv) {
+            Toast.error('Invoice not found');
+            return;
+        }
+        
+        this.currentId = id;
+        const content = document.getElementById('viewInvoiceContent');
+        if (content) {
+            content.innerHTML = `
+                <div class="row g-4">
+                    <div class="col-12 d-flex justify-content-between align-items-start border-bottom pb-3">
+                        <div>
+                            <h5 class="mb-1">${inv.invoiceNumber}</h5>
+                            <small class="text-muted">Invoice Date: ${Format.date(inv.invoiceDate)}</small>
+                        </div>
+                        ${Format.statusBadge(inv.status)}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Customer</div>
+                        <div class="detail-value fw-semibold">${inv.customerName || 'N/A'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Due Date</div>
+                        <div class="detail-value">${Format.date(inv.dueDate)}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Order Reference</div>
+                        <div class="detail-value">${inv.orderNumber || '-'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Payment Terms</div>
+                        <div class="detail-value">${inv.paymentTerms || 'Net 30'}</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-3">
+                                        <div class="small text-muted">Subtotal</div>
+                                        <h5 class="mb-0">${Format.currency(inv.subtotal || inv.totalAmount)}</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-3">
+                                        <div class="small text-muted">Tax</div>
+                                        <h5 class="mb-0">${Format.currency(inv.taxAmount || 0)}</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card ${inv.status === 'Paid' ? 'bg-success' : 'bg-primary'} text-white">
+                                    <div class="card-body text-center py-3">
+                                        <div class="small">Total Amount</div>
+                                        <h4 class="mb-0">${Format.currency(inv.totalAmount)}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ${inv.notes ? `<div class="col-12"><div class="detail-label">Notes</div><div class="detail-value">${inv.notes}</div></div>` : ''}
+                </div>
+            `;
+        }
+        Modal.show('viewInvoiceModal');
     },
 
     edit(id) {
@@ -237,6 +303,53 @@ const Invoices = {
             });
         });
         return items;
+    },
+
+    filter(search = '', status = '') {
+        let filtered = this.data;
+        
+        if (search) {
+            const s = search.toLowerCase();
+            filtered = filtered.filter(i => 
+                i.invoiceNumber?.toLowerCase().includes(s) ||
+                i.customerName?.toLowerCase().includes(s)
+            );
+        }
+        
+        if (status) {
+            filtered = filtered.filter(i => i.status === status);
+        }
+        
+        this.renderFiltered(filtered);
+    },
+
+    renderFiltered(data) {
+        const tbody = document.getElementById('invoicesTableBody');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No invoices found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(i => `
+            <tr>
+                <td><strong>${i.invoiceNumber}</strong></td>
+                <td>${i.customerName || 'N/A'}</td>
+                <td>${Format.date(i.invoiceDate)}</td>
+                <td>${Format.date(i.dueDate)}</td>
+                <td class="text-end">${Format.currency(i.totalAmount)}</td>
+                <td>${Format.statusBadge(i.status)}</td>
+                <td class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="Invoices.view(${i.invoiceId})">${Icons.view}</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="Invoices.edit(${i.invoiceId})">${Icons.edit}</button>
+                        <button class="btn btn-sm btn-outline-info" onclick="Invoices.print(${i.invoiceId})">${Icons.print}</button>
+                        ${i.status !== 'Paid' ? `<button class="btn btn-sm btn-outline-success" onclick="Invoices.recordPayment(${i.invoiceId})">${Icons.payment}</button>` : ''}
+                    </div>
+                </td>
+            </tr>
+        `).join('');
     }
 };
 
@@ -331,7 +444,101 @@ const CustomerAccounts = {
     },
 
     viewStatement(id) {
-        window.location.href = `/BillingStaff/CustomerStatement/${id}`;
+        const c = this.data.find(customer => customer.customerId === id);
+        if (!c) {
+            Toast.error('Customer not found');
+            return;
+        }
+        
+        const content = document.getElementById('viewAccountContent');
+        if (content) {
+            content.innerHTML = `
+                <div class="row g-4">
+                    <div class="col-12 text-center border-bottom pb-3">
+                        <h5 class="mb-1">${c.firstName} ${c.lastName}</h5>
+                        <small class="text-muted">${c.customerCode}</small>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Email</div>
+                        <div class="detail-value">${c.email}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Phone</div>
+                        <div class="detail-value">${c.phone || '-'}</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-3">
+                                        <div class="small text-muted">Total Orders</div>
+                                        <h4 class="mb-0 text-primary">${c.totalOrders || 0}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-3">
+                                        <div class="small text-muted">Total Spent</div>
+                                        <h4 class="mb-0 text-success">${Format.currency(c.totalSpent)}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card ${(c.balance || 0) > 0 ? 'bg-warning' : 'bg-success'} text-white">
+                                    <div class="card-body text-center py-3">
+                                        <div class="small">Balance</div>
+                                        <h4 class="mb-0">${Format.currency(c.balance || 0)}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        Modal.show('viewAccountModal');
+    },
+
+    filter(search = '') {
+        let filtered = this.data;
+        
+        if (search) {
+            const s = search.toLowerCase();
+            filtered = filtered.filter(c => 
+                (c.firstName + ' ' + c.lastName).toLowerCase().includes(s) ||
+                c.email?.toLowerCase().includes(s) ||
+                c.customerCode?.toLowerCase().includes(s)
+            );
+        }
+        
+        this.renderFiltered(filtered);
+    },
+
+    renderFiltered(data) {
+        const tbody = document.getElementById('accountsTableBody');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No accounts found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(c => `
+            <tr>
+                <td><strong>${c.customerCode}</strong></td>
+                <td>
+                    <div class="fw-semibold">${c.firstName} ${c.lastName}</div>
+                    <small class="text-muted">${c.email}</small>
+                </td>
+                <td>${c.totalOrders || 0}</td>
+                <td class="text-end">${Format.currency(c.totalSpent)}</td>
+                <td class="text-end">${Format.currency(c.balance || 0)}</td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-primary" onclick="CustomerAccounts.viewStatement(${c.customerId})">${Icons.view}</button>
+                </td>
+            </tr>
+        `).join('');
     }
 };
 

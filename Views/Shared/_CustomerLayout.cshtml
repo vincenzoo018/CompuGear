@@ -8,6 +8,34 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <style>
         :root {
+            --primary: #008080;
+            --primary-hover: #006666;
+            --primary-active: #004D4D;
+            --primary-foreground: #FFFFFF;
+            --background: #F8FAFB;
+            --foreground: #141516;
+            --card: #FFFFFF;
+            --border: #E5E7EB;
+            --muted: #F1F5F9;
+            --muted-foreground: #64748B;
+            --success: #10B981;
+            --success-light: #ECFDF5;
+            --success-fg: #166534;
+            --warning: #F59E0B;
+            --warning-light: #FFFBEB;
+            --warning-fg: #B45309;
+            --error: #EF4444;
+            --error-light: #FEF2F2;
+            --error-fg: #B91C1C;
+            --info: #3B82F6;
+            --info-light: #EFF6FF;
+            --info-fg: #1E40AF;
+            --pending: #F97316;
+            --pending-light: #FFF7ED;
+            --pending-fg: #C2410C;
+            --accent: #FF6B35;
+            --radius: 12px;
+            /* Legacy support */
             --primary-color: #008080;
             --primary-dark: #006666;
             --primary-light: #20b2aa;
@@ -24,9 +52,70 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            font-family: 'Segoe UI', 'Roboto', -apple-system, sans-serif;
+            background: var(--background);
             min-height: 100vh;
+            color: var(--foreground);
+        }
+
+        /* Animations */
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+            opacity: 0;
+        }
+
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-scale-in {
+            animation: scaleIn 0.3s ease-out forwards;
+        }
+
+        @@keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Card Elevated */
+        .card-elevated {
+            background: var(--card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+
+        .card-elevated:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Badge Styles */
+        .badge-success { background: var(--success-light); color: var(--success-fg); border: 1px solid var(--success); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-warning { background: var(--warning-light); color: var(--warning-fg); border: 1px solid var(--warning); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-error { background: var(--error-light); color: var(--error-fg); border: 1px solid var(--error); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-info { background: var(--info-light); color: var(--info-fg); border: 1px solid var(--info); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .badge-pending { background: var(--pending-light); color: var(--pending-fg); border: 1px solid var(--pending); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+
+        /* Button Styles */
+        .btn-primary-gradient {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+            color: var(--primary-foreground);
+            border: none;
+            padding: 12px 24px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,128,128,0.3);
         }
 
         /* Header */

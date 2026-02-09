@@ -176,7 +176,68 @@ const Campaigns = {
     },
 
     view(id) {
-        window.location.href = `/MarketingStaff/CampaignDetails/${id}`;
+        const c = this.data.find(campaign => campaign.campaignId === id);
+        if (!c) {
+            Toast.error('Campaign not found');
+            return;
+        }
+        
+        this.currentId = id;
+        const content = document.getElementById('viewCampaignContent');
+        if (content) {
+            content.innerHTML = `
+                <div class="row g-4">
+                    <div class="col-12 d-flex justify-content-between align-items-start border-bottom pb-3">
+                        <div>
+                            <h5 class="mb-1">${c.campaignName}</h5>
+                            <small class="text-muted">${c.campaignCode}</small>
+                        </div>
+                        ${Format.statusBadge(c.status)}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Campaign Type</div>
+                        <div class="detail-value"><span class="badge bg-info">${c.type || 'General'}</span></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Duration</div>
+                        <div class="detail-value">${Format.date(c.startDate)} - ${Format.date(c.endDate)}</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="detail-label">Description</div>
+                        <div class="detail-value">${c.description || 'No description provided'}</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-3">
+                                        <div class="small text-muted">Budget</div>
+                                        <h4 class="mb-0 text-primary">${Format.currency(c.budget)}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-3">
+                                        <div class="small text-muted">Spent</div>
+                                        <h4 class="mb-0 text-warning">${Format.currency(c.spent || 0)}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card ${(c.roi || 0) >= 0 ? 'bg-success' : 'bg-danger'} text-white">
+                                    <div class="card-body text-center py-3">
+                                        <div class="small">ROI</div>
+                                        <h4 class="mb-0">${Format.percentage(c.roi)}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        Modal.show('viewCampaignModal');
     },
 
     edit(id) {
@@ -240,6 +301,64 @@ const Campaigns = {
         } catch (error) {
             Toast.error('Failed to update campaign status');
         }
+    },
+
+    filter(search = '', status = '', type = '') {
+        let filtered = this.data;
+        
+        if (search) {
+            const s = search.toLowerCase();
+            filtered = filtered.filter(c => 
+                c.campaignName?.toLowerCase().includes(s) ||
+                c.campaignCode?.toLowerCase().includes(s)
+            );
+        }
+        
+        if (status) {
+            filtered = filtered.filter(c => c.status === status);
+        }
+        
+        if (type) {
+            filtered = filtered.filter(c => c.type === type);
+        }
+        
+        this.renderFiltered(filtered);
+    },
+
+    renderFiltered(data) {
+        const tbody = document.getElementById('campaignsTableBody');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No campaigns found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(c => `
+            <tr>
+                <td>
+                    <div class="fw-semibold">${c.campaignName}</div>
+                    <small class="text-muted">${c.campaignCode}</small>
+                </td>
+                <td><span class="badge bg-info">${c.type || 'General'}</span></td>
+                <td>${Format.statusBadge(c.status)}</td>
+                <td>
+                    <div>${Format.date(c.startDate)}</div>
+                    <small class="text-muted">to ${Format.date(c.endDate)}</small>
+                </td>
+                <td class="text-end">${Format.currency(c.budget)}</td>
+                <td class="text-end">${Format.percentage(c.roi)}</td>
+                <td class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="Campaigns.view(${c.campaignId})">${Icons.view}</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="Campaigns.edit(${c.campaignId})">${Icons.edit}</button>
+                        <button class="btn btn-sm btn-outline-${c.status === 'Active' ? 'danger' : 'success'}" onclick="Campaigns.toggleStatus(${c.campaignId})">
+                            ${c.status === 'Active' ? Icons.toggleOff : Icons.toggleOn}
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
     }
 };
 
@@ -306,6 +425,51 @@ const Promotions = {
         Modal.show('promotionModal');
     },
 
+    view(id) {
+        const p = this.data.find(promo => promo.promotionId === id);
+        if (!p) {
+            Toast.error('Promotion not found');
+            return;
+        }
+        
+        this.currentId = id;
+        const content = document.getElementById('viewPromotionContent');
+        if (content) {
+            content.innerHTML = `
+                <div class="row g-4">
+                    <div class="col-12 d-flex justify-content-between align-items-start border-bottom pb-3">
+                        <div>
+                            <h5 class="mb-1">${p.promoName}</h5>
+                            <code class="fs-5">${p.promoCode}</code>
+                        </div>
+                        ${Format.statusBadge(p.isActive ? 'Active' : 'Inactive')}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Discount Type</div>
+                        <div class="detail-value">${p.discountType}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Discount Value</div>
+                        <div class="detail-value fw-semibold text-success">
+                            ${p.discountType === 'Percentage' ? Format.percentage(p.discountValue) : Format.currency(p.discountValue)}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Validity Period</div>
+                        <div class="detail-value">${Format.date(p.startDate)} - ${Format.date(p.endDate)}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Usage</div>
+                        <div class="detail-value">${p.usageCount || 0} / ${p.usageLimit || '∞'}</div>
+                    </div>
+                    ${p.minOrderAmount ? `<div class="col-md-6"><div class="detail-label">Min. Order Amount</div><div class="detail-value">${Format.currency(p.minOrderAmount)}</div></div>` : ''}
+                    ${p.description ? `<div class="col-12"><div class="detail-label">Description</div><div class="detail-value">${p.description}</div></div>` : ''}
+                </div>
+            `;
+        }
+        Modal.show('viewPromotionModal');
+    },
+
     async toggle(id) {
         try {
             await API.put(`/promotions/${id}/toggle`, {});
@@ -341,6 +505,55 @@ const Promotions = {
         } catch (error) {
             Toast.error('Failed to save promotion');
         }
+    },
+
+    filter(search = '', status = '') {
+        let filtered = this.data;
+        
+        if (search) {
+            const s = search.toLowerCase();
+            filtered = filtered.filter(p => 
+                p.promoCode?.toLowerCase().includes(s) ||
+                p.promoName?.toLowerCase().includes(s)
+            );
+        }
+        
+        if (status) {
+            const isActive = status === 'Active';
+            filtered = filtered.filter(p => p.isActive === isActive);
+        }
+        
+        this.renderFiltered(filtered);
+    },
+
+    renderFiltered(data) {
+        const tbody = document.getElementById('promotionsTableBody');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No promotions found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(p => `
+            <tr>
+                <td><strong>${p.promoCode}</strong></td>
+                <td>${p.promoName}</td>
+                <td>${p.discountType === 'Percentage' ? Format.percentage(p.discountValue) : Format.currency(p.discountValue)}</td>
+                <td>${Format.date(p.startDate)} - ${Format.date(p.endDate)}</td>
+                <td>${p.usageCount || 0} / ${p.usageLimit || '∞'}</td>
+                <td>${Format.statusBadge(p.isActive ? 'Active' : 'Inactive')}</td>
+                <td class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="Promotions.view(${p.promotionId})">${Icons.view}</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="Promotions.edit(${p.promotionId})">${Icons.edit}</button>
+                        <button class="btn btn-sm btn-outline-${p.isActive ? 'danger' : 'success'}" onclick="Promotions.toggle(${p.promotionId})">
+                            ${p.isActive ? Icons.toggleOff : Icons.toggleOn}
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
     }
 };
 

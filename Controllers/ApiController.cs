@@ -1433,6 +1433,88 @@ namespace CompuGear.Controllers
             }
         }
 
+        // Support Staff respond endpoint - sends response and optionally updates status
+        [HttpPost("tickets/{id}/respond")]
+        public async Task<IActionResult> RespondToTicket(int id, [FromBody] TicketResponseRequest request)
+        {
+            try
+            {
+                var ticket = await _context.SupportTickets.FindAsync(id);
+                if (ticket == null) return NotFound();
+
+                // Get current user info from session
+                var userId = HttpContext.Session.GetInt32("UserId");
+                var userName = HttpContext.Session.GetString("UserName") ?? "Support Staff";
+
+                // Create the message
+                var ticketMessage = new TicketMessage
+                {
+                    TicketId = id,
+                    Message = request.Message,
+                    SenderType = "Staff",
+                    SenderId = userId,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.TicketMessages.Add(ticketMessage);
+
+                // Update status if provided
+                if (!string.IsNullOrEmpty(request.Status))
+                {
+                    ticket.Status = request.Status;
+                    if (request.Status == "Resolved" && !ticket.ResolvedAt.HasValue)
+                        ticket.ResolvedAt = DateTime.UtcNow;
+                    if (request.Status == "Closed" && !ticket.ClosedAt.HasValue)
+                        ticket.ClosedAt = DateTime.UtcNow;
+                }
+
+                ticket.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Response sent successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
+            }
+        }
+
+        // Support Staff escalate ticket to admin
+        [HttpPost("tickets/{id}/escalate")]
+        public async Task<IActionResult> EscalateTicket(int id, [FromBody] TicketEscalationRequest request)
+        {
+            try
+            {
+                var ticket = await _context.SupportTickets.FindAsync(id);
+                if (ticket == null) return NotFound();
+
+                var userId = HttpContext.Session.GetInt32("UserId");
+
+                // Update ticket status to Pending Approval
+                ticket.Status = "Pending Approval";
+                ticket.UpdatedAt = DateTime.UtcNow;
+
+                // Add an internal note/message about escalation
+                var escalationNote = new TicketMessage
+                {
+                    TicketId = id,
+                    Message = $"[ESCALATED TO ADMIN]\nReason: {request.Reason}\nNotes: {request.Notes ?? "N/A"}",
+                    SenderType = "System",
+                    SenderId = userId,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.TicketMessages.Add(escalationNote);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Ticket escalated to Admin for approval" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
+            }
+        }
+
         [HttpDelete("tickets/{id}")]
         public async Task<IActionResult> DeleteTicket(int id)
         {
@@ -2174,6 +2256,466 @@ namespace CompuGear.Controllers
         }
 
         #endregion
+
+        #region Live Chat Support
+
+        // Get current logged in user info
+        [HttpGet("GetCurrentUser")]
+        public IActionResult GetCurrentUser()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var roleId = HttpContext.Session.GetInt32("RoleId");
+            var userName = HttpContext.Session.GetString("UserName");
+            var fullName = HttpContext.Session.GetString("FullName");
+
+            if (userId == null)
+                return Ok(new { success = false, message = "Not logged in" });
+
+            return Ok(new { 
+                success = true, 
+                data = new { 
+                    userId = userId, 
+                    roleId = roleId, 
+                    userName = userName, 
+                    fullName = fullName 
+                } 
+            });
+        }
+
+        // Get all active chat sessions (for support staff)
+        [HttpGet("GetActiveChatSessions")]
+        public async Task<IActionResult> GetActiveChatSessions()
+        {
+            try
+            {
+                var currentUserId = HttpContext.Session.GetInt32("UserId");
+                
+                var sessions = await _context.ChatSessions
+                    .Include(s => s.Customer)
+                    .Where(s => s.Status == "Active" || s.Status == "Transferred" || s.Status == "Pending")
+                    .OrderByDescending(s => s.StartedAt)
+                    .Select(s => new
+                    {
+                        s.SessionId,
+                        CustomerName = s.Customer != null ? s.Customer.FullName : "Guest",
+                        CustomerEmail = s.Customer != null ? s.Customer.Email : "",
+                        s.CustomerId,
+                        s.Status,
+                        s.TotalMessages,
+                        s.StartedAt,
+                        s.AgentId,
+                        LastMessageAt = _context.ChatMessages
+                            .Where(m => m.SessionId == s.SessionId)
+                            .OrderByDescending(m => m.CreatedAt)
+                            .Select(m => m.CreatedAt)
+                            .FirstOrDefault(),
+                        UnreadCount = _context.ChatMessages
+                            .Count(m => m.SessionId == s.SessionId && m.SenderType == "Customer" && !m.IsRead)
+                    })
+                    .ToListAsync();
+
+                return Ok(new { success = true, data = sessions });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message, data = new List<object>() });
+            }
+        }
+
+        // Get pending agent requests (customers waiting for live agent)
+        [HttpGet("GetPendingAgentRequests")]
+        public async Task<IActionResult> GetPendingAgentRequests()
+        {
+            try
+            {
+                var pendingRequests = await _context.ChatSessions
+                    .Include(s => s.Customer)
+                    .Where(s => s.Status == "Pending" || s.Status == "Transferred")
+                    .OrderBy(s => s.StartedAt)
+                    .Select(s => new
+                    {
+                        s.SessionId,
+                        CustomerName = s.Customer != null ? s.Customer.FullName : "Guest",
+                        CustomerEmail = s.Customer != null ? s.Customer.Email : "",
+                        s.CustomerId,
+                        s.StartedAt,
+                        WaitingMinutes = (int)(DateTime.UtcNow - s.StartedAt).TotalMinutes
+                    })
+                    .ToListAsync();
+
+                return Ok(new { success = true, data = pendingRequests });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message, data = new List<object>() });
+            }
+        }
+
+        // Get chat messages for a session
+        [HttpGet("GetChatMessages")]
+        public async Task<IActionResult> GetChatMessages([FromQuery] int sessionId)
+        {
+            try
+            {
+                var messages = await _context.ChatMessages
+                    .Where(m => m.SessionId == sessionId)
+                    .OrderBy(m => m.CreatedAt)
+                    .Select(m => new
+                    {
+                        m.MessageId,
+                        m.SenderType,
+                        m.Message,
+                        m.MessageType,
+                        m.CreatedAt
+                    })
+                    .ToListAsync();
+
+                // Mark messages as read
+                var unreadMessages = await _context.ChatMessages
+                    .Where(m => m.SessionId == sessionId && m.SenderType == "Customer" && !m.IsRead)
+                    .ToListAsync();
+                
+                foreach (var msg in unreadMessages)
+                {
+                    msg.IsRead = true;
+                }
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, data = messages });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message, data = new List<object>() });
+            }
+        }
+
+        // Accept a pending chat request
+        [HttpPost("AcceptChat")]
+        public async Task<IActionResult> AcceptChat([FromBody] ChatSessionRequest request)
+        {
+            try
+            {
+                var agentId = HttpContext.Session.GetInt32("UserId");
+                var agentName = HttpContext.Session.GetString("FullName") ?? "Support Agent";
+
+                var session = await _context.ChatSessions.FindAsync(request.SessionId);
+                if (session == null)
+                    return Ok(new { success = false, message = "Chat session not found" });
+
+                session.AgentId = agentId;
+                session.Status = "Active";
+
+                // Add system message
+                var systemMessage = new ChatMessage
+                {
+                    SessionId = session.SessionId,
+                    SenderType = "System",
+                    Message = $"{agentName} has joined the chat. How can we assist you today?",
+                    MessageType = "Text",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.ChatMessages.Add(systemMessage);
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Chat accepted" });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        // Decline a pending chat request
+        [HttpPost("DeclineChat")]
+        public async Task<IActionResult> DeclineChat([FromBody] ChatSessionRequest request)
+        {
+            try
+            {
+                var session = await _context.ChatSessions.FindAsync(request.SessionId);
+                if (session == null)
+                    return Ok(new { success = false, message = "Chat session not found" });
+
+                // Add system message
+                var systemMessage = new ChatMessage
+                {
+                    SessionId = session.SessionId,
+                    SenderType = "System",
+                    Message = "All agents are currently busy. Please try again later or submit a support ticket.",
+                    MessageType = "Text",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.ChatMessages.Add(systemMessage);
+
+                session.Status = "Ended";
+                session.EndedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Chat declined" });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        // Send message from agent
+        [HttpPost("SendAgentChatMessage")]
+        public async Task<IActionResult> SendAgentChatMessage([FromBody] AgentChatMessageRequest request)
+        {
+            try
+            {
+                var agentId = HttpContext.Session.GetInt32("UserId") ?? 0;
+
+                var session = await _context.ChatSessions.FindAsync(request.SessionId);
+                if (session == null)
+                    return Ok(new { success = false, message = "Chat session not found" });
+
+                var message = new ChatMessage
+                {
+                    SessionId = request.SessionId,
+                    SenderType = "Agent",
+                    SenderId = agentId,
+                    Message = request.Message,
+                    MessageType = "Text",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.ChatMessages.Add(message);
+
+                session.TotalMessages += 1;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Message sent" });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        // End a chat session
+        [HttpPost("EndChatSession")]
+        public async Task<IActionResult> EndChatSession([FromBody] ChatSessionRequest request)
+        {
+            try
+            {
+                var agentName = HttpContext.Session.GetString("FullName") ?? "Support Agent";
+
+                var session = await _context.ChatSessions.FindAsync(request.SessionId);
+                if (session == null)
+                    return Ok(new { success = false, message = "Chat session not found" });
+
+                // Add system message
+                var systemMessage = new ChatMessage
+                {
+                    SessionId = session.SessionId,
+                    SenderType = "System",
+                    Message = $"Chat ended by {agentName}. Thank you for contacting CompuGear Support!",
+                    MessageType = "Text",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.ChatMessages.Add(systemMessage);
+
+                session.Status = "Ended";
+                session.EndedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Chat ended" });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        // Customer requests live agent
+        [HttpPost("RequestLiveAgent")]
+        public async Task<IActionResult> RequestLiveAgent([FromBody] RequestLiveAgentRequest request)
+        {
+            try
+            {
+                var customerId = HttpContext.Session.GetInt32("CustomerId");
+
+                // Find existing pending session or create new one
+                var session = await _context.ChatSessions
+                    .FirstOrDefaultAsync(s => s.CustomerId == customerId && 
+                        (s.Status == "Active" || s.Status == "Pending"));
+
+                if (session == null)
+                {
+                    session = new ChatSession
+                    {
+                        CustomerId = customerId,
+                        VisitorId = request.VisitorId ?? Guid.NewGuid().ToString(),
+                        SessionToken = Guid.NewGuid().ToString(),
+                        Status = "Pending",
+                        StartedAt = DateTime.UtcNow,
+                        Source = "Website"
+                    };
+                    _context.ChatSessions.Add(session);
+                }
+                else
+                {
+                    session.Status = "Pending";
+                }
+
+                // Add system message
+                var systemMessage = new ChatMessage
+                {
+                    SessionId = session.SessionId,
+                    SenderType = "System",
+                    Message = "You have requested to speak with a live agent. Please wait while we connect you...",
+                    MessageType = "Text",
+                    CreatedAt = DateTime.UtcNow
+                };
+                
+                await _context.SaveChangesAsync();
+                
+                // Add system message after session is saved (to get SessionId)
+                systemMessage.SessionId = session.SessionId;
+                _context.ChatMessages.Add(systemMessage);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Agent request submitted", sessionId = session.SessionId });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        // Customer sends chat message
+        [HttpPost("CustomerSendChatMessage")]
+        public async Task<IActionResult> CustomerSendChatMessage([FromBody] CustomerChatMessageRequest request)
+        {
+            try
+            {
+                var customerId = HttpContext.Session.GetInt32("CustomerId");
+
+                var session = await _context.ChatSessions.FindAsync(request.SessionId);
+                if (session == null)
+                    return Ok(new { success = false, message = "Chat session not found" });
+
+                var message = new ChatMessage
+                {
+                    SessionId = request.SessionId,
+                    SenderType = "Customer",
+                    SenderId = customerId,
+                    Message = request.Message,
+                    MessageType = "Text",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.ChatMessages.Add(message);
+
+                session.TotalMessages += 1;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Message sent" });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        // Get chat updates for customer
+        [HttpGet("GetCustomerChatUpdates")]
+        public async Task<IActionResult> GetCustomerChatUpdates([FromQuery] int sessionId, [FromQuery] int? lastMessageId)
+        {
+            try
+            {
+                var session = await _context.ChatSessions
+                    .Where(s => s.SessionId == sessionId)
+                    .Select(s => new { s.Status, s.AgentId })
+                    .FirstOrDefaultAsync();
+
+                if (session == null)
+                    return Ok(new { success = false, message = "Session not found" });
+
+                var messagesQuery = _context.ChatMessages
+                    .Where(m => m.SessionId == sessionId);
+
+                if (lastMessageId.HasValue && lastMessageId > 0)
+                {
+                    messagesQuery = messagesQuery.Where(m => m.MessageId > lastMessageId);
+                }
+
+                var messages = await messagesQuery
+                    .OrderBy(m => m.CreatedAt)
+                    .Select(m => new
+                    {
+                        m.MessageId,
+                        m.SenderType,
+                        m.Message,
+                        m.CreatedAt
+                    })
+                    .ToListAsync();
+
+                // Get agent name if assigned
+                string? agentName = null;
+                if (session.AgentId.HasValue)
+                {
+                    var agent = await _context.Users
+                        .Where(u => u.UserId == session.AgentId)
+                        .Select(u => u.FirstName + " " + u.LastName)
+                        .FirstOrDefaultAsync();
+                    agentName = agent;
+                }
+
+                return Ok(new { 
+                    success = true, 
+                    data = new {
+                        status = session.Status,
+                        agentName = agentName,
+                        messages = messages
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        // Customer ends their chat session
+        [HttpPost("CustomerEndChat")]
+        public async Task<IActionResult> CustomerEndChat([FromBody] ChatSessionRequest request)
+        {
+            try
+            {
+                var session = await _context.ChatSessions.FindAsync(request.SessionId);
+                if (session == null)
+                    return Ok(new { success = false, message = "Chat session not found" });
+
+                // Add system message
+                var systemMessage = new ChatMessage
+                {
+                    SessionId = session.SessionId,
+                    SenderType = "System",
+                    Message = "Customer ended the chat. Thank you for contacting CompuGear Support!",
+                    MessageType = "Text",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.ChatMessages.Add(systemMessage);
+
+                session.Status = "Ended";
+                session.EndedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Chat ended" });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        #endregion
     }
 
     // Request DTOs
@@ -2225,6 +2767,42 @@ namespace CompuGear.Controllers
         public int ProductId { get; set; }
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
+    }
+
+    // Live Chat Request DTOs
+    public class ChatSessionRequest
+    {
+        public int SessionId { get; set; }
+    }
+
+    public class AgentChatMessageRequest
+    {
+        public int SessionId { get; set; }
+        public string Message { get; set; } = string.Empty;
+    }
+
+    public class CustomerChatMessageRequest
+    {
+        public int SessionId { get; set; }
+        public string Message { get; set; } = string.Empty;
+    }
+
+    public class RequestLiveAgentRequest
+    {
+        public string? VisitorId { get; set; }
+    }
+
+    public class TicketResponseRequest
+    {
+        public string Message { get; set; } = string.Empty;
+        public string? Status { get; set; }
+        public string? InternalNotes { get; set; }
+    }
+
+    public class TicketEscalationRequest
+    {
+        public string Reason { get; set; } = string.Empty;
+        public string? Notes { get; set; }
     }
 
 }

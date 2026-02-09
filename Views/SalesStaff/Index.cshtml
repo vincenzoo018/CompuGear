@@ -3,171 +3,186 @@
     Layout = "~/Views/Shared/_SalesLayout.cshtml";
 }
 
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">Sales Dashboard</h1>
-            <p class="text-muted mb-0">Welcome back! Here's your sales overview.</p>
+<div class="page-header">
+    <p class="text-muted mb-0">Dashboard</p>
+    <h1 class="page-title">Sales Dashboard</h1>
+    <p class="page-subtitle">Welcome back! Here's your sales overview.</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="stat-cards">
+    <div class="stat-card fade-in stagger-1">
+        <div class="stat-info">
+            <span class="stat-label">Total Sales</span>
+            <span class="stat-value" id="totalSales">₱0</span>
+            <div class="stat-trend up" id="salesTrend">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                    <polyline points="17 6 23 6 23 12"/>
+                </svg>
+                <span>Loading...</span>
+            </div>
         </div>
-        <div>
-            <a href="/SalesStaff/CreateOrder" class="btn btn-primary">
-                <i class="bi bi-plus-lg me-2"></i>New Order
-            </a>
+        <div class="stat-icon teal">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
         </div>
     </div>
 
-    <!-- Stats Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted mb-1">Total Sales (This Month)</p>
-                            <h3 class="mb-0" id="totalSales">₱0.00</h3>
-                        </div>
-                        <div class="bg-primary bg-opacity-10 p-2 rounded">
-                            <i class="bi bi-currency-dollar text-primary fs-4"></i>
-                        </div>
-                    </div>
-                </div>
+    <div class="stat-card fade-in stagger-2">
+        <div class="stat-info">
+            <span class="stat-label">Total Orders</span>
+            <span class="stat-value" id="ordersToday">0</span>
+            <div class="stat-trend up" id="ordersTrend">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                    <polyline points="17 6 23 6 23 12"/>
+                </svg>
+                <span>Loading...</span>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted mb-1">Orders Today</p>
-                            <h3 class="mb-0" id="ordersToday">0</h3>
-                        </div>
-                        <div class="bg-success bg-opacity-10 p-2 rounded">
-                            <i class="bi bi-bag-check text-success fs-4"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="stat-icon green">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="9" cy="21" r="1"/>
+                <circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+        </div>
+    </div>
+
+    <div class="stat-card fade-in stagger-3">
+        <div class="stat-info">
+            <span class="stat-label">Active Leads</span>
+            <span class="stat-value" id="activeLeads">0</span>
+            <div class="stat-trend" id="leadsTrend">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+                    <polyline points="17 6 23 6 23 12"/>
+                </svg>
+                <span>Loading...</span>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted mb-1">Active Leads</p>
-                            <h3 class="mb-0" id="activeLeads">0</h3>
-                        </div>
-                        <div class="bg-warning bg-opacity-10 p-2 rounded">
-                            <i class="bi bi-people text-warning fs-4"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="stat-icon orange">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+        </div>
+    </div>
+
+    <div class="stat-card fade-in stagger-4">
+        <div class="stat-info">
+            <span class="stat-label">Pending Orders</span>
+            <span class="stat-value" id="pendingOrders">0</span>
+            <div class="stat-trend" id="pendingTrend">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span>Loading...</span>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="text-muted mb-1">Pending Orders</p>
-                            <h3 class="mb-0" id="pendingOrders">0</h3>
-                        </div>
-                        <div class="bg-info bg-opacity-10 p-2 rounded">
-                            <i class="bi bi-clock text-info fs-4"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="stat-icon blue">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="grid grid-3" style="grid-template-columns: 2fr 1fr;">
+    <!-- Sales Chart -->
+    <div class="card fade-in">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Sales Overview</h3>
+                <p class="card-subtitle">Monthly sales trend</p>
+            </div>
+            <a href="/SalesStaff/Orders" class="btn btn-outline btn-sm">View Details</a>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="salesChart"></canvas>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
-        <!-- Sales Chart -->
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0">
-                    <h5 class="mb-0">Sales Overview</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="salesChart" height="300"></canvas>
-                </div>
+    <!-- Recent Orders -->
+    <div class="card fade-in">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Recent Orders</h3>
+                <p class="card-subtitle">Latest transactions</p>
             </div>
         </div>
-
-        <!-- Recent Activity -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0">
-                    <h5 class="mb-0">Recent Orders</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush" id="recentOrdersList">
-                        <div class="list-group-item text-center py-4">
-                            <span class="text-muted">Loading...</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-white border-0">
-                    <a href="/SalesStaff/Orders" class="btn btn-outline-primary btn-sm w-100">View All Orders</a>
+        <div class="card-body" style="padding: 0;">
+            <div class="list-group list-group-flush" id="recentOrdersList">
+                <div class="list-group-item text-center py-4">
+                    <span class="text-muted">Loading...</span>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="row g-4 mt-2">
-        <!-- Top Customers -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Top Customers</h5>
-                    <a href="/SalesStaff/Customers" class="btn btn-sm btn-outline-primary">View All</a>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Customer</th>
-                                    <th class="text-center">Orders</th>
-                                    <th class="text-end">Total Spent</th>
-                                </tr>
-                            </thead>
-                            <tbody id="topCustomersTable">
-                                <tr>
-                                    <td colspan="3" class="text-center py-4">Loading...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+<!-- Top Customers & Leads -->
+<div class="grid grid-2 mt-3">
+    <!-- Top Customers -->
+    <div class="card fade-in">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Top Customers</h3>
+                <p class="card-subtitle">By total spent</p>
+            </div>
+            <a href="/SalesStaff/Customers" class="btn btn-primary btn-sm">View All</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th class="text-center">Orders</th>
+                            <th class="text-end">Total Spent</th>
+                        </tr>
+                    </thead>
+                    <tbody id="topCustomersTable">
+                        <tr><td colspan="3" class="text-center py-4">Loading...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
+    </div>
 
-        <!-- Hot Leads -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Hot Leads</h5>
-                    <a href="/SalesStaff/Leads" class="btn btn-sm btn-outline-primary">View All</a>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Lead</th>
-                                    <th>Status</th>
-                                    <th class="text-end">Value</th>
-                                </tr>
-                            </thead>
-                            <tbody id="hotLeadsTable">
-                                <tr>
-                                    <td colspan="3" class="text-center py-4">Loading...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+    <!-- Hot Leads -->
+    <div class="card fade-in">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Hot Leads</h3>
+                <p class="card-subtitle">Active opportunities</p>
+            </div>
+            <a href="/SalesStaff/Leads" class="btn btn-primary btn-sm">View All</a>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Lead</th>
+                            <th>Status</th>
+                            <th class="text-end">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hotLeadsTable">
+                        <tr><td colspan="3" class="text-center py-4">Loading...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -176,4 +191,131 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="~/js/sales.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadSalesDashboard();
+        });
+
+        async function loadSalesDashboard() {
+            try {
+                const [orders, customers, leads] = await Promise.all([
+                    fetch('/api/orders').then(r => r.json()).catch(() => []),
+                    fetch('/api/customers').then(r => r.json()).catch(() => []),
+                    fetch('/api/leads').then(r => r.json()).catch(() => [])
+                ]);
+
+                // Update Stats
+                const totalSales = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+                document.getElementById('totalSales').textContent = '₱' + totalSales.toLocaleString('en-PH', {minimumFractionDigits: 2});
+                document.getElementById('ordersToday').textContent = orders.length.toLocaleString();
+                document.getElementById('activeLeads').textContent = leads.filter(l => l.status === 'Open' || l.status === 'Qualified').length;
+                document.getElementById('pendingOrders').textContent = orders.filter(o => o.orderStatus === 'Pending').length;
+
+                // Update trends
+                document.getElementById('salesTrend').querySelector('span:last-child').textContent = 'This month';
+                document.getElementById('ordersTrend').querySelector('span:last-child').textContent = `${orders.filter(o => o.orderStatus === 'Completed').length} completed`;
+                document.getElementById('leadsTrend').querySelector('span:last-child').textContent = 'Hot opportunities';
+                document.getElementById('pendingTrend').querySelector('span:last-child').textContent = 'Awaiting action';
+
+                // Render tables
+                renderRecentOrders(orders.slice(0, 5));
+                renderTopCustomers(customers.sort((a, b) => (b.totalSpent || 0) - (a.totalSpent || 0)).slice(0, 5));
+                renderHotLeads(leads.filter(l => l.status !== 'Closed').slice(0, 5));
+                renderSalesChart(orders);
+
+            } catch (error) {
+                console.error('Failed to load sales dashboard:', error);
+            }
+        }
+
+        function renderRecentOrders(orders) {
+            const list = document.getElementById('recentOrdersList');
+            if (orders.length === 0) {
+                list.innerHTML = '<div class="list-group-item text-center py-4"><span class="text-muted">No orders</span></div>';
+                return;
+            }
+            list.innerHTML = orders.map(o => `
+                <a href="/SalesStaff/Orders" class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between">
+                        <strong>${o.orderNumber || '#' + o.orderId}</strong>
+                        <span class="badge ${o.orderStatus === 'Completed' ? 'badge-success' : o.orderStatus === 'Pending' ? 'badge-warning' : 'badge-info'}">${o.orderStatus}</span>
+                    </div>
+                    <small class="text-muted">${o.customerName || 'Customer'} - ₱${(o.totalAmount || 0).toLocaleString()}</small>
+                </a>
+            `).join('');
+        }
+
+        function renderTopCustomers(customers) {
+            const tbody = document.getElementById('topCustomersTable');
+            if (customers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4">No customers</td></tr>';
+                return;
+            }
+            tbody.innerHTML = customers.map(c => `
+                <tr>
+                    <td><strong>${c.firstName} ${c.lastName}</strong></td>
+                    <td class="text-center">${c.totalOrders || 0}</td>
+                    <td class="text-end">₱${(c.totalSpent || 0).toLocaleString()}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderHotLeads(leads) {
+            const tbody = document.getElementById('hotLeadsTable');
+            if (leads.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4">No leads</td></tr>';
+                return;
+            }
+            tbody.innerHTML = leads.map(l => `
+                <tr>
+                    <td><strong>${l.contactName || l.companyName || 'Lead'}</strong></td>
+                    <td><span class="badge ${l.status === 'Qualified' ? 'badge-success' : 'badge-info'}">${l.status}</span></td>
+                    <td class="text-end">₱${(l.estimatedValue || 0).toLocaleString()}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderSalesChart(orders) {
+            const ctx = document.getElementById('salesChart')?.getContext('2d');
+            if (!ctx) return;
+
+            const monthlyData = Array(12).fill(0);
+            const currentYear = new Date().getFullYear();
+
+            orders.forEach(o => {
+                const date = new Date(o.orderDate);
+                if (date.getFullYear() === currentYear) {
+                    monthlyData[date.getMonth()] += o.totalAmount || 0;
+                }
+            });
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Sales',
+                        data: monthlyData,
+                        borderColor: '#008080',
+                        backgroundColor: 'rgba(0, 128, 128, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#008080',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#E5E7EB' }, ticks: { callback: v => '₱' + (v / 1000).toFixed(0) + 'k' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+    </script>
 }

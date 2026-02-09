@@ -136,11 +136,55 @@
     </div>
 </div>
 
+<!-- View Customer Modal -->
+<div class="modal fade view-modal" id="viewCustomerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title">Customer Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewCustomerContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning" onclick="SalesCustomers.edit(SalesCustomers.currentId)">
+                    <i class="bi bi-pencil me-1"></i>Edit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="~/js/sales.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             SalesCustomers.load();
+            
+            // Filter functionality
+            const searchInput = document.getElementById('customerSearch');
+            const statusFilter = document.getElementById('customerFilter');
+            
+            function filterCustomers() {
+                SalesCustomers.filter(
+                    searchInput?.value || '',
+                    '',
+                    statusFilter?.value || ''
+                );
+            }
+            
+            if (searchInput) searchInput.addEventListener('input', filterCustomers);
+            if (statusFilter) statusFilter.addEventListener('change', filterCustomers);
+            
+            // Form submission
+            document.getElementById('customerForm')?.addEventListener('submit', function(e) {
+                e.preventDefault();
+                SalesCustomers.save();
+            });
         });
     </script>
 }

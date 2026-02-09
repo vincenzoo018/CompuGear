@@ -86,5 +86,12 @@ namespace CompuGear.Controllers
             ViewData["Title"] = "Ticket Escalations";
             return View("~/Views/SupportStaff/Escalations.cshtml");
         }
+
+        // Live Chat Support
+        public IActionResult LiveChat()
+        {
+            ViewData["Title"] = "Live Chat Support";
+            return View("~/Views/SupportStaff/LiveChat.cshtml");
+        }
     }
 }

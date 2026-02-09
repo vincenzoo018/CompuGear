@@ -546,6 +546,72 @@ const Marketing = {
             } catch (error) {
                 Toast.error('Failed to delete campaign');
             }
+        },
+
+        filter(search, status) {
+            let filtered = this.data;
+            
+            if (search) {
+                filtered = filtered.filter(c => 
+                    (c.campaignName || '').toLowerCase().includes(search) ||
+                    (c.campaignCode || '').toLowerCase().includes(search)
+                );
+            }
+            
+            if (status) {
+                filtered = filtered.filter(c => c.status === status);
+            }
+            
+            this.renderFiltered(filtered);
+        },
+
+        renderFiltered(data) {
+            const tbody = document.getElementById('campaignsTableBody');
+            if (!tbody) return;
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No campaigns match your search criteria.</td></tr>';
+                document.getElementById('totalCampaigns')?.textContent && (document.getElementById('totalCampaigns').textContent = '0');
+                return;
+            }
+
+            tbody.innerHTML = data.map(c => `
+                <tr>
+                    <td>
+                        <div class="fw-semibold">${c.campaignName}</div>
+                        <small class="text-muted">${c.campaignCode}</small>
+                    </td>
+                    <td><span class="badge bg-info">${c.type || 'General'}</span></td>
+                    <td>${Format.statusBadge(c.status)}</td>
+                    <td>
+                        <div>${Format.date(c.startDate)}</div>
+                        <small class="text-muted">to ${Format.date(c.endDate)}</small>
+                    </td>
+                    <td class="text-end">${Format.currency(c.budget)}</td>
+                    <td class="text-end">${Format.percentage(c.roi)}</td>
+                    <td>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-teal" style="width: ${Math.min((c.actualSpend / c.budget) * 100, 100)}%"></div>
+                        </div>
+                        <small class="text-muted">${Format.currency(c.actualSpend)} spent</small>
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="Marketing.campaigns.view(${c.campaignId})" title="View">
+                                ${Icons.view}
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="Marketing.campaigns.edit(${c.campaignId})" title="Edit">
+                                ${Icons.edit}
+                            </button>
+                            <button class="btn btn-sm btn-outline-${c.status === 'Active' ? 'danger' : 'success'}" onclick="Marketing.campaigns.toggleStatus(${c.campaignId})" title="${c.status === 'Active' ? 'Deactivate' : 'Activate'}">
+                                ${c.status === 'Active' ? Icons.toggleOff : Icons.toggleOn}
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('totalCampaigns')?.textContent && (document.getElementById('totalCampaigns').textContent = data.length);
         }
     },
 
@@ -793,6 +859,83 @@ const Marketing = {
             } catch (error) {
                 Toast.error('Failed to delete promotion');
             }
+        },
+
+        filter(search, status) {
+            let filtered = this.data;
+            
+            if (search) {
+                filtered = filtered.filter(p => 
+                    (p.promotionName || '').toLowerCase().includes(search) ||
+                    (p.promotionCode || '').toLowerCase().includes(search)
+                );
+            }
+            
+            if (status === 'Active') {
+                filtered = filtered.filter(p => p.isActive === true);
+            } else if (status === 'Inactive') {
+                filtered = filtered.filter(p => p.isActive === false);
+            }
+            
+            this.renderFiltered(filtered);
+        },
+
+        renderFiltered(data) {
+            const tbody = document.getElementById('promotionsTableBody');
+            if (!tbody) return;
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No promotions match your search criteria.</td></tr>';
+                document.getElementById('promotionCount')?.textContent && (document.getElementById('promotionCount').textContent = '0 promotions');
+                return;
+            }
+
+            tbody.innerHTML = data.map(p => `
+                <tr data-deployed="${p.isActive}">
+                    <td>
+                        <div class="fw-semibold">${p.promotionName}</div>
+                        <code class="small bg-light px-2 py-1 rounded">${p.promotionCode}</code>
+                    </td>
+                    <td><span class="badge bg-info">${p.discountType}</span></td>
+                    <td class="text-end fw-semibold text-success">
+                        ${p.discountType === 'Percentage' ? Format.percentage(p.discountValue) : 
+                          p.discountType === 'FreeShipping' ? '<span class="badge bg-warning">Free Shipping</span>' :
+                          Format.currency(p.discountValue)}
+                    </td>
+                    <td>
+                        <div>${Format.date(p.startDate)}</div>
+                        <small class="text-muted">to ${Format.date(p.endDate)}</small>
+                    </td>
+                    <td class="text-center">${p.timesUsed || 0} / ${p.usageLimit || '∞'}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm deploy-btn ${p.isActive ? 'deployed' : 'not-deployed'}" 
+                                onclick="Marketing.promotions.toggleVisibility(${p.promotionId})"
+                                title="${p.isActive ? 'Currently visible to customers - Click to hide' : 'Hidden from customers - Click to deploy'}">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" class="me-1">
+                                ${p.isActive ? 
+                                    '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>' : 
+                                    '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'}
+                            </svg>
+                            ${p.isActive ? 'Deployed' : 'Deploy'}
+                        </button>
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="Marketing.promotions.view(${p.promotionId})" title="View">
+                                ${Icons.view}
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="Marketing.promotions.edit(${p.promotionId})" title="Edit">
+                                ${Icons.edit}
+                            </button>
+                            <button class="btn btn-sm btn-outline-${p.isActive ? 'danger' : 'success'}" onclick="Marketing.promotions.toggleStatus(${p.promotionId})" title="${p.isActive ? 'Deactivate' : 'Activate'}">
+                                ${p.isActive ? Icons.toggleOff : Icons.toggleOn}
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('promotionCount')?.textContent && (document.getElementById('promotionCount').textContent = data.length + ' promotions');
         }
     }
 };
@@ -1010,6 +1153,94 @@ const Customers = {
             this.load();
         } catch (error) {
             Toast.error('Failed to update customer status');
+        }
+    },
+
+    filter(search, type, status) {
+        let filtered = this.data;
+        
+        if (search) {
+            filtered = filtered.filter(c => 
+                (c.fullName || '').toLowerCase().includes(search) ||
+                (c.firstName || '').toLowerCase().includes(search) ||
+                (c.lastName || '').toLowerCase().includes(search) ||
+                (c.email || '').toLowerCase().includes(search) ||
+                (c.customerCode || '').toLowerCase().includes(search) ||
+                (c.phone || '').toLowerCase().includes(search) ||
+                (c.companyName || '').toLowerCase().includes(search)
+            );
+        }
+        
+        if (type) {
+            filtered = filtered.filter(c => c.categoryName === type);
+        }
+        
+        if (status === 'active') {
+            filtered = filtered.filter(c => c.status === 'Active');
+        } else if (status === 'inactive') {
+            filtered = filtered.filter(c => c.status !== 'Active');
+        }
+        
+        this.renderFiltered(filtered);
+    },
+
+    renderFiltered(data) {
+        const tbody = document.getElementById('customersTableBody');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No customers match your search criteria.</td></tr>';
+            document.getElementById('customerCount').textContent = '0 customers';
+            return;
+        }
+
+        tbody.innerHTML = data.map(c => `
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-circle me-3">${(c.firstName?.[0] || '') + (c.lastName?.[0] || '')}</div>
+                        <div>
+                            <div class="fw-semibold">${c.fullName}</div>
+                            <small class="text-muted">${c.customerCode}</small>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div>${c.email}</div>
+                    <small class="text-muted">${c.phone || '-'}</small>
+                </td>
+                <td><span class="badge bg-info">${c.categoryName}</span></td>
+                <td>${Format.statusBadge(c.status)}</td>
+                <td class="text-center">${c.totalOrders}</td>
+                <td class="text-end">${Format.currency(c.totalSpent)}</td>
+                <td class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="Customers.view(${c.customerId})" title="View">
+                            ${Icons.view}
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="Customers.edit(${c.customerId})" title="Edit">
+                            ${Icons.edit}
+                        </button>
+                        <button class="btn btn-sm btn-outline-${c.status === 'Active' ? 'danger' : 'success'}" onclick="Customers.toggleStatus(${c.customerId})" title="${c.status === 'Active' ? 'Deactivate' : 'Activate'}">
+                            ${c.status === 'Active' ? Icons.toggleOff : Icons.toggleOn}
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        document.getElementById('customerCount').textContent = data.length + ' customers';
+    },
+
+    async delete(id) {
+        if (!confirm('Are you sure you want to delete this customer?')) return;
+
+        try {
+            await API.delete(`/customers/${id}`);
+            Toast.success('Customer deleted successfully');
+            this.load();
+        } catch (error) {
+            Toast.error('Failed to delete customer');
         }
     }
 };
@@ -1312,6 +1543,99 @@ const Inventory = {
             } catch (error) {
                 Toast.error('Failed to update product status');
             }
+        },
+
+        filter(search, category, brand, stock) {
+            let filtered = this.data;
+            
+            if (search) {
+                filtered = filtered.filter(p => 
+                    (p.productName || '').toLowerCase().includes(search) ||
+                    (p.sku || '').toLowerCase().includes(search) ||
+                    (p.productCode || '').toLowerCase().includes(search)
+                );
+            }
+            
+            if (category) {
+                filtered = filtered.filter(p => p.categoryId == category || (p.categoryName || '').toLowerCase() === category.toLowerCase());
+            }
+            
+            if (brand) {
+                filtered = filtered.filter(p => p.brandId == brand || (p.brandName || '').toLowerCase() === brand.toLowerCase());
+            }
+            
+            if (stock) {
+                if (stock === 'instock') {
+                    filtered = filtered.filter(p => p.stockQuantity > p.reorderLevel);
+                } else if (stock === 'low') {
+                    filtered = filtered.filter(p => p.stockQuantity > 0 && p.stockQuantity <= p.reorderLevel);
+                } else if (stock === 'outofstock') {
+                    filtered = filtered.filter(p => p.stockQuantity <= 0);
+                }
+            }
+            
+            this.renderFiltered(filtered);
+        },
+
+        renderFiltered(data) {
+            const tbody = document.getElementById('productsTableBody');
+            if (!tbody) return;
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">No products match your search criteria.</td></tr>';
+                document.getElementById('totalProducts')?.textContent && (document.getElementById('totalProducts').textContent = '0');
+                return;
+            }
+
+            tbody.innerHTML = data.map(p => `
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            ${p.mainImageUrl ? 
+                                `<img src="${p.mainImageUrl}" class="product-thumb me-3" alt="${p.productName}" onerror="this.onerror=null; this.src='/images/placeholder.png'; this.classList.add('product-image-placeholder');">` :
+                                `<div class="product-image-placeholder me-3">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                                    </svg>
+                                </div>`
+                            }
+                            <div>
+                                <div class="fw-semibold">${p.productName}</div>
+                                <small class="text-muted">${p.sku || p.productCode}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${p.categoryName || '-'}</td>
+                    <td>${p.brandName || '-'}</td>
+                    <td class="text-end">${Format.currency(p.costPrice)}</td>
+                    <td class="text-end">${Format.currency(p.sellingPrice)}</td>
+                    <td class="text-center">
+                        <span class="badge ${p.stockQuantity <= p.reorderLevel ? 'bg-danger' : p.stockQuantity <= p.reorderLevel * 2 ? 'bg-warning text-dark' : 'bg-success'}">
+                            ${p.stockQuantity}
+                        </span>
+                    </td>
+                    <td>${Format.statusBadge(p.status)}</td>
+                    <td class="text-center">
+                        ${p.isFeatured ? '<i class="bi bi-star-fill text-warning"></i>' : ''}
+                        ${p.isOnSale ? '<span class="badge bg-danger">Sale</span>' : ''}
+                    </td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="Inventory.products.view(${p.productId})" title="View">
+                                ${Icons.view}
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="Inventory.products.edit(${p.productId})" title="Edit">
+                                ${Icons.edit}
+                            </button>
+                            <button class="btn btn-sm btn-outline-${p.status === 'Active' ? 'danger' : 'success'}" onclick="Inventory.products.toggleStatus(${p.productId})" title="${p.status === 'Active' ? 'Deactivate' : 'Activate'}">
+                                ${p.status === 'Active' ? Icons.toggleOff : Icons.toggleOn}
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('totalProducts')?.textContent && (document.getElementById('totalProducts').textContent = data.length);
         }
     }
 };
@@ -1554,6 +1878,103 @@ const Sales = {
                 this.load();
             } catch (error) {
                 Toast.error('Failed to update order status');
+            }
+        },
+
+        filter(search, status) {
+            let filtered = this.data;
+            
+            if (search) {
+                filtered = filtered.filter(o => 
+                    (o.orderNumber || '').toLowerCase().includes(search) ||
+                    (o.customerName || '').toLowerCase().includes(search)
+                );
+            }
+            
+            if (status) {
+                filtered = filtered.filter(o => o.orderStatus === status);
+            }
+            
+            this.renderFiltered(filtered);
+        },
+
+        renderFiltered(data) {
+            const tbody = document.getElementById('ordersTableBody');
+            if (!tbody) return;
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No orders match your search criteria.</td></tr>';
+                document.getElementById('orderCount').textContent = '0 orders';
+                return;
+            }
+
+            tbody.innerHTML = data.map(o => `
+                <tr>
+                    <td>
+                        <div class="fw-semibold">${o.orderNumber}</div>
+                        <small class="text-muted">${Format.date(o.orderDate, true)}</small>
+                    </td>
+                    <td>${o.customerName || 'Guest'}</td>
+                    <td>${Format.date(o.orderDate)}</td>
+                    <td class="text-center">${o.itemCount}</td>
+                    <td class="text-end">${Format.currency(o.totalAmount)}</td>
+                    <td>${Format.statusBadge(o.orderStatus)}</td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="Sales.orders.view(${o.orderId})" title="View">
+                                ${Icons.view}
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="Sales.orders.edit(${o.orderId})" title="Edit">
+                                ${Icons.edit}
+                            </button>
+                            <button class="btn btn-sm btn-outline-${o.orderStatus === 'Cancelled' ? 'success' : 'danger'}" onclick="Sales.orders.toggleStatus(${o.orderId})" title="${o.orderStatus === 'Cancelled' ? 'Activate' : 'Cancel'}">
+                                ${o.orderStatus === 'Cancelled' ? Icons.toggleOn : Icons.toggleOff}
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('orderCount').textContent = data.length + ' orders';
+        },
+
+        showModal(order = null) {
+            Modal.reset('orderForm');
+            const modalTitle = document.getElementById('modalTitle');
+            if (modalTitle) modalTitle.textContent = order ? 'Edit Order' : 'Create New Order';
+            document.getElementById('orderId').value = order?.orderId || '';
+
+            if (order) {
+                document.getElementById('orderStatus').value = order.orderStatus || 'Pending';
+                document.getElementById('paymentStatus').value = order.paymentStatus || 'Unpaid';
+                document.getElementById('paymentMethod').value = order.paymentMethod || '';
+                document.getElementById('shippingMethod').value = order.shippingMethod || '';
+                document.getElementById('trackingNumber').value = order.trackingNumber || '';
+                document.getElementById('orderNotes').value = order.notes || '';
+            }
+
+            Modal.show('orderModal');
+        },
+
+        async cancel(id) {
+            try {
+                await API.put(`/orders/${id}/status`, { status: 'Cancelled' });
+                Toast.success('Order cancelled successfully');
+                this.load();
+            } catch (error) {
+                Toast.error('Failed to cancel order');
+            }
+        },
+
+        async confirmCancel(reason) {
+            if (!this.currentId) return;
+            try {
+                await API.put(`/orders/${this.currentId}/status`, { status: 'Cancelled', notes: reason });
+                Toast.success('Order cancelled successfully');
+                Modal.hide('cancelOrderModal');
+                this.load();
+            } catch (error) {
+                Toast.error('Failed to cancel order');
             }
         }
     },
@@ -2033,6 +2454,72 @@ const Support = {
             } catch (error) {
                 Toast.error('Failed to update ticket status');
             }
+        },
+
+        filter(search, status, priority) {
+            let filtered = this.data;
+            
+            if (search) {
+                filtered = filtered.filter(t => 
+                    (t.ticketNumber || '').toLowerCase().includes(search) ||
+                    (t.subject || '').toLowerCase().includes(search) ||
+                    (t.customerName || '').toLowerCase().includes(search) ||
+                    (t.contactEmail || '').toLowerCase().includes(search)
+                );
+            }
+            
+            if (status) {
+                filtered = filtered.filter(t => t.status === status);
+            }
+            
+            if (priority) {
+                filtered = filtered.filter(t => t.priority === priority);
+            }
+            
+            this.renderFiltered(filtered);
+        },
+
+        renderFiltered(data) {
+            const tbody = document.getElementById('ticketsTableBody');
+            if (!tbody) return;
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No tickets match your search criteria.</td></tr>';
+                document.getElementById('totalTickets')?.textContent && (document.getElementById('totalTickets').textContent = '0');
+                return;
+            }
+
+            tbody.innerHTML = data.map(t => `
+                <tr>
+                    <td>
+                        <div class="fw-semibold">${t.ticketNumber}</div>
+                        <small class="text-muted">${Format.date(t.createdAt, true)}</small>
+                    </td>
+                    <td>${t.customerName || t.contactEmail}</td>
+                    <td><span class="badge bg-info">${t.categoryName || '-'}</span></td>
+                    <td>
+                        <div class="text-truncate" style="max-width: 200px;">${t.subject}</div>
+                    </td>
+                    <td>${Format.priorityBadge(t.priority)}</td>
+                    <td>${Format.statusBadge(t.status)}</td>
+                    <td>${t.firstResponseAt ? Format.date(t.firstResponseAt, true) : '<span class="text-warning">Awaiting</span>'}</td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="Support.tickets.view(${t.ticketId})" title="View">
+                                ${Icons.view}
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="Support.tickets.edit(${t.ticketId})" title="Edit">
+                                ${Icons.edit}
+                            </button>
+                            <button class="btn btn-sm btn-outline-${t.status === 'Closed' ? 'success' : 'danger'}" onclick="Support.tickets.toggleStatus(${t.ticketId})" title="${t.status === 'Closed' ? 'Reopen' : 'Close'}">
+                                ${t.status === 'Closed' ? Icons.toggleOn : Icons.toggleOff}
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('totalTickets')?.textContent && (document.getElementById('totalTickets').textContent = data.length);
         }
     }
 };
@@ -2260,6 +2747,78 @@ const Users = {
         } catch (error) {
             Toast.error('Failed to delete user');
         }
+    },
+
+    filter(search, role, status) {
+        let filtered = this.data;
+        
+        if (search) {
+            filtered = filtered.filter(u => 
+                (u.fullName || '').toLowerCase().includes(search) ||
+                (u.firstName || '').toLowerCase().includes(search) ||
+                (u.lastName || '').toLowerCase().includes(search) ||
+                (u.email || '').toLowerCase().includes(search) ||
+                (u.username || '').toLowerCase().includes(search)
+            );
+        }
+        
+        if (role) {
+            filtered = filtered.filter(u => u.roleId == role);
+        }
+        
+        if (status === 'active') {
+            filtered = filtered.filter(u => u.isActive);
+        } else if (status === 'inactive') {
+            filtered = filtered.filter(u => !u.isActive);
+        }
+        
+        this.renderFiltered(filtered);
+    },
+
+    renderFiltered(data) {
+        const tbody = document.getElementById('usersTableBody');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No users match your search criteria.</td></tr>';
+            document.getElementById('userCount').textContent = '0 users';
+            return;
+        }
+
+        tbody.innerHTML = data.map(u => `
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-circle me-3">${(u.firstName?.[0] || '') + (u.lastName?.[0] || '')}</div>
+                        <div>
+                            <div class="fw-semibold">${u.fullName || (u.firstName + ' ' + u.lastName)}</div>
+                            <small class="text-muted">@${u.username}</small>
+                        </div>
+                    </div>
+                </td>
+                <td>${u.email}</td>
+                <td><span class="badge bg-info">${u.roleName || 'Staff'}</span></td>
+                <td>
+                    <span class="badge ${u.isActive ? 'bg-success' : 'bg-secondary'}">${u.isActive ? 'Active' : 'Inactive'}</span>
+                </td>
+                <td>${u.lastLoginAt ? Format.date(u.lastLoginAt, true) : 'Never'}</td>
+                <td class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="Users.view(${u.userId})" title="View">
+                            ${Icons.view}
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="Users.edit(${u.userId})" title="Edit">
+                            ${Icons.edit}
+                        </button>
+                        <button class="btn btn-sm btn-outline-${u.isActive ? 'danger' : 'success'}" onclick="Users.toggleStatus(${u.userId})" title="${u.isActive ? 'Deactivate' : 'Activate'}">
+                            ${u.isActive ? Icons.toggleOff : Icons.toggleOn}
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+
+        document.getElementById('userCount').textContent = data.length + ' users';
     }
 };
 
@@ -2559,6 +3118,61 @@ const Billing = {
             } catch (error) {
                 Toast.error('Failed to update invoice status');
             }
+        },
+
+        filter(search, status) {
+            let filtered = this.data;
+            
+            if (search) {
+                filtered = filtered.filter(i => 
+                    (i.invoiceNumber || '').toLowerCase().includes(search) ||
+                    (i.customerName || '').toLowerCase().includes(search)
+                );
+            }
+            
+            if (status) {
+                filtered = filtered.filter(i => i.status === status);
+            }
+            
+            this.renderFiltered(filtered);
+        },
+
+        renderFiltered(data) {
+            const tbody = document.getElementById('invoicesTableBody');
+            if (!tbody) return;
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No invoices match your search criteria.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(i => `
+                <tr>
+                    <td>
+                        <div class="fw-semibold">${i.invoiceNumber}</div>
+                        <small class="text-muted">${Format.date(i.invoiceDate)}</small>
+                    </td>
+                    <td>${i.customerName || '-'}</td>
+                    <td>${Format.date(i.dueDate)}</td>
+                    <td class="text-end">${Format.currency(i.totalAmount)}</td>
+                    <td class="text-end text-success">${Format.currency(i.paidAmount)}</td>
+                    <td class="text-end ${i.balance > 0 ? 'text-danger' : ''}">${Format.currency(i.balance)}</td>
+                    <td>${Format.statusBadge(i.status)}</td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="Billing.invoices.view(${i.invoiceId})" title="View">
+                                ${Icons.view}
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="Billing.invoices.edit(${i.invoiceId})" title="Edit">
+                                ${Icons.edit}
+                            </button>
+                            <button class="btn btn-sm btn-outline-${(i.status === 'Cancelled' || i.status === 'Void') ? 'success' : 'danger'}" onclick="Billing.invoices.toggleStatus(${i.invoiceId})" title="${(i.status === 'Cancelled' || i.status === 'Void') ? 'Activate' : 'Void'}">
+                                ${(i.status === 'Cancelled' || i.status === 'Void') ? Icons.toggleOn : Icons.toggleOff}
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
         }
     },
 

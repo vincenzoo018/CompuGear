@@ -165,7 +165,7 @@ const Products = {
 
     updateStats() {
         const totalProducts = this.data.length;
-        const totalValue = this.data.reduce((sum, p) => sum + ((p.price || 0) * (p.stockQuantity || 0)), 0);
+        const totalValue = this.data.reduce((sum, p) => sum + ((p.sellingPrice || p.price || 0) * (p.stockQuantity || 0)), 0);
         const lowStock = this.data.filter(p => p.stockQuantity > 0 && p.stockQuantity <= (p.reorderLevel || 10)).length;
         const outOfStock = this.data.filter(p => (p.stockQuantity || 0) <= 0).length;
 
@@ -175,8 +175,126 @@ const Products = {
         if (document.getElementById('outOfStockCount')) document.getElementById('outOfStockCount').textContent = Format.number(outOfStock);
     },
 
+    filter(search, category, stock) {
+        let filtered = this.data;
+        
+        if (search) {
+            const s = search.toLowerCase();
+            filtered = filtered.filter(p => 
+                (p.productName || '').toLowerCase().includes(s) ||
+                (p.sku || '').toLowerCase().includes(s)
+            );
+        }
+        
+        if (category) {
+            filtered = filtered.filter(p => p.categoryId == category || (p.categoryName || '').toLowerCase() === category.toLowerCase());
+        }
+        
+        if (stock === 'instock') {
+            filtered = filtered.filter(p => p.stockQuantity > (p.reorderLevel || 10));
+        } else if (stock === 'low') {
+            filtered = filtered.filter(p => p.stockQuantity > 0 && p.stockQuantity <= (p.reorderLevel || 10));
+        } else if (stock === 'out') {
+            filtered = filtered.filter(p => p.stockQuantity <= 0);
+        }
+        
+        this.renderFiltered(filtered);
+    },
+
+    renderFiltered(data) {
+        const tbody = document.getElementById('productsTableBody');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4">No products match your criteria</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(p => `
+            <tr>
+                <td><strong>${p.sku}</strong></td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <img src="${p.mainImageUrl || p.imageUrl || '/images/products/default.png'}" class="me-2 rounded" width="40" height="40" style="object-fit: cover;" onerror="this.src='/images/products/default.png'">
+                        <div>
+                            <div class="fw-semibold">${p.productName}</div>
+                            <small class="text-muted">${p.categoryName || 'Uncategorized'}</small>
+                        </div>
+                    </div>
+                </td>
+                <td class="text-end">${Format.currency(p.sellingPrice || p.price)}</td>
+                <td class="text-center">${Format.number(p.stockQuantity)}</td>
+                <td class="text-center">${Format.number(p.reorderLevel || 10)}</td>
+                <td>${Format.stockStatus(p.stockQuantity, p.reorderLevel || 10)}</td>
+                <td class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="Products.view(${p.productId})">${Icons.view}</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="Products.edit(${p.productId})">${Icons.edit}</button>
+                        <button class="btn btn-sm btn-outline-success" onclick="Products.adjustStock(${p.productId}, 'add')">${Icons.add}</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="Products.adjustStock(${p.productId}, 'subtract')">${Icons.minus}</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    },
+
     view(id) {
-        window.location.href = `/InventoryStaff/ProductDetails/${id}`;
+        const p = this.data.find(product => product.productId === id);
+        if (!p) {
+            Toast.error('Product not found');
+            return;
+        }
+        
+        this.currentId = id;
+        const content = document.getElementById('viewProductContent');
+        if (content) {
+            content.innerHTML = `
+                <div class="row g-4">
+                    <div class="col-md-4 text-center">
+                        <img src="${p.mainImageUrl || p.imageUrl || '/images/products/default.png'}" class="img-fluid rounded mb-3" style="max-height: 200px;" alt="${p.productName}" onerror="this.src='/images/products/default.png'">
+                    </div>
+                    <div class="col-md-8">
+                        <h4 class="mb-1">${p.productName}</h4>
+                        <p class="text-muted mb-3">SKU: ${p.sku}</p>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="detail-label">Category</div>
+                                <div class="detail-value">${p.categoryName || 'Uncategorized'}</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-label">Brand</div>
+                                <div class="detail-value">${p.brandName || '-'}</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-label">Cost Price</div>
+                                <div class="detail-value">${Format.currency(p.costPrice)}</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-label">Selling Price</div>
+                                <div class="detail-value text-primary fw-bold">${Format.currency(p.sellingPrice || p.price)}</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-label">Stock Quantity</div>
+                                <div class="detail-value">${Format.number(p.stockQuantity)} units</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="detail-label">Reorder Level</div>
+                                <div class="detail-value">${Format.number(p.reorderLevel || 10)} units</div>
+                            </div>
+                            <div class="col-12">
+                                <div class="detail-label">Status</div>
+                                <div class="detail-value">${Format.stockStatus(p.stockQuantity, p.reorderLevel || 10)}</div>
+                            </div>
+                            <div class="col-12">
+                                <div class="detail-label">Description</div>
+                                <div class="detail-value">${p.shortDescription || p.description || '-'}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        Modal.show('viewProductModal');
     },
 
     edit(id) {
@@ -324,6 +442,56 @@ const StockLevels = {
             },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
         });
+    },
+
+    filter(search = '', stockLevel = '') {
+        let filtered = this.data;
+        
+        if (search) {
+            const s = search.toLowerCase();
+            filtered = filtered.filter(p => 
+                p.sku?.toLowerCase().includes(s) ||
+                p.productName?.toLowerCase().includes(s)
+            );
+        }
+        
+        if (stockLevel === 'instock') {
+            filtered = filtered.filter(p => p.stockQuantity > (p.reorderLevel || 10));
+        } else if (stockLevel === 'low') {
+            filtered = filtered.filter(p => p.stockQuantity > 0 && p.stockQuantity <= (p.reorderLevel || 10));
+        } else if (stockLevel === 'out') {
+            filtered = filtered.filter(p => (p.stockQuantity || 0) <= 0);
+        }
+        
+        this.renderFiltered(filtered);
+    },
+
+    renderFiltered(data) {
+        const tbody = document.getElementById('stockTableBody');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No products found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(p => {
+            const percentage = Math.min((p.stockQuantity / (p.reorderLevel * 3 || 30)) * 100, 100);
+            const barColor = p.stockQuantity <= 0 ? 'danger' : p.stockQuantity <= p.reorderLevel ? 'warning' : 'success';
+            return `
+            <tr>
+                <td><strong>${p.sku}</strong></td>
+                <td>${p.productName}</td>
+                <td class="text-center">${Format.number(p.stockQuantity)}</td>
+                <td class="text-center">${Format.number(p.reorderLevel || 10)}</td>
+                <td style="width: 200px;">
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-${barColor}" style="width: ${percentage}%"></div>
+                    </div>
+                </td>
+                <td>${Format.stockStatus(p.stockQuantity, p.reorderLevel || 10)}</td>
+            </tr>
+        `}).join('');
     }
 };
 
@@ -425,7 +593,44 @@ const Suppliers = {
     },
 
     view(id) {
-        window.location.href = `/InventoryStaff/SupplierDetails/${id}`;
+        const s = this.data.find(supplier => supplier.supplierId === id);
+        if (!s) {
+            Toast.error('Supplier not found');
+            return;
+        }
+        
+        this.currentId = id;
+        const content = document.getElementById('viewSupplierContent');
+        if (content) {
+            content.innerHTML = `
+                <div class="row g-4">
+                    <div class="col-12 text-center border-bottom pb-3">
+                        <h5 class="mb-1">${s.supplierName}</h5>
+                        <small class="text-muted">${s.supplierCode || 'SUP-' + s.supplierId}</small>
+                        <div class="mt-2">
+                            <span class="badge bg-${s.isActive ? 'success' : 'secondary'}">${s.isActive ? 'Active' : 'Inactive'}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Contact Person</div>
+                        <div class="detail-value">${s.contactPerson || '-'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Email</div>
+                        <div class="detail-value">${s.email || '-'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Phone</div>
+                        <div class="detail-value">${s.phone || '-'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Address</div>
+                        <div class="detail-value">${s.address || '-'}</div>
+                    </div>
+                </div>
+            `;
+        }
+        Modal.show('viewSupplierModal');
     },
 
     edit(id) {
@@ -467,6 +672,56 @@ const Suppliers = {
         } catch (error) {
             Toast.error('Failed to save supplier');
         }
+    },
+
+    filter(search = '', status = '') {
+        let filtered = this.data;
+        
+        if (search) {
+            const s = search.toLowerCase();
+            filtered = filtered.filter(supplier => 
+                supplier.supplierName?.toLowerCase().includes(s) ||
+                supplier.email?.toLowerCase().includes(s) ||
+                supplier.contactPerson?.toLowerCase().includes(s)
+            );
+        }
+        
+        if (status === 'active') {
+            filtered = filtered.filter(s => s.isActive);
+        } else if (status === 'inactive') {
+            filtered = filtered.filter(s => !s.isActive);
+        }
+        
+        this.renderFiltered(filtered);
+    },
+
+    renderFiltered(data) {
+        const tbody = document.getElementById('suppliersTableBody');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">No suppliers found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(s => `
+            <tr>
+                <td><strong>${s.supplierCode || s.supplierId}</strong></td>
+                <td>
+                    <div class="fw-semibold">${s.supplierName}</div>
+                    <small class="text-muted">${s.contactPerson || ''}</small>
+                </td>
+                <td>${s.email || '-'}</td>
+                <td>${s.phone || '-'}</td>
+                <td><span class="badge bg-${s.isActive ? 'success' : 'secondary'}">${s.isActive ? 'Active' : 'Inactive'}</span></td>
+                <td class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="Suppliers.view(${s.supplierId})">${Icons.view}</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="Suppliers.edit(${s.supplierId})">${Icons.edit}</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
     }
 };
 

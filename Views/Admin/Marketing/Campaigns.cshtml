@@ -551,26 +551,10 @@
 
     // Filter campaigns
     function filterCampaigns() {
-        const search = document.getElementById('searchCampaigns').value.toLowerCase();
-        const typeFilter = document.getElementById('filterType').value;
-        const statusFilter = document.getElementById('filterStatus').value;
+        const search = (document.getElementById('searchCampaigns')?.value || '').toLowerCase();
+        const statusFilter = document.getElementById('filterStatus')?.value || '';
 
-        const rows = document.querySelectorAll('#campaignsTableBody tr');
-        let visibleCount = 0;
-
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            let show = true;
-
-            if (search && !text.includes(search)) show = false;
-            if (typeFilter && !text.toLowerCase().includes(typeFilter.toLowerCase())) show = false;
-            if (statusFilter && !text.toLowerCase().includes(statusFilter.toLowerCase())) show = false;
-
-            row.style.display = show ? '' : 'none';
-            if (show) visibleCount++;
-        });
-
-        document.getElementById('campaignCount').textContent = visibleCount + ' campaigns';
+        Marketing.campaigns.filter(search, statusFilter);
     }
 
     function resetFilters() {
@@ -578,7 +562,7 @@
         document.getElementById('filterType').value = '';
         document.getElementById('filterStatus').value = '';
         document.getElementById('filterDateRange').value = '';
-        filterCampaigns();
+        Marketing.campaigns.load();
     }
 
     function applyFilters() {

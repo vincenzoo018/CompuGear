@@ -198,7 +198,73 @@ const SalesCustomers = {
     },
 
     view(id) {
-        window.location.href = `/SalesStaff/CustomerProfile/${id}`;
+        const c = this.data.find(customer => customer.customerId === id);
+        if (!c) {
+            Toast.error('Customer not found');
+            return;
+        }
+        
+        this.currentId = id;
+        const content = document.getElementById('viewCustomerContent');
+        if (content) {
+            content.innerHTML = `
+                <div class="text-center mb-4">
+                    <div class="avatar-circle avatar-lg mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem; background: linear-gradient(135deg, #008080, #006666); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        ${(c.firstName?.[0] || '') + (c.lastName?.[0] || '')}
+                    </div>
+                    <h4>${c.firstName} ${c.lastName}</h4>
+                    <p class="text-muted">${c.customerCode}</p>
+                    ${Format.statusBadge(c.status)}
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="detail-label">Email</div>
+                        <div class="detail-value">${c.email}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Phone</div>
+                        <div class="detail-value">${c.phone || '-'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Company</div>
+                        <div class="detail-value">${c.companyName || '-'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Category</div>
+                        <div class="detail-value">${c.categoryName || 'Standard'}</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="detail-label">Address</div>
+                        <div class="detail-value">${c.billingAddress || '-'}${c.billingCity ? ', ' + c.billingCity : ''}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center py-3">
+                                <div class="detail-label">Total Orders</div>
+                                <h4 class="mb-0 text-primary">${c.totalOrders || 0}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center py-3">
+                                <div class="detail-label">Total Spent</div>
+                                <h4 class="mb-0 text-success">${Format.currency(c.totalSpent)}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center py-3">
+                                <div class="detail-label">Credit Limit</div>
+                                <h4 class="mb-0 text-warning">${Format.currency(c.creditLimit)}</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        Modal.show('viewCustomerModal');
     },
 
     edit(id) {
@@ -236,6 +302,60 @@ const SalesCustomers = {
         } catch (error) {
             Toast.error('Failed to save customer');
         }
+    },
+
+    filter(search = '', category = '', status = '') {
+        let filtered = this.data;
+        
+        if (search) {
+            const s = search.toLowerCase();
+            filtered = filtered.filter(c => 
+                (c.firstName + ' ' + c.lastName).toLowerCase().includes(s) ||
+                c.email?.toLowerCase().includes(s) ||
+                c.customerCode?.toLowerCase().includes(s) ||
+                c.phone?.toLowerCase().includes(s)
+            );
+        }
+        
+        if (category) {
+            filtered = filtered.filter(c => c.categoryName === category);
+        }
+        
+        if (status) {
+            filtered = filtered.filter(c => c.status === status);
+        }
+        
+        this.renderFiltered(filtered);
+    },
+
+    renderFiltered(data) {
+        const tbody = document.getElementById('customersTableBody');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No customers found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(c => `
+            <tr>
+                <td><strong>${c.customerCode}</strong></td>
+                <td>
+                    <div class="fw-semibold">${c.firstName} ${c.lastName}</div>
+                    <small class="text-muted">${c.email}</small>
+                </td>
+                <td>${c.phone || '-'}</td>
+                <td>${c.categoryName || 'Standard'}</td>
+                <td>${Format.currency(c.totalSpent)}</td>
+                <td>${Format.statusBadge(c.status)}</td>
+                <td class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="SalesCustomers.view(${c.customerId})">${Icons.view}</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="SalesCustomers.edit(${c.customerId})">${Icons.edit}</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
     }
 };
 
@@ -298,7 +418,78 @@ const SalesOrders = {
     },
 
     view(id) {
-        window.location.href = `/SalesStaff/OrderDetails/${id}`;
+        const o = this.data.find(order => order.orderId === id);
+        if (!o) {
+            Toast.error('Order not found');
+            return;
+        }
+        
+        this.currentId = id;
+        const content = document.getElementById('viewOrderContent');
+        if (content) {
+            content.innerHTML = `
+                <div class="row g-4">
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-3">
+                            <div>
+                                <h5 class="mb-1">${o.orderNumber}</h5>
+                                <small class="text-muted">${Format.date(o.orderDate, true)}</small>
+                            </div>
+                            ${Format.statusBadge(o.orderStatus)}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Customer</div>
+                        <div class="detail-value">${o.customerName || 'N/A'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Payment Method</div>
+                        <div class="detail-value">${o.paymentMethod || '-'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Payment Status</div>
+                        <div class="detail-value">${Format.statusBadge(o.paymentStatus || 'Pending')}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Items</div>
+                        <div class="detail-value">${o.itemCount || 0} items</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="detail-label">Shipping Address</div>
+                        <div class="detail-value">${o.shippingAddress || o.billingAddress || '-'}</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-3">
+                                        <div class="detail-label">Subtotal</div>
+                                        <h5 class="mb-0">${Format.currency(o.subtotal || o.totalAmount)}</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-3">
+                                        <div class="detail-label">Tax</div>
+                                        <h5 class="mb-0">${Format.currency(o.taxAmount || 0)}</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center py-3">
+                                        <div class="small">Total Amount</div>
+                                        <h4 class="mb-0">${Format.currency(o.totalAmount)}</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        Modal.show('viewOrderModal');
     },
 
     edit(id) {
@@ -316,6 +507,51 @@ const SalesOrders = {
         } catch (error) {
             Toast.error('Failed to update order status');
         }
+    },
+
+    filter(search = '', status = '') {
+        let filtered = this.data;
+        
+        if (search) {
+            const s = search.toLowerCase();
+            filtered = filtered.filter(o => 
+                o.orderNumber?.toLowerCase().includes(s) ||
+                o.customerName?.toLowerCase().includes(s)
+            );
+        }
+        
+        if (status) {
+            filtered = filtered.filter(o => o.orderStatus === status);
+        }
+        
+        this.renderFiltered(filtered);
+    },
+
+    renderFiltered(data) {
+        const tbody = document.getElementById('ordersTableBody');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No orders found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(o => `
+            <tr>
+                <td><strong>${o.orderNumber}</strong></td>
+                <td>${o.customerName || 'N/A'}</td>
+                <td>${Format.date(o.orderDate)}</td>
+                <td>${o.itemCount || 0} items</td>
+                <td>${Format.currency(o.totalAmount)}</td>
+                <td>${Format.statusBadge(o.orderStatus)}</td>
+                <td class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="SalesOrders.view(${o.orderId})">${Icons.view}</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="SalesOrders.edit(${o.orderId})">${Icons.edit}</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
     }
 };
 
@@ -379,9 +615,54 @@ const SalesLeads = {
     },
 
     view(id) {
-        const lead = this.data.find(l => l.leadId === id);
-        if (!lead) return;
-        Modal.show('leadViewModal');
+        const l = this.data.find(lead => lead.leadId === id);
+        if (!l) {
+            Toast.error('Lead not found');
+            return;
+        }
+        
+        this.currentId = id;
+        const content = document.getElementById('viewLeadContent');
+        if (content) {
+            content.innerHTML = `
+                <div class="row g-4">
+                    <div class="col-12 text-center border-bottom pb-3">
+                        <h5 class="mb-1">${l.firstName} ${l.lastName}</h5>
+                        <small class="text-muted">${l.leadCode}</small>
+                        <div class="mt-2">${Format.statusBadge(l.status)}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Email</div>
+                        <div class="detail-value">${l.email || '-'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Phone</div>
+                        <div class="detail-value">${l.phone || '-'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Company</div>
+                        <div class="detail-value">${l.companyName || '-'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Source</div>
+                        <div class="detail-value">${l.source || '-'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Estimated Value</div>
+                        <div class="detail-value fw-semibold text-success">${Format.currency(l.estimatedValue)}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Created Date</div>
+                        <div class="detail-value">${Format.date(l.createdDate)}</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="detail-label">Notes</div>
+                        <div class="detail-value">${l.notes || 'No notes available'}</div>
+                    </div>
+                </div>
+            `;
+        }
+        Modal.show('viewLeadModal');
     },
 
     edit(id) {
@@ -417,6 +698,60 @@ const SalesLeads = {
         } catch (error) {
             Toast.error('Failed to save lead');
         }
+    },
+
+    filter(search = '', status = '', source = '') {
+        let filtered = this.data;
+        
+        if (search) {
+            const s = search.toLowerCase();
+            filtered = filtered.filter(l => 
+                (l.firstName + ' ' + l.lastName).toLowerCase().includes(s) ||
+                l.email?.toLowerCase().includes(s) ||
+                l.leadCode?.toLowerCase().includes(s) ||
+                l.companyName?.toLowerCase().includes(s)
+            );
+        }
+        
+        if (status) {
+            filtered = filtered.filter(l => l.status === status);
+        }
+        
+        if (source) {
+            filtered = filtered.filter(l => l.source === source);
+        }
+        
+        this.renderFiltered(filtered);
+    },
+
+    renderFiltered(data) {
+        const tbody = document.getElementById('leadsTableBody');
+        if (!tbody) return;
+
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No leads found</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(l => `
+            <tr>
+                <td><strong>${l.leadCode}</strong></td>
+                <td>
+                    <div class="fw-semibold">${l.firstName} ${l.lastName}</div>
+                    <small class="text-muted">${l.email || ''}</small>
+                </td>
+                <td>${l.companyName || '-'}</td>
+                <td>${l.source || '-'}</td>
+                <td>${Format.currency(l.estimatedValue)}</td>
+                <td>${Format.statusBadge(l.status)}</td>
+                <td class="text-center">
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="SalesLeads.view(${l.leadId})">${Icons.view}</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="SalesLeads.edit(${l.leadId})">${Icons.edit}</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
     }
 };
 

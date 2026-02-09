@@ -1,769 +1,827 @@
 @{
-    ViewData["Title"] = "Customer Support";
+    ViewData["Title"] = "Support Center";
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
 }
 
 <style>
-    .support-page { padding: 30px 0; background: #f8f9fa; min-height: 100vh; }
-    
+    .support-page { min-height: 100vh; }
+
+    /* Page Header */
     .page-header {
-        background: linear-gradient(135deg, #008080 0%, #20b2aa 100%);
-        color: white;
-        padding: 40px;
-        border-radius: 20px;
-        margin-bottom: 30px;
         text-align: center;
+        margin-bottom: 40px;
     }
-    
-    .page-header h1 { font-weight: 800; margin-bottom: 10px; font-size: 2.2rem; }
-    .page-header p { opacity: 0.9; margin: 0; }
-    
-    .support-grid {
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--foreground);
+        margin-bottom: 8px;
+    }
+
+    .page-subtitle { color: var(--muted-foreground); }
+
+    /* Two Column Layout */
+    .support-layout {
         display: grid;
-        grid-template-columns: 1fr 380px;
-        gap: 30px;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
     }
-    
-    @@media (max-width: 992px) {
-        .support-grid { grid-template-columns: 1fr; }
-    }
-    
-    .support-card {
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 4px 25px rgba(0,0,0,0.08);
+
+    /* Chatbot Section */
+    .chat-section {
+        background: var(--card);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        height: 650px;
         overflow: hidden;
+        position: relative;
     }
-    
-    .card-header {
-        padding: 20px 25px;
-        border-bottom: 1px solid #e5e7eb;
+
+    .chat-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
         display: flex;
+        align-items: center;
         justify-content: space-between;
-        align-items: center;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+        color: white;
     }
-    
-    .card-header h3 {
-        font-weight: 700;
-        color: #1f2937;
-        margin: 0;
+
+    .chat-header-left {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
     }
-    
-    .status-indicator {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.85rem;
-    }
-    
-    .status-dot {
-        width: 10px;
-        height: 10px;
+
+    .chat-avatar {
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
-        background: #10b981;
-        animation: pulse 2s infinite;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
     }
-    
+
+    .chat-info h3 { font-size: 1.1rem; font-weight: 600; margin: 0; }
+    .chat-info span { font-size: 0.8rem; opacity: 0.9; display: flex; align-items: center; gap: 6px; }
+    .online-dot { width: 8px; height: 8px; background: #10B981; border-radius: 50%; animation: pulse 2s infinite; }
+
     @@keyframes pulse {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
     }
-    
-    /* Chat Area */
-    .chat-container {
-        height: 500px;
+
+    .btn-request-agent {
+        padding: 8px 16px;
+        background: rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 20px;
+        color: white;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
         display: flex;
-        flex-direction: column;
+        align-items: center;
+        gap: 6px;
     }
-    
+
+    .btn-request-agent:hover { background: rgba(255,255,255,0.3); }
+    .btn-request-agent:disabled { opacity: 0.6; cursor: not-allowed; }
+
     .chat-messages {
         flex: 1;
         overflow-y: auto;
         padding: 20px;
-        background: #f9fafb;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
     }
-    
+
     .message {
         display: flex;
-        gap: 12px;
-        margin-bottom: 20px;
-        animation: fadeIn 0.3s ease;
+        gap: 10px;
+        max-width: 85%;
     }
-    
-    @@keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
+
+    .message.bot { align-self: flex-start; }
+    .message.user { align-self: flex-end; flex-direction: row-reverse; }
+    .message.agent { align-self: flex-start; }
+    .message.system {
+        align-self: center;
+        max-width: 90%;
     }
-    
-    .message.user { flex-direction: row-reverse; }
-    
+
     .message-avatar {
-        width: 40px;
-        height: 40px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 0.9rem;
         flex-shrink: 0;
-        font-size: 1.2rem;
     }
-    
-    .message.bot .message-avatar { background: linear-gradient(135deg, #008080, #20b2aa); }
-    .message.user .message-avatar { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
-    .message.agent .message-avatar { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
-    
-    .message-content {
-        max-width: 75%;
-        padding: 15px 20px;
-        border-radius: 18px;
+
+    .message.bot .message-avatar { background: var(--primary); color: white; }
+    .message.user .message-avatar { background: var(--muted); }
+    .message.agent .message-avatar { background: #10B981; color: white; }
+
+    .message-bubble {
+        padding: 12px 16px;
+        border-radius: 16px;
         line-height: 1.5;
     }
-    
-    .message.bot .message-content { background: white; color: #1f2937; border-bottom-left-radius: 5px; }
-    .message.user .message-content { background: linear-gradient(135deg, #008080, #006666); color: white; border-bottom-right-radius: 5px; }
-    .message.agent .message-content { background: #fef3cd; color: #856404; border-bottom-left-radius: 5px; }
-    
-    .message-time {
-        font-size: 0.75rem;
-        color: #9ca3af;
-        margin-top: 5px;
+
+    .message.bot .message-bubble {
+        background: var(--muted);
+        color: var(--foreground);
+        border-bottom-left-radius: 4px;
     }
-    
-    .message.user .message-time { text-align: right; }
-    
+
+    .message.user .message-bubble {
+        background: var(--primary);
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+
+    .message.agent .message-bubble {
+        background: #D1FAE5;
+        color: #065F46;
+        border-bottom-left-radius: 4px;
+    }
+
+    .message.system .message-bubble {
+        background: #FEF3C7;
+        color: #92400E;
+        font-size: 0.85rem;
+        text-align: center;
+        border-radius: 8px;
+    }
+
+    /* Typing Indicator */
     .typing-indicator {
-        display: none;
-        padding: 15px 20px;
-        background: white;
-        border-radius: 18px;
-        border-bottom-left-radius: 5px;
-        width: fit-content;
-    }
-    
-    .typing-indicator.show { display: block; }
-    
-    .typing-dots {
         display: flex;
-        gap: 5px;
+        gap: 4px;
+        padding: 8px 0;
     }
-    
-    .typing-dots span {
+
+    .typing-indicator span {
         width: 8px;
         height: 8px;
-        background: #9ca3af;
+        background: var(--muted-foreground);
         border-radius: 50%;
-        animation: bounce 1.4s infinite;
+        animation: typingBounce 1.4s infinite;
     }
-    
-    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-    
-    @@keyframes bounce {
+
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @@keyframes typingBounce {
         0%, 60%, 100% { transform: translateY(0); }
         30% { transform: translateY(-5px); }
     }
-    
-    /* Quick Replies */
+
+    /* Live Agent Status Banner */
+    .agent-status-banner {
+        background: linear-gradient(135deg, #10B981, #059669);
+        color: white;
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.9rem;
+    }
+
+    .agent-status-banner.waiting {
+        background: linear-gradient(135deg, #F59E0B, #D97706);
+    }
+
+    .agent-status-banner .status-text {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-end-chat {
+        padding: 6px 14px;
+        background: rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 6px;
+        color: white;
+        font-size: 0.8rem;
+        cursor: pointer;
+    }
+
+    .btn-end-chat:hover { background: rgba(255,255,255,0.3); }
+
+    /* Quick Reply Buttons */
     .quick-replies {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
-        padding: 15px 20px;
-        background: white;
-        border-top: 1px solid #f3f4f6;
+        gap: 8px;
+        padding: 16px 20px;
+        border-top: 1px solid var(--border);
+        background: var(--background);
     }
-    
-    .quick-reply {
+
+    .quick-reply-btn {
         padding: 8px 16px;
-        background: #f3f4f6;
-        border: none;
+        background: var(--card);
+        border: 1px solid var(--border);
         border-radius: 20px;
-        cursor: pointer;
         font-size: 0.85rem;
-        color: #374151;
-        transition: all 0.3s;
+        color: var(--foreground);
+        cursor: pointer;
+        transition: all 0.2s;
     }
-    
-    .quick-reply:hover {
-        background: #008080;
+
+    .quick-reply-btn:hover {
+        background: var(--primary);
         color: white;
+        border-color: var(--primary);
     }
-    
-    /* Chat Input */
-    .chat-input-area {
-        padding: 20px;
-        border-top: 1px solid #e5e7eb;
+
+    .chat-input-container {
+        padding: 16px 20px;
+        border-top: 1px solid var(--border);
         display: flex;
         gap: 12px;
     }
-    
+
     .chat-input {
         flex: 1;
-        padding: 14px 20px;
-        border: 2px solid #e5e7eb;
-        border-radius: 25px;
-        font-size: 1rem;
-        transition: all 0.3s;
-    }
-    
-    .chat-input:focus {
+        padding: 12px 16px;
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        font-size: 0.95rem;
         outline: none;
-        border-color: #008080;
+        transition: border-color 0.2s;
     }
-    
-    .send-btn {
-        width: 50px;
-        height: 50px;
-        background: linear-gradient(135deg, #008080, #006666);
-        color: white;
-        border: none;
+
+    .chat-input:focus { border-color: var(--primary); }
+
+    .chat-send-btn {
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
+        background: var(--primary);
+        border: none;
+        color: white;
         cursor: pointer;
-        font-size: 1.2rem;
-        transition: all 0.3s;
-    }
-    
-    .send-btn:hover { transform: scale(1.05); }
-    .send-btn:disabled { background: #9ca3af; cursor: not-allowed; }
-    
-    /* Support Options */
-    .support-options { display: flex; flex-direction: column; gap: 15px; padding: 25px; }
-    
-    .support-option {
         display: flex;
         align-items: center;
-        gap: 15px;
-        padding: 20px;
-        background: #f9fafb;
-        border-radius: 15px;
-        cursor: pointer;
-        transition: all 0.3s;
-        border: 2px solid transparent;
+        justify-content: center;
+        transition: all 0.2s;
     }
-    
-    .support-option:hover { border-color: #008080; background: #f0f9f9; }
-    .support-option.active { border-color: #008080; background: #f0f9f9; }
-    
-    .option-icon {
-        width: 50px;
-        height: 50px;
+
+    .chat-send-btn:hover { background: var(--primary-hover); transform: scale(1.05); }
+
+    /* FAQ & Channels Section */
+    .faq-section {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .faq-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .faq-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--foreground);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .faq-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .faq-item {
+        background: var(--card);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    .faq-question {
+        padding: 18px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--foreground);
+        transition: background 0.2s;
+    }
+
+    .faq-question:hover { background: var(--muted); }
+
+    .faq-icon {
+        font-size: 1.2rem;
+        transition: transform 0.3s;
+        color: var(--muted-foreground);
+    }
+
+    .faq-item.open .faq-icon { transform: rotate(180deg); }
+
+    .faq-answer {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+
+    .faq-answer-content {
+        padding: 0 20px 20px;
+        color: var(--muted-foreground);
+        line-height: 1.6;
+    }
+
+    .faq-item.open .faq-answer { max-height: 200px; }
+
+    /* Support Channels */
+    .channels-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--foreground);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .support-channels {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .channel-card {
+        background: var(--card);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .channel-card:hover {
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px rgba(0,128,128,0.1);
+    }
+
+    .channel-icon {
+        width: 48px;
+        height: 48px;
         border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.5rem;
     }
-    
-    .option-icon.ai { background: linear-gradient(135deg, #008080, #20b2aa); }
-    .option-icon.agent { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
-    .option-icon.ticket { background: linear-gradient(135deg, #8b5cf6, #a78bfa); }
-    .option-icon.faq { background: linear-gradient(135deg, #10b981, #34d399); }
-    
-    .option-info h4 { font-weight: 600; color: #1f2937; margin: 0 0 5px 0; }
-    .option-info p { color: #6b7280; font-size: 0.85rem; margin: 0; }
-    
-    /* FAQ Section */
-    .faq-section { padding: 25px; }
-    
-    .faq-item {
-        border-bottom: 1px solid #e5e7eb;
-        padding: 15px 0;
+
+    .channel-icon.email { background: var(--info-light); }
+    .channel-icon.phone { background: var(--success-light); }
+    .channel-icon.ticket { background: var(--warning-light); }
+    .channel-icon.live { background: var(--error-light); }
+
+    .channel-info h4 { font-weight: 600; color: var(--foreground); margin-bottom: 4px; }
+    .channel-info p { font-size: 0.8rem; color: var(--muted-foreground); margin: 0; }
+
+    /* Responsive */
+    @@media (max-width: 992px) {
+        .support-layout { grid-template-columns: 1fr; }
+        .chat-section { height: 550px; }
     }
-    
-    .faq-item:last-child { border-bottom: none; }
-    
-    .faq-question {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        cursor: pointer;
-        font-weight: 600;
-        color: #1f2937;
+
+    @@media (max-width: 576px) {
+        .support-channels { grid-template-columns: 1fr; }
+        .chat-header { padding: 16px; flex-direction: column; gap: 12px; }
+        .quick-replies { overflow-x: auto; flex-wrap: nowrap; }
+        .quick-reply-btn { white-space: nowrap; }
     }
-    
-    .faq-toggle { font-size: 1.2rem; transition: transform 0.3s; }
-    .faq-item.open .faq-toggle { transform: rotate(45deg); }
-    
-    .faq-answer {
-        max-height: 0;
-        overflow: hidden;
-        transition: all 0.3s;
-        color: #6b7280;
-        line-height: 1.6;
-    }
-    
-    .faq-item.open .faq-answer {
-        max-height: 200px;
-        padding-top: 15px;
-    }
-    
-    /* Agent Chat Notice */
-    .agent-notice {
-        background: linear-gradient(135deg, #fef3cd, #fff8e1);
-        border: 1px solid #f59e0b;
-        border-radius: 12px;
-        padding: 15px;
-        margin: 15px 20px;
-        display: none;
-    }
-    
-    .agent-notice.show { display: block; }
-    
-    .agent-notice h4 { color: #92400e; margin: 0 0 5px 0; font-size: 0.9rem; }
-    .agent-notice p { color: #b45309; font-size: 0.85rem; margin: 0; }
 </style>
 
 <div class="support-page">
-    <div class="container">
-        <div class="page-header">
-            <h1>💬 Customer Support</h1>
-            <p>We're here to help! Chat with our AI assistant or connect with a support agent</p>
-        </div>
-        
-        <div class="support-grid">
-            <!-- Main Chat Area -->
-            <div class="support-card">
-                <div class="card-header">
-                    <h3 id="chatTitle">🤖 AI Assistant</h3>
-                    <div class="status-indicator">
-                        <span class="status-dot"></span>
-                        <span id="statusText">Online</span>
+    <!-- Page Header -->
+    <div class="page-header animate-fade-in">
+        <h1 class="page-title">💬 Customer Support</h1>
+        <p class="page-subtitle">Chat with our AI assistant or connect with a live agent</p>
+    </div>
+
+    <div class="support-layout">
+        <!-- Chatbot -->
+        <section class="chat-section animate-fade-in" style="animation-delay: 0.1s">
+            <div class="chat-header">
+                <div class="chat-header-left">
+                    <div class="chat-avatar" id="chatAvatar">🤖</div>
+                    <div class="chat-info">
+                        <h3 id="chatAgentName">GearBot Assistant</h3>
+                        <span><span class="online-dot"></span> <span id="chatStatus">Online</span></span>
                     </div>
                 </div>
-                
-                <div class="agent-notice" id="agentNotice">
-                    <h4>👤 Connected to Support Agent</h4>
-                    <p>You're now chatting with a live support agent. They'll assist you shortly.</p>
+                <button class="btn-request-agent" id="btnRequestAgent" onclick="requestLiveAgent()">
+                    👤 Request Live Agent
+                </button>
+            </div>
+
+            <!-- Agent Status Banner (hidden by default) -->
+            <div class="agent-status-banner waiting" id="agentStatusBanner" style="display: none;">
+                <div class="status-text">
+                    <span>⏳</span>
+                    <span id="agentStatusText">Waiting for an agent to connect...</span>
                 </div>
-                
-                <div class="chat-container">
-                    <div class="chat-messages" id="chatMessages">
-                        <!-- Messages will be inserted here -->
+                <button class="btn-end-chat" onclick="endLiveChat()">Cancel</button>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-bubble">
+                        Hi there! 👋 I'm GearBot, your virtual assistant. How can I help you today?
                     </div>
-                    
-                    <div class="typing-indicator" id="typingIndicator">
-                        <div class="typing-dots">
-                            <span></span><span></span><span></span>
-                        </div>
-                    </div>
-                    
-                    <div class="quick-replies" id="quickReplies">
-                        <button class="quick-reply" onclick="sendQuickReply('Track my order')">📦 Track Order</button>
-                        <button class="quick-reply" onclick="sendQuickReply('Return or refund')">🔄 Returns</button>
-                        <button class="quick-reply" onclick="sendQuickReply('Product inquiry')">🛒 Products</button>
-                        <button class="quick-reply" onclick="sendQuickReply('Payment issues')">💳 Payments</button>
-                        <button class="quick-reply" onclick="sendQuickReply('Talk to agent')">👤 Live Agent</button>
-                    </div>
-                </div>
-                
-                <div class="chat-input-area">
-                    <input type="text" class="chat-input" id="messageInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
-                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
                 </div>
             </div>
-            
-            <!-- Support Options Sidebar -->
+
+            <div class="quick-replies" id="quickReplies">
+                <button class="quick-reply-btn" onclick="sendQuickReply('Track my order')">📦 Track my order</button>
+                <button class="quick-reply-btn" onclick="sendQuickReply('Return policy')">↩️ Return policy</button>
+                <button class="quick-reply-btn" onclick="sendQuickReply('Shipping info')">🚚 Shipping info</button>
+                <button class="quick-reply-btn" onclick="sendQuickReply('Payment methods')">💳 Payment methods</button>
+            </div>
+
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+                <button class="chat-send-btn" onclick="sendMessage()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- FAQ & Channels -->
+        <section class="faq-section animate-fade-in" style="animation-delay: 0.2s">
+            <div class="faq-header">
+                <h2 class="faq-title">❓ Frequently Asked Questions</h2>
+            </div>
+            <div class="faq-list" id="faqList">
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        How do I track my order?
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            You can track your order by going to "My Orders" in your account dashboard. Click on any order to see its current status and tracking information.
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        What is your return policy?
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            We offer a 30-day return policy for most products. Items must be unused and in their original packaging. To initiate a return, visit "My Orders" and select "Request Return".
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        What payment methods do you accept?
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            We accept major credit cards (Visa, Mastercard), GCash, Maya, bank transfers, and Cash on Delivery (COD) for orders within Metro Manila.
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        How long does shipping take?
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            Metro Manila: 1-3 business days. Luzon: 3-5 business days. Visayas & Mindanao: 5-7 business days. Express shipping available at checkout.
+                        </div>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        Do products come with warranty?
+                        <span class="faq-icon">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        <div class="faq-answer-content">
+                            Yes! All products come with manufacturer warranty (1-3 years depending on product). Keep your receipt for claims.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support Channels -->
             <div>
-                <div class="support-card" style="margin-bottom: 20px;">
-                    <div class="card-header">
-                        <h3>🎯 Support Options</h3>
-                    </div>
-                    <div class="support-options">
-                        <div class="support-option active" onclick="switchToAI()">
-                            <div class="option-icon ai">🤖</div>
-                            <div class="option-info">
-                                <h4>AI Assistant</h4>
-                                <p>Get instant answers 24/7</p>
-                            </div>
+                <h2 class="channels-title">📞 Contact Us</h2>
+                <div class="support-channels">
+                    <a href="mailto:support@compugear.ph" class="channel-card">
+                        <div class="channel-icon email">📧</div>
+                        <div class="channel-info">
+                            <h4>Email Support</h4>
+                            <p>support@compugear.ph</p>
                         </div>
-                        <div class="support-option" onclick="requestAgent()">
-                            <div class="option-icon agent">👤</div>
-                            <div class="option-info">
-                                <h4>Live Agent</h4>
-                                <p>Chat with support staff</p>
-                            </div>
+                    </a>
+                    <a href="tel:+6328001234" class="channel-card">
+                        <div class="channel-icon phone">📞</div>
+                        <div class="channel-info">
+                            <h4>Phone Support</h4>
+                            <p>(02) 8000-1234</p>
                         </div>
-                        <a href="/CustomerPortal/SubmitTicket" class="support-option" style="text-decoration: none;">
-                            <div class="option-icon ticket">📝</div>
-                            <div class="option-info">
-                                <h4>Submit Ticket</h4>
-                                <p>Create a support ticket</p>
-                            </div>
-                        </a>
-                        <a href="/CustomerPortal/MyTickets" class="support-option" style="text-decoration: none;">
-                            <div class="option-icon faq">📋</div>
-                            <div class="option-info">
-                                <h4>My Tickets</h4>
-                                <p>View your support tickets</p>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-                
-                <!-- FAQ Section -->
-                <div class="support-card">
-                    <div class="card-header">
-                        <h3>❓ Quick FAQ</h3>
-                    </div>
-                    <div class="faq-section">
-                        <div class="faq-item" onclick="toggleFaq(this)">
-                            <div class="faq-question">
-                                <span>How do I track my order?</span>
-                                <span class="faq-toggle">+</span>
-                            </div>
-                            <div class="faq-answer">
-                                Go to "My Orders" in your account dashboard. Click on any order to see its current status and tracking information.
-                            </div>
+                    </a>
+                    <a href="/CustomerPortal/SubmitTicket" class="channel-card">
+                        <div class="channel-icon ticket">🎫</div>
+                        <div class="channel-info">
+                            <h4>Submit a Ticket</h4>
+                            <p>Get help in 24hrs</p>
                         </div>
-                        <div class="faq-item" onclick="toggleFaq(this)">
-                            <div class="faq-question">
-                                <span>What is your return policy?</span>
-                                <span class="faq-toggle">+</span>
-                            </div>
-                            <div class="faq-answer">
-                                We accept returns within 7 days of delivery for unopened items. Contact our support team to initiate a return request.
-                            </div>
+                    </a>
+                    <a href="/CustomerPortal/MyTickets" class="channel-card">
+                        <div class="channel-icon live">📋</div>
+                        <div class="channel-info">
+                            <h4>My Tickets</h4>
+                            <p>View ticket history</p>
                         </div>
-                        <div class="faq-item" onclick="toggleFaq(this)">
-                            <div class="faq-question">
-                                <span>How can I use promo codes?</span>
-                                <span class="faq-toggle">+</span>
-                            </div>
-                            <div class="faq-answer">
-                                Enter your promo code in the cart page before checkout. The discount will be automatically applied to eligible items.
-                            </div>
-                        </div>
-                        <div class="faq-item" onclick="toggleFaq(this)">
-                            <div class="faq-question">
-                                <span>Payment methods accepted?</span>
-                                <span class="faq-toggle">+</span>
-                            </div>
-                            <div class="faq-answer">
-                                We accept Credit/Debit Cards, GCash, GrabPay, and Maya through our secure PayMongo payment gateway.
-                            </div>
-                        </div>
-                    </div>
+                    </a>
                 </div>
             </div>
-        </div>
+        </section>
     </div>
 </div>
 
 @section Scripts {
 <script>
-    let chatSessionId = null;
-    let isAgentChat = false;
-    let isWaitingForAgent = false;
-    let currentQuickReplies = [];
+    // Chat state
+    let chatMode = 'bot'; // 'bot' or 'agent'
+    let sessionId = null;
+    let pollingInterval = null;
     let lastMessageId = 0;
-    let pollInterval = null;
-    let agentName = null;
 
-    document.addEventListener('DOMContentLoaded', function() {
-        initChat();
-    });
-
-    function initChat() {
-        // Add welcome message
-        addMessage('bot', "👋 Hi there! I'm your AI assistant. I can help you with:\n\n• Order tracking and status\n• Returns and refunds\n• Product information\n• Payment inquiries\n• Promotions and discounts\n\nHow can I assist you today?");
-    }
+    // Bot responses for different topics
+    const botResponses = {
+        'track': "To track your order, go to **My Orders** in your dashboard. You can see the current status and estimated delivery date there. Would you like me to show you how? 📦",
+        'return': "We have a **30-day return policy** for most products! Items must be unused and in original packaging. Just go to My Orders, select your order, and click 'Request Return'. Need help with a specific return? 🔄",
+        'shipping': "**Shipping times:**\n• Metro Manila: 1-3 days\n• Luzon: 3-5 days\n• Visayas/Mindanao: 5-7 days\n\nFree shipping on orders over ₱2,000! 🚚",
+        'payment': "We accept:\n• Credit/Debit Cards (Visa, Mastercard)\n• GCash & Maya\n• Bank Transfer\n• Cash on Delivery (Metro Manila)\n\nAll transactions are securely encrypted! 💳",
+        'warranty': "All our products come with manufacturer warranty (1-3 years depending on the product). Keep your receipt for claims. Need to file a warranty claim? 🛡️",
+        'agent': "I understand you'd like to speak with a live agent. Click the **'Request Live Agent'** button above to connect with our support team. They're available Mon-Sat, 9AM-6PM. 👤",
+        'default': "I'm here to help! You can ask me about:\n• Order tracking 📦\n• Returns & refunds ↩️\n• Shipping information 🚚\n• Payment options 💳\n\nOr click **'Request Live Agent'** to chat with our support team! 😊"
+    };
 
     function handleKeyPress(event) {
-        if (event.key === 'Enter') {
-            sendMessage();
-        }
-    }
-
-    async function sendMessage() {
-        const input = document.getElementById('messageInput');
-        const message = input.value.trim();
-        
-        if (!message) return;
-        
-        // Add user message
-        addMessage('user', message);
-        input.value = '';
-        
-        // If waiting for agent or in agent chat, send to live chat endpoint
-        if (isWaitingForAgent || isAgentChat) {
-            await sendToAgent(message);
-            return;
-        }
-        
-        // Show typing indicator
-        showTyping(true);
-        
-        try {
-            const response = await fetch('/CustomerPortal/SendChatMessage', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: message,
-                    sessionId: chatSessionId
-                })
-            });
-            
-            const result = await response.json();
-            
-            showTyping(false);
-            
-            if (result.success) {
-                chatSessionId = result.sessionId;
-                
-                // Check if should transfer to agent
-                if (result.shouldTransferToAgent) {
-                    // AI detected need to transfer
-                    addMessage('bot', result.response);
-                    await requestAgent();
-                    return;
-                }
-                
-                // Add bot response
-                addMessage('bot', result.response);
-                
-                // Update quick replies
-                if (result.quickReplies && result.quickReplies.length > 0) {
-                    updateQuickReplies(result.quickReplies);
-                }
-            } else {
-                addMessage('bot', "I apologize, but I'm having trouble processing your request. Please try again or contact a live agent.");
-            }
-        } catch (error) {
-            showTyping(false);
-            console.error('Error:', error);
-            addMessage('bot', "Sorry, there was an error. Please try again later.");
-        }
-    }
-
-    async function sendToAgent(message) {
-        try {
-            const response = await fetch('/CustomerPortal/SendLiveChatMessage', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sessionId: chatSessionId,
-                    message: message
-                })
-            });
-            
-            const result = await response.json();
-            if (!result.success) {
-                addMessage('bot', "Message could not be sent. Please try again.");
-            }
-        } catch (error) {
-            console.error('Error sending to agent:', error);
-        }
+        if (event.key === 'Enter') sendMessage();
     }
 
     function sendQuickReply(text) {
-        document.getElementById('messageInput').value = text;
+        document.getElementById('chatInput').value = text;
         sendMessage();
     }
 
-    function addMessage(type, content, messageId = null) {
-        // Prevent duplicate messages
-        if (messageId && messageId <= lastMessageId) return;
-        if (messageId) lastMessageId = messageId;
-        
+    async function sendMessage() {
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+        if (!message) return;
+
+        addMessage(message, 'user');
+        input.value = '';
+
+        if (chatMode === 'bot') {
+            showTypingIndicator();
+            setTimeout(() => {
+                removeTypingIndicator();
+                const response = getBotResponse(message);
+                addMessage(response, 'bot');
+            }, 1200);
+        } else if ((chatMode === 'agent' || chatMode === 'waiting') && sessionId) {
+            // Send to live agent
+            try {
+                await fetch('/api/CustomerSendChatMessage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: sessionId, message: message })
+                });
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
+        }
+    }
+
+    function addMessage(text, type) {
         const container = document.getElementById('chatMessages');
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        const avatars = {
-            'bot': '🤖',
-            'user': '👤',
-            'agent': '👨‍💼',
-            'system': 'ℹ️'
-        };
-        
-        const message = document.createElement('div');
-        message.className = `message ${type}`;
-        if (messageId) message.dataset.messageId = messageId;
-        
-        message.innerHTML = `
-            <div class="message-avatar">${avatars[type]}</div>
-            <div>
-                <div class="message-content">${content.replace(/\n/g, '<br>')}</div>
-                <div class="message-time">${time}</div>
-            </div>
-        `;
-        
-        container.appendChild(message);
+        const avatars = { bot: '🤖', user: '👤', agent: '👨‍💼', system: '⚡' };
+
+        const messageHtml = `
+            <div class="message ${type}">
+                ${type !== 'system' ? `<div class="message-avatar">${avatars[type]}</div>` : ''}
+                <div class="message-bubble">${text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</div>
+            </div>`;
+
+        container.insertAdjacentHTML('beforeend', messageHtml);
         container.scrollTop = container.scrollHeight;
-        
-        // Play notification sound for agent messages
-        if (type === 'agent' && document.hidden) {
-            playNotificationSound();
-        }
     }
 
-    function showTyping(show) {
+    function showTypingIndicator() {
+        const container = document.getElementById('chatMessages');
+        container.insertAdjacentHTML('beforeend', `
+            <div class="message bot" id="typingIndicator">
+                <div class="message-avatar">🤖</div>
+                <div class="message-bubble">
+                    <div class="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            </div>`);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
         const indicator = document.getElementById('typingIndicator');
-        indicator.classList.toggle('show', show);
-        
-        if (show) {
-            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+        if (indicator) indicator.remove();
+    }
+
+    function getBotResponse(message) {
+        const lower = message.toLowerCase();
+
+        if (lower.includes('track') || lower.includes('order') || lower.includes('where')) {
+            return botResponses.track;
+        } else if (lower.includes('return') || lower.includes('refund') || lower.includes('exchange')) {
+            return botResponses.return;
+        } else if (lower.includes('ship') || lower.includes('delivery') || lower.includes('deliver')) {
+            return botResponses.shipping;
+        } else if (lower.includes('pay') || lower.includes('gcash') || lower.includes('card') || lower.includes('cod')) {
+            return botResponses.payment;
+        } else if (lower.includes('warranty') || lower.includes('guarantee')) {
+            return botResponses.warranty;
+        } else if (lower.includes('agent') || lower.includes('human') || lower.includes('person') || lower.includes('staff')) {
+            return botResponses.agent;
+        } else if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey')) {
+            return "Hello! 👋 Great to see you! How can I assist you today?";
+        } else if (lower.includes('thank')) {
+            return "You're welcome! 😊 Is there anything else I can help you with?";
+        } else {
+            return botResponses.default;
         }
     }
 
-    function updateQuickReplies(replies) {
-        const container = document.getElementById('quickReplies');
-        container.innerHTML = replies.map(reply => 
-            `<button class="quick-reply" onclick="sendQuickReply('${reply}')">${reply}</button>`
-        ).join('');
+    function toggleFaq(element) {
+        const item = element.closest('.faq-item');
+        const wasOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+        if (!wasOpen) item.classList.add('open');
     }
 
-    function switchToAI() {
-        // Stop polling if active
-        if (pollInterval) {
-            clearInterval(pollInterval);
-            pollInterval = null;
-        }
-        
-        isAgentChat = false;
-        isWaitingForAgent = false;
-        document.getElementById('chatTitle').innerHTML = '🤖 AI Assistant';
-        document.getElementById('statusText').textContent = 'Online';
-        document.getElementById('agentNotice').classList.remove('show');
-        document.querySelectorAll('.support-option')[0].classList.add('active');
-        document.querySelectorAll('.support-option')[1].classList.remove('active');
-        
-        // Reset quick replies
-        document.getElementById('quickReplies').innerHTML = `
-            <button class="quick-reply" onclick="sendQuickReply('Track my order')">📦 Track Order</button>
-            <button class="quick-reply" onclick="sendQuickReply('Return or refund')">🔄 Returns</button>
-            <button class="quick-reply" onclick="sendQuickReply('Product inquiry')">🛒 Products</button>
-            <button class="quick-reply" onclick="sendQuickReply('Payment issues')">💳 Payments</button>
-            <button class="quick-reply" onclick="sendQuickReply('Talk to agent')">👤 Live Agent</button>
-        `;
-        
-        addMessage('bot', "You're now chatting with the AI assistant again. How can I help you?");
-    }
+    // Live Agent Functions
+    async function requestLiveAgent() {
+        const btn = document.getElementById('btnRequestAgent');
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Requesting...';
 
-    async function requestAgent() {
-        showTyping(true);
-        
         try {
-            const response = await fetch('/CustomerPortal/TransferToAgent', {
+            const response = await fetch('/api/RequestLiveAgent', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sessionId: chatSessionId,
-                    reason: 'Customer requested live agent'
-                })
+                body: JSON.stringify({})
             });
-            
             const result = await response.json();
-            
-            showTyping(false);
-            
+
             if (result.success) {
-                isWaitingForAgent = true;
-                chatSessionId = result.sessionId || chatSessionId;
-                
-                document.getElementById('chatTitle').innerHTML = '⏳ Connecting to Agent...';
-                document.getElementById('statusText').textContent = 'Waiting';
-                document.getElementById('agentNotice').innerHTML = `
-                    <h4>⏳ Connecting to Support Agent</h4>
-                    <p>Please wait while we connect you with the next available agent. This usually takes 1-3 minutes.</p>
-                `;
-                document.getElementById('agentNotice').classList.add('show');
-                document.querySelectorAll('.support-option')[1].classList.add('active');
-                document.querySelectorAll('.support-option')[0].classList.remove('active');
-                
-                addMessage('system', "🔔 Your request has been sent to our support team. Please wait a moment while an agent joins the chat. In the meantime, feel free to describe your issue in detail.");
-                
-                // Update quick replies for agent chat
-                document.getElementById('quickReplies').innerHTML = `
-                    <button class="quick-reply" onclick="sendQuickReply('I need help with my order')">📦 Order Issue</button>
-                    <button class="quick-reply" onclick="sendQuickReply('I have a complaint')">⚠️ Complaint</button>
-                    <button class="quick-reply" onclick="sendQuickReply('Technical support needed')">🔧 Technical</button>
-                `;
-                
-                // Start polling for agent messages
-                startPollingForMessages();
+                sessionId = result.sessionId;
+                chatMode = 'waiting';
+
+                // Show waiting banner
+                document.getElementById('agentStatusBanner').style.display = 'flex';
+                document.getElementById('agentStatusText').textContent = 'Waiting for an agent to connect...';
+
+                // Hide quick replies
+                document.getElementById('quickReplies').style.display = 'none';
+
+                // Add system message
+                addMessage('You requested to chat with a live agent. Please wait...', 'system');
+
+                btn.style.display = 'none';
+
+                // Start polling for agent connection
+                startPolling();
             } else {
-                addMessage('bot', "I apologize, but we couldn't connect you to an agent at this time. Please try again or submit a support ticket.");
+                alert(result.message || 'Failed to request live agent');
+                btn.disabled = false;
+                btn.innerHTML = '👤 Request Live Agent';
             }
         } catch (error) {
-            showTyping(false);
-            console.error('Error:', error);
-            addMessage('bot', "Sorry, there was an error connecting to an agent. Please try again.");
+            console.error('Error requesting live agent:', error);
+            btn.disabled = false;
+            btn.innerHTML = '👤 Request Live Agent';
         }
     }
 
-    function startPollingForMessages() {
-        // Poll every 2 seconds for new messages
-        pollInterval = setInterval(async () => {
-            if (!chatSessionId) return;
-            
+    function startPolling() {
+        pollingInterval = setInterval(async () => {
+            if (!sessionId) return;
+
             try {
-                const response = await fetch(`/CustomerPortal/GetChatMessages?sessionId=${chatSessionId}&lastMessageId=${lastMessageId}`);
+                const response = await fetch(`/api/GetCustomerChatUpdates?sessionId=${sessionId}&lastMessageId=${lastMessageId}`);
                 const result = await response.json();
-                
-                if (result.success) {
-                    // Check if agent has joined
-                    if (result.agentJoined && !isAgentChat) {
-                        isAgentChat = true;
-                        isWaitingForAgent = false;
-                        agentName = result.agentName || 'Support Agent';
-                        
-                        document.getElementById('chatTitle').innerHTML = `👤 ${agentName}`;
-                        document.getElementById('statusText').textContent = 'Connected';
-                        document.getElementById('agentNotice').innerHTML = `
-                            <h4>👤 Connected to ${agentName}</h4>
-                            <p>You're now chatting with a live support agent.</p>
-                        `;
-                        
-                        addMessage('agent', `Hi! I'm ${agentName}, and I'll be assisting you today. How can I help?`);
+
+                if (result.success && result.data) {
+                    // Check if agent connected
+                    if (result.data.status === 'Active' && result.data.agentName && chatMode !== 'agent') {
+                        chatMode = 'agent';
+
+                        // Update UI for agent chat
+                        document.getElementById('chatAvatar').textContent = '👨‍💼';
+                        document.getElementById('chatAgentName').textContent = result.data.agentName;
+                        document.getElementById('chatStatus').textContent = 'Live Chat';
+
+                        const banner = document.getElementById('agentStatusBanner');
+                        banner.classList.remove('waiting');
+                        document.getElementById('agentStatusText').textContent = `Connected with ${result.data.agentName}`;
                     }
-                    
-                    // Check if chat ended
-                    if (result.chatEnded) {
-                        clearInterval(pollInterval);
-                        pollInterval = null;
-                        
-                        addMessage('system', "The support session has ended. Thank you for contacting us!");
-                        document.getElementById('agentNotice').innerHTML = `
-                            <h4>✅ Session Ended</h4>
-                            <p>This support session has been closed. Click "AI Assistant" to start a new chat.</p>
-                        `;
-                    }
-                    
+
                     // Add new messages
-                    if (result.messages && result.messages.length > 0) {
-                        result.messages.forEach(msg => {
-                            if (msg.senderType === 'Agent') {
-                                addMessage('agent', msg.message, msg.messageId);
+                    if (result.data.messages && result.data.messages.length > 0) {
+                        result.data.messages.forEach(msg => {
+                            if (msg.messageId > lastMessageId) {
+                                lastMessageId = msg.messageId;
+                                if (msg.senderType === 'Agent') {
+                                    addMessage(msg.message, 'agent');
+                                } else if (msg.senderType === 'System') {
+                                    addMessage(msg.message, 'system');
+                                }
                             }
                         });
                     }
+
+                    // Check if chat ended
+                    if (result.data.status === 'Ended') {
+                        endLiveChatUI();
+                        addMessage('This chat session has ended. Thank you for contacting us!', 'system');
+                    }
                 }
             } catch (error) {
-                console.error('Error polling messages:', error);
+                console.error('Polling error:', error);
             }
         }, 2000);
     }
 
-    function playNotificationSound() {
-        try {
-            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQAA');
-            audio.volume = 0.3;
-            audio.play().catch(() => {});
-        } catch (e) {}
+    async function endLiveChat() {
+        if (sessionId) {
+            try {
+                await fetch('/api/CustomerEndChat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId: sessionId })
+                });
+            } catch (error) {
+                console.error('Error ending chat:', error);
+            }
+        }
+        endLiveChatUI();
     }
 
-    function toggleFaq(element) {
-        element.classList.toggle('open');
-    }
-    
-    // Cleanup on page unload
-    window.addEventListener('beforeunload', function() {
-        if (pollInterval) {
-            clearInterval(pollInterval);
+    function endLiveChatUI() {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
         }
-    });
+
+        chatMode = 'bot';
+        sessionId = null;
+        lastMessageId = 0;
+
+        // Reset UI
+        document.getElementById('chatAvatar').textContent = '🤖';
+        document.getElementById('chatAgentName').textContent = 'GearBot Assistant';
+        document.getElementById('chatStatus').textContent = 'Online';
+        document.getElementById('agentStatusBanner').style.display = 'none';
+        document.getElementById('quickReplies').style.display = 'flex';
+
+        const btn = document.getElementById('btnRequestAgent');
+        btn.style.display = 'flex';
+        btn.disabled = false;
+        btn.innerHTML = '👤 Request Live Agent';
+    }
 </script>
 }

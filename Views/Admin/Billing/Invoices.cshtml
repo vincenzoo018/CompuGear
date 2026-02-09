@@ -506,14 +506,20 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         Billing.invoices.load();
-        document.getElementById('searchInvoices').addEventListener('input', Billing.invoices.filter);
-        document.getElementById('filterStatus').addEventListener('change', Billing.invoices.filter);
+        document.getElementById('searchInvoices').addEventListener('input', filterInvoices);
+        document.getElementById('filterStatus').addEventListener('change', filterInvoices);
         document.getElementById('invoiceDate').value = new Date().toISOString().split('T')[0];
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 30);
         document.getElementById('dueDate').value = dueDate.toISOString().split('T')[0];
         document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
     });
+
+    function filterInvoices() {
+        const search = (document.getElementById('searchInvoices')?.value || '').toLowerCase();
+        const status = document.getElementById('filterStatus')?.value || '';
+        Billing.invoices.filter(search, status);
+    }
 
     function openCreateInvoiceModal() {
         currentInvoiceId = null;
@@ -608,16 +614,16 @@
         calculateInvoiceTotal();
     }
 
-    function filterTable() { Billing.invoices.filter(); }
+    function filterTable() { filterInvoices(); }
     function resetFilters() {
         document.getElementById('searchInvoices').value = '';
         document.getElementById('filterStatus').value = '';
         document.getElementById('filterDateFrom').value = '';
         document.getElementById('filterDateTo').value = '';
-        Billing.invoices.filter();
+        Billing.invoices.load();
     }
 
-    function applyFilters() { Billing.invoices.filter(); Toast.success('Filters applied!'); }
+    function applyFilters() { filterInvoices(); Toast.success('Filters applied!'); }
     function exportInvoices() { Toast.success('Exporting invoices...'); }
     function printInvoice(id) { Toast.success('Preparing invoice for printing...'); }
     function printInvoiceFromView() { Toast.success('Preparing invoice for printing...'); }

@@ -54,6 +54,34 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             CustomerAccounts.load();
+            
+            // Filter functionality
+            const searchInput = document.getElementById('accountSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    CustomerAccounts.filter(this.value);
+                });
+            }
         });
     </script>
 }
+
+<!-- View Account Modal -->
+<div class="modal fade view-modal" id="viewAccountModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title">Account Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewAccountContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

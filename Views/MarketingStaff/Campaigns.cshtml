@@ -109,6 +109,46 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             Campaigns.load();
+            
+            // Filter functionality
+            const searchInput = document.getElementById('campaignSearch');
+            const statusFilter = document.getElementById('campaignStatusFilter');
+            const typeFilter = document.getElementById('campaignTypeFilter');
+            
+            function filterCampaigns() {
+                Campaigns.filter(
+                    searchInput?.value || '',
+                    statusFilter?.value || '',
+                    typeFilter?.value || ''
+                );
+            }
+            
+            if (searchInput) searchInput.addEventListener('input', filterCampaigns);
+            if (statusFilter) statusFilter.addEventListener('change', filterCampaigns);
+            if (typeFilter) typeFilter.addEventListener('change', filterCampaigns);
         });
     </script>
 }
+
+<!-- View Campaign Modal -->
+<div class="modal fade view-modal" id="viewCampaignModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title">Campaign Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewCampaignContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning" onclick="Campaigns.edit(Campaigns.currentId)">
+                    <i class="bi bi-pencil me-1"></i>Edit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

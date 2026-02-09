@@ -148,6 +148,46 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             Invoices.load();
+            
+            // Filter functionality
+            const searchInput = document.getElementById('invoiceSearch');
+            const statusFilter = document.getElementById('invoiceStatusFilter');
+            
+            function filterInvoices() {
+                Invoices.filter(
+                    searchInput?.value || '',
+                    statusFilter?.value || ''
+                );
+            }
+            
+            if (searchInput) searchInput.addEventListener('input', filterInvoices);
+            if (statusFilter) statusFilter.addEventListener('change', filterInvoices);
         });
     </script>
 }
+
+<!-- View Invoice Modal -->
+<div class="modal fade view-modal" id="viewInvoiceModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title">Invoice Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewInvoiceContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-info" onclick="Invoices.print(Invoices.currentId)">
+                    <i class="bi bi-printer me-1"></i>Print
+                </button>
+                <button type="button" class="btn btn-success" onclick="Invoices.recordPayment(Invoices.currentId)">
+                    <i class="bi bi-credit-card me-1"></i>Record Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

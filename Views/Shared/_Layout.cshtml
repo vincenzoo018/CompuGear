@@ -163,6 +163,7 @@
                     </a>
                     <div class="nav-submenu">
                         <a asp-controller="Support" asp-action="Tickets" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Tickets" ? "active" : "")">Support Tickets</a>
+                        <a asp-controller="Support" asp-action="LiveChat" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "LiveChat" ? "active" : "")">Live Chat</a>
                         <a asp-controller="Support" asp-action="Status" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Status" ? "active" : "")">Ticket Status</a>
                         <a asp-controller="Support" asp-action="Knowledge" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Knowledge" ? "active" : "")">Knowledge Base</a>
                         <a asp-controller="Support" asp-action="Reports" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Reports" ? "active" : "")">Support Reports</a>

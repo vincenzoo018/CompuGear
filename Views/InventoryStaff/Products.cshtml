@@ -185,11 +185,69 @@
     </div>
 </div>
 
+<!-- View Product Modal -->
+<div class="modal fade view-modal" id="viewProductModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header modal-header-primary">
+                <h5 class="modal-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    Product Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewProductContent">
+                <div class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning" onclick="Products.edit(Products.currentId); Modal.hide('viewProductModal');">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="~/js/inventory.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             Products.load();
+            loadCategoryDropdowns();
+            
+            // Wire up filters
+            document.getElementById('productSearch')?.addEventListener('input', filterProducts);
+            document.getElementById('categoryFilter')?.addEventListener('change', filterProducts);
+            document.getElementById('stockFilter')?.addEventListener('change', filterProducts);
         });
+        
+        async function loadCategoryDropdowns() {
+            try {
+                const categories = await API.get('/product-categories');
+                const options = categories.map(c => `<option value="${c.categoryId}">${c.categoryName}</option>`).join('');
+                
+                const filterDropdown = document.getElementById('categoryFilter');
+                const formDropdown = document.getElementById('productCategory');
+                
+                if (filterDropdown) filterDropdown.innerHTML = '<option value="">All Categories</option>' + options;
+                if (formDropdown) formDropdown.innerHTML = '<option value="">Select Category</option>' + options;
+            } catch (e) { console.error('Failed to load categories'); }
+        }
+        
+        function filterProducts() {
+            const search = (document.getElementById('productSearch')?.value || '').toLowerCase();
+            const category = document.getElementById('categoryFilter')?.value || '';
+            const stock = document.getElementById('stockFilter')?.value || '';
+            Products.filter(search, category, stock);
+        }
+        
+        function resetFilters() {
+            document.getElementById('productSearch').value = '';
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('stockFilter').value = '';
+            Products.load();
+        }
     </script>
 }
