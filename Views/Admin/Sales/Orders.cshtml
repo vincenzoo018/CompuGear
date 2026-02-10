@@ -84,12 +84,12 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                     </svg>
-                    <input type="text" class="form-control" id="searchOrders" placeholder="Search by order #, customer...">
+                    <input type="text" class="form-control" id="searchOrders" placeholder="Search by order #, customer..." oninput="filterOrders()">
                 </div>
             </div>
             <div class="col-md-2">
                 <label class="form-label">Status</label>
-                <select class="form-select" id="filterStatus">
+                <select class="form-select" id="filterStatus" onchange="filterOrders()">
                     <option value="">All Status</option>
                     <option value="Pending">Pending</option>
                     <option value="Confirmed">Confirmed</option>
@@ -148,7 +148,7 @@
                     </tr>
                 </thead>
                 <tbody id="ordersTableBody">
-                    <!-- Dynamic content loaded via JavaScript -->
+                    <tr><td colspan="8" class="text-center py-4">Loading orders...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -166,11 +166,11 @@
 </div>
 
 <!-- View Order Modal -->
-<div class="modal fade" id="viewOrderModal" tabindex="-1" aria-labelledby="viewOrderModalLabel" aria-hidden="true">
+<div class="modal fade" id="viewOrderModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header" style="background: linear-gradient(135deg, #008080, #006666); color: white;">
-                <h5 class="modal-title" id="viewOrderModalLabel">
+                <h5 class="modal-title">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
                     </svg>
@@ -178,74 +178,7 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div class="row mb-4">
-                    <div class="col-md-4">
-                        <div class="p-3 bg-light rounded">
-                            <h6 class="text-muted mb-2">Customer</h6>
-                            <div class="fw-bold" id="viewCustomerName"></div>
-                            <div class="text-muted small" id="viewShippingAddress"></div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="p-3 bg-light rounded">
-                            <h6 class="text-muted mb-2">Order Info</h6>
-                            <div><span class="text-muted">Date:</span> <span id="viewOrderDate"></span></div>
-                            <div><span class="text-muted">Method:</span> <span id="viewPaymentMethod"></span></div>
-                            <div><span class="text-muted">Reference:</span> <span id="viewPaymentRef"></span></div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="p-3 bg-light rounded">
-                            <h6 class="text-muted mb-2">Status</h6>
-                            <div class="mb-1"><span class="text-muted">Order:</span> <span id="viewOrderStatus"></span></div>
-                            <div><span class="text-muted">Payment:</span> <span id="viewPaymentStatus"></span></div>
-                        </div>
-                    </div>
-                </div>
-
-                <h6>Order Items</h6>
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Product</th>
-                                <th class="text-end">Unit Price</th>
-                                <th class="text-center">Qty</th>
-                                <th class="text-end">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody id="viewOrderItems"></tbody>
-                        <tfoot>
-                            <tr>
-                                <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
-                                <td class="text-end" id="viewSubtotal"></td>
-                            </tr>
-                            <tr>
-                                <td colspan="3" class="text-end">Discount:</td>
-                                <td class="text-end text-danger" id="viewDiscount"></td>
-                            </tr>
-                            <tr>
-                                <td colspan="3" class="text-end">VAT (12%):</td>
-                                <td class="text-end" id="viewTax"></td>
-                            </tr>
-                            <tr>
-                                <td colspan="3" class="text-end">Shipping:</td>
-                                <td class="text-end" id="viewShipping"></td>
-                            </tr>
-                            <tr class="table-primary">
-                                <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                                <td class="text-end"><strong id="viewTotal"></strong></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-
-                <div class="mt-3" id="viewNotesSection" style="display: none;">
-                    <h6>Notes</h6>
-                    <p class="text-muted mb-0" id="viewNotes"></p>
-                </div>
-            </div>
+            <div class="modal-body" id="viewOrderContent"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-outline-secondary" onclick="printOrder()">
@@ -344,7 +277,6 @@
                 </div>
                 <h5 class="mb-1">Order <span id="paymentLinkOrderNumber" class="text-teal"></span> Approved!</h5>
                 <p class="text-muted mb-3">A PayMongo checkout link has been generated. Share it with the customer to complete payment.</p>
-                
                 <div class="input-group mb-3">
                     <input type="text" class="form-control" id="paymentLinkUrl" readonly style="font-size: 0.85rem;">
                     <button class="btn btn-outline-primary" onclick="copyPaymentLink()" title="Copy Link">
@@ -353,7 +285,6 @@
                         </svg>
                     </button>
                 </div>
-
                 <div class="d-grid gap-2">
                     <button class="btn btn-success" onclick="openPaymentLink()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
@@ -373,20 +304,125 @@
 </div>
 
 @section Scripts {
-<script src="~/js/admin.js?v=@DateTime.Now.Ticks"></script>
+<script src="~/js/admin.js" asp-append-version="true"></script>
 <script>
-    let currentOrderId = null;
+    // ============================================
+    // Admin Orders - Self-contained implementation
+    // ============================================
+    var adminOrders = [];
+    var currentOrderId = null;
 
     document.addEventListener('DOMContentLoaded', function() {
-        Sales.orders.load();
-        document.getElementById('searchOrders')?.addEventListener('input', filterOrders);
-        document.getElementById('filterStatus')?.addEventListener('change', filterOrders);
+        loadAdminOrders();
     });
 
+    async function loadAdminOrders() {
+        try {
+            const response = await fetch('/api/orders');
+            if (!response.ok) throw new Error('Failed to fetch orders');
+            adminOrders = await response.json();
+            renderAdminOrders(adminOrders);
+            updateOrderStats(adminOrders);
+        } catch (error) {
+            console.error('Error loading orders:', error);
+            var tbody = document.getElementById('ordersTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-danger">Failed to load orders. Please refresh.</td></tr>';
+        }
+    }
+
+    function renderAdminOrders(data) {
+        var tbody = document.getElementById('ordersTableBody');
+        if (!tbody) return;
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No orders found.</td></tr>';
+            updateOrderStats([]);
+            return;
+        }
+
+        var iconView = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+        var iconApprove = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+        var iconReject = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        var iconUpdate = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
+        var iconCancel = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="8" cy="12" r="3"/></svg>';
+
+        var html = '';
+        for (var i = 0; i < data.length; i++) {
+            var o = data[i];
+            var actions = '<button class="btn btn-sm btn-outline-primary" onclick="viewOrder(' + o.orderId + ')" title="View">' + iconView + '</button>';
+
+            if (o.orderStatus === 'Pending') {
+                actions += '<button class="btn btn-sm btn-success" onclick="approveOrder(' + o.orderId + ')" title="Approve">' + iconApprove + '</button>';
+                actions += '<button class="btn btn-sm btn-danger" onclick="rejectOrder(' + o.orderId + ')" title="Reject">' + iconReject + '</button>';
+            } else if (o.orderStatus !== 'Cancelled' && o.orderStatus !== 'Completed') {
+                actions += '<button class="btn btn-sm btn-outline-info" onclick="updateStatus(' + o.orderId + ')" title="Update Status">' + iconUpdate + '</button>';
+                actions += '<button class="btn btn-sm btn-outline-danger" onclick="rejectOrder(' + o.orderId + ')" title="Cancel">' + iconCancel + '</button>';
+            } else if (o.orderStatus === 'Cancelled') {
+                actions += '<button class="btn btn-sm btn-outline-secondary" disabled>' + iconCancel + '</button>';
+            }
+
+            var orderDate = o.orderDate ? new Date(o.orderDate) : new Date();
+            var dateStr = orderDate.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
+            var dateTimeStr = orderDate.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            var amount = parseFloat(o.totalAmount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            var statusColor = getStatusColor(o.orderStatus);
+            var paymentColor = getStatusColor(o.paymentStatus);
+
+            html += '<tr>' +
+                '<td><div class="fw-semibold">' + (o.orderNumber || '') + '</div><small class="text-muted">' + dateTimeStr + '</small></td>' +
+                '<td>' + (o.customerName || 'Guest') + '</td>' +
+                '<td>' + dateStr + '</td>' +
+                '<td class="text-center">' + (o.itemCount || 0) + '</td>' +
+                '<td class="text-end">₱' + amount + '</td>' +
+                '<td class="text-center"><span class="badge bg-' + statusColor + '">' + (o.orderStatus || 'Unknown') + '</span></td>' +
+                '<td class="text-center"><span class="badge bg-' + paymentColor + '">' + (o.paymentStatus || 'Pending') + '</span></td>' +
+                '<td class="text-center"><div class="btn-group">' + actions + '</div></td>' +
+                '</tr>';
+        }
+        tbody.innerHTML = html;
+        document.getElementById('orderCount').textContent = data.length + ' orders';
+        document.getElementById('orderPaginationInfo').textContent = 'Showing 1 to ' + data.length + ' of ' + data.length + ' orders';
+    }
+
+    function getStatusColor(status) {
+        var map = {
+            'Active': 'success', 'Inactive': 'secondary',
+            'Pending': 'warning', 'Confirmed': 'primary',
+            'Processing': 'info', 'Completed': 'info',
+            'Delivered': 'success', 'Cancelled': 'danger',
+            'Paid': 'success', 'Unpaid': 'danger', 'Partial': 'warning'
+        };
+        return map[status] || 'secondary';
+    }
+
+    function updateOrderStats(data) {
+        var total = data.length;
+        var pending = 0, processing = 0, completed = 0;
+        for (var i = 0; i < data.length; i++) {
+            if (data[i].orderStatus === 'Pending') pending++;
+            else if (data[i].orderStatus === 'Processing' || data[i].orderStatus === 'Confirmed') processing++;
+            else if (data[i].orderStatus === 'Completed' || data[i].orderStatus === 'Delivered') completed++;
+        }
+        document.getElementById('totalOrders').textContent = total;
+        document.getElementById('pendingOrders').textContent = pending;
+        document.getElementById('processingOrders').textContent = processing;
+        document.getElementById('completedOrders').textContent = completed;
+    }
+
     function filterOrders() {
-        const search = (document.getElementById('searchOrders')?.value || '').toLowerCase();
-        const status = document.getElementById('filterStatus')?.value || '';
-        Sales.orders.filter(search, status);
+        var search = (document.getElementById('searchOrders').value || '').toLowerCase();
+        var status = document.getElementById('filterStatus').value || '';
+        var filtered = adminOrders;
+        if (search) {
+            filtered = filtered.filter(function(o) {
+                return (o.orderNumber || '').toLowerCase().indexOf(search) >= 0 ||
+                       (o.customerName || '').toLowerCase().indexOf(search) >= 0;
+            });
+        }
+        if (status) {
+            filtered = filtered.filter(function(o) { return o.orderStatus === status; });
+        }
+        renderAdminOrders(filtered);
     }
 
     function resetFilters() {
@@ -394,7 +430,8 @@
         document.getElementById('filterStatus').value = '';
         document.getElementById('filterDateFrom').value = '';
         document.getElementById('filterDateTo').value = '';
-        Sales.orders.load();
+        renderAdminOrders(adminOrders);
+        updateOrderStats(adminOrders);
     }
 
     function applyFilters() {
@@ -402,15 +439,64 @@
         Toast.success('Filters applied!');
     }
 
+    // View Order
+    function viewOrder(id) {
+        var o = null;
+        for (var i = 0; i < adminOrders.length; i++) {
+            if (adminOrders[i].orderId === id) { o = adminOrders[i]; break; }
+        }
+        if (!o) return;
+        currentOrderId = id;
+
+        document.getElementById('viewOrderNumber').textContent = o.orderNumber;
+
+        var items = o.items || [];
+        var dateStr = o.orderDate ? new Date(o.orderDate).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+        var statusColor = getStatusColor(o.orderStatus);
+        var paymentColor = getStatusColor(o.paymentStatus);
+        var fmt = function(val) { return '₱' + parseFloat(val || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+
+        var itemRows = '';
+        if (items.length > 0) {
+            for (var i = 0; i < items.length; i++) {
+                var it = items[i];
+                itemRows += '<tr><td>' + (it.productName || '-') + '</td><td class="text-end">' + fmt(it.unitPrice) + '</td><td class="text-center">' + it.quantity + '</td><td class="text-end">' + fmt(it.totalPrice) + '</td></tr>';
+            }
+        } else {
+            itemRows = '<tr><td colspan="4" class="text-center text-muted">' + (o.itemCount || 0) + ' item(s)</td></tr>';
+        }
+
+        var content = document.getElementById('viewOrderContent');
+        content.innerHTML =
+            '<div class="row mb-4">' +
+                '<div class="col-md-4"><div class="p-3 bg-light rounded"><h6 class="text-muted mb-2">Customer</h6><div class="fw-bold">' + (o.customerName || 'Guest') + '</div><div class="text-muted small">' + ([o.shippingAddress, o.shippingCity].filter(Boolean).join(', ') || '-') + '</div></div></div>' +
+                '<div class="col-md-4"><div class="p-3 bg-light rounded"><h6 class="text-muted mb-2">Order Info</h6><div><span class="text-muted">Date:</span> ' + dateStr + '</div><div><span class="text-muted">Method:</span> ' + (o.paymentMethod || '-') + '</div><div><span class="text-muted">Reference:</span> ' + (o.paymentReference || '-') + '</div></div></div>' +
+                '<div class="col-md-4"><div class="p-3 bg-light rounded"><h6 class="text-muted mb-2">Status</h6><div class="mb-1"><span class="text-muted">Order:</span> <span class="badge bg-' + statusColor + '">' + o.orderStatus + '</span></div><div><span class="text-muted">Payment:</span> <span class="badge bg-' + paymentColor + '">' + (o.paymentStatus || 'Pending') + '</span></div></div></div>' +
+            '</div>' +
+            '<h6>Order Items</h6>' +
+            '<div class="table-responsive"><table class="table table-sm table-bordered"><thead class="table-light"><tr><th>Product</th><th class="text-end">Unit Price</th><th class="text-center">Qty</th><th class="text-end">Subtotal</th></tr></thead>' +
+            '<tbody>' + itemRows + '</tbody>' +
+            '<tfoot>' +
+                '<tr><td colspan="3" class="text-end"><strong>Subtotal:</strong></td><td class="text-end">' + fmt(o.subtotal) + '</td></tr>' +
+                '<tr><td colspan="3" class="text-end">Discount:</td><td class="text-end text-danger">-' + fmt(o.discountAmount) + '</td></tr>' +
+                '<tr><td colspan="3" class="text-end">VAT (12%):</td><td class="text-end">' + fmt(o.taxAmount) + '</td></tr>' +
+                '<tr><td colspan="3" class="text-end">Shipping:</td><td class="text-end">' + fmt(o.shippingAmount) + '</td></tr>' +
+                '<tr class="table-primary"><td colspan="3" class="text-end"><strong>Total:</strong></td><td class="text-end"><strong>' + fmt(o.totalAmount) + '</strong></td></tr>' +
+            '</tfoot></table></div>' +
+            (o.notes ? '<div class="mt-3"><h6>Notes</h6><p class="text-muted mb-0">' + o.notes + '</p></div>' : '');
+
+        var modal = document.getElementById('viewOrderModal');
+        var bsModal = bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
+        bsModal.show();
+    }
+
     // Approve Order
     async function approveOrder(id) {
         if (!confirm('Approve this order? This will confirm the order, generate an invoice, and create a PayMongo payment link.')) return;
         try {
-            const result = await API.put(`/orders/${id}/approve`);
+            var result = await API.put('/orders/' + id + '/approve');
             Toast.success(result.message || 'Order approved successfully!');
-            Sales.orders.load();
-
-            // Show PayMongo checkout URL if generated
+            loadAdminOrders();
             if (result.checkoutUrl) {
                 showPaymentLinkModal(result.checkoutUrl, result.orderNumber);
             }
@@ -419,50 +505,58 @@
         }
     }
 
-    // Show PayMongo Payment Link Modal
     function showPaymentLinkModal(url, orderNumber) {
         document.getElementById('paymentLinkOrderNumber').textContent = orderNumber || '';
         document.getElementById('paymentLinkUrl').value = url;
         document.getElementById('paymentLinkAnchor').href = url;
-        Modal.show('paymentLinkModal');
+        var modal = document.getElementById('paymentLinkModal');
+        var bsModal = bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
+        bsModal.show();
     }
 
     function copyPaymentLink() {
-        const input = document.getElementById('paymentLinkUrl');
+        var input = document.getElementById('paymentLinkUrl');
         input.select();
-        navigator.clipboard.writeText(input.value).then(() => {
+        navigator.clipboard.writeText(input.value).then(function() {
             Toast.success('Payment link copied to clipboard!');
-        }).catch(() => {
+        }).catch(function() {
             document.execCommand('copy');
             Toast.success('Payment link copied!');
         });
     }
 
     function openPaymentLink() {
-        const url = document.getElementById('paymentLinkUrl').value;
+        var url = document.getElementById('paymentLinkUrl').value;
         if (url) window.open(url, '_blank');
     }
 
     // Reject Order
     function rejectOrder(id) {
-        const order = Sales.orders.data.find(o => o.orderId === id);
-        if (!order) return;
+        var o = null;
+        for (var i = 0; i < adminOrders.length; i++) {
+            if (adminOrders[i].orderId === id) { o = adminOrders[i]; break; }
+        }
+        if (!o) return;
         currentOrderId = id;
-        document.getElementById('rejectOrderNumber').textContent = order.orderNumber;
+        document.getElementById('rejectOrderNumber').textContent = o.orderNumber;
         document.getElementById('rejectReason').value = '';
-        Modal.show('rejectOrderModal');
+        var modal = document.getElementById('rejectOrderModal');
+        var bsModal = bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
+        bsModal.show();
     }
 
     async function confirmReject() {
         if (!currentOrderId) return;
         try {
-            const result = await API.put(`/orders/${currentOrderId}/reject`, {
+            var result = await API.put('/orders/' + currentOrderId + '/reject', {
                 status: 'Cancelled',
                 notes: document.getElementById('rejectReason').value || 'Rejected by admin'
             });
             Toast.success(result.message || 'Order rejected');
-            Modal.hide('rejectOrderModal');
-            Sales.orders.load();
+            var modal = document.getElementById('rejectOrderModal');
+            var bsModal = bootstrap.Modal.getInstance(modal);
+            if (bsModal) bsModal.hide();
+            loadAdminOrders();
         } catch (error) {
             Toast.error(error.message || 'Failed to reject order');
         }
@@ -470,26 +564,33 @@
 
     // Update Status
     function updateStatus(id) {
-        const order = Sales.orders.data.find(o => o.orderId === id);
-        if (!order) return;
+        var o = null;
+        for (var i = 0; i < adminOrders.length; i++) {
+            if (adminOrders[i].orderId === id) { o = adminOrders[i]; break; }
+        }
+        if (!o) return;
         currentOrderId = id;
-        document.getElementById('statusOrderNumber').textContent = order.orderNumber;
-        document.getElementById('currentStatus').innerHTML = Format.statusBadge(order.orderStatus);
-        document.getElementById('newStatus').value = order.orderStatus;
+        document.getElementById('statusOrderNumber').textContent = o.orderNumber;
+        document.getElementById('currentStatus').innerHTML = '<span class="badge bg-' + getStatusColor(o.orderStatus) + '">' + o.orderStatus + '</span>';
+        document.getElementById('newStatus').value = o.orderStatus;
         document.getElementById('statusNotes').value = '';
-        Modal.show('updateStatusModal');
+        var modal = document.getElementById('updateStatusModal');
+        var bsModal = bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
+        bsModal.show();
     }
 
     async function confirmStatusUpdate() {
         if (!currentOrderId) return;
         try {
-            await API.put(`/orders/${currentOrderId}/status`, {
+            await API.put('/orders/' + currentOrderId + '/status', {
                 status: document.getElementById('newStatus').value,
                 notes: document.getElementById('statusNotes').value
             });
             Toast.success('Status updated!');
-            Modal.hide('updateStatusModal');
-            Sales.orders.load();
+            var modal = document.getElementById('updateStatusModal');
+            var bsModal = bootstrap.Modal.getInstance(modal);
+            if (bsModal) bsModal.hide();
+            loadAdminOrders();
         } catch (error) {
             Toast.error('Failed to update status');
         }
@@ -497,82 +598,78 @@
 
     // Print Order
     function printOrder() {
-        const id = Sales.orders.currentId;
-        if (!id) return;
-        const o = Sales.orders.data.find(ord => ord.orderId === id);
+        if (!currentOrderId) return;
+        var o = null;
+        for (var i = 0; i < adminOrders.length; i++) {
+            if (adminOrders[i].orderId === currentOrderId) { o = adminOrders[i]; break; }
+        }
         if (!o) return;
+        var items = o.items || [];
+        var fmt = function(val) { return '₱' + parseFloat(val || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
 
-        const items = o.items || [];
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
-            <html><head><title>Order ${o.orderNumber}</title>
-            <style>
-                body { font-family: 'Segoe UI', Arial, sans-serif; margin: 40px; color: #333; }
-                .header { display: flex; justify-content: space-between; border-bottom: 3px solid #008080; padding-bottom: 20px; margin-bottom: 30px; }
-                .company h1 { color: #008080; margin: 0; font-size: 28px; }
-                .company p { margin: 2px 0; color: #666; }
-                .badge { background: #008080; color: white; padding: 8px 20px; border-radius: 5px; font-size: 18px; }
-                .details { display: flex; justify-content: space-between; margin-bottom: 30px; }
-                .detail-block h3 { color: #008080; font-size: 14px; margin-bottom: 5px; }
-                .detail-block p { margin: 2px 0; }
-                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                th { background: #008080; color: white; padding: 10px; text-align: left; }
-                td { padding: 10px; border-bottom: 1px solid #eee; }
-                .totals { text-align: right; }
-                .totals td { border: none; }
-                .total-row td { font-weight: bold; font-size: 18px; color: #008080; border-top: 2px solid #008080; }
-                @@media print { body { margin: 20px; } }
-            </style></head><body>
-            <div class="header">
-                <div class="company"><h1>CompuGear</h1><p>Computer & Gear Solutions</p></div>
-                <div><span class="badge">${o.orderNumber}</span></div>
-            </div>
-            <div class="details">
-                <div class="detail-block">
-                    <h3>CUSTOMER</h3>
-                    <p><strong>${o.customerName || '-'}</strong></p>
-                    <p>${o.shippingAddress || ''} ${o.shippingCity || ''}</p>
-                </div>
-                <div class="detail-block" style="text-align:right">
-                    <h3>ORDER DETAILS</h3>
-                    <p>Date: ${Format.date(o.orderDate)}</p>
-                    <p>Status: ${o.orderStatus}</p>
-                    <p>Payment: ${o.paymentStatus}</p>
-                </div>
-            </div>
-            <table>
-                <thead><tr><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Total</th></tr></thead>
-                <tbody>${items.map(i => `<tr>
-                    <td>${i.productName || '-'}</td>
-                    <td style="text-align:center">${i.quantity}</td>
-                    <td style="text-align:right">₱${(i.unitPrice || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
-                    <td style="text-align:right">₱${(i.totalPrice || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
-                </tr>`).join('')}</tbody>
-            </table>
-            <table class="totals"><tbody>
-                <tr><td></td><td>Subtotal:</td><td>₱${(o.subtotal || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</td></tr>
-                ${o.discountAmount > 0 ? `<tr><td></td><td>Discount:</td><td>-₱${o.discountAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td></tr>` : ''}
-                <tr><td></td><td>VAT (12%):</td><td>₱${(o.taxAmount || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</td></tr>
-                ${o.shippingAmount > 0 ? `<tr><td></td><td>Shipping:</td><td>₱${o.shippingAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td></tr>` : ''}
-                <tr class="total-row"><td></td><td>Total:</td><td>₱${o.totalAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td></tr>
-            </tbody></table>
-            <script>window.onload = function() { window.print(); }<\/script>
-            </body></html>
-        `);
+        var itemsHtml = '';
+        for (var i = 0; i < items.length; i++) {
+            var it = items[i];
+            itemsHtml += '<tr><td>' + (it.productName || '-') + '</td><td style="text-align:center">' + it.quantity + '</td><td style="text-align:right">' + fmt(it.unitPrice) + '</td><td style="text-align:right">' + fmt(it.totalPrice) + '</td></tr>';
+        }
+
+        var dateStr = o.orderDate ? new Date(o.orderDate).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
+        var printContent = '<html><head><title>Order ' + o.orderNumber + '</title>' +
+            '<style>' +
+            'body { font-family: Segoe UI, Arial, sans-serif; margin: 40px; color: #333; }' +
+            '.header { display: flex; justify-content: space-between; border-bottom: 3px solid #008080; padding-bottom: 20px; margin-bottom: 30px; }' +
+            '.company h1 { color: #008080; margin: 0; font-size: 28px; }' +
+            '.company p { margin: 2px 0; color: #666; }' +
+            '.badge { background: #008080; color: white; padding: 8px 20px; border-radius: 5px; font-size: 18px; }' +
+            '.details { display: flex; justify-content: space-between; margin-bottom: 30px; }' +
+            '.detail-block h3 { color: #008080; font-size: 14px; margin-bottom: 5px; }' +
+            '.detail-block p { margin: 2px 0; }' +
+            'table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }' +
+            'th { background: #008080; color: white; padding: 10px; text-align: left; }' +
+            'td { padding: 10px; border-bottom: 1px solid #eee; }' +
+            '.totals { text-align: right; }' +
+            '.totals td { border: none; }' +
+            '.total-row td { font-weight: bold; font-size: 18px; color: #008080; border-top: 2px solid #008080; }' +
+            '</style></head><body>' +
+            '<div class="header"><div class="company"><h1>CompuGear</h1><p>Computer & Gear Solutions</p></div><div><span class="badge">' + o.orderNumber + '</span></div></div>' +
+            '<div class="details"><div class="detail-block"><h3>CUSTOMER</h3><p><strong>' + (o.customerName || '-') + '</strong></p><p>' + (o.shippingAddress || '') + ' ' + (o.shippingCity || '') + '</p></div>' +
+            '<div class="detail-block" style="text-align:right"><h3>ORDER DETAILS</h3><p>Date: ' + dateStr + '</p><p>Status: ' + o.orderStatus + '</p><p>Payment: ' + o.paymentStatus + '</p></div></div>' +
+            '<table><thead><tr><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Price</th><th style="text-align:right">Total</th></tr></thead><tbody>' + itemsHtml + '</tbody></table>' +
+            '<table class="totals"><tbody>' +
+            '<tr><td></td><td>Subtotal:</td><td>' + fmt(o.subtotal) + '</td></tr>' +
+            (o.discountAmount > 0 ? '<tr><td></td><td>Discount:</td><td>-' + fmt(o.discountAmount) + '</td></tr>' : '') +
+            '<tr><td></td><td>VAT (12%):</td><td>' + fmt(o.taxAmount) + '</td></tr>' +
+            (o.shippingAmount > 0 ? '<tr><td></td><td>Shipping:</td><td>' + fmt(o.shippingAmount) + '</td></tr>' : '') +
+            '<tr class="total-row"><td></td><td>Total:</td><td>' + fmt(o.totalAmount) + '</td></tr>' +
+            '</tbody></table>' +
+            '<script>window.onload = function() { window.print(); }</' + 'script>' +
+            '</body></html>';
+
+        var printWindow = window.open('', '_blank');
+        printWindow.document.write(printContent);
         printWindow.document.close();
     }
 
     // Export Orders
     function exportOrders() {
-        const rows = [['Order #', 'Customer', 'Date', 'Items', 'Amount', 'Order Status', 'Payment Status', 'Payment Method']];
-        Sales.orders.data.forEach(o => {
+        var rows = [['Order #', 'Customer', 'Date', 'Items', 'Amount', 'Order Status', 'Payment Status', 'Payment Method']];
+        for (var i = 0; i < adminOrders.length; i++) {
+            var o = adminOrders[i];
             rows.push([o.orderNumber, o.customerName || '', new Date(o.orderDate).toLocaleDateString(), o.itemCount, o.totalAmount.toFixed(2), o.orderStatus, o.paymentStatus, o.paymentMethod || '-']);
-        });
-        const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const a = document.createElement('a');
+        }
+        var csvContent = '';
+        for (var i = 0; i < rows.length; i++) {
+            var line = '';
+            for (var j = 0; j < rows[i].length; j++) {
+                if (j > 0) line += ',';
+                line += '"' + rows[i][j] + '"';
+            }
+            csvContent += line + '\n';
+        }
+        var blob = new Blob([csvContent], { type: 'text/csv' });
+        var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `orders_${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = 'orders_' + new Date().toISOString().split('T')[0] + '.csv';
         a.click();
         Toast.success('Orders exported!');
     }

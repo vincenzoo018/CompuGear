@@ -3,103 +3,146 @@
     Layout = "~/Views/Shared/_SalesLayout.cshtml";
 }
 
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">Products & Inventory</h1>
-            <p class="text-muted mb-0">Browse available products and stock information</p>
-        </div>
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Products & Inventory</h1>
+        <p class="page-subtitle">Browse available products and stock information</p>
     </div>
+</div>
 
-    <!-- Stats Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-primary mb-0" id="totalProducts">0</h4>
-                    <small class="text-muted">Total Products</small>
-                </div>
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+                </svg>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-success mb-0" id="inStockProducts">0</h4>
-                    <small class="text-muted">In Stock</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-warning mb-0" id="lowStockProducts">0</h4>
-                    <small class="text-muted">Low Stock</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-danger mb-0" id="outOfStockProducts">0</h4>
-                    <small class="text-muted">Out of Stock</small>
-                </div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalProducts">0</div>
+                <div class="stat-label">Total Products</div>
             </div>
         </div>
     </div>
-
-    <!-- Products Table -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-0">
-            <div class="row align-items-center">
-                <div class="col-md-4">
-                    <input type="text" class="form-control" placeholder="Search products..." id="productSearch">
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select" id="categoryFilter">
-                        <option value="">All Categories</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select" id="stockFilter">
-                        <option value="">All Stock Levels</option>
-                        <option value="instock">In Stock</option>
-                        <option value="low">Low Stock</option>
-                        <option value="out">Out of Stock</option>
-                    </select>
-                </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="inStockProducts">0</div>
+                <div class="stat-label">In Stock</div>
             </div>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>SKU</th>
-                            <th>Product</th>
-                            <th>Category</th>
-                            <th class="text-end">Price</th>
-                            <th class="text-center">Stock</th>
-                            <th>Status</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="productsTableBody">
-                        <tr>
-                            <td colspan="7" class="text-center py-4">Loading products...</td>
-                        </tr>
-                    </tbody>
-                </table>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="lowStockProducts">0</div>
+                <div class="stat-label">Low Stock</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-danger">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="outOfStockProducts">0</div>
+                <div class="stat-label">Out of Stock</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4 fade-in">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label">Search Products</label>
+                <input type="text" class="form-control" id="productSearch" placeholder="Search by name, SKU, category..." oninput="filterProducts()">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Stock Level</label>
+                <select class="form-select" id="stockFilter" onchange="filterProducts()">
+                    <option value="">All Stock Levels</option>
+                    <option value="in-stock">In Stock</option>
+                    <option value="low-stock">Low Stock</option>
+                    <option value="out-of-stock">Out of Stock</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" onclick="document.getElementById('productSearch').value='';document.getElementById('stockFilter').value='';SalesProducts.load();">Reset</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Product List</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 10%;">SKU</th>
+                        <th style="width: 22%;">Product</th>
+                        <th style="width: 12%;">Brand</th>
+                        <th style="width: 12%; text-align: right;">Price</th>
+                        <th style="width: 12%; text-align: center;">Stock</th>
+                        <th style="width: 12%; text-align: center;">Status</th>
+                        <th style="width: 10%; text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="productsTableBody">
+                    <tr><td colspan="7" class="text-center py-4">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- View Product Modal -->
+<div class="modal fade" id="viewProductModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #008080, #006666); color: white;">
+                <h5 class="modal-title">Product Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewProductContent"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script src="~/js/sales.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            SalesProducts.load();
-        });
-    </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        SalesProducts.load();
+    });
+
+    function filterProducts() {
+        const search = (document.getElementById('productSearch')?.value || '').toLowerCase();
+        const status = document.getElementById('stockFilter')?.value || '';
+        SalesProducts.filter(search, status);
+    }
+</script>
 }

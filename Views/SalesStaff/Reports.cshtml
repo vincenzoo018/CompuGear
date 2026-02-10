@@ -3,161 +3,200 @@
     Layout = "~/Views/Shared/_SalesLayout.cshtml";
 }
 
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">Sales Reports</h1>
-            <p class="text-muted mb-0">Analyze your sales performance</p>
-        </div>
-        <div class="btn-group">
-            <button class="btn btn-outline-primary active" data-period="week">This Week</button>
-            <button class="btn btn-outline-primary" data-period="month">This Month</button>
-            <button class="btn btn-outline-primary" data-period="year">This Year</button>
-        </div>
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Sales Reports</h1>
+        <p class="page-subtitle">Analyze your sales performance and generate PDF reports</p>
     </div>
+    <button class="btn btn-primary" id="generatePdfBtn" onclick="generatePdfReport()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/>
+        </svg>
+        Generate Report PDF
+    </button>
+</div>
 
-    <!-- Summary Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="text-muted mb-1">Total Revenue</p>
-                            <h3 class="mb-0" id="totalRevenue">₱0.00</h3>
-                        </div>
-                        <div class="bg-primary bg-opacity-10 p-2 rounded">
-                            <i class="bi bi-currency-dollar text-primary fs-4"></i>
-                        </div>
+<!-- Period Filter -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0">
+            <div class="card-body py-3">
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <span class="fw-semibold text-muted">Filter by Period:</span>
+                    <div class="btn-group" role="group" id="periodFilter">
+                        <button type="button" class="btn btn-outline-primary" data-period="day" onclick="setPeriod('day')">Today</button>
+                        <button type="button" class="btn btn-outline-primary" data-period="week" onclick="setPeriod('week')">This Week</button>
+                        <button type="button" class="btn btn-outline-primary active" data-period="month" onclick="setPeriod('month')">This Month</button>
+                        <button type="button" class="btn btn-outline-primary" data-period="year" onclick="setPeriod('year')">This Year</button>
+                        <button type="button" class="btn btn-outline-primary" data-period="all" onclick="setPeriod('all')">All Time</button>
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="text-muted mb-1">Total Orders</p>
-                            <h3 class="mb-0" id="totalOrders">0</h3>
-                        </div>
-                        <div class="bg-success bg-opacity-10 p-2 rounded">
-                            <i class="bi bi-bag text-success fs-4"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="text-muted mb-1">Avg. Order Value</p>
-                            <h3 class="mb-0" id="avgOrderValue">₱0.00</h3>
-                        </div>
-                        <div class="bg-info bg-opacity-10 p-2 rounded">
-                            <i class="bi bi-graph-up text-info fs-4"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="text-muted mb-1">Conversion Rate</p>
-                            <h3 class="mb-0" id="conversionRate">0%</h3>
-                        </div>
-                        <div class="bg-warning bg-opacity-10 p-2 rounded">
-                            <i class="bi bi-arrow-up-right text-warning fs-4"></i>
-                        </div>
-                    </div>
+                    <span class="badge bg-primary ms-auto" id="reportPeriodLabel">This Month</span>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="row g-4">
-        <!-- Sales Trend Chart -->
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0">
-                    <h5 class="mb-0">Sales Trend</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="salesTrendChart" height="300"></canvas>
-                </div>
+<!-- Summary Stats -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="reportRevenue">₱0</div>
+                <div class="stat-label">Total Revenue</div>
             </div>
         </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="reportOrders">0</div>
+                <div class="stat-label">Total Orders</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-info">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="reportAvgOrder">₱0</div>
+                <div class="stat-label">Avg Order Value</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="reportCompleted">0</div>
+                <div class="stat-label">Completed Orders</div>
+            </div>
+        </div>
+    </div>
+</div>
 
-        <!-- Sales by Category -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0">
-                    <h5 class="mb-0">Sales by Category</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="categoryChart" height="300"></canvas>
+<div class="row g-4">
+    <!-- Sales Trend Chart -->
+    <div class="col-lg-8">
+        <div class="card fade-in">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Sales Trend</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="salesTrendChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Breakdown -->
+    <div class="col-lg-4">
+        <div class="card fade-in">
+            <div class="card-header">
+                <h5 class="mb-0">Order Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <!-- Top Selling Products -->
+    <div class="col-lg-6">
+        <div class="card fade-in">
+            <div class="card-header">
+                <h5 class="mb-0">Top Selling Products</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-center">Sold</th>
+                                <th class="text-end">Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topProductsTable">
+                            <tr><td colspan="3" class="text-center py-4">Loading...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4 mt-2">
-        <!-- Top Selling Products -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0">
-                    <h5 class="mb-0">Top Selling Products</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Product</th>
-                                    <th class="text-center">Sold</th>
-                                    <th class="text-end">Revenue</th>
-                                </tr>
-                            </thead>
-                            <tbody id="topProductsTable">
-                                <tr>
-                                    <td colspan="3" class="text-center py-4">Loading...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+    <!-- Top Customers -->
+    <div class="col-lg-6">
+        <div class="card fade-in">
+            <div class="card-header">
+                <h5 class="mb-0">Top Customers</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th class="text-center">Orders</th>
+                                <th class="text-end">Total Spent</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topCustomersTable">
+                            <tr><td colspan="3" class="text-center py-4">Loading...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
+    </div>
+</div>
 
-        <!-- Top Customers -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0">
-                    <h5 class="mb-0">Top Customers</h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Customer</th>
-                                    <th class="text-center">Orders</th>
-                                    <th class="text-end">Total Spent</th>
-                                </tr>
-                            </thead>
-                            <tbody id="topCustomersTable">
-                                <tr>
-                                    <td colspan="3" class="text-center py-4">Loading...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+<!-- Recent Orders -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card fade-in">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Orders in Period</h5>
+                <span class="badge bg-primary" id="periodOrderCount">0 orders</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Date</th>
+                                <th class="text-center">Items</th>
+                                <th class="text-end">Amount</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Payment</th>
+                            </tr>
+                        </thead>
+                        <tbody id="periodOrdersTable">
+                            <tr><td colspan="7" class="text-center py-4">Loading...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -165,6 +204,194 @@
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="~/js/sales.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let allOrders = [];
+    let currentPeriod = 'month';
+    let salesTrendChart = null;
+    let statusChart = null;
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            allOrders = await API.get('/orders');
+            updateReportData();
+        } catch (error) {
+            Toast.error('Failed to load report data');
+        }
+
+        // Also load customers for top customers table
+        try {
+            const customers = await API.get('/customers');
+            renderTopCustomers(customers);
+        } catch(e) {}
+    });
+
+    function setPeriod(period) {
+        currentPeriod = period;
+        // Update active button
+        document.querySelectorAll('#periodFilter .btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`#periodFilter [data-period="${period}"]`)?.classList.add('active');
+
+        const labels = { day: 'Today', week: 'This Week', month: 'This Month', year: 'This Year', all: 'All Time' };
+        document.getElementById('reportPeriodLabel').textContent = labels[period] || period;
+
+        updateReportData();
+    }
+
+    function updateReportData() {
+        const filtered = SalesReportPDF.filterByPeriod(allOrders, currentPeriod);
+
+        // Update stats
+        const revenue = filtered.reduce((s, o) => s + (o.totalAmount || 0), 0);
+        const avg = filtered.length > 0 ? revenue / filtered.length : 0;
+        const completed = filtered.filter(o => o.orderStatus === 'Completed' || o.orderStatus === 'Delivered').length;
+
+        document.getElementById('reportRevenue').textContent = Format.currency(revenue);
+        document.getElementById('reportOrders').textContent = filtered.length;
+        document.getElementById('reportAvgOrder').textContent = Format.currency(avg);
+        document.getElementById('reportCompleted').textContent = completed;
+        document.getElementById('periodOrderCount').textContent = filtered.length + ' orders';
+
+        renderPeriodOrders(filtered);
+        renderSalesTrendChart(filtered);
+        renderStatusChart(filtered);
+        renderTopProducts(filtered);
+    }
+
+    function renderPeriodOrders(orders) {
+        const tbody = document.getElementById('periodOrdersTable');
+        if (!tbody) return;
+        if (orders.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No orders in this period.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = orders.map(o => `<tr>
+            <td><strong>${o.orderNumber}</strong></td>
+            <td>${o.customerName || 'Guest'}</td>
+            <td>${Format.date(o.orderDate)}</td>
+            <td class="text-center">${o.itemCount || 0}</td>
+            <td class="text-end">${Format.currency(o.totalAmount)}</td>
+            <td class="text-center">${Format.statusBadge(o.orderStatus)}</td>
+            <td class="text-center">${Format.statusBadge(o.paymentStatus)}</td>
+        </tr>`).join('');
+    }
+
+    function renderSalesTrendChart(orders) {
+        const ctx = document.getElementById('salesTrendChart');
+        if (!ctx) return;
+
+        // Group by date
+        const grouped = {};
+        orders.forEach(o => {
+            const d = new Date(o.orderDate).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
+            grouped[d] = (grouped[d] || 0) + (o.totalAmount || 0);
+        });
+
+        const labels = Object.keys(grouped);
+        const data = Object.values(grouped);
+
+        if (salesTrendChart) salesTrendChart.destroy();
+        salesTrendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Revenue',
+                    data,
+                    borderColor: '#008080',
+                    backgroundColor: 'rgba(0, 128, 128, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#008080',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { callback: v => '₱' + v.toLocaleString() } }
+                }
+            }
+        });
+    }
+
+    function renderStatusChart(orders) {
+        const ctx = document.getElementById('statusChart');
+        if (!ctx) return;
+
+        const statuses = {};
+        orders.forEach(o => { statuses[o.orderStatus] = (statuses[o.orderStatus] || 0) + 1; });
+
+        const colorMap = {
+            'Pending': '#ffc107', 'Confirmed': '#0d6efd', 'Processing': '#0dcaf0',
+            'Shipped': '#6f42c1', 'Delivered': '#198754', 'Completed': '#008080',
+            'Cancelled': '#dc3545'
+        };
+
+        if (statusChart) statusChart.destroy();
+        statusChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(statuses),
+                datasets: [{
+                    data: Object.values(statuses),
+                    backgroundColor: Object.keys(statuses).map(s => colorMap[s] || '#6c757d')
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true } } }
+            }
+        });
+    }
+
+    function renderTopProducts(orders) {
+        const tbody = document.getElementById('topProductsTable');
+        if (!tbody) return;
+
+        const products = {};
+        orders.forEach(o => {
+            (o.items || []).forEach(i => {
+                if (!products[i.productName]) products[i.productName] = { qty: 0, revenue: 0 };
+                products[i.productName].qty += i.quantity;
+                products[i.productName].revenue += i.totalPrice || 0;
+            });
+        });
+
+        const sorted = Object.entries(products).sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 5);
+        if (sorted.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted">No product data</td></tr>';
+            return;
+        }
+        tbody.innerHTML = sorted.map(([name, d]) => `<tr>
+            <td class="fw-semibold">${name}</td>
+            <td class="text-center">${d.qty}</td>
+            <td class="text-end">${Format.currency(d.revenue)}</td>
+        </tr>`).join('');
+    }
+
+    function renderTopCustomers(customers) {
+        const tbody = document.getElementById('topCustomersTable');
+        if (!tbody) return;
+
+        const sorted = [...customers].sort((a, b) => (b.totalSpent || 0) - (a.totalSpent || 0)).slice(0, 5);
+        if (sorted.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted">No customer data</td></tr>';
+            return;
+        }
+        tbody.innerHTML = sorted.map(c => `<tr>
+            <td class="fw-semibold">${c.firstName} ${c.lastName}</td>
+            <td class="text-center">${c.totalOrders || 0}</td>
+            <td class="text-end">${Format.currency(c.totalSpent)}</td>
+        </tr>`).join('');
+    }
+
+    function generatePdfReport() {
+        const labels = { day: 'Today', week: 'This Week', month: 'This Month', year: 'This Year', all: 'All Time' };
+        SalesReportPDF.generate(allOrders, currentPeriod, labels[currentPeriod] || 'All Time');
+    }
+</script>
 }

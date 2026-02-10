@@ -400,6 +400,26 @@ namespace CompuGear.Controllers
             return Ok(new { success = true, message = "Customer deleted successfully" });
         }
 
+        [HttpPut("customers/{id}/toggle-status")]
+        public async Task<IActionResult> ToggleCustomerStatus(int id)
+        {
+            try
+            {
+                var customer = await _context.Customers.FindAsync(id);
+                if (customer == null) return NotFound();
+
+                customer.Status = customer.Status == "Active" ? "Inactive" : "Active";
+                customer.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = $"Customer {(customer.Status == "Active" ? "activated" : "deactivated")} successfully", status = customer.Status });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
         [HttpGet("customer-categories")]
         public async Task<IActionResult> GetCustomerCategories()
         {
@@ -1549,6 +1569,26 @@ namespace CompuGear.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { success = true, message = "Lead deleted successfully" });
+        }
+
+        [HttpPut("leads/{id}/toggle-status")]
+        public async Task<IActionResult> ToggleLeadStatus(int id)
+        {
+            try
+            {
+                var lead = await _context.Leads.FindAsync(id);
+                if (lead == null) return NotFound();
+
+                lead.Status = lead.Status == "Active" || lead.Status == "New" || lead.Status == "Qualified" || lead.Status == "Hot" ? "Inactive" : "Active";
+                lead.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = $"Lead {(lead.Status == "Inactive" ? "deactivated" : "activated")} successfully", status = lead.Status });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         #endregion

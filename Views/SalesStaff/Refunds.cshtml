@@ -26,35 +26,63 @@
 
 <!-- Stats -->
 <div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm text-center p-3">
-            <div class="h3 text-warning mb-1" id="pendingRequests">0</div>
-            <div class="text-muted small">Pending Requests</div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="pendingRequests">0</div>
+                <div class="stat-label">Pending Requests</div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm text-center p-3">
-            <div class="h3 text-success mb-1" id="approvedRequests">0</div>
-            <div class="text-muted small">Approved</div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="approvedRequests">0</div>
+                <div class="stat-label">Approved</div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm text-center p-3">
-            <div class="h3 text-danger mb-1" id="rejectedRequests">0</div>
-            <div class="text-muted small">Rejected</div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-danger">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="rejectedRequests">0</div>
+                <div class="stat-label">Rejected</div>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm text-center p-3">
-            <div class="h3 text-primary mb-1" id="totalRefundAmount">₱0</div>
-            <div class="text-muted small">Approved Amount</div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalRefundAmount">₱0</div>
+                <div class="stat-label">Approved Amount</div>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- My Requests Table -->
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">My Refund Requests</h5>
         <div class="d-flex gap-2">
             <select class="form-select form-select-sm" id="statusFilter" style="width: auto;" onchange="filterRequests()">
@@ -68,8 +96,8 @@
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
+            <table class="data-table">
+                <thead>
                     <tr>
                         <th>Request Code</th>
                         <th>Order #</th>
@@ -93,9 +121,9 @@
 <div class="modal fade" id="refundModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ff6b35, #e55a2b); color: white;">
                 <h5 class="modal-title">Request Order Refund</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="refundForm" onsubmit="submitRefundRequest(event)">
                 <div class="modal-body">

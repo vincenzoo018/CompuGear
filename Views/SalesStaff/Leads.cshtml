@@ -3,127 +3,208 @@
     Layout = "~/Views/Shared/_SalesLayout.cshtml";
 }
 
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">Leads & Opportunities</h1>
-            <p class="text-muted mb-0">Track and manage your sales pipeline</p>
-        </div>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#leadModal">
-            <i class="bi bi-plus-lg me-2"></i>Add Lead
-        </button>
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Leads & Opportunities</h1>
+        <p class="page-subtitle">Track and manage your sales pipeline</p>
     </div>
+    <button class="btn btn-primary" onclick="SalesLeads.openCreate()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Add Lead
+    </button>
+</div>
 
-    <!-- Stats Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-primary mb-0" id="totalLeads">0</h4>
-                    <small class="text-muted">Total Leads</small>
-                </div>
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-warning mb-0" id="hotLeads">0</h4>
-                    <small class="text-muted">Hot Leads</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-success mb-0" id="convertedLeads">0</h4>
-                    <small class="text-muted">Converted</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-info mb-0" id="pipelineValue">₱0</h4>
-                    <small class="text-muted">Pipeline Value</small>
-                </div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalLeads">0</div>
+                <div class="stat-label">Total Leads</div>
             </div>
         </div>
     </div>
-
-    <!-- Leads Table -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-0">
-            <div class="row align-items-center">
-                <div class="col-md-4">
-                    <input type="text" class="form-control" placeholder="Search leads..." id="leadSearch">
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select" id="leadStatusFilter">
-                        <option value="">All Status</option>
-                        <option value="New">New</option>
-                        <option value="Contacted">Contacted</option>
-                        <option value="Qualified">Qualified</option>
-                        <option value="Proposal">Proposal</option>
-                        <option value="Negotiation">Negotiation</option>
-                        <option value="Converted">Converted</option>
-                        <option value="Lost">Lost</option>
-                    </select>
-                </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-info">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="newLeads">0</div>
+                <div class="stat-label">New Leads</div>
             </div>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Lead</th>
-                            <th>Company</th>
-                            <th>Source</th>
-                            <th class="text-end">Value</th>
-                            <th>Status</th>
-                            <th>Last Contact</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="leadsTableBody">
-                        <tr>
-                            <td colspan="7" class="text-center py-4">Loading leads...</td>
-                        </tr>
-                    </tbody>
-                </table>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="qualifiedLeads">0</div>
+                <div class="stat-label">Qualified / Hot</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="wonLeads">0</div>
+                <div class="stat-label">Won / Converted</div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Lead Modal -->
-<div class="modal fade" id="leadModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add Lead</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<!-- Pipeline Value -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-light border-0">
+            <div class="card-body py-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="fw-semibold text-muted">Pipeline Value</span>
+                    <h4 class="mb-0 text-primary" id="pipelineValue">₱0</h4>
+                </div>
+                <span class="badge bg-primary" id="leadCount">0 leads</span>
             </div>
-            <form id="leadForm">
-                <div class="modal-body">
+        </div>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4 fade-in">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Search Leads</label>
+                <input type="text" class="form-control" id="leadSearch" placeholder="Search by name, email, company..." oninput="filterLeads()">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="leadStatusFilter" onchange="filterLeads()">
+                    <option value="">All Status</option>
+                    <option value="New">New</option>
+                    <option value="Contacted">Contacted</option>
+                    <option value="Qualified">Qualified</option>
+                    <option value="Hot">Hot</option>
+                    <option value="Proposal">Proposal</option>
+                    <option value="Negotiation">Negotiation</option>
+                    <option value="Won">Won</option>
+                    <option value="Lost">Lost</option>
+                    <option value="Inactive">Inactive</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Source</label>
+                <select class="form-select" id="leadSourceFilter" onchange="filterLeads()">
+                    <option value="">All Sources</option>
+                    <option value="Website">Website</option>
+                    <option value="Referral">Referral</option>
+                    <option value="Social Media">Social Media</option>
+                    <option value="Cold Call">Cold Call</option>
+                    <option value="Trade Show">Trade Show</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" onclick="document.getElementById('leadSearch').value='';document.getElementById('leadStatusFilter').value='';document.getElementById('leadSourceFilter').value='';SalesLeads.load();">Reset</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leads Table -->
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Lead List</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 8%;">Code</th>
+                        <th style="width: 16%;">Lead</th>
+                        <th style="width: 12%;">Company</th>
+                        <th style="width: 10%;">Source</th>
+                        <th style="width: 10%; text-align: right;">Value</th>
+                        <th style="width: 10%; text-align: center;">Status</th>
+                        <th style="width: 10%; text-align: center;">Created</th>
+                        <th style="width: 24%; text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="leadsTableBody">
+                    <tr><td colspan="8" class="text-center py-4">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- View Lead Modal -->
+<div class="modal fade" id="viewLeadModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #008080, #006666); color: white;">
+                <h5 class="modal-title">Lead Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewLeadContent"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Lead Modal -->
+<div class="modal fade" id="leadModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #008080, #006666); color: white;">
+                <h5 class="modal-title" id="leadModalTitle">Add New Lead</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="leadForm" onsubmit="event.preventDefault(); SalesLeads.save();">
                     <input type="hidden" id="leadId">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Contact Name</label>
-                            <input type="text" class="form-control" id="leadName" required>
+                            <label class="form-label">First Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="leadFirstName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="leadLastName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="leadEmail">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone</label>
+                            <input type="text" class="form-control" id="leadPhone">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Company</label>
                             <input type="text" class="form-control" id="leadCompany">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" id="leadEmail" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Phone</label>
-                            <input type="tel" class="form-control" id="leadPhone">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Source</label>
@@ -137,73 +218,46 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Estimated Value</label>
-                            <input type="number" class="form-control" id="leadValue" step="0.01">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="leadStatus">
+                                <option value="New">New</option>
+                                <option value="Contacted">Contacted</option>
+                                <option value="Qualified">Qualified</option>
+                                <option value="Hot">Hot</option>
+                                <option value="Proposal">Proposal</option>
+                                <option value="Negotiation">Negotiation</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Estimated Value (₱)</label>
+                            <input type="number" class="form-control" id="leadValue" step="0.01" min="0">
                         </div>
                         <div class="col-12">
                             <label class="form-label">Notes</label>
-                            <textarea class="form-control" id="leadNotes" rows="3"></textarea>
+                            <textarea class="form-control" id="leadNotes" rows="2"></textarea>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Lead</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- View Lead Modal -->
-<div class="modal fade view-modal" id="viewLeadModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title">Lead Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </form>
             </div>
-            <div class="modal-body" id="viewLeadContent">
-                <div class="text-center py-4">
-                    <div class="spinner-border text-primary" role="status"></div>
-                </div>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-warning" onclick="SalesLeads.edit(SalesLeads.currentId)">
-                    <i class="bi bi-pencil me-1"></i>Edit
-                </button>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="SalesLeads.save()">Save Lead</button>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script src="~/js/sales.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            SalesLeads.load();
-            
-            // Filter functionality
-            const searchInput = document.getElementById('leadSearch');
-            const statusFilter = document.getElementById('leadStatusFilter');
-            
-            function filterLeads() {
-                SalesLeads.filter(
-                    searchInput?.value || '',
-                    statusFilter?.value || '',
-                    ''
-                );
-            }
-            
-            if (searchInput) searchInput.addEventListener('input', filterLeads);
-            if (statusFilter) statusFilter.addEventListener('change', filterLeads);
-            
-            // Form submission
-            document.getElementById('leadForm')?.addEventListener('submit', function(e) {
-                e.preventDefault();
-                SalesLeads.save();
-            });
-        });
-    </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        SalesLeads.load();
+    });
+
+    function filterLeads() {
+        const search = (document.getElementById('leadSearch')?.value || '').toLowerCase();
+        const status = document.getElementById('leadStatusFilter')?.value || '';
+        const source = document.getElementById('leadSourceFilter')?.value || '';
+        SalesLeads.filter(search, status, source);
+    }
+</script>
 }
