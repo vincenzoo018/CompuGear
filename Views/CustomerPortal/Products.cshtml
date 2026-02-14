@@ -4,71 +4,291 @@
 }
 
 <style>
-    .products-page { min-height: 100vh; }
-
-    /* Page Header */
-    .page-header {
-        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
-        color: white;
-        padding: 32px 40px;
-        border-radius: 16px;
-        margin-bottom: 24px;
-        position: relative;
-        overflow: hidden;
+    /* ========== PRODUCTS PAGE STYLES ========== */
+    .products-page {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 24px 20px;
+        min-height: 100vh;
     }
 
-    .page-header::before {
-        content: '🛍️';
+    /* Compact Page Header */
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+
+    .page-header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .page-header-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .page-header-icon svg {
+        width: 24px;
+        height: 24px;
+        color: white;
+    }
+
+    .page-header-text h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--foreground);
+        margin: 0 0 4px 0;
+    }
+
+    .page-header-text p {
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
+        margin: 0;
+    }
+
+    .header-search {
+        position: relative;
+        width: 320px;
+    }
+
+    .header-search input {
+        width: 100%;
+        padding: 10px 16px 10px 42px;
+        border: 1px solid var(--border);
+        border-radius: 50px;
+        font-size: 0.875rem;
+        background: var(--card);
+        transition: all 0.2s;
+    }
+
+    .header-search input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.1);
+    }
+
+    .header-search input::placeholder {
+        color: var(--muted-foreground);
+    }
+
+    .header-search-icon {
         position: absolute;
-        right: 40px;
+        left: 14px;
         top: 50%;
         transform: translateY(-50%);
-        font-size: 5rem;
-        opacity: 0.15;
+        color: var(--muted-foreground);
+        pointer-events: none;
     }
 
-    .page-header h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
-    .page-header p { opacity: 0.9; margin: 0; }
+    .header-search-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    /* Toolbar */
+    .products-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+
+    .toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .btn-filter-toggle {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--foreground);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-filter-toggle:hover {
+        border-color: var(--primary);
+        background: var(--muted);
+    }
+
+    .btn-filter-toggle svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .results-count {
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
+    }
+
+    .results-count strong {
+        color: var(--foreground);
+        font-weight: 600;
+    }
+
+    .toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .sort-dropdown {
+        padding: 10px 36px 10px 14px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: var(--card);
+        font-size: 0.875rem;
+        color: var(--foreground);
+        cursor: pointer;
+        transition: border-color 0.2s;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+    }
+
+    .sort-dropdown:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+
+    .view-toggle {
+        display: flex;
+        background: var(--muted);
+        border-radius: var(--radius-sm);
+        padding: 4px;
+    }
+
+    .view-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: transparent;
+        border-radius: 6px;
+        color: var(--muted-foreground);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .view-btn:hover {
+        color: var(--foreground);
+    }
+
+    .view-btn.active {
+        background: var(--card);
+        color: var(--foreground);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .view-btn svg {
+        width: 18px;
+        height: 18px;
+    }
 
     /* Content Layout */
     .content-wrapper {
         display: grid;
-        grid-template-columns: 280px 1fr;
+        grid-template-columns: 260px 1fr;
         gap: 24px;
     }
 
     /* Sidebar Filters */
     .filters-sidebar {
         position: sticky;
-        top: 100px;
+        top: 90px;
         height: fit-content;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
     }
 
     .filter-card {
         background: var(--card);
         border-radius: var(--radius);
         border: 1px solid var(--border);
-        padding: 20px;
-        margin-bottom: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .filter-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
     }
 
     .filter-title {
-        font-weight: 700;
-        color: var(--foreground);
-        margin-bottom: 16px;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
+        font-weight: 700;
+        color: var(--foreground);
+        font-size: 0.95rem;
     }
 
-    .filter-group { margin-bottom: 16px; }
-    .filter-group:last-child { margin-bottom: 0; }
+    .filter-title svg {
+        width: 18px;
+        height: 18px;
+        color: var(--primary);
+    }
+
+    .btn-clear-filters {
+        font-size: 0.75rem;
+        color: var(--muted-foreground);
+        background: none;
+        border: none;
+        cursor: pointer;
+        text-decoration: underline;
+        transition: color 0.2s;
+    }
+
+    .btn-clear-filters:hover {
+        color: var(--primary);
+    }
+
+    .filter-body {
+        padding: 20px;
+    }
+
+    .filter-section {
+        margin-bottom: 24px;
+    }
+
+    .filter-section:last-child {
+        margin-bottom: 0;
+    }
 
     .filter-label {
+        font-size: 10px;
         font-weight: 600;
-        color: var(--foreground);
-        font-size: 0.85rem;
-        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted-foreground);
+        margin-bottom: 12px;
         display: block;
     }
 
@@ -76,149 +296,201 @@
         width: 100%;
         padding: 10px 14px;
         border: 1px solid var(--border);
-        border-radius: 8px;
-        font-size: 0.9rem;
+        border-radius: var(--radius-sm);
+        font-size: 0.875rem;
         background: var(--card);
+        color: var(--foreground);
         cursor: pointer;
         transition: border-color 0.2s;
     }
 
-    .filter-select:focus { border-color: var(--primary); outline: none; }
+    .filter-select:focus {
+        border-color: var(--primary);
+        outline: none;
+    }
 
     /* Price Range Slider */
-    .price-range-container { padding: 8px 0; }
-
-    .price-inputs {
+    .price-display {
         display: flex;
-        gap: 12px;
-        align-items: center;
+        justify-content: space-between;
         margin-bottom: 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--foreground);
     }
 
-    .price-input {
-        flex: 1;
-        padding: 8px 12px;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        font-size: 0.85rem;
+    .price-slider-container {
+        position: relative;
+        height: 6px;
+        background: var(--border);
+        border-radius: 3px;
+        margin: 16px 0;
     }
-
-    .price-input:focus { border-color: var(--primary); outline: none; }
 
     .price-slider {
         width: 100%;
-        height: 6px;
         -webkit-appearance: none;
-        background: linear-gradient(to right, var(--primary) 0%, var(--primary) 50%, var(--border) 50%, var(--border) 100%);
+        appearance: none;
+        height: 6px;
+        background: linear-gradient(to right, var(--primary) 0%, var(--primary) var(--value, 50%), var(--border) var(--value, 50%), var(--border) 100%);
         border-radius: 3px;
         outline: none;
+        cursor: pointer;
     }
 
     .price-slider::-webkit-slider-thumb {
         -webkit-appearance: none;
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
         background: var(--primary);
         border-radius: 50%;
         cursor: pointer;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 8px rgba(0, 128, 128, 0.3);
+        transition: transform 0.2s;
     }
 
-    .filter-checkbox {
+    .price-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.1);
+    }
+
+    .price-slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        background: var(--primary);
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 128, 128, 0.3);
+    }
+
+    /* Brand Checkboxes */
+    .brand-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .brand-checkbox {
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-bottom: 10px;
         cursor: pointer;
-        font-size: 0.9rem;
+        font-size: 0.875rem;
+        color: var(--foreground);
+        transition: color 0.2s;
     }
 
-    .filter-checkbox input {
+    .brand-checkbox:hover {
+        color: var(--primary);
+    }
+
+    .brand-checkbox input {
         width: 18px;
         height: 18px;
         accent-color: var(--primary);
         cursor: pointer;
+        border-radius: 4px;
     }
 
-    .btn-apply {
+    /* Toggle Switch */
+    .toggle-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .toggle-label {
+        font-size: 0.875rem;
+        color: var(--foreground);
+    }
+
+    .toggle-switch {
+        position: relative;
+        width: 48px;
+        height: 26px;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--border);
+        border-radius: 26px;
+        transition: 0.3s;
+    }
+
+    .toggle-slider::before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        bottom: 3px;
+        background: white;
+        border-radius: 50%;
+        transition: 0.3s;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+        background: var(--primary);
+    }
+
+    .toggle-switch input:checked + .toggle-slider::before {
+        transform: translateX(22px);
+    }
+
+    .btn-apply-filters {
         width: 100%;
-        padding: 12px;
+        padding: 12px 16px;
         background: linear-gradient(135deg, var(--primary), var(--primary-hover));
         color: white;
         border: none;
-        border-radius: 8px;
+        border-radius: var(--radius-sm);
+        font-size: 0.875rem;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
-        margin-bottom: 8px;
-    }
-
-    .btn-apply:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,128,128,0.3); }
-
-    .btn-reset {
-        width: 100%;
-        padding: 10px;
-        background: transparent;
-        color: var(--muted-foreground);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .btn-reset:hover { background: var(--muted); }
-
-    /* Products Main */
-    .products-main { min-width: 0; }
-
-    .products-toolbar {
+        margin-top: 20px;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
-        flex-wrap: wrap;
-        gap: 12px;
+        justify-content: center;
+        gap: 8px;
     }
 
-    .results-count { color: var(--muted-foreground); font-size: 0.9rem; }
-    .results-count strong { color: var(--foreground); }
-
-    .toolbar-actions { display: flex; align-items: center; gap: 12px; }
-
-    .view-toggle {
-        display: flex;
-        background: var(--muted);
-        border-radius: 8px;
-        padding: 4px;
+    .btn-apply-filters:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
     }
 
-    .view-btn {
-        padding: 8px 12px;
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        border-radius: 6px;
-        color: var(--muted-foreground);
-        transition: all 0.2s;
+    .btn-apply-filters svg {
+        width: 16px;
+        height: 16px;
     }
 
-    .view-btn.active { background: var(--card); color: var(--foreground); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-
-    .sort-dropdown {
-        padding: 8px 14px;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        background: var(--card);
-        font-size: 0.9rem;
-        cursor: pointer;
+    /* Products Main Area */
+    .products-main {
+        min-width: 0;
     }
 
     /* Product Grid */
     .products-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        grid-template-columns: repeat(3, 1fr);
         gap: 20px;
+    }
+
+    .products-grid.four-cols {
+        grid-template-columns: repeat(4, 1fr);
     }
 
     .products-grid.list-view {
@@ -227,33 +499,69 @@
 
     .products-grid.list-view .product-card {
         display: grid;
-        grid-template-columns: 200px 1fr;
+        grid-template-columns: 220px 1fr;
     }
 
-    .products-grid.list-view .product-image { height: 160px; }
-    .products-grid.list-view .product-body { display: flex; flex-direction: column; justify-content: center; }
+    .products-grid.list-view .product-image {
+        height: 100%;
+        min-height: 200px;
+    }
 
+    .products-grid.list-view .product-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* Product Card */
     .product-card {
         background: var(--card);
         border-radius: var(--radius);
         border: 1px solid var(--border);
         overflow: hidden;
-        transition: all 0.2s;
+        transition: all 0.25s ease;
     }
 
     .product-card:hover {
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-        transform: translateY(-4px);
+        border-color: var(--primary);
+        box-shadow: 0 8px 24px rgba(0, 128, 128, 0.12);
+        transform: translateY(-4px) scale(1.01);
     }
 
     .product-image {
-        height: 180px;
-        background: linear-gradient(135deg, var(--muted) 0%, var(--border) 100%);
+        position: relative;
+        height: 200px;
+        background: linear-gradient(135deg, var(--muted) 0%, #e8ecef 100%);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 4rem;
-        position: relative;
+        overflow: hidden;
+    }
+
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .product-card:hover .product-image img {
+        transform: scale(1.05);
+    }
+
+    .product-image-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: var(--muted-foreground);
+    }
+
+    .product-image-placeholder svg {
+        width: 64px;
+        height: 64px;
+        opacity: 0.4;
     }
 
     .product-badges {
@@ -261,25 +569,32 @@
         top: 12px;
         left: 12px;
         display: flex;
+        flex-direction: column;
         gap: 6px;
     }
 
-    .badge-sale {
-        background: var(--accent);
-        color: white;
+    .product-badge {
         padding: 4px 10px;
         border-radius: 20px;
-        font-size: 0.7rem;
-        font-weight: 600;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
-    .badge-new {
+    .product-badge.sale {
+        background: var(--accent);
+        color: white;
+    }
+
+    .product-badge.new {
         background: var(--success);
         color: white;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 0.7rem;
-        font-weight: 600;
+    }
+
+    .product-badge.hot {
+        background: var(--error);
+        color: white;
     }
 
     .wishlist-btn {
@@ -295,48 +610,120 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         transition: all 0.2s;
+        color: var(--muted-foreground);
     }
 
-    .wishlist-btn:hover { transform: scale(1.1); }
-    .wishlist-btn.active { background: #FEE2E2; }
+    .wishlist-btn:hover {
+        transform: scale(1.1);
+        color: var(--error);
+    }
 
-    .product-body { padding: 16px; }
-    .product-category { color: var(--primary); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
-    .product-name { font-weight: 600; color: var(--foreground); font-size: 0.95rem; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .product-brand { color: var(--muted-foreground); font-size: 0.8rem; margin-bottom: 8px; }
+    .wishlist-btn.active {
+        background: var(--error-light);
+        color: var(--error);
+    }
+
+    .wishlist-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .product-content {
+        padding: 16px;
+    }
+
+    .product-category {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--primary);
+        margin-bottom: 6px;
+    }
+
+    .product-name {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--foreground);
+        margin-bottom: 8px;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
 
     .product-rating {
         display: flex;
         align-items: center;
-        gap: 6px;
-        margin-bottom: 10px;
+        gap: 8px;
+        margin-bottom: 12px;
     }
 
-    .stars { display: flex; gap: 2px; }
-    .star { color: #FCD34D; font-size: 0.85rem; }
-    .star.empty { color: var(--border); }
-    .rating-count { color: var(--muted-foreground); font-size: 0.75rem; }
+    .rating-stars {
+        display: flex;
+        gap: 2px;
+    }
 
-    .product-pricing { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-    .current-price { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
-    .original-price { font-size: 0.85rem; color: var(--muted-foreground); text-decoration: line-through; }
-    .discount-tag { background: var(--error-light); color: var(--error-fg); padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; }
+    .rating-stars svg {
+        width: 14px;
+        height: 14px;
+    }
 
-    .stock-status { font-size: 0.8rem; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-    .stock-status.in-stock { color: var(--success-fg); }
-    .stock-status.low-stock { color: var(--warning-fg); }
-    .stock-status.out-of-stock { color: var(--error-fg); }
+    .rating-stars svg.filled {
+        color: #FBBF24;
+        fill: #FBBF24;
+    }
+
+    .rating-stars svg.empty {
+        color: var(--border);
+        fill: var(--border);
+    }
+
+    .rating-count {
+        font-size: 0.75rem;
+        color: var(--muted-foreground);
+    }
+
+    .product-pricing {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+    }
+
+    .current-price {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--accent);
+    }
+
+    .original-price {
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
+        text-decoration: line-through;
+    }
+
+    .discount-badge {
+        background: var(--error-light);
+        color: var(--error-fg);
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
 
     .btn-add-cart {
         width: 100%;
-        padding: 12px;
+        padding: 12px 16px;
         background: linear-gradient(135deg, var(--primary), var(--primary-hover));
         color: white;
         border: none;
-        border-radius: 8px;
+        border-radius: var(--radius-sm);
+        font-size: 0.875rem;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
@@ -346,9 +733,27 @@
         gap: 8px;
     }
 
-    .btn-add-cart:hover { transform: scale(1.02); box-shadow: 0 4px 12px rgba(0,128,128,0.3); }
-    .btn-add-cart:disabled { background: var(--muted); color: var(--muted-foreground); cursor: not-allowed; transform: none; box-shadow: none; }
-    .btn-add-cart.added { background: var(--success); }
+    .btn-add-cart:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
+    }
+
+    .btn-add-cart.added {
+        background: var(--success);
+    }
+
+    .btn-add-cart:disabled {
+        background: var(--muted);
+        color: var(--muted-foreground);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .btn-add-cart svg {
+        width: 18px;
+        height: 18px;
+    }
 
     /* Pagination */
     .pagination-container {
@@ -356,245 +761,828 @@
         justify-content: center;
         align-items: center;
         gap: 8px;
-        margin-top: 32px;
+        margin-top: 40px;
     }
 
     .page-btn {
-        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        padding: 0 14px;
         border: 1px solid var(--border);
         background: var(--card);
-        border-radius: 8px;
-        cursor: pointer;
+        border-radius: var(--radius-sm);
+        font-size: 0.875rem;
         font-weight: 500;
+        color: var(--foreground);
+        cursor: pointer;
         transition: all 0.2s;
     }
 
-    .page-btn:hover { border-color: var(--primary); }
-    .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-    .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    /* Empty State */
-    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted-foreground); }
-    .empty-state-icon { font-size: 4rem; margin-bottom: 16px; opacity: 0.5; }
-    .empty-state-text { font-size: 1.1rem; margin-bottom: 8px; }
-
-    /* Mobile Filter Toggle */
-    .mobile-filter-toggle {
-        display: none;
-        width: 100%;
-        padding: 12px;
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        margin-bottom: 16px;
-        cursor: pointer;
-        font-weight: 600;
+    .page-btn:hover:not(:disabled) {
+        border-color: var(--primary);
+        color: var(--primary);
     }
 
-    /* Responsive */
+    .page-btn.active {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+
+    .page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .page-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Mobile Filter Overlay */
+    .filter-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1050;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .filter-overlay.show {
+        display: block;
+        opacity: 1;
+    }
+
+    .mobile-filter-header {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .mobile-filter-header h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--foreground);
+        margin: 0;
+    }
+
+    .btn-close-filters {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--muted);
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        color: var(--foreground);
+        transition: background 0.2s;
+    }
+
+    .btn-close-filters:hover {
+        background: var(--border);
+    }
+
+    .btn-close-filters svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    /* Empty State */
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+        background: var(--muted);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted-foreground);
+    }
+
+    .empty-state-icon svg {
+        width: 40px;
+        height: 40px;
+    }
+
+    .empty-state-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--foreground);
+        margin-bottom: 8px;
+    }
+
+    .empty-state-text {
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
+    }
+
+    /* Responsive Styles */
+    @@media (max-width: 1200px) {
+        .products-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
     @@media (max-width: 992px) {
-        .content-wrapper { grid-template-columns: 1fr; }
+        .content-wrapper {
+            grid-template-columns: 1fr;
+        }
+
+        .btn-filter-toggle {
+            display: flex;
+        }
 
         .filters-sidebar {
             position: fixed;
             top: 0;
-            left: -100%;
+            left: -320px;
             width: 300px;
             height: 100vh;
+            max-height: 100vh;
             background: var(--background);
             z-index: 1100;
-            padding: 20px;
-            overflow-y: auto;
             transition: left 0.3s ease;
+            border-radius: 0;
         }
 
-        .filters-sidebar.open { left: 0; }
-
-        .filter-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
+        .filters-sidebar.open {
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1050;
         }
 
-        .filter-overlay.show { display: block; }
-
-        .mobile-filter-toggle { display: flex; align-items: center; justify-content: center; gap: 8px; }
-
-        .close-filters {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .close-filters button {
-            background: none;
+        .filters-sidebar .filter-card {
             border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
+            border-radius: 0;
+            box-shadow: none;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filters-sidebar .filter-header {
+            display: none;
+        }
+
+        .mobile-filter-header {
+            display: flex;
+        }
+
+        .filters-sidebar .filter-body {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .products-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
         }
     }
 
     @@media (max-width: 768px) {
-        .page-header { padding: 24px; }
-        .page-header h1 { font-size: 1.4rem; }
-        .products-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .product-image { height: 140px; font-size: 2.5rem; }
-        .product-body { padding: 12px; }
-        .product-name { font-size: 0.85rem; }
-        .current-price { font-size: 1rem; }
+        .products-page {
+            padding: 16px;
+        }
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .header-search {
+            width: 100%;
+        }
+
+        .products-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .toolbar-left {
+            justify-content: space-between;
+        }
+
+        .toolbar-right {
+            justify-content: space-between;
+        }
+
+        .view-toggle {
+            display: none;
+        }
     }
 
     @@media (max-width: 576px) {
-        .page-header::before { display: none; }
-        .toolbar-actions { width: 100%; justify-content: space-between; }
+        .products-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .product-image {
+            height: 180px;
+        }
     }
 </style>
 
 <div class="products-page">
-    <!-- Page Header -->
-    <div class="page-header animate-fade-in">
-        <h1>🛍️ Browse Products</h1>
-        <p>Discover the best computer accessories for your setup</p>
+    <!-- Compact Page Header -->
+    <header class="page-header animate-fade-in">
+        <div class="page-header-left">
+            <div class="page-header-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+            </div>
+            <div class="page-header-text">
+                <h1>Browse Products</h1>
+                <p>Discover premium computer accessories for your setup</p>
+            </div>
+        </div>
+        <div class="header-search">
+            <span class="header-search-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </span>
+            <input type="text" id="searchInput" placeholder="Search products...">
+        </div>
+    </header>
+
+    <!-- Toolbar -->
+    <div class="products-toolbar animate-fade-in stagger-1">
+        <div class="toolbar-left">
+            <button class="btn-filter-toggle" onclick="toggleFilters()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                Filters
+            </button>
+            <span class="results-count">Showing <strong id="resultsCount">8</strong> products</span>
+        </div>
+        <div class="toolbar-right">
+            <select class="sort-dropdown" id="sortDropdown">
+                <option value="featured">Featured</option>
+                <option value="name">Name: A-Z</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="newest">Newest First</option>
+                <option value="rating">Top Rated</option>
+            </select>
+            <div class="view-toggle">
+                <button class="view-btn active" id="gridViewBtn" onclick="setView('grid')" title="Grid View">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                    </svg>
+                </button>
+                <button class="view-btn" id="listViewBtn" onclick="setView('list')" title="List View">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- Mobile Filter Toggle -->
-    <button class="mobile-filter-toggle" onclick="toggleFilters()">
-        🎯 Filter & Sort
-    </button>
-
-    <!-- Filter Overlay -->
+    <!-- Filter Overlay for Mobile -->
     <div class="filter-overlay" id="filterOverlay" onclick="toggleFilters()"></div>
 
     <div class="content-wrapper">
-        <!-- Filters Sidebar -->
-        <aside class="filters-sidebar" id="filtersSidebar">
-            <div class="close-filters d-lg-none">
-                <span class="filter-title">🎯 Filters</span>
-                <button onclick="toggleFilters()">✕</button>
-            </div>
-
+        <!-- Sticky Sidebar Filters -->
+        <aside class="filters-sidebar animate-fade-in stagger-2" id="filtersSidebar">
             <div class="filter-card">
-                <div class="filter-title d-none d-lg-flex">🎯 Filters</div>
-
-                <div class="filter-group">
-                    <label class="filter-label">Category</label>
-                    <select class="filter-select" id="categoryFilter">
-                        <option value="">All Categories</option>
-                    </select>
+                <!-- Mobile Header -->
+                <div class="mobile-filter-header">
+                    <h3>Filters</h3>
+                    <button class="btn-close-filters" onclick="toggleFilters()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 </div>
 
-                <div class="filter-group">
-                    <label class="filter-label">Brand</label>
-                    <select class="filter-select" id="brandFilter">
-                        <option value="">All Brands</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label class="filter-label">Price Range</label>
-                    <div class="price-range-container">
-                        <div class="price-inputs">
-                            <input type="number" class="price-input" id="minPrice" placeholder="₱ Min">
-                            <span>—</span>
-                            <input type="number" class="price-input" id="maxPrice" placeholder="₱ Max">
-                        </div>
-                        <input type="range" class="price-slider" id="priceSlider" min="0" max="50000" value="25000">
+                <!-- Desktop Header -->
+                <div class="filter-header">
+                    <div class="filter-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                        Filters
                     </div>
+                    <button class="btn-clear-filters" onclick="resetFilters()">Clear All</button>
                 </div>
 
-                <div class="filter-group">
-                    <label class="filter-label">Availability</label>
-                    <label class="filter-checkbox">
-                        <input type="checkbox" id="inStockOnly">
-                        <span>In Stock Only</span>
-                    </label>
-                    <label class="filter-checkbox">
-                        <input type="checkbox" id="onSaleOnly">
-                        <span>On Sale</span>
-                    </label>
-                </div>
+                <div class="filter-body">
+                    <!-- Category Filter -->
+                    <div class="filter-section">
+                        <label class="filter-label">Category</label>
+                        <select class="filter-select" id="categoryFilter">
+                            <option value="">All Categories</option>
+                            <option value="keyboards">Keyboards</option>
+                            <option value="mice">Mice</option>
+                            <option value="headsets">Headsets</option>
+                            <option value="monitors">Monitors</option>
+                            <option value="storage">Storage</option>
+                            <option value="accessories">Accessories</option>
+                        </select>
+                    </div>
 
-                <button class="btn-apply" onclick="applyFilters()">Apply Filters</button>
-                <button class="btn-reset" onclick="resetFilters()">Reset All</button>
+                    <!-- Price Range -->
+                    <div class="filter-section">
+                        <label class="filter-label">Price Range</label>
+                        <div class="price-display">
+                            <span>₱0</span>
+                            <span id="priceValue">₱25,000</span>
+                        </div>
+                        <input type="range" class="price-slider" id="priceSlider" min="0" max="50000" value="25000" oninput="updatePriceDisplay(this.value)">
+                    </div>
+
+                    <!-- Brand Checkboxes -->
+                    <div class="filter-section">
+                        <label class="filter-label">Brand</label>
+                        <div class="brand-list">
+                            <label class="brand-checkbox">
+                                <input type="checkbox" value="logitech">
+                                <span>Logitech</span>
+                            </label>
+                            <label class="brand-checkbox">
+                                <input type="checkbox" value="razer">
+                                <span>Razer</span>
+                            </label>
+                            <label class="brand-checkbox">
+                                <input type="checkbox" value="steelseries">
+                                <span>SteelSeries</span>
+                            </label>
+                            <label class="brand-checkbox">
+                                <input type="checkbox" value="corsair">
+                                <span>Corsair</span>
+                            </label>
+                            <label class="brand-checkbox">
+                                <input type="checkbox" value="hyperx">
+                                <span>HyperX</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- In Stock Toggle -->
+                    <div class="filter-section">
+                        <div class="toggle-wrapper">
+                            <span class="toggle-label">In Stock Only</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="inStockToggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Apply Filters Button -->
+                    <button class="btn-apply-filters" onclick="applyFilters()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Apply Filters
+                    </button>
+                </div>
             </div>
         </aside>
 
-        <!-- Products Main -->
+        <!-- Products Main Area -->
         <main class="products-main">
-            <div class="products-toolbar">
-                <div class="results-count">
-                    Showing <strong id="resultsCount">0</strong> products
-                </div>
-                <div class="toolbar-actions">
-                    <div class="view-toggle">
-                        <button class="view-btn active" id="gridViewBtn" onclick="setView('grid')">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                                <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+            <div class="products-grid" id="productsGrid">
+                <!-- Product 1 -->
+                <article class="product-card card-interactive animate-fade-in stagger-1">
+                    <div class="product-image">
+                        <div class="product-image-placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                                <path d="M6 8h.01M10 8h.01M6 12h12M6 16h8"></path>
                             </svg>
-                        </button>
-                        <button class="view-btn" id="listViewBtn" onclick="setView('list')">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
-                                <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
-                                <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                        </div>
+                        <div class="product-badges">
+                            <span class="product-badge sale">Sale</span>
+                        </div>
+                        <button class="wishlist-btn" onclick="toggleWishlist(this, 1)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                             </svg>
                         </button>
                     </div>
-                    <select class="sort-dropdown" id="sortDropdown" onchange="applyFilters()">
-                        <option value="featured">Featured</option>
-                        <option value="name">Name: A-Z</option>
-                        <option value="price-asc">Price: Low to High</option>
-                        <option value="price-desc">Price: High to Low</option>
-                        <option value="newest">Newest First</option>
-                    </select>
-                </div>
+                    <div class="product-content">
+                        <div class="product-category">Keyboards</div>
+                        <h3 class="product-name">Logitech G Pro X Mechanical Gaming Keyboard</h3>
+                        <div class="product-rating">
+                            <div class="rating-stars">
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            </div>
+                            <span class="rating-count">(234 reviews)</span>
+                        </div>
+                        <div class="product-pricing">
+                            <span class="current-price">₱6,495</span>
+                            <span class="original-price">₱7,999</span>
+                            <span class="discount-badge">-19%</span>
+                        </div>
+                        <button class="btn-add-cart" onclick="addToCart(1, 'Logitech G Pro X', 6495)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            Add to Cart
+                        </button>
+                    </div>
+                </article>
+
+                <!-- Product 2 -->
+                <article class="product-card card-interactive animate-fade-in stagger-2">
+                    <div class="product-image">
+                        <div class="product-image-placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <ellipse cx="12" cy="14" rx="8" ry="6"></ellipse>
+                                <path d="M4 14V8a8 8 0 0 1 16 0v6"></path>
+                                <circle cx="8" cy="10" r="1"></circle>
+                                <circle cx="16" cy="10" r="1"></circle>
+                            </svg>
+                        </div>
+                        <div class="product-badges">
+                            <span class="product-badge new">New</span>
+                        </div>
+                        <button class="wishlist-btn" onclick="toggleWishlist(this, 2)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="product-content">
+                        <div class="product-category">Mice</div>
+                        <h3 class="product-name">Razer DeathAdder V3 Pro Wireless Gaming Mouse</h3>
+                        <div class="product-rating">
+                            <div class="rating-stars">
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="empty"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            </div>
+                            <span class="rating-count">(189 reviews)</span>
+                        </div>
+                        <div class="product-pricing">
+                            <span class="current-price">₱8,990</span>
+                        </div>
+                        <button class="btn-add-cart" onclick="addToCart(2, 'Razer DeathAdder V3 Pro', 8990)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            Add to Cart
+                        </button>
+                    </div>
+                </article>
+
+                <!-- Product 3 -->
+                <article class="product-card card-interactive animate-fade-in stagger-3">
+                    <div class="product-image">
+                        <div class="product-image-placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+                                <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+                            </svg>
+                        </div>
+                        <div class="product-badges">
+                            <span class="product-badge hot">Hot</span>
+                        </div>
+                        <button class="wishlist-btn" onclick="toggleWishlist(this, 3)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="product-content">
+                        <div class="product-category">Headsets</div>
+                        <h3 class="product-name">SteelSeries Arctis Nova Pro Wireless Headset</h3>
+                        <div class="product-rating">
+                            <div class="rating-stars">
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            </div>
+                            <span class="rating-count">(412 reviews)</span>
+                        </div>
+                        <div class="product-pricing">
+                            <span class="current-price">₱19,990</span>
+                        </div>
+                        <button class="btn-add-cart" onclick="addToCart(3, 'SteelSeries Arctis Nova Pro', 19990)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            Add to Cart
+                        </button>
+                    </div>
+                </article>
+
+                <!-- Product 4 -->
+                <article class="product-card card-interactive animate-fade-in stagger-4">
+                    <div class="product-image">
+                        <div class="product-image-placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                <line x1="8" y1="21" x2="16" y2="21"></line>
+                                <line x1="12" y1="17" x2="12" y2="21"></line>
+                            </svg>
+                        </div>
+                        <div class="product-badges">
+                            <span class="product-badge sale">Sale</span>
+                        </div>
+                        <button class="wishlist-btn" onclick="toggleWishlist(this, 4)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="product-content">
+                        <div class="product-category">Monitors</div>
+                        <h3 class="product-name">ASUS ROG Swift PG27AQDM 27" 240Hz OLED Monitor</h3>
+                        <div class="product-rating">
+                            <div class="rating-stars">
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="empty"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            </div>
+                            <span class="rating-count">(87 reviews)</span>
+                        </div>
+                        <div class="product-pricing">
+                            <span class="current-price">₱45,995</span>
+                            <span class="original-price">₱54,990</span>
+                            <span class="discount-badge">-16%</span>
+                        </div>
+                        <button class="btn-add-cart" onclick="addToCart(4, 'ASUS ROG Swift PG27AQDM', 45995)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            Add to Cart
+                        </button>
+                    </div>
+                </article>
+
+                <!-- Product 5 -->
+                <article class="product-card card-interactive animate-fade-in stagger-5">
+                    <div class="product-image">
+                        <div class="product-image-placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                                <rect x="9" y="9" width="6" height="6"></rect>
+                                <line x1="9" y1="2" x2="9" y2="4"></line>
+                                <line x1="15" y1="2" x2="15" y2="4"></line>
+                                <line x1="9" y1="20" x2="9" y2="22"></line>
+                                <line x1="15" y1="20" x2="15" y2="22"></line>
+                                <line x1="20" y1="9" x2="22" y2="9"></line>
+                                <line x1="20" y1="15" x2="22" y2="15"></line>
+                                <line x1="2" y1="9" x2="4" y2="9"></line>
+                                <line x1="2" y1="15" x2="4" y2="15"></line>
+                            </svg>
+                        </div>
+                        <div class="product-badges"></div>
+                        <button class="wishlist-btn" onclick="toggleWishlist(this, 5)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="product-content">
+                        <div class="product-category">Storage</div>
+                        <h3 class="product-name">Samsung 990 Pro 2TB NVMe M.2 SSD</h3>
+                        <div class="product-rating">
+                            <div class="rating-stars">
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            </div>
+                            <span class="rating-count">(356 reviews)</span>
+                        </div>
+                        <div class="product-pricing">
+                            <span class="current-price">₱12,490</span>
+                        </div>
+                        <button class="btn-add-cart" onclick="addToCart(5, 'Samsung 990 Pro 2TB', 12490)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            Add to Cart
+                        </button>
+                    </div>
+                </article>
+
+                <!-- Product 6 -->
+                <article class="product-card card-interactive animate-fade-in stagger-6">
+                    <div class="product-image">
+                        <div class="product-image-placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                                <path d="M6 8h.01M10 8h.01M6 12h12M6 16h8"></path>
+                            </svg>
+                        </div>
+                        <div class="product-badges">
+                            <span class="product-badge new">New</span>
+                        </div>
+                        <button class="wishlist-btn" onclick="toggleWishlist(this, 6)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="product-content">
+                        <div class="product-category">Keyboards</div>
+                        <h3 class="product-name">Corsair K100 RGB Optical-Mechanical Keyboard</h3>
+                        <div class="product-rating">
+                            <div class="rating-stars">
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="empty"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            </div>
+                            <span class="rating-count">(143 reviews)</span>
+                        </div>
+                        <div class="product-pricing">
+                            <span class="current-price">₱14,295</span>
+                        </div>
+                        <button class="btn-add-cart" onclick="addToCart(6, 'Corsair K100 RGB', 14295)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            Add to Cart
+                        </button>
+                    </div>
+                </article>
+
+                <!-- Product 7 -->
+                <article class="product-card card-interactive animate-fade-in stagger-7">
+                    <div class="product-image">
+                        <div class="product-image-placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+                                <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+                            </svg>
+                        </div>
+                        <div class="product-badges">
+                            <span class="product-badge sale">Sale</span>
+                        </div>
+                        <button class="wishlist-btn" onclick="toggleWishlist(this, 7)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="product-content">
+                        <div class="product-category">Headsets</div>
+                        <h3 class="product-name">HyperX Cloud III Wireless Gaming Headset</h3>
+                        <div class="product-rating">
+                            <div class="rating-stars">
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            </div>
+                            <span class="rating-count">(278 reviews)</span>
+                        </div>
+                        <div class="product-pricing">
+                            <span class="current-price">₱6,795</span>
+                            <span class="original-price">₱8,490</span>
+                            <span class="discount-badge">-20%</span>
+                        </div>
+                        <button class="btn-add-cart" onclick="addToCart(7, 'HyperX Cloud III Wireless', 6795)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            Add to Cart
+                        </button>
+                    </div>
+                </article>
+
+                <!-- Product 8 -->
+                <article class="product-card card-interactive animate-fade-in stagger-8">
+                    <div class="product-image">
+                        <div class="product-image-placeholder">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                            </svg>
+                        </div>
+                        <div class="product-badges"></div>
+                        <button class="wishlist-btn" onclick="toggleWishlist(this, 8)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="product-content">
+                        <div class="product-category">Accessories</div>
+                        <h3 class="product-name">Elgato Stream Deck MK.2 - 15 Keys LCD</h3>
+                        <div class="product-rating">
+                            <div class="rating-stars">
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="filled"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <svg viewBox="0 0 24 24" class="empty"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            </div>
+                            <span class="rating-count">(198 reviews)</span>
+                        </div>
+                        <div class="product-pricing">
+                            <span class="current-price">₱8,990</span>
+                        </div>
+                        <button class="btn-add-cart" onclick="addToCart(8, 'Elgato Stream Deck MK.2', 8990)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            Add to Cart
+                        </button>
+                    </div>
+                </article>
             </div>
 
-            <div class="products-grid" id="productsGrid">
-                <div class="empty-state" style="grid-column: 1 / -1;">
-                    <div class="empty-state-icon">🔄</div>
-                    <p class="empty-state-text">Loading products...</p>
-                </div>
-            </div>
-
-            <div class="pagination-container" id="pagination"></div>
+            <!-- Pagination -->
+            <nav class="pagination-container animate-fade-in">
+                <button class="page-btn" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <button class="page-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            </nav>
         </main>
     </div>
 </div>
 
 @section Scripts {
 <script>
-    let currentPage = 1;
-    let totalPages = 1;
     let currentView = 'grid';
-    const pageSize = 12;
-    const productIcons = ['🖥️', '⌨️', '🖱️', '🎧', '💾', '🎮', '📱', '🔌', '💻', '🖨️', '🔊', '📷'];
 
-    document.addEventListener('DOMContentLoaded', function() {
-        loadCategories();
-        loadBrands();
-        loadProducts();
-
-        // Check URL params for search
-        const urlParams = new URLSearchParams(window.location.search);
-        const searchQuery = urlParams.get('search');
-        if (searchQuery) {
-            // Trigger search with the query
-        }
-    });
-
+    // Toggle Filters Sidebar (Mobile)
     function toggleFilters() {
-        document.getElementById('filtersSidebar').classList.toggle('open');
-        document.getElementById('filterOverlay').classList.toggle('show');
+        const sidebar = document.getElementById('filtersSidebar');
+        const overlay = document.getElementById('filterOverlay');
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('show');
     }
 
+    // Set View Mode (Grid/List)
     function setView(view) {
         currentView = view;
         const grid = document.getElementById('productsGrid');
@@ -612,208 +1600,207 @@
         }
     }
 
-    async function loadCategories() {
-        try {
-            const response = await fetch('/CustomerPortal/GetCategories');
-            const result = await response.json();
-            if (result.success) {
-                const select = document.getElementById('categoryFilter');
-                result.data.forEach(cat => {
-                    select.innerHTML += `<option value="${cat.categoryId}">${cat.categoryName}</option>`;
-                });
-            }
-        } catch (error) { console.error('Error loading categories:', error); }
+    // Update Price Display
+    function updatePriceDisplay(value) {
+        document.getElementById('priceValue').textContent = '₱' + parseInt(value).toLocaleString('en-PH');
+        const slider = document.getElementById('priceSlider');
+        const percentage = (value / slider.max) * 100;
+        slider.style.setProperty('--value', percentage + '%');
     }
 
-    async function loadBrands() {
-        try {
-            const response = await fetch('/CustomerPortal/GetBrands');
-            const result = await response.json();
-            if (result.success) {
-                const select = document.getElementById('brandFilter');
-                result.data.forEach(brand => {
-                    select.innerHTML += `<option value="${brand}">${brand}</option>`;
-                });
-            }
-        } catch (error) { console.error('Error loading brands:', error); }
-    }
-
-    async function loadProducts(page = 1) {
-        currentPage = page;
-        const category = document.getElementById('categoryFilter').value;
-        const brand = document.getElementById('brandFilter').value;
-        const onSale = document.getElementById('onSaleOnly').checked;
-        const sort = document.getElementById('sortDropdown').value;
-
-        const params = new URLSearchParams({
-            page: page,
-            pageSize: pageSize,
-            categoryId: category,
-            brand: brand,
-            onSale: onSale,
-            sort: sort
-        });
-
-        try {
-            const response = await fetch(`/CustomerPortal/GetProducts?${params}`);
-            const result = await response.json();
-
-            if (result.success) {
-                document.getElementById('resultsCount').textContent = result.pagination.total;
-                totalPages = result.pagination.totalPages;
-                renderProducts(result.data);
-                renderPagination();
-            }
-        } catch (error) {
-            console.error('Error loading products:', error);
-            document.getElementById('productsGrid').innerHTML = `
-                <div class="empty-state" style="grid-column: 1 / -1;">
-                    <div class="empty-state-icon">❌</div>
-                    <p class="empty-state-text">Failed to load products</p>
-                </div>`;
+    // Initialize price slider background
+    document.addEventListener('DOMContentLoaded', function() {
+        const slider = document.getElementById('priceSlider');
+        if (slider) {
+            updatePriceDisplay(slider.value);
         }
-    }
+    });
 
-    function renderProducts(products) {
-        const grid = document.getElementById('productsGrid');
-        const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-
-        if (!products || products.length === 0) {
-            grid.innerHTML = `
-                <div class="empty-state" style="grid-column: 1 / -1;">
-                    <div class="empty-state-icon">📦</div>
-                    <p class="empty-state-text">No products found</p>
-                    <p style="font-size: 0.9rem;">Try adjusting your filters</p>
-                </div>`;
-            return;
-        }
-
-        grid.innerHTML = products.map((product, index) => {
-            const inWishlist = wishlist.includes(product.productId) || wishlist.some(w => w && w.productId === product.productId);
-            const rating = Math.floor(3 + Math.random() * 2);
-            const reviewCount = Math.floor(10 + Math.random() * 200);
-            const stockStatus = product.stockQuantity > 10 ? 'in-stock' : product.stockQuantity > 0 ? 'low-stock' : 'out-of-stock';
-            const stockText = product.stockQuantity > 10 ? '✓ In Stock' : product.stockQuantity > 0 ? `⚠ Only ${product.stockQuantity} left` : '✕ Out of Stock';
-
-            return `
-                <div class="product-card animate-fade-in" style="animation-delay: ${index * 0.05}s">
-                    <div class="product-image">
-                        ${productIcons[index % productIcons.length]}
-                        <div class="product-badges">
-                            ${product.isOnSale ? '<span class="badge-sale">SALE</span>' : ''}
-                            ${product.isFeatured ? '<span class="badge-new">Featured</span>' : ''}
-                        </div>
-                        <button class="wishlist-btn ${inWishlist ? 'active' : ''}" onclick="toggleWishlist(event, ${product.productId}, '${product.productName.replace(/'/g, "\\'")}', ${product.sellingPrice})">
-                            ${inWishlist ? '❤️' : '🤍'}
-                        </button>
-                    </div>
-                    <div class="product-body">
-                        <div class="product-category">${product.categoryName || 'Accessories'}</div>
-                        <div class="product-name" title="${product.productName}">${product.productName}</div>
-                        <div class="product-brand">${product.brandName || 'Generic'}</div>
-                        <div class="product-rating">
-                            <div class="stars">
-                                ${'<span class="star">★</span>'.repeat(rating)}${'<span class="star empty">★</span>'.repeat(5 - rating)}
-                            </div>
-                            <span class="rating-count">(${reviewCount})</span>
-                        </div>
-                        <div class="product-pricing">
-                            <span class="current-price">₱${product.sellingPrice.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
-                            ${product.compareAtPrice ? `
-                                <span class="original-price">₱${product.compareAtPrice.toLocaleString()}</span>
-                                <span class="discount-tag">-${product.discountPercent}%</span>
-                            ` : ''}
-                        </div>
-                        <div class="stock-status ${stockStatus}">${stockText}</div>
-                        <button class="btn-add-cart" id="addBtn-${product.productId}" 
-                                onclick="addToCart(${product.productId}, '${product.productName.replace(/'/g, "\\'")}', ${product.sellingPrice}, '${product.sku || ''}')"
-                                ${product.stockQuantity === 0 ? 'disabled' : ''}>
-                            ${product.stockQuantity === 0 ? '✕ Out of Stock' : '🛒 Add to Cart'}
-                        </button>
-                    </div>
-                </div>`;
-        }).join('');
-    }
-
-    function renderPagination() {
-        const container = document.getElementById('pagination');
-        if (totalPages <= 1) { container.innerHTML = ''; return; }
-
-        let html = `<button class="page-btn" onclick="loadProducts(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>`;
-
-        for (let i = 1; i <= totalPages; i++) {
-            if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="loadProducts(${i})">${i}</button>`;
-            } else if (i === currentPage - 2 || i === currentPage + 2) {
-                html += `<span style="padding: 0 8px;">...</span>`;
-            }
-        }
-
-        html += `<button class="page-btn" onclick="loadProducts(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next →</button>`;
-        container.innerHTML = html;
-    }
-
+    // Apply Filters
     function applyFilters() {
-        toggleFilters();
-        loadProducts(1);
+        // Close mobile sidebar if open
+        const sidebar = document.getElementById('filtersSidebar');
+        const overlay = document.getElementById('filterOverlay');
+        if (sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('show');
+        }
+
+        // Filter logic would go here
+        showToast('Filters applied', 'success');
     }
 
+    // Reset Filters
     function resetFilters() {
         document.getElementById('categoryFilter').value = '';
-        document.getElementById('brandFilter').value = '';
-        document.getElementById('minPrice').value = '';
-        document.getElementById('maxPrice').value = '';
-        document.getElementById('inStockOnly').checked = false;
-        document.getElementById('onSaleOnly').checked = false;
-        document.getElementById('sortDropdown').value = 'featured';
-        loadProducts(1);
+        document.getElementById('priceSlider').value = 25000;
+        updatePriceDisplay(25000);
+        document.getElementById('inStockToggle').checked = false;
+
+        // Reset brand checkboxes
+        document.querySelectorAll('.brand-checkbox input').forEach(cb => {
+            cb.checked = false;
+        });
+
+        showToast('Filters reset', 'info');
     }
 
-    function toggleWishlist(event, productId, productName, price) {
-        event.stopPropagation();
-        let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-        // Store as plain productId integers for consistency
-        const index = wishlist.indexOf(productId);
-        // Also check old object format
-        const objIndex = wishlist.findIndex(w => w && w.productId === productId);
-        const btn = event.currentTarget;
+    // Toggle Wishlist
+    function toggleWishlist(btn, productId) {
+        btn.classList.toggle('active');
+        const isActive = btn.classList.contains('active');
 
-        if (index > -1 || objIndex > -1) {
-            if (index > -1) wishlist.splice(index, 1);
-            else wishlist.splice(objIndex, 1);
-            btn.classList.remove('active');
-            btn.innerHTML = '🤍';
-            showToast('Removed from wishlist', 'info');
+        if (isActive) {
+            btn.querySelector('svg').style.fill = 'currentColor';
+            showToast('Added to wishlist', 'success');
         } else {
-            wishlist.push(productId);
-            btn.classList.add('active');
-            btn.innerHTML = '❤️';
-            showToast('Added to wishlist!', 'success');
+            btn.querySelector('svg').style.fill = 'none';
+            showToast('Removed from wishlist', 'info');
+        }
+
+        // Save to localStorage
+        let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+        if (isActive) {
+            if (!wishlist.includes(productId)) {
+                wishlist.push(productId);
+            }
+        } else {
+            wishlist = wishlist.filter(id => id !== productId);
         }
         localStorage.setItem('wishlist', JSON.stringify(wishlist));
     }
 
-    function addToCart(productId, productName, price, sku) {
+    // Add to Cart
+    function addToCart(productId, productName, price) {
         let cart = JSON.parse(localStorage.getItem('cart') || '[]');
         const existingIndex = cart.findIndex(item => item.productId === productId);
 
         if (existingIndex > -1) {
             cart[existingIndex].quantity += 1;
         } else {
-            cart.push({ productId, name: productName, price, sku: sku || '', quantity: 1 });
+            cart.push({ productId, name: productName, price, quantity: 1 });
         }
 
         localStorage.setItem('cart', JSON.stringify(cart));
         updateCartBadge();
 
-        const btn = document.getElementById(`addBtn-${productId}`);
-        if (btn) {
-            btn.classList.add('added');
-            btn.innerHTML = '✓ Added!';
-            setTimeout(() => { btn.classList.remove('added'); btn.innerHTML = '🛒 Add to Cart'; }, 2000);
+        // Visual feedback on button
+        const btns = document.querySelectorAll('.btn-add-cart');
+        btns.forEach(btn => {
+            if (btn.onclick && btn.onclick.toString().includes(productId)) {
+                const originalHTML = btn.innerHTML;
+                btn.classList.add('added');
+                btn.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Added!
+                `;
+                setTimeout(() => {
+                    btn.classList.remove('added');
+                    btn.innerHTML = originalHTML;
+                }, 2000);
+            }
+        });
+
+        showToast('Added to cart', 'success');
+    }
+
+    // Update Cart Badge in Header
+    function updateCartBadge() {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+        const badge = document.querySelector('.header-btn .badge');
+        if (badge) {
+            badge.textContent = totalItems;
+        }
+    }
+
+    // Show Toast Notification
+    function showToast(message, type = 'info') {
+        // Check if showToast is defined globally (from layout)
+        if (typeof window.showToast === 'function' && window.showToast !== showToast) {
+            window.showToast(message, type);
+            return;
         }
 
-        showToast('✓ Added to cart!', 'success');
+        // Fallback toast implementation
+        const existingToast = document.querySelector('.toast-notification');
+        if (existingToast) {
+            existingToast.remove();
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 20px;
+            background: var(--foreground);
+            color: white;
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 9999;
+            animation: slideInUp 0.3s ease;
+        `;
+
+        if (type === 'success') {
+            toast.style.background = 'var(--success)';
+        } else if (type === 'error') {
+            toast.style.background = 'var(--error)';
+        }
+
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'slideOutDown 0.3s ease forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
+
+    // Add toast animation styles
+    const toastStyles = document.createElement('style');
+    toastStyles.textContent = `
+        @@keyframes slideInUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @@keyframes slideOutDown {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(toastStyles);
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            const query = this.value.trim();
+            if (query) {
+                showToast('Searching for: ' + query, 'info');
+                // Search logic would go here
+            }
+        }
+    });
+
+    // Initialize wishlist states from localStorage
+    document.addEventListener('DOMContentLoaded', function() {
+        const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+        wishlist.forEach(productId => {
+            const btns = document.querySelectorAll('.wishlist-btn');
+            btns.forEach(btn => {
+                if (btn.onclick && btn.onclick.toString().includes(productId)) {
+                    btn.classList.add('active');
+                    btn.querySelector('svg').style.fill = 'currentColor';
+                }
+            });
+        });
+
+        updateCartBadge();
+    });
 </script>
 }

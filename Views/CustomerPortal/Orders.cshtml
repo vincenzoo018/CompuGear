@@ -1,4 +1,5 @@
-@{
+    
+    @{
     ViewData["Title"] = "My Orders";
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
 }
@@ -216,64 +217,83 @@
     }
 
     /* Modal */
-    .modal-backdrop {
+    .cg-modal-backdrop {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0,0,0,0.5);
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.6);
         display: none;
         align-items: center;
         justify-content: center;
-        z-index: 1000;
+        z-index: 9999;
         padding: 20px;
     }
 
-    .modal-backdrop.active { display: flex; }
+    .cg-modal-backdrop.active { 
+        display: flex !important; 
+    }
 
-    .modal {
-        background: var(--card);
+    .cg-modal {
+        background: #FFFFFF;
         border-radius: 20px;
         width: 100%;
         max-width: 600px;
         max-height: 90vh;
         overflow-y: auto;
-        animation: scaleIn 0.2s ease;
+        animation: orderModalScaleIn 0.25s ease forwards;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        opacity: 1;
+        transform: scale(1);
+        position: relative;
+        display: block;
     }
 
-    @@keyframes scaleIn {
-        from { opacity: 0; transform: scale(0.95); }
+    @@keyframes orderModalScaleIn {
+        from { opacity: 0; transform: scale(0.9); }
         to { opacity: 1; transform: scale(1); }
     }
 
-    .modal-header {
+    .cg-modal-header {
         padding: 24px;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid #E5E7EB;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        background: #FFFFFF;
+        border-radius: 20px 20px 0 0;
     }
 
-    .modal-title {
+    .cg-modal-title {
         font-size: 1.3rem;
         font-weight: 700;
-        color: var(--foreground);
+        color: #141516;
     }
 
-    .modal-close {
+    .cg-modal-close {
         background: none;
         border: none;
         font-size: 1.5rem;
-        color: var(--muted-foreground);
+        color: #64748B;
         cursor: pointer;
         padding: 8px;
         line-height: 1;
+        border-radius: 8px;
+        transition: all 0.2s;
     }
 
-    .modal-close:hover { color: var(--foreground); }
+    .cg-modal-close:hover { 
+        color: #141516; 
+        background: #F1F5F9;
+    }
 
-    .modal-body { padding: 24px; }
+    .cg-modal-body { 
+        padding: 24px; 
+        background: #FFFFFF;
+    }
 
     /* Order Detail */
     .order-detail-status {
@@ -450,6 +470,345 @@
         .stats-grid { grid-template-columns: 1fr 1fr; }
         .page-title { font-size: 1.5rem; }
     }
+
+    /* ========== TRACKING MODAL ========== */
+    .tracking-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.65);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        padding: 20px;
+        backdrop-filter: blur(4px);
+    }
+
+    .tracking-backdrop.active {
+        display: flex !important;
+    }
+
+    .tracking-modal {
+        background: #FFFFFF;
+        border-radius: 20px;
+        width: 100%;
+        max-width: 900px;
+        max-height: 92vh;
+        overflow-y: auto;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+        animation: trackingModalIn 0.3s ease forwards;
+    }
+
+    @@keyframes trackingModalIn {
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .tracking-modal-header {
+        padding: 24px 28px;
+        border-bottom: 1px solid #E5E7EB;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #008080, #006666);
+        border-radius: 20px 20px 0 0;
+        color: white;
+    }
+
+    .tracking-modal-header .cg-modal-title {
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.2rem;
+    }
+
+    .tracking-modal-header .cg-modal-close {
+        color: rgba(255,255,255,0.8);
+        background: rgba(255,255,255,0.15);
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        font-size: 1.4rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .tracking-modal-header .cg-modal-close:hover {
+        background: rgba(255,255,255,0.3);
+        color: white;
+    }
+
+    .tracking-modal-body {
+        padding: 0;
+    }
+
+    /* Map Container */
+    .tracking-map-container {
+        width: 100%;
+        height: 320px;
+        position: relative;
+        border-bottom: 3px solid #008080;
+    }
+
+    #trackingMap {
+        width: 100%;
+        height: 100%;
+    }
+
+    .map-overlay-info {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(8px);
+        padding: 12px 16px;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        z-index: 5;
+        max-width: 260px;
+    }
+
+    .map-overlay-info .overlay-status {
+        font-weight: 700;
+        color: #008080;
+        font-size: 0.9rem;
+        margin-bottom: 4px;
+    }
+
+    .map-overlay-info .overlay-detail {
+        font-size: 0.78rem;
+        color: #64748B;
+    }
+
+    /* Tracking Content */
+    .tracking-content {
+        padding: 24px 28px;
+    }
+
+    .tracking-summary {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .tracking-summary-card {
+        background: #F8FAFC;
+        border: 1px solid #E5E7EB;
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .tracking-summary-card .summary-icon {
+        font-size: 1.6rem;
+        margin-bottom: 6px;
+    }
+
+    .tracking-summary-card .summary-label {
+        font-size: 0.75rem;
+        color: #64748B;
+        margin-bottom: 2px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+
+    .tracking-summary-card .summary-value {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #141516;
+    }
+
+    /* Tracking Timeline */
+    .tracking-timeline {
+        position: relative;
+        padding-left: 40px;
+    }
+
+    .tracking-timeline::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: #E5E7EB;
+        border-radius: 2px;
+    }
+
+    .timeline-item {
+        position: relative;
+        padding-bottom: 28px;
+        padding-left: 20px;
+    }
+
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+
+    .timeline-dot {
+        position: absolute;
+        left: -31px;
+        top: 2px;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #E5E7EB;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        border: 3px solid #FFFFFF;
+        box-shadow: 0 0 0 2px #E5E7EB;
+        z-index: 1;
+    }
+
+    .timeline-item.completed .timeline-dot {
+        background: #10B981;
+        box-shadow: 0 0 0 2px #10B981;
+        color: white;
+    }
+
+    .timeline-item.current .timeline-dot {
+        background: #008080;
+        box-shadow: 0 0 0 2px #008080, 0 0 0 6px rgba(0,128,128,0.2);
+        color: white;
+        animation: pulseTrack 2s ease-in-out infinite;
+    }
+
+    @@keyframes pulseTrack {
+        0%, 100% { box-shadow: 0 0 0 2px #008080, 0 0 0 6px rgba(0,128,128,0.2); }
+        50% { box-shadow: 0 0 0 2px #008080, 0 0 0 10px rgba(0,128,128,0.1); }
+    }
+
+    .timeline-item-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .timeline-info h4 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #141516;
+        margin: 0 0 2px 0;
+    }
+
+    .timeline-item:not(.completed):not(.current) .timeline-info h4 {
+        color: #94A3B8;
+    }
+
+    .timeline-info p {
+        font-size: 0.82rem;
+        color: #64748B;
+        margin: 0;
+    }
+
+    .timeline-item:not(.completed):not(.current) .timeline-info p {
+        color: #CBD5E1;
+    }
+
+    .timeline-date {
+        font-size: 0.78rem;
+        color: #64748B;
+        white-space: nowrap;
+        text-align: right;
+    }
+
+    .timeline-item:not(.completed):not(.current) .timeline-date {
+        color: #CBD5E1;
+    }
+
+    /* Track Order Button */
+    .btn-track-order {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #008080, #006666);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        width: 100%;
+        justify-content: center;
+        margin-top: 16px;
+    }
+
+    .btn-track-order:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,128,128,0.3);
+    }
+
+    /* Tracking Items in Modal */
+    .tracking-items-section {
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid #E5E7EB;
+    }
+
+    .tracking-items-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #141516;
+        margin-bottom: 12px;
+    }
+
+    .tracking-item-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        background: #F8FAFC;
+        border-radius: 8px;
+        margin-bottom: 6px;
+    }
+
+    .tracking-item-icon {
+        font-size: 1.3rem;
+    }
+
+    .tracking-item-details {
+        flex: 1;
+    }
+
+    .tracking-item-name {
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: #141516;
+    }
+
+    .tracking-item-qty {
+        font-size: 0.78rem;
+        color: #64748B;
+    }
+
+    .tracking-item-price {
+        font-weight: 700;
+        color: #008080;
+        font-size: 0.9rem;
+    }
+
+    @@media (max-width: 768px) {
+        .tracking-modal { max-width: 100%; border-radius: 16px; }
+        .tracking-map-container { height: 240px; }
+        .tracking-summary { grid-template-columns: 1fr; }
+        .tracking-content { padding: 16px 20px; }
+    }
 </style>
 
 <div class="orders-page">
@@ -521,23 +880,56 @@
 </div>
 
 <!-- Order Detail Modal -->
-<div class="modal-backdrop" id="orderModal" onclick="closeModalOnBackdrop(event)">
-    <div class="modal" onclick="event.stopPropagation()">
-        <div class="modal-header">
-            <span class="modal-title" id="modalTitle">Order Details</span>
-            <button class="modal-close" onclick="closeModal()">&times;</button>
+<div class="cg-modal-backdrop" id="orderModal" onclick="closeModalOnBackdrop(event)">
+    <div class="cg-modal" onclick="event.stopPropagation()">
+        <div class="cg-modal-header">
+            <span class="cg-modal-title" id="modalTitle">Order Details</span>
+            <button class="cg-modal-close" onclick="closeModal()">&times;</button>
         </div>
-        <div class="modal-body" id="modalBody">
+        <div class="cg-modal-body" id="modalBody">
             <!-- Content loaded dynamically -->
         </div>
     </div>
 </div>
 
+<!-- Order Tracking Modal -->
+<div class="tracking-backdrop" id="trackingModal" onclick="closeTrackingOnBackdrop(event)">
+    <div class="tracking-modal" onclick="event.stopPropagation()">
+        <div class="tracking-modal-header">
+            <span class="cg-modal-title">
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <span id="trackingModalTitle">Track Order</span>
+            </span>
+            <button class="cg-modal-close" onclick="closeTrackingModal()">&times;</button>
+        </div>
+        <div class="tracking-modal-body">
+            <!-- Google Map -->
+            <div class="tracking-map-container">
+                <div id="trackingMap"></div>
+                <div class="map-overlay-info" id="mapOverlayInfo">
+                    <div class="overlay-status" id="overlayStatus">Loading...</div>
+                    <div class="overlay-detail" id="overlayDetail">Fetching tracking info</div>
+                </div>
+            </div>
+            <!-- Tracking Details -->
+            <div class="tracking-content" id="trackingContent">
+                <div style="text-align:center; padding:40px;">
+                    <div style="font-size:2rem;">🔄</div>
+                    <p style="color:#64748B;">Loading tracking details...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAppyyZwTguVFsOgqXF8PPjBg4uoGvtnCs&callback=initMapsReady" async defer></script>
 <script>
     const productIcons = ['🖥️', '⌨️', '🖱️', '🎧', '💾', '🎮', '📱', '🔌', '💻', '🖨️'];
     let allOrders = [];
     let currentFilter = 'all';
+    let trackingMap = null;
+    let googleMapsReady = false;
 
     const statusConfig = {
         'Pending': { emoji: '⏱️', badge: 'badge-pending', step: 0 },
@@ -550,15 +942,18 @@
         'Refunded': { emoji: '↩️', badge: 'badge-cancelled', step: -1 }
     };
 
+    // Google Maps callback
+    function initMapsReady() {
+        googleMapsReady = true;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        // Check if returning from payment
         const urlParams = new URLSearchParams(window.location.search);
         const paymentStatus = urlParams.get('payment');
         const orderId = urlParams.get('orderId');
 
         if (paymentStatus === 'success' && orderId) {
             showPaymentSuccessToast(orderId);
-            // Clean URL
             window.history.replaceState({}, document.title, '/CustomerPortal/Orders');
         }
 
@@ -566,7 +961,6 @@
     });
 
     async function showPaymentSuccessToast(orderId) {
-        // Check payment status from server
         try {
             const response = await fetch(`/CustomerPortal/CheckPaymentStatus?orderId=${orderId}`);
             const result = await response.json();
@@ -575,11 +969,10 @@
                 const order = result.data;
                 const isPaid = order.paymentStatus === 'Paid';
 
-                // Show success overlay
                 const overlay = document.createElement('div');
                 overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(4px);';
                 overlay.innerHTML = `
-                    <div style="background: white; border-radius: 20px; padding: 50px; max-width: 450px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: scaleIn 0.3s ease;">
+                    <div style="background: white; border-radius: 20px; padding: 50px; max-width: 450px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: trackingModalIn 0.3s ease;">
                         <div style="font-size: 5rem; margin-bottom: 16px;">${isPaid ? '🎉' : '⏱️'}</div>
                         <h2 style="font-size: 1.8rem; font-weight: 800; color: #1f2937; margin-bottom: 8px;">${isPaid ? 'Payment Successful!' : 'Order Created!'}</h2>
                         <p style="color: #6b7280; margin-bottom: 8px;">Order <strong>#${order.orderNumber}</strong></p>
@@ -593,8 +986,6 @@
                         </button>
                     </div>`;
                 document.body.appendChild(overlay);
-
-                // Auto-dismiss after 8 seconds
                 setTimeout(() => overlay.remove(), 8000);
             }
         } catch (error) {
@@ -610,17 +1001,14 @@
             if (result.success) {
                 allOrders = result.data || [];
 
-                // Update stats from server
                 if (result.stats) {
                     document.getElementById('statTotal').textContent = result.stats.total || 0;
                     document.getElementById('statProcessing').textContent = result.stats.pending || 0;
                     
-                    // Count shipped from orders
                     const shippedCount = allOrders.filter(o => o.orderStatus === 'Shipped').length;
                     document.getElementById('statShipped').textContent = shippedCount;
                     document.getElementById('statDelivered').textContent = result.stats.delivered || 0;
 
-                    // Tab counts
                     document.getElementById('countAll').textContent = result.stats.total || 0;
                     const pendingCount = allOrders.filter(o => o.orderStatus === 'Pending').length;
                     const processingCount = allOrders.filter(o => o.orderStatus === 'Processing' || o.orderStatus === 'Confirmed').length;
@@ -668,9 +1056,7 @@
                 <div class="empty-state">
                     <div class="empty-icon">📦</div>
                     <p class="empty-text">${currentFilter === 'all' ? "You haven't placed any orders yet" : `No ${currentFilter} orders found`}</p>
-                    <a href="/CustomerPortal/Products" class="btn-shop">
-                        🛒 Start Shopping
-                    </a>
+                    <a href="/CustomerPortal/Products" class="btn-shop">🛒 Start Shopping</a>
                 </div>`;
             return;
         }
@@ -712,9 +1098,7 @@
             <div class="empty-state">
                 <div class="empty-icon">📦</div>
                 <p class="empty-text">You haven't placed any orders yet</p>
-                <a href="/CustomerPortal/Products" class="btn-shop">
-                    🛒 Start Shopping
-                </a>
+                <a href="/CustomerPortal/Products" class="btn-shop">🛒 Start Shopping</a>
             </div>`;
     }
 
@@ -733,7 +1117,7 @@
 
         const timelineHtml = steps.map((step, i) => {
             let stepClass = '';
-            if (currentStep === -1) stepClass = ''; // Cancelled
+            if (currentStep === -1) stepClass = '';
             else if (i < currentStep) stepClass = 'completed';
             else if (i === currentStep) stepClass = 'current';
 
@@ -761,6 +1145,14 @@
         const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0) || order.totalAmount;
         const vatableSales = subtotal / 1.12;
         const vatAmount = subtotal - vatableSales;
+
+        // Determine if tracking should be available
+        const canTrack = order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Refunded';
+        const trackBtnHtml = canTrack ? `
+            <button class="btn-track-order" onclick="event.stopPropagation(); closeModal(); openTrackingModal(${order.orderId});">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                📍 Track My Order
+            </button>` : '';
 
         document.getElementById('modalBody').innerHTML = `
             <div class="order-detail-status">
@@ -804,7 +1196,7 @@
             <div class="detail-section">
                 <div class="detail-section-title">Items (${items.length})</div>
                 <div class="order-items-list">
-                    ${itemsHtml || '<p style="color: var(--muted-foreground); font-size: 0.9rem;">Item details not available</p>'}
+                    ${itemsHtml || '<p style="color: #64748B; font-size: 0.9rem;">Item details not available</p>'}
                 </div>
             </div>
 
@@ -822,14 +1214,18 @@
             <div class="order-total-row">
                 <span>Total Amount</span>
                 <span>₱${order.totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
-            </div>`;
+            </div>
+
+            ${trackBtnHtml}`;
 
         document.getElementById('orderModal').classList.add('active');
+        document.getElementById('orderModal').style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
 
     function closeModal() {
         document.getElementById('orderModal').classList.remove('active');
+        document.getElementById('orderModal').style.display = 'none';
         document.body.style.overflow = '';
     }
 
@@ -837,8 +1233,386 @@
         if (event.target.id === 'orderModal') closeModal();
     }
 
+    // ==========================================
+    // TRACKING MODAL FUNCTIONS
+    // ==========================================
+
+    async function openTrackingModal(orderId) {
+        const modal = document.getElementById('trackingModal');
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+
+        document.getElementById('trackingModalTitle').textContent = 'Loading...';
+        document.getElementById('overlayStatus').textContent = 'Loading...';
+        document.getElementById('overlayDetail').textContent = 'Fetching tracking information';
+        document.getElementById('trackingContent').innerHTML = `
+            <div style="text-align:center; padding:40px;">
+                <div style="font-size:2rem; animation: pulseTrack 1.5s infinite;">📦</div>
+                <p style="color:#64748B; margin-top:12px;">Loading tracking details...</p>
+            </div>`;
+
+        try {
+            const response = await fetch(`/CustomerPortal/GetOrderTracking?orderId=${orderId}`);
+            const result = await response.json();
+
+            if (result.success) {
+                renderTrackingModal(result.data);
+            } else {
+                document.getElementById('trackingContent').innerHTML = `
+                    <div style="text-align:center; padding:40px;">
+                        <div style="font-size:2rem;">❌</div>
+                        <p style="color:#EF4444; margin-top:12px;">Failed to load tracking info</p>
+                    </div>`;
+            }
+        } catch (error) {
+            console.error('Tracking error:', error);
+            document.getElementById('trackingContent').innerHTML = `
+                <div style="text-align:center; padding:40px;">
+                    <div style="font-size:2rem;">❌</div>
+                    <p style="color:#EF4444; margin-top:12px;">Error loading tracking data</p>
+                </div>`;
+        }
+    }
+
+    function renderTrackingModal(data) {
+        // Update header
+        document.getElementById('trackingModalTitle').textContent = `Track Order #${data.orderNumber}`;
+
+        // Map overlay
+        const statusText = data.orderStatus === 'Delivered' ? '✅ Delivered' 
+            : data.orderStatus === 'Shipped' ? '🚚 In Transit'
+            : data.orderStatus === 'Out for Delivery' ? '📍 Out for Delivery'
+            : data.orderStatus === 'Processing' ? '⚙️ Processing'
+            : data.orderStatus === 'Confirmed' ? '✓ Confirmed'
+            : '⏱️ Pending';
+        
+        document.getElementById('overlayStatus').textContent = statusText;
+        document.getElementById('overlayDetail').textContent = 
+            data.trackingNumber ? `Tracking: ${data.trackingNumber}` : `Est. Delivery: ${data.tracking.estimatedDelivery}`;
+
+        // Initialize Google Map
+        initTrackingMap(data.tracking);
+
+        // Build summary cards
+        const summaryHtml = `
+            <div class="tracking-summary">
+                <div class="tracking-summary-card">
+                    <div class="summary-icon">📍</div>
+                    <div class="summary-label">From</div>
+                    <div class="summary-value">${data.tracking.origin.label}</div>
+                </div>
+                <div class="tracking-summary-card">
+                    <div class="summary-icon">🏠</div>
+                    <div class="summary-label">Destination</div>
+                    <div class="summary-value">${data.shippingAddress || data.shippingCity || 'Delivery Address'}</div>
+                </div>
+                <div class="tracking-summary-card">
+                    <div class="summary-icon">📅</div>
+                    <div class="summary-label">Est. Delivery</div>
+                    <div class="summary-value">${data.tracking.estimatedDelivery}</div>
+                </div>
+            </div>`;
+
+        // Build timeline
+        const timelineIcons = {
+            'placed': '📋',
+            'confirmed': '✅',
+            'processing': '⚙️',
+            'shipped': '🚚',
+            'outfordelivery': '📍',
+            'delivered': '🏠'
+        };
+
+        // Find the last completed step to mark it as "current"
+        let lastCompletedIdx = -1;
+        data.timeline.forEach((step, i) => {
+            if (step.completed) lastCompletedIdx = i;
+        });
+
+        const timelineHtml = data.timeline.map((step, idx) => {
+            let cls = '';
+            if (step.completed && idx === lastCompletedIdx) cls = 'current';
+            else if (step.completed) cls = 'completed';
+
+            const icon = timelineIcons[step.icon] || '○';
+            const dateStr = step.date 
+                ? new Date(step.date).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                : '—';
+
+            return `
+                <div class="timeline-item ${cls}">
+                    <div class="timeline-dot">${step.completed ? '✓' : '○'}</div>
+                    <div class="timeline-item-content">
+                        <div class="timeline-info">
+                            <h4>${icon} ${step.status}</h4>
+                            <p>${step.description}</p>
+                        </div>
+                        <div class="timeline-date">${step.completed ? dateStr : ''}</div>
+                    </div>
+                </div>`;
+        }).join('');
+
+        // Build items
+        const itemsHtml = (data.items || []).map((item, i) => `
+            <div class="tracking-item-row">
+                <div class="tracking-item-icon">${productIcons[i % productIcons.length]}</div>
+                <div class="tracking-item-details">
+                    <div class="tracking-item-name">${item.productName}</div>
+                    <div class="tracking-item-qty">Qty: ${item.quantity} × ₱${item.unitPrice.toLocaleString('en-PH', {minimumFractionDigits: 2})}</div>
+                </div>
+                <div class="tracking-item-price">₱${item.totalPrice.toLocaleString('en-PH', {minimumFractionDigits: 2})}</div>
+            </div>`).join('');
+
+        // Progress bar percentage
+        const progressPct = Math.round(data.tracking.progress * 100);
+
+        document.getElementById('trackingContent').innerHTML = `
+            ${summaryHtml}
+
+            <!-- Progress Bar -->
+            <div style="margin-bottom: 28px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                    <span style="font-size:0.82rem; font-weight:600; color:#141516;">Delivery Progress</span>
+                    <span style="font-size:0.82rem; font-weight:700; color:#008080;">${progressPct}%</span>
+                </div>
+                <div style="background:#E5E7EB; border-radius:10px; height:10px; overflow:hidden;">
+                    <div style="background: linear-gradient(90deg, #008080, #10B981); height:100%; width:${progressPct}%; border-radius:10px; transition: width 1s ease;"></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:6px;">
+                    <span style="font-size:0.72rem; color:#94A3B8;">Warehouse</span>
+                    <span style="font-size:0.72rem; color:#94A3B8;">Your Address</span>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div style="margin-bottom:24px;">
+                <h3 style="font-size:1rem; font-weight:700; color:#141516; margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid #E5E7EB;">📦 Tracking Timeline</h3>
+                <div class="tracking-timeline">
+                    ${timelineHtml}
+                </div>
+            </div>
+
+            <!-- Order Info -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                <div style="background:#F8FAFC; border-radius:10px; padding:14px;">
+                    <div style="font-size:0.75rem; color:#64748B; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Shipping Method</div>
+                    <div style="font-weight:600; color:#141516; font-size:0.9rem;">${data.shippingMethod || 'Standard Shipping'}</div>
+                </div>
+                <div style="background:#F8FAFC; border-radius:10px; padding:14px;">
+                    <div style="font-size:0.75rem; color:#64748B; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Tracking Number</div>
+                    <div style="font-weight:600; color:#008080; font-size:0.9rem;">${data.trackingNumber || 'Awaiting shipment'}</div>
+                </div>
+            </div>
+
+            <!-- Items -->
+            <div class="tracking-items-section">
+                <div class="tracking-items-title">📦 Items in this Order (${(data.items || []).length})</div>
+                ${itemsHtml}
+                <div style="display:flex; justify-content:space-between; padding:14px 12px; background:linear-gradient(135deg, #008080, #006666); color:white; border-radius:10px; margin-top:10px; font-weight:700;">
+                    <span>Total</span>
+                    <span>₱${data.totalAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                </div>
+            </div>`;
+    }
+
+    function initTrackingMap(tracking) {
+        if (!googleMapsReady || typeof google === 'undefined') {
+            // Retry after a delay if Google Maps isn't loaded yet
+            setTimeout(() => initTrackingMap(tracking), 500);
+            return;
+        }
+
+        const mapEl = document.getElementById('trackingMap');
+        
+        const origin = tracking.origin;
+        const dest = tracking.destination;
+        const current = tracking.currentLocation;
+
+        // Center map between origin and destination
+        const centerLat = (origin.lat + dest.lat) / 2;
+        const centerLng = (origin.lng + dest.lng) / 2;
+
+        trackingMap = new google.maps.Map(mapEl, {
+            center: { lat: centerLat, lng: centerLng },
+            zoom: 12,
+            disableDefaultUI: true,
+            zoomControl: true,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: true,
+            styles: [
+                { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#e9e9e9' }] },
+                { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#9e9e9e' }] },
+                { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+                { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#616161' }] },
+                { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+                { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+                { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] }
+            ]
+        });
+
+        // Warehouse marker (origin)
+        new google.maps.Marker({
+            position: { lat: origin.lat, lng: origin.lng },
+            map: trackingMap,
+            title: origin.label,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 10,
+                fillColor: '#008080',
+                fillOpacity: 1,
+                strokeColor: '#FFFFFF',
+                strokeWeight: 3
+            },
+            label: { text: '📦', fontSize: '16px' }
+        });
+
+        // Add info window for origin
+        const originInfo = new google.maps.InfoWindow({
+            content: `<div style="padding:6px; font-family:Segoe UI,sans-serif;"><strong style="color:#008080;">📦 ${origin.label}</strong><br><span style="font-size:12px; color:#666;">Origin</span></div>`
+        });
+
+        const originMarker = new google.maps.Marker({
+            position: { lat: origin.lat, lng: origin.lng },
+            map: trackingMap,
+            title: origin.label,
+            icon: {
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+                        <circle cx="20" cy="20" r="18" fill="#008080" stroke="white" stroke-width="3"/>
+                        <text x="20" y="26" text-anchor="middle" font-size="18">📦</text>
+                    </svg>`),
+                scaledSize: new google.maps.Size(40, 40),
+                anchor: new google.maps.Point(20, 20)
+            }
+        });
+        originMarker.addListener('click', () => originInfo.open(trackingMap, originMarker));
+
+        // Destination marker
+        const destMarker = new google.maps.Marker({
+            position: { lat: dest.lat, lng: dest.lng },
+            map: trackingMap,
+            title: dest.label,
+            icon: {
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+                        <circle cx="20" cy="20" r="18" fill="#10B981" stroke="white" stroke-width="3"/>
+                        <text x="20" y="26" text-anchor="middle" font-size="18">🏠</text>
+                    </svg>`),
+                scaledSize: new google.maps.Size(40, 40),
+                anchor: new google.maps.Point(20, 20)
+            }
+        });
+
+        const destInfo = new google.maps.InfoWindow({
+            content: `<div style="padding:6px; font-family:Segoe UI,sans-serif;"><strong style="color:#10B981;">🏠 ${dest.label}</strong><br><span style="font-size:12px; color:#666;">Destination</span></div>`
+        });
+        destMarker.addListener('click', () => destInfo.open(trackingMap, destMarker));
+
+        // Draw route line (completed path)
+        const routePath = tracking.waypoints.map(wp => ({ lat: wp.lat, lng: wp.lng }));
+        
+        // Full route (gray)
+        new google.maps.Polyline({
+            path: routePath,
+            geodesic: true,
+            strokeColor: '#CBD5E1',
+            strokeOpacity: 0.8,
+            strokeWeight: 4,
+            map: trackingMap
+        });
+
+        // Completed route (teal)
+        const completedPath = tracking.waypoints.filter(wp => wp.reached).map(wp => ({ lat: wp.lat, lng: wp.lng }));
+        if (current) {
+            completedPath.push({ lat: current.lat, lng: current.lng });
+        }
+        
+        new google.maps.Polyline({
+            path: completedPath,
+            geodesic: true,
+            strokeColor: '#008080',
+            strokeOpacity: 1,
+            strokeWeight: 5,
+            map: trackingMap
+        });
+
+        // Current location marker (package in transit)
+        if (tracking.progress > 0 && tracking.progress < 1) {
+            const packageMarker = new google.maps.Marker({
+                position: { lat: current.lat, lng: current.lng },
+                map: trackingMap,
+                title: 'Current Package Location',
+                icon: {
+                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+                        <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50">
+                            <circle cx="25" cy="25" r="22" fill="#FF6B35" stroke="white" stroke-width="3">
+                                <animate attributeName="r" from="20" to="24" dur="1.5s" repeatCount="indefinite" />
+                            </circle>
+                            <text x="25" y="32" text-anchor="middle" font-size="22">🚚</text>
+                        </svg>`),
+                    scaledSize: new google.maps.Size(50, 50),
+                    anchor: new google.maps.Point(25, 25)
+                },
+                animation: google.maps.Animation.BOUNCE
+            });
+
+            const packageInfo = new google.maps.InfoWindow({
+                content: `<div style="padding:8px; font-family:Segoe UI,sans-serif;">
+                    <strong style="color:#FF6B35;">🚚 Your Package</strong><br>
+                    <span style="font-size:12px; color:#666;">Currently in transit</span><br>
+                    <span style="font-size:12px; color:#008080; font-weight:600;">${Math.round(tracking.progress * 100)}% of the way there</span>
+                </div>`
+            });
+            packageMarker.addListener('click', () => packageInfo.open(trackingMap, packageMarker));
+
+            // Stop bounce after 3 seconds for a cleaner look
+            setTimeout(() => packageMarker.setAnimation(null), 3000);
+        }
+
+        // Waypoint markers (small dots)
+        tracking.waypoints.forEach((wp, i) => {
+            if (i === 0 || i === tracking.waypoints.length - 1) return; // Skip origin/dest
+            new google.maps.Marker({
+                position: { lat: wp.lat, lng: wp.lng },
+                map: trackingMap,
+                title: wp.label,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 5,
+                    fillColor: wp.reached ? '#008080' : '#CBD5E1',
+                    fillOpacity: 1,
+                    strokeColor: '#FFFFFF',
+                    strokeWeight: 2
+                }
+            });
+        });
+
+        // Fit bounds to show full route
+        const bounds = new google.maps.LatLngBounds();
+        bounds.extend({ lat: origin.lat, lng: origin.lng });
+        bounds.extend({ lat: dest.lat, lng: dest.lng });
+        if (current) bounds.extend({ lat: current.lat, lng: current.lng });
+        trackingMap.fitBounds(bounds, { padding: 60 });
+    }
+
+    function closeTrackingModal() {
+        document.getElementById('trackingModal').classList.remove('active');
+        document.getElementById('trackingModal').style.display = 'none';
+        document.body.style.overflow = '';
+        trackingMap = null;
+    }
+
+    function closeTrackingOnBackdrop(event) {
+        if (event.target.id === 'trackingModal') closeTrackingModal();
+    }
+
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeModal();
+        if (e.key === 'Escape') {
+            closeModal();
+            closeTrackingModal();
+        }
     });
 </script>
 }

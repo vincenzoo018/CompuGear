@@ -1304,9 +1304,185 @@ namespace CompuGear.Controllers
             });
         }
 
+        // GET: /CustomerPortal/GetOrderTracking
+        [HttpGet]
+        public async Task<IActionResult> GetOrderTracking(int orderId)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            var customerId = customer?.CustomerId ?? 1;
+
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .Include(o => o.StatusHistory)
+                .FirstOrDefaultAsync(o => o.OrderId == orderId && o.CustomerId == customerId);
+
+            if (order == null)
+                return Json(new { success = false, message = "Order not found" });
+
+            // Build status history timeline
+            var statusHistory = await _context.Set<OrderStatusHistory>()
+                .Where(h => h.OrderId == orderId)
+                .OrderBy(h => h.ChangedAt)
+                .Select(h => new
+                {
+                    h.HistoryId,
+                    h.PreviousStatus,
+                    h.NewStatus,
+                    h.Notes,
+                    h.ChangedAt
+                })
+                .ToListAsync();
+
+            // Build timeline from order dates
+            var timeline = new List<object>();
+
+            // Order placed
+            timeline.Add(new
+            {
+                status = "Order Placed",
+                description = $"Order #{order.OrderNumber} was placed",
+                date = (DateTime?)order.OrderDate,
+                completed = true,
+                icon = "placed"
+            });
+
+            // Confirmed
+            var isConfirmed = order.OrderStatus != "Pending" && order.OrderStatus != "Cancelled";
+            timeline.Add(new
+            {
+                status = "Confirmed",
+                description = isConfirmed ? "Your order has been confirmed and payment verified" : "Awaiting order confirmation",
+                date = isConfirmed ? (DateTime?)(order.ConfirmedAt ?? order.OrderDate.AddHours(1)) : null,
+                completed = isConfirmed,
+                icon = "confirmed"
+            });
+
+            // Processing
+            var isProcessing = new[] { "Processing", "Shipped", "Out for Delivery", "Delivered" }.Contains(order.OrderStatus);
+            timeline.Add(new
+            {
+                status = "Processing",
+                description = isProcessing ? "Your order is being prepared for shipment" : "Order will be prepared once confirmed",
+                date = isProcessing ? (DateTime?)(order.ConfirmedAt ?? order.OrderDate).AddHours(2) : null,
+                completed = isProcessing,
+                icon = "processing"
+            });
+
+            // Shipped
+            var isShipped = new[] { "Shipped", "Out for Delivery", "Delivered" }.Contains(order.OrderStatus);
+            timeline.Add(new
+            {
+                status = "Shipped",
+                description = isShipped ? $"Package shipped via {order.ShippingMethod ?? "Standard Shipping"}" : "Package will be shipped once processed",
+                date = isShipped ? (DateTime?)(order.ShippedAt ?? order.OrderDate.AddDays(1)) : null,
+                completed = isShipped,
+                icon = "shipped"
+            });
+
+            // Out for Delivery
+            var isOutForDelivery = new[] { "Out for Delivery", "Delivered" }.Contains(order.OrderStatus);
+            timeline.Add(new
+            {
+                status = "Out for Delivery",
+                description = isOutForDelivery ? "Your package is on its way to you" : "Package will be out for delivery soon",
+                date = isOutForDelivery ? (DateTime?)(order.ShippedAt ?? order.OrderDate).AddDays(1) : null,
+                completed = isOutForDelivery,
+                icon = "outfordelivery"
+            });
+
+            // Delivered
+            var isDelivered = order.OrderStatus == "Delivered";
+            timeline.Add(new
+            {
+                status = "Delivered",
+                description = isDelivered ? "Your package has been delivered" : "Package will be delivered to your address",
+                date = isDelivered ? (DateTime?)(order.DeliveredAt ?? DateTime.UtcNow) : null,
+                completed = isDelivered,
+                icon = "delivered"
+            });
+
+            // CompuGear Warehouse in Makati as origin
+            var warehouseLat = 14.5547;
+            var warehouseLng = 121.0244;
+
+            // Default destination in Manila
+            var destLat = 14.5995;
+            var destLng = 120.9842;
+
+            // Determine progress (0.0 to 1.0)
+            double progress = 0.0;
+            if (order.OrderStatus == "Pending") progress = 0.0;
+            else if (order.OrderStatus == "Confirmed") progress = 0.1;
+            else if (order.OrderStatus == "Processing") progress = 0.25;
+            else if (order.OrderStatus == "Shipped") progress = 0.55;
+            else if (order.OrderStatus == "Out for Delivery") progress = 0.85;
+            else if (order.OrderStatus == "Delivered") progress = 1.0;
+
+            // Generate waypoints along the route
+            var waypoints = new List<object>();
+            var steps = 5;
+            for (int i = 0; i <= steps; i++)
+            {
+                var frac = (double)i / steps;
+                var lat = warehouseLat + (destLat - warehouseLat) * frac;
+                var lng = warehouseLng + (destLng - warehouseLng) * frac;
+                var label = i == 0 ? "CompuGear Warehouse"
+                    : i == steps ? (order.ShippingAddress ?? "Delivery Address")
+                    : $"Transit Point {i}";
+                waypoints.Add(new { lat, lng, label, reached = frac <= progress });
+            }
+
+            // Current package location
+            var currentLat = warehouseLat + (destLat - warehouseLat) * progress;
+            var currentLng = warehouseLng + (destLng - warehouseLng) * progress;
+
+            return Json(new
+            {
+                success = true,
+                data = new
+                {
+                    order.OrderId,
+                    order.OrderNumber,
+                    order.OrderStatus,
+                    order.PaymentStatus,
+                    order.OrderDate,
+                    order.TotalAmount,
+                    order.ShippingAddress,
+                    order.ShippingCity,
+                    order.ShippingState,
+                    order.ShippingMethod,
+                    order.TrackingNumber,
+                    order.ShippedAt,
+                    order.DeliveredAt,
+                    items = order.OrderItems.Select(oi => new
+                    {
+                        oi.ProductName,
+                        oi.Quantity,
+                        oi.UnitPrice,
+                        oi.TotalPrice,
+                        productImage = oi.Product?.MainImageUrl
+                    }),
+                    timeline,
+                    tracking = new
+                    {
+                        origin = new { lat = warehouseLat, lng = warehouseLng, label = "CompuGear Warehouse, Makati" },
+                        destination = new { lat = destLat, lng = destLng, label = order.ShippingAddress ?? "Delivery Address" },
+                        currentLocation = new { lat = currentLat, lng = currentLng },
+                        progress,
+                        waypoints,
+                        estimatedDelivery = order.OrderStatus == "Delivered"
+                            ? order.DeliveredAt?.ToString("MMM dd, yyyy")
+                            : order.OrderDate.AddDays(5).ToString("MMM dd, yyyy")
+                    }
+                }
+            });
+        }
+
         // GET: /CustomerPortal/GetChatHistory
         [HttpGet]
         public async Task<IActionResult> GetChatHistory(int sessionId)
+
         {
             var messages = await _context.ChatMessages
                 .Where(m => m.SessionId == sessionId)
