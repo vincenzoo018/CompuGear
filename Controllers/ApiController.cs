@@ -3329,6 +3329,51 @@ namespace CompuGear.Controllers
 
         #endregion
 
+        #region Company Module Subscription (for sidebar filtering)
+
+        /// <summary>
+        /// Returns the module codes the logged-in company is subscribed to.
+        /// Used by _Layout.cshtml to show/hide sidebar menu items.
+        /// </summary>
+        [HttpGet("my-modules")]
+        public async Task<IActionResult> GetMyModules()
+        {
+            try
+            {
+                var roleId = HttpContext.Session.GetInt32("RoleId");
+                // Super Admin sees everything
+                if (roleId == 1)
+                {
+                    var allModules = await _context.ERPModules
+                        .Where(m => m.IsActive)
+                        .Select(m => m.ModuleCode)
+                        .ToListAsync();
+                    return Ok(new { success = true, modules = allModules });
+                }
+
+                var companyId = HttpContext.Session.GetInt32("CompanyId");
+                if (companyId == null)
+                {
+                    // No company → show nothing (or default set)
+                    return Ok(new { success = true, modules = new List<string>() });
+                }
+
+                var subscribedModules = await _context.CompanyModuleAccess
+                    .Include(a => a.Module)
+                    .Where(a => a.CompanyId == companyId && a.IsEnabled)
+                    .Select(a => a.Module.ModuleCode)
+                    .ToListAsync();
+
+                return Ok(new { success = true, modules = subscribedModules });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        #endregion
+
         #region Role-Based Access Control
 
         [HttpGet("role-access")]

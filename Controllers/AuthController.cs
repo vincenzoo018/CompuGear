@@ -184,6 +184,11 @@ namespace CompuGear.Controllers
                                 HttpContext.Session.SetInt32("CustomerId", customer.CustomerId);
                                 HttpContext.Session.SetString("CustomerName", customer.FullName);
                                 HttpContext.Session.SetString("CustomerEmail", customer.Email);
+                                // Ensure CompanyId is set from Customer record if not already set from User
+                                if (!user.CompanyId.HasValue && customer.CompanyId.HasValue)
+                                {
+                                    HttpContext.Session.SetInt32("CompanyId", customer.CompanyId.Value);
+                                }
                             }
                             return Json(new { success = true, message = "Login successful", redirectUrl = "/CustomerPortal/Index" });
                         }
@@ -229,7 +234,16 @@ namespace CompuGear.Controllers
                             HttpContext.Session.SetString("CustomerName", customer2.FullName);
                             HttpContext.Session.SetString("CustomerEmail", customer2.Email);
                             HttpContext.Session.SetInt32("UserId", customerUser.UserId);
-                            HttpContext.Session.SetInt32("RoleId", 8); // Customer role
+                            HttpContext.Session.SetInt32("RoleId", 7); // Customer role
+                            HttpContext.Session.SetString("RoleName", "Customer");
+                            if (customer2.CompanyId.HasValue)
+                            {
+                                HttpContext.Session.SetInt32("CompanyId", customer2.CompanyId.Value);
+                            }
+                            else if (customerUser.CompanyId.HasValue)
+                            {
+                                HttpContext.Session.SetInt32("CompanyId", customerUser.CompanyId.Value);
+                            }
 
                             return Json(new { success = true, message = "Login successful", redirectUrl = "/CustomerPortal/Index" });
                         }

@@ -70,7 +70,7 @@
                 </div>
 
                 <!-- Customer Management -->
-                <div class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Customers" ? "expanded" : "")">
+                <div class="nav-item module-menu-item" data-module="CUSTOMERS" @(ViewContext.RouteData.Values["controller"]?.ToString() == "Customers" ? "expanded" : "")>
                     <a href="#" class="nav-link nav-link-toggle">
                         <span class="nav-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -93,7 +93,7 @@
                 </div>
 
                 <!-- Sales Management -->
-                <div class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Sales" ? "expanded" : "")">
+                <div class="nav-item module-menu-item" data-module="SALES" @(ViewContext.RouteData.Values["controller"]?.ToString() == "Sales" ? "expanded" : "")>
                     <a href="#" class="nav-link nav-link-toggle">
                         <span class="nav-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -117,7 +117,7 @@
                 </div>
 
                 <!-- Inventory Management -->
-                <div class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Inventory" ? "expanded" : "")">
+                <div class="nav-item module-menu-item" data-module="INVENTORY" @(ViewContext.RouteData.Values["controller"]?.ToString() == "Inventory" ? "expanded" : "")>
                     <a href="#" class="nav-link nav-link-toggle">
                         <span class="nav-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -146,7 +146,7 @@
                 </div>
 
                 <!-- Support Management -->
-                <div class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Support" ? "expanded" : "")">
+                <div class="nav-item module-menu-item" data-module="SUPPORT" @(ViewContext.RouteData.Values["controller"]?.ToString() == "Support" ? "expanded" : "")>
                     <a href="#" class="nav-link nav-link-toggle">
                         <span class="nav-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -171,7 +171,7 @@
                 </div>
 
                 <!-- Marketing Management -->
-                <div class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Marketing" ? "expanded" : "")">
+                <div class="nav-item module-menu-item" data-module="MARKETING" @(ViewContext.RouteData.Values["controller"]?.ToString() == "Marketing" ? "expanded" : "")>
                     <a href="#" class="nav-link nav-link-toggle">
                         <span class="nav-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -196,7 +196,7 @@
                 </div>
 
                 <!-- Billing Management -->
-                <div class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Billing" ? "expanded" : "")">
+                <div class="nav-item module-menu-item" data-module="BILLING" @(ViewContext.RouteData.Values["controller"]?.ToString() == "Billing" ? "expanded" : "")>
                     <a href="#" class="nav-link nav-link-toggle">
                         <span class="nav-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -364,6 +364,40 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- Module-based sidebar filtering -->
+    <script>
+        (function () {
+            // Get the role from session (rendered server-side)
+            var roleId = @(Context.Session.GetInt32("RoleId") ?? 0);
+            // Super Admin (1) sees everything, skip filtering
+            if (roleId === 1) return;
+
+            // Initially hide all module menu items to prevent flash
+            var moduleItems = document.querySelectorAll('.module-menu-item');
+            moduleItems.forEach(function (item) { item.style.display = 'none'; });
+
+            // Fetch subscribed modules and show only subscribed ones
+            fetch('/api/my-modules')
+                .then(function (res) { return res.json(); })
+                .then(function (result) {
+                    if (result.success && result.modules) {
+                        var subscribed = result.modules;
+                        moduleItems.forEach(function (item) {
+                            var moduleCode = item.getAttribute('data-module');
+                            if (subscribed.indexOf(moduleCode) !== -1) {
+                                item.style.display = '';
+                            }
+                        });
+                    }
+                })
+                .catch(function () {
+                    // On error, show all items as fallback
+                    moduleItems.forEach(function (item) { item.style.display = ''; });
+                });
+        })();
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

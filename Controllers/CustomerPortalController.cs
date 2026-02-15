@@ -24,12 +24,25 @@ namespace CompuGear.Controllers
         // Helper method to get current customer
         private async Task<Customer?> GetCurrentCustomerAsync()
         {
+            // Try session-based customer ID first
+            var sessionCustomerId = HttpContext.Session.GetInt32("CustomerId");
+            if (sessionCustomerId.HasValue)
+            {
+                return await _context.Customers.FirstOrDefaultAsync(c => c.CustomerId == sessionCustomerId.Value);
+            }
+
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (int.TryParse(userIdClaim, out int userId))
             {
                 return await _context.Customers.FirstOrDefaultAsync(c => c.UserId == userId);
             }
             return null;
+        }
+
+        // Helper: Get CompanyId from session for company isolation
+        private int? GetPortalCompanyId()
+        {
+            return HttpContext.Session.GetInt32("CompanyId");
         }
 
         // Customer Dashboard
@@ -134,19 +147,13 @@ namespace CompuGear.Controllers
             var customer = await GetCurrentCustomerAsync();
             if (customer == null)
             {
-                // For demo, get first customer
-                customer = await _context.Customers
-                    .Include(c => c.Category)
-                    .Include(c => c.Addresses)
-                    .FirstOrDefaultAsync();
+                return Json(new { success = false, message = "Customer not found. Please log in." });
             }
-            else
-            {
-                customer = await _context.Customers
-                    .Include(c => c.Category)
-                    .Include(c => c.Addresses)
-                    .FirstOrDefaultAsync(c => c.CustomerId == customer.CustomerId);
-            }
+
+            customer = await _context.Customers
+                .Include(c => c.Category)
+                .Include(c => c.Addresses)
+                .FirstOrDefaultAsync(c => c.CustomerId == customer.CustomerId);
 
             if (customer == null)
                 return Json(new { success = false, message = "Customer not found" });
@@ -204,13 +211,9 @@ namespace CompuGear.Controllers
         public async Task<IActionResult> UpdateProfile([FromBody] CustomerProfileUpdateModel model)
         {
             var customer = await GetCurrentCustomerAsync();
-            if (customer == null)
-            {
-                customer = await _context.Customers.FirstOrDefaultAsync();
-            }
 
             if (customer == null)
-                return Json(new { success = false, message = "Customer not found" });
+                return Json(new { success = false, message = "Customer not found. Please log in." });
 
             customer.FirstName = model.FirstName ?? customer.FirstName;
             customer.LastName = model.LastName ?? customer.LastName;
@@ -239,10 +242,15 @@ namespace CompuGear.Controllers
         [HttpGet]
         public async Task<IActionResult> GetProducts(int page = 1, int pageSize = 12, int? categoryId = null, int? brandId = null, string? search = null, string? sort = "featured", bool? onSale = null)
         {
+            var companyId = GetPortalCompanyId();
             var query = _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
                 .Where(p => p.Status == "Active");
+
+            // Company isolation: only show products belonging to this company
+            if (companyId.HasValue)
+                query = query.Where(p => p.CompanyId == companyId);
 
             if (categoryId.HasValue)
                 query = query.Where(p => p.CategoryId == categoryId);
@@ -310,10 +318,17 @@ namespace CompuGear.Controllers
         [HttpGet]
         public async Task<IActionResult> GetFeaturedProducts(int count = 8)
         {
-            var products = await _context.Products
+            var companyId = GetPortalCompanyId();
+            var baseQuery = _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
-                .Where(p => p.Status == "Active" && p.IsFeatured)
+                .Where(p => p.Status == "Active");
+
+            if (companyId.HasValue)
+                baseQuery = baseQuery.Where(p => p.CompanyId == companyId);
+
+            var products = await baseQuery
+                .Where(p => p.IsFeatured)
                 .OrderByDescending(p => p.CreatedAt)
                 .Take(count)
                 .Select(p => new
@@ -338,10 +353,7 @@ namespace CompuGear.Controllers
             // If no featured products, get latest active products
             if (!products.Any())
             {
-                products = await _context.Products
-                    .Include(p => p.Category)
-                    .Include(p => p.Brand)
-                    .Where(p => p.Status == "Active")
+                products = await baseQuery
                     .OrderByDescending(p => p.CreatedAt)
                     .Take(count)
                     .Select(p => new
@@ -410,10 +422,16 @@ namespace CompuGear.Controllers
         [HttpGet]
         public async Task<IActionResult> GetPromotions()
         {
+            var companyId = GetPortalCompanyId();
             var now = DateTime.UtcNow;
-            var promotions = await _context.Promotions
+            var promoQuery = _context.Promotions
                 .Include(p => p.Campaign)
-                .Where(p => p.IsActive && p.StartDate <= now && p.EndDate >= now)
+                .Where(p => p.IsActive && p.StartDate <= now && p.EndDate >= now);
+
+            if (companyId.HasValue)
+                promoQuery = promoQuery.Where(p => p.CompanyId == companyId);
+
+            var promotions = await promoQuery
                 .OrderByDescending(p => p.CreatedAt)
                 .Select(p => new
                 {
@@ -435,8 +453,13 @@ namespace CompuGear.Controllers
                 .ToListAsync();
 
             // Also get active campaigns
-            var campaigns = await _context.Campaigns
-                .Where(c => c.Status == "Active" && c.StartDate <= now && c.EndDate >= now)
+            var campaignQuery = _context.Campaigns
+                .Where(c => c.Status == "Active" && c.StartDate <= now && c.EndDate >= now);
+
+            if (companyId.HasValue)
+                campaignQuery = campaignQuery.Where(c => c.CompanyId == companyId);
+
+            var campaigns = await campaignQuery
                 .OrderByDescending(c => c.CreatedAt)
                 .Select(c => new
                 {
@@ -460,12 +483,20 @@ namespace CompuGear.Controllers
         public async Task<IActionResult> GetOrders(int page = 1, int pageSize = 10, string? status = null)
         {
             var customer = await GetCurrentCustomerAsync();
-            var customerId = customer?.CustomerId ?? 1; // Demo fallback
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in to view orders" });
+
+            var customerId = customer.CustomerId;
+            var companyId = GetPortalCompanyId();
 
             var query = _context.Orders
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
                 .Where(o => o.CustomerId == customerId);
+
+            // Company isolation
+            if (companyId.HasValue)
+                query = query.Where(o => o.CompanyId == companyId);
 
             if (!string.IsNullOrEmpty(status) && status != "all")
                 query = query.Where(o => o.OrderStatus == status);
@@ -523,7 +554,11 @@ namespace CompuGear.Controllers
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderModel model)
         {
             var customer = await GetCurrentCustomerAsync();
-            var customerId = customer?.CustomerId ?? 1;
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in to place an order" });
+
+            var customerId = customer.CustomerId;
+            var companyId = GetPortalCompanyId();
 
             // Validate cart items
             if (model.Items == null || !model.Items.Any())
@@ -600,6 +635,7 @@ namespace CompuGear.Controllers
             {
                 OrderNumber = orderNumber,
                 CustomerId = customerId,
+                CompanyId = companyId,
                 OrderDate = DateTime.UtcNow,
                 OrderStatus = "Pending",
                 PaymentStatus = "Pending",
@@ -641,6 +677,7 @@ namespace CompuGear.Controllers
                     InvoiceNumber = invoiceNumber,
                     OrderId = order.OrderId,
                     CustomerId = customerId,
+                    CompanyId = companyId,
                     InvoiceDate = DateTime.UtcNow,
                     DueDate = DateTime.UtcNow.AddDays(30),
                     Subtotal = subtotal,
@@ -705,9 +742,13 @@ namespace CompuGear.Controllers
         [HttpPost]
         public async Task<IActionResult> ProcessPayment([FromBody] PaymentRequestModel model)
         {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
-                .FirstOrDefaultAsync(o => o.OrderId == model.OrderId);
+                .FirstOrDefaultAsync(o => o.OrderId == model.OrderId && o.CustomerId == customer.CustomerId);
 
             if (order == null)
                 return Json(new { success = false, message = "Order not found" });
@@ -922,6 +963,7 @@ namespace CompuGear.Controllers
                                     InvoiceId = invoice.InvoiceId,
                                     OrderId = orderId,
                                     CustomerId = order.CustomerId,
+                                    CompanyId = order.CompanyId,
                                     PaymentDate = DateTime.UtcNow,
                                     Amount = order.TotalAmount,
                                     PaymentMethodType = order.PaymentMethod ?? "gcash",
@@ -952,7 +994,9 @@ namespace CompuGear.Controllers
         [HttpGet]
         public async Task<IActionResult> CheckPaymentStatus(int orderId)
         {
-            var order = await _context.Orders.FindAsync(orderId);
+            var customer = await GetCurrentCustomerAsync();
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId && 
+                (customer == null || o.CustomerId == customer.CustomerId));
             if (order == null)
                 return Json(new { success = false, message = "Order not found" });
 
@@ -977,10 +1021,16 @@ namespace CompuGear.Controllers
         {
             try
             {
-                var products = await _context.Products
+                var companyId = GetPortalCompanyId();
+                var query = _context.Products
                     .Include(p => p.Category)
                     .Include(p => p.Brand)
-                    .Where(p => productIds.Contains(p.ProductId))
+                    .Where(p => productIds.Contains(p.ProductId));
+
+                if (companyId.HasValue)
+                    query = query.Where(p => p.CompanyId == companyId);
+
+                var products = await query
                     .Select(p => new
                     {
                         p.ProductId,
@@ -1011,8 +1061,14 @@ namespace CompuGear.Controllers
         [HttpPost]
         public async Task<IActionResult> ValidatePromo([FromBody] ValidatePromoModel model)
         {
-            var promo = await _context.Promotions
-                .FirstOrDefaultAsync(p => p.PromotionCode.ToLower() == model.PromoCode.ToLower() && p.IsActive);
+            var companyId = GetPortalCompanyId();
+            var promoQuery = _context.Promotions
+                .Where(p => p.PromotionCode.ToLower() == model.PromoCode.ToLower() && p.IsActive);
+
+            if (companyId.HasValue)
+                promoQuery = promoQuery.Where(p => p.CompanyId == companyId);
+
+            var promo = await promoQuery.FirstOrDefaultAsync();
 
             if (promo == null)
                 return Json(new { success = false, message = "Invalid promo code" });
@@ -1049,12 +1105,21 @@ namespace CompuGear.Controllers
         public async Task<IActionResult> GetTickets()
         {
             var customer = await GetCurrentCustomerAsync();
-            var customerId = customer?.CustomerId ?? 1;
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in to view tickets" });
 
-            var tickets = await _context.SupportTickets
+            var customerId = customer.CustomerId;
+            var companyId = GetPortalCompanyId();
+
+            var query = _context.SupportTickets
                 .Include(t => t.Category)
                 .Include(t => t.AssignedUser)
-                .Where(t => t.CustomerId == customerId)
+                .Where(t => t.CustomerId == customerId);
+
+            if (companyId.HasValue)
+                query = query.Where(t => t.CompanyId == companyId);
+
+            var tickets = await query
                 .OrderByDescending(t => t.CreatedAt)
                 .Select(t => new
                 {
@@ -1080,7 +1145,10 @@ namespace CompuGear.Controllers
         public async Task<IActionResult> GetTicketDetails(int id)
         {
             var customer = await GetCurrentCustomerAsync();
-            var customerId = customer?.CustomerId ?? 1;
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            var customerId = customer.CustomerId;
 
             var ticket = await _context.SupportTickets
                 .Include(t => t.Category)
@@ -1134,7 +1202,7 @@ namespace CompuGear.Controllers
             var customer = await GetCurrentCustomerAsync();
 
             var ticket = await _context.SupportTickets.FindAsync(model.TicketId);
-            if (ticket == null || ticket.CustomerId != (customer?.CustomerId ?? 1))
+            if (ticket == null || ticket.CustomerId != (customer?.CustomerId))
                 return Json(new { success = false, message = "Ticket not found" });
 
             var ticketMessage = new TicketMessage
@@ -1159,6 +1227,7 @@ namespace CompuGear.Controllers
         {
             var customer = await GetCurrentCustomerAsync();
             var customerId = customer?.CustomerId;
+            var companyId = GetPortalCompanyId();
 
             var ticketCount = await _context.SupportTickets.CountAsync() + 1;
             var ticketNumber = $"TKT-{DateTime.Now:yyyy}-{ticketCount:D4}";
@@ -1167,6 +1236,7 @@ namespace CompuGear.Controllers
             {
                 TicketNumber = ticketNumber,
                 CustomerId = customerId,
+                CompanyId = companyId,
                 CategoryId = model.CategoryId,
                 Subject = model.Subject,
                 Description = model.Description,
@@ -1196,10 +1266,13 @@ namespace CompuGear.Controllers
         {
             var customer = await GetCurrentCustomerAsync();
             var customerId = customer?.CustomerId ?? 0;
+            var companyId = GetPortalCompanyId();
 
-            // Find or create chat session
-            var session = await _context.ChatSessions
-                .FirstOrDefaultAsync(s => s.CustomerId == customerId && s.Status == "Active");
+            // Find or create chat session for this customer and company
+            var sessionQuery = _context.ChatSessions
+                .Where(s => s.CustomerId == customerId && s.Status == "Active");
+
+            var session = await sessionQuery.FirstOrDefaultAsync();
 
             if (session == null)
             {
@@ -1267,10 +1340,16 @@ namespace CompuGear.Controllers
             if (session == null)
                 return Json(new { success = false, message = "Chat session not found" });
 
-            // Find available support agent
-            var supportAgent = await _context.Users
-                .Where(u => u.RoleId == 4 && u.IsActive) // Customer Support Staff
-                .FirstOrDefaultAsync();
+            var companyId = GetPortalCompanyId();
+
+            // Find available support agent (scoped to company if set)
+            var agentQuery = _context.Users
+                .Where(u => u.RoleId == 4 && u.IsActive);
+
+            if (companyId.HasValue)
+                agentQuery = agentQuery.Where(u => u.CompanyId == companyId);
+
+            var supportAgent = await agentQuery.FirstOrDefaultAsync();
 
             if (supportAgent != null)
             {
@@ -1309,7 +1388,10 @@ namespace CompuGear.Controllers
         public async Task<IActionResult> GetOrderTracking(int orderId)
         {
             var customer = await GetCurrentCustomerAsync();
-            var customerId = customer?.CustomerId ?? 1;
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            var customerId = customer.CustomerId;
 
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
@@ -1528,9 +1610,17 @@ namespace CompuGear.Controllers
         [HttpGet]
         public async Task<IActionResult> GetActiveChats()
         {
-            var chats = await _context.ChatSessions
+            var companyId = GetPortalCompanyId();
+
+            var chatQuery = _context.ChatSessions
                 .Include(s => s.Customer)
-                .Where(s => s.Status == "Active" || s.Status == "Transferred")
+                .Where(s => s.Status == "Active" || s.Status == "Transferred");
+
+            // Company isolation: only show chats from customers of this company
+            if (companyId.HasValue)
+                chatQuery = chatQuery.Where(s => s.Customer != null && s.Customer.CompanyId == companyId);
+
+            var chats = await chatQuery
                 .OrderByDescending(s => s.StartedAt)
                 .Select(s => new
                 {
