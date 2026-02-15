@@ -671,36 +671,60 @@
     }
 
     function populateProfile(data) {
-        const customer = data.customer || {};
-        const stats = data.stats || {};
+        // API returns flat structure: data.firstName, data.totalOrders, etc.
+        const fullName = ((data.firstName || '') + ' ' + (data.lastName || '')).trim() || 'Customer';
 
         // Header
-        document.getElementById('profileName').textContent = customer.fullName || 'Customer';
-        document.getElementById('profileEmail').textContent = customer.email || '';
-        document.getElementById('statOrders').textContent = stats.totalOrders || 0;
-        document.getElementById('statSpent').textContent = '₱' + (stats.totalSpent || 0).toLocaleString();
+        document.getElementById('profileName').textContent = fullName;
+        document.getElementById('profileEmail').textContent = data.email || '';
+        document.getElementById('statOrders').textContent = data.totalOrders || 0;
+        document.getElementById('statSpent').textContent = '₱' + (data.totalSpent || 0).toLocaleString();
 
-        if (customer.createdAt) {
-            const date = new Date(customer.createdAt);
+        if (data.createdAt) {
+            const date = new Date(data.createdAt);
             document.getElementById('statMember').textContent = date.toLocaleDateString('en-PH', { month: 'short', year: 'numeric' });
         }
 
         // Form fields
-        document.getElementById('firstName').value = customer.firstName || '';
-        document.getElementById('lastName').value = customer.lastName || '';
-        document.getElementById('email').value = customer.email || '';
-        document.getElementById('phone').value = customer.phone || '';
+        document.getElementById('firstName').value = data.firstName || '';
+        document.getElementById('lastName').value = data.lastName || '';
+        document.getElementById('email').value = data.email || '';
+        document.getElementById('phone').value = data.phone || '';
 
-        // Loyalty
-        const loyalty = data.loyalty || { points: 0, tier: 'Bronze' };
-        document.getElementById('pointsValue').textContent = (loyalty.points || 0).toLocaleString();
-        document.getElementById('tierName').textContent = (loyalty.tier || 'Bronze') + ' Member';
+        if (data.dateOfBirth) {
+            const dobInput = document.getElementById('birthDate');
+            if (dobInput) dobInput.value = data.dateOfBirth.split('T')[0];
+        }
+        if (data.gender) {
+            const genderSelect = document.getElementById('gender');
+            if (genderSelect) genderSelect.value = data.gender;
+        }
+
+        // Loyalty - points stored directly on customer
+        const points = data.loyaltyPoints || 0;
+        let tier = 'Bronze';
+        if (points >= 10000) tier = 'Platinum';
+        else if (points >= 5000) tier = 'Gold';
+        else if (points >= 1000) tier = 'Silver';
+
+        document.getElementById('pointsValue').textContent = points.toLocaleString();
+        document.getElementById('tierName').textContent = tier + ' Member';
 
         const tiers = { 'Bronze': '🥉', 'Silver': '🥈', 'Gold': '🥇', 'Platinum': '💎' };
-        document.getElementById('tierIcon').textContent = tiers[loyalty.tier] || '🥉';
+        document.getElementById('tierIcon').textContent = tiers[tier] || '🥉';
 
-        // Addresses
-        loadAddresses(data.addresses || []);
+        // Addresses - API returns Addresses array with AddressLine1, City, etc.
+        const addresses = (data.addresses || []).map(a => ({
+            id: a.addressId,
+            type: (a.addressType || 'home').toLowerCase(),
+            street: a.addressLine1 || '',
+            barangay: a.addressLine2 || '',
+            city: a.city || '',
+            province: a.state || '',
+            postalCode: a.zipCode || '',
+            isDefault: a.isDefault || false
+        }));
+        loadAddresses(addresses);
 
         // Rewards activity
         loadRewardsActivity(data.rewardsHistory || []);

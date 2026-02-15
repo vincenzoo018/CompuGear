@@ -129,6 +129,15 @@ BEGIN
 END
 GO
 
+-- ChatSessions
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ChatSessions') AND name = 'CompanyId')
+BEGIN
+    ALTER TABLE ChatSessions ADD CompanyId INT NULL FOREIGN KEY REFERENCES Companies(CompanyId);
+    UPDATE ChatSessions SET CompanyId = 1;
+    PRINT 'Added CompanyId to ChatSessions';
+END
+GO
+
 -- =====================================================
 -- 2. Create RoleModuleAccess table
 -- =====================================================

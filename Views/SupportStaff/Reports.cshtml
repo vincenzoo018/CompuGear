@@ -136,5 +136,174 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="~/js/support.js"></script>
+    <script>
+        let ticketTrendChart, categoryChart, priorityChart, resolutionTimeChart;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            loadReports('week');
+
+            document.querySelectorAll('[data-period]').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    document.querySelectorAll('[data-period]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    loadReports(this.dataset.period);
+                });
+            });
+        });
+
+        async function loadReports(period) {
+            try {
+                const res = await fetch('/api/tickets');
+                let tickets = [];
+                if (res.ok) {
+                    const data = await res.json();
+                    tickets = Array.isArray(data) ? data : (data.data || data.tickets || []);
+                }
+
+                const now = new Date();
+                let startDate;
+                if (period === 'week') startDate = new Date(now.getTime() - 7 * 86400000);
+                else if (period === 'year') startDate = new Date(now.getFullYear(), 0, 1);
+                else startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+
+                const filtered = tickets.filter(t => new Date(t.createdAt) >= startDate);
+
+                // Summary Cards
+                document.getElementById('totalTickets').textContent = filtered.length;
+                const resolved = filtered.filter(t => t.status === 'Resolved' || t.status === 'Closed').length;
+                document.getElementById('resolvedTickets').textContent = resolved;
+
+                // Avg resolution time
+                const resolvedTickets = filtered.filter(t => (t.status === 'Resolved' || t.status === 'Closed') && t.resolvedAt);
+                let avgHours = 0;
+                if (resolvedTickets.length > 0) {
+                    const totalMs = resolvedTickets.reduce((sum, t) => sum + (new Date(t.resolvedAt) - new Date(t.createdAt)), 0);
+                    avgHours = Math.round(totalMs / resolvedTickets.length / 3600000);
+                }
+                document.getElementById('avgResolutionTime').textContent = avgHours + 'h';
+
+                // Satisfaction rate
+                const rated = filtered.filter(t => t.satisfactionRating && t.satisfactionRating > 0);
+                const satRate = rated.length > 0 ? Math.round((rated.filter(t => t.satisfactionRating >= 4).length / rated.length) * 100) : (resolved > 0 ? Math.round((resolved / filtered.length) * 100) : 0);
+                document.getElementById('satisfactionRate').textContent = satRate + '%';
+
+                renderTicketTrend(filtered, period);
+                renderCategoryChart(filtered);
+                renderPriorityChart(filtered);
+                renderResolutionTimeChart(filtered);
+            } catch (err) {
+                console.error('Failed to load reports:', err);
+            }
+        }
+
+        function renderTicketTrend(tickets, period) {
+            const ctx = document.getElementById('ticketTrendChart')?.getContext('2d');
+            if (!ctx) return;
+            if (ticketTrendChart) ticketTrendChart.destroy();
+
+            const now = new Date();
+            let labels = [], created = [], resolved = [];
+
+            if (period === 'week') {
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date(now.getTime() - i * 86400000);
+                    const label = d.toLocaleDateString('en-US', { weekday: 'short' });
+                    labels.push(label);
+                    const dayStr = d.toISOString().slice(0, 10);
+                    created.push(tickets.filter(t => t.createdAt && t.createdAt.slice(0, 10) === dayStr).length);
+                    resolved.push(tickets.filter(t => (t.status === 'Resolved' || t.status === 'Closed') && t.resolvedAt && t.resolvedAt.slice(0, 10) === dayStr).length);
+                }
+            } else if (period === 'month') {
+                for (let i = 29; i >= 0; i -= 5) {
+                    const d = new Date(now.getTime() - i * 86400000);
+                    labels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                    const start = new Date(now.getTime() - i * 86400000);
+                    const end = new Date(now.getTime() - Math.max(0, i - 5) * 86400000);
+                    created.push(tickets.filter(t => { const cd = new Date(t.createdAt); return cd >= start && cd < end; }).length);
+                    resolved.push(tickets.filter(t => (t.status === 'Resolved' || t.status === 'Closed') && t.resolvedAt && new Date(t.resolvedAt) >= start && new Date(t.resolvedAt) < end).length);
+                }
+            } else {
+                const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                for (let m = 0; m < 12; m++) {
+                    labels.push(months[m]);
+                    created.push(tickets.filter(t => new Date(t.createdAt).getMonth() === m).length);
+                    resolved.push(tickets.filter(t => (t.status === 'Resolved' || t.status === 'Closed') && t.resolvedAt && new Date(t.resolvedAt).getMonth() === m).length);
+                }
+            }
+
+            ticketTrendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Created', data: created, borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.3 },
+                        { label: 'Resolved', data: resolved, borderColor: '#10B981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.3 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+        }
+
+        function renderCategoryChart(tickets) {
+            const ctx = document.getElementById('categoryChart')?.getContext('2d');
+            if (!ctx) return;
+            if (categoryChart) categoryChart.destroy();
+
+            const cats = {};
+            tickets.forEach(t => { const c = t.categoryName || t.category || 'Uncategorized'; cats[c] = (cats[c] || 0) + 1; });
+            const labels = Object.keys(cats);
+            const data = Object.values(cats);
+            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#6B7280', '#14B8A6'];
+
+            categoryChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, labels.length) }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        function renderPriorityChart(tickets) {
+            const ctx = document.getElementById('priorityChart')?.getContext('2d');
+            if (!ctx) return;
+            if (priorityChart) priorityChart.destroy();
+
+            const priorities = { 'Critical': 0, 'High': 0, 'Medium': 0, 'Low': 0 };
+            tickets.forEach(t => { const p = t.priority || 'Medium'; if (priorities.hasOwnProperty(p)) priorities[p]++; else priorities[p] = 1; });
+            const pColors = { 'Critical': '#DC2626', 'High': '#EF4444', 'Medium': '#F59E0B', 'Low': '#10B981' };
+
+            priorityChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(priorities),
+                    datasets: [{ label: 'Tickets', data: Object.values(priorities), backgroundColor: Object.keys(priorities).map(p => pColors[p] || '#6B7280') }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+            });
+        }
+
+        function renderResolutionTimeChart(tickets) {
+            const ctx = document.getElementById('resolutionTimeChart')?.getContext('2d');
+            if (!ctx) return;
+            if (resolutionTimeChart) resolutionTimeChart.destroy();
+
+            const catTimes = {};
+            tickets.filter(t => (t.status === 'Resolved' || t.status === 'Closed') && t.resolvedAt).forEach(t => {
+                const cat = t.categoryName || t.category || 'Uncategorized';
+                if (!catTimes[cat]) catTimes[cat] = [];
+                catTimes[cat].push((new Date(t.resolvedAt) - new Date(t.createdAt)) / 3600000);
+            });
+
+            const labels = Object.keys(catTimes);
+            const data = labels.map(cat => Math.round(catTimes[cat].reduce((a, b) => a + b, 0) / catTimes[cat].length));
+
+            resolutionTimeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels.length ? labels : ['No Data'],
+                    datasets: [{ label: 'Hours', data: data.length ? data : [0], backgroundColor: '#008080' }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
+    </script>
 }

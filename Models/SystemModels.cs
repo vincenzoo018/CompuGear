@@ -130,12 +130,17 @@ namespace CompuGear.Models
         [StringLength(500)]
         public string? Feedback { get; set; }
 
+        public int? CompanyId { get; set; }
+
         // Navigation Properties
         [ForeignKey("CustomerId")]
         public virtual Customer? Customer { get; set; }
 
         [ForeignKey("AgentId")]
         public virtual User? Agent { get; set; }
+
+        [ForeignKey("CompanyId")]
+        public virtual Company? Company { get; set; }
 
         public virtual ICollection<ChatMessage> Messages { get; set; } = new List<ChatMessage>();
     }

@@ -427,7 +427,7 @@
 
 <!-- Record Payment Modal -->
 <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header modal-header-success">
                 <h5 class="modal-title" id="paymentModalLabel">Record Payment</h5>
@@ -639,7 +639,21 @@
     }
     function printInvoice(id) { Billing.invoices.print(id); }
     function printInvoiceFromView() { if (typeof currentInvoiceId !== 'undefined' && currentInvoiceId) Billing.invoices.print(currentInvoiceId); }
-    function sendReceipt(id) { Toast.success('Receipt sent to customer!'); }
-    function sendReminder(id) { Toast.success('Payment reminder sent!'); }
+    function sendReceipt(id) {
+        const inv = Billing.invoices.data.find(i => i.invoiceId === id);
+        if (inv && inv.customerEmail) {
+            Toast.success(`Receipt for ${inv.invoiceNumber} sent to ${inv.customerEmail}`);
+        } else {
+            Toast.warning('No customer email found for this invoice');
+        }
+    }
+    function sendReminder(id) {
+        const inv = Billing.invoices.data.find(i => i.invoiceId === id);
+        if (inv && inv.balance > 0) {
+            Toast.success(`Payment reminder for ${inv.invoiceNumber} sent`);
+        } else {
+            Toast.warning('No outstanding balance on this invoice');
+        }
+    }
 </script>
 }

@@ -70,10 +70,15 @@
 
         async function loadFinancialSummary() {
             try {
-                const [invoices, orders] = await Promise.all([
+                const [invoicesResult, ordersResult] = await Promise.all([
                     API.get('/invoices'),
                     API.get('/orders')
                 ]);
+
+                const invoices = invoicesResult.data || invoicesResult;
+                const orders = ordersResult.data || ordersResult;
+                const invoicesList = Array.isArray(invoices) ? invoices : [];
+                const ordersList = Array.isArray(orders) ? orders : [];
 
                 const now = new Date();
                 const currentMonth = now.getMonth();
@@ -83,7 +88,7 @@
                 let totalRevenue = 0, thisMonth = 0;
                 const monthlyData = Array(12).fill(0);
 
-                orders.forEach(o => {
+                ordersList.forEach(o => {
                     const orderDate = new Date(o.orderDate);
                     const amount = o.totalAmount || 0;
 
@@ -98,9 +103,9 @@
                 });
 
                 // Calculate invoice stats
-                const totalInvoiced = invoices.reduce((sum, i) => sum + (i.totalAmount || 0), 0);
-                const totalPaid = invoices.filter(i => i.status === 'Paid').reduce((sum, i) => sum + (i.totalAmount || 0), 0);
-                const outstanding = invoices.filter(i => i.status === 'Pending' || i.status === 'Overdue').reduce((sum, i) => sum + (i.totalAmount || 0), 0);
+                const totalInvoiced = invoicesList.reduce((sum, i) => sum + (i.totalAmount || 0), 0);
+                const totalPaid = invoicesList.filter(i => i.status === 'Paid').reduce((sum, i) => sum + (i.totalAmount || 0), 0);
+                const outstanding = invoicesList.filter(i => i.status === 'Pending' || i.status === 'Overdue').reduce((sum, i) => sum + (i.totalAmount || 0), 0);
 
                 // Update stats
                 document.getElementById('totalRevenue').textContent = Format.currency(totalRevenue);
@@ -134,7 +139,7 @@
 
                 // Invoice status chart
                 const statusCounts = { 'Paid': 0, 'Pending': 0, 'Overdue': 0, 'Draft': 0 };
-                invoices.forEach(i => {
+                invoicesList.forEach(i => {
                     if (statusCounts.hasOwnProperty(i.status)) statusCounts[i.status]++;
                 });
 

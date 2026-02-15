@@ -80,8 +80,8 @@
                 <thead>
                     <tr>
                         <th>Supplier Name</th>
-                        <th>Company Name</th>
-                        <th>Contact Number</th>
+                        <th>Contact Person</th>
+                        <th>Phone</th>
                         <th>Email</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -113,19 +113,41 @@
                     <input type="hidden" id="supplierId" value="0">
                     <div class="mb-3">
                         <label class="form-label">Supplier Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="supplierName" required placeholder="Enter supplier name">
+                        <input type="text" class="form-control" id="supplierName" required placeholder="Enter supplier/company name">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Company Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="companyName" required placeholder="Enter company name">
+                        <label class="form-label">Contact Person</label>
+                        <input type="text" class="form-control" id="contactPerson" placeholder="Enter contact person name">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Contact Number</label>
-                        <input type="text" class="form-control" id="contactNumber" placeholder="Enter contact number">
+                        <label class="form-label">Phone</label>
+                        <input type="text" class="form-control" id="contactNumber" placeholder="Enter phone number">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Email</label>
                         <input type="email" class="form-control" id="email" placeholder="Enter email address">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <input type="text" class="form-control" id="address" placeholder="Enter address">
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">City</label>
+                            <input type="text" class="form-control" id="city" placeholder="Enter city">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Country</label>
+                            <input type="text" class="form-control" id="country" placeholder="Enter country">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Website</label>
+                        <input type="text" class="form-control" id="website" placeholder="Enter website URL">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Terms</label>
+                        <input type="text" class="form-control" id="paymentTerms" placeholder="e.g., Net 30, COD">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Status</label>
@@ -158,16 +180,38 @@
                     <p class="fw-medium mb-0" id="viewName">-</p>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label text-muted small">Company Name</label>
-                    <p class="fw-medium mb-0" id="viewCompany">-</p>
+                    <label class="form-label text-muted small">Contact Person</label>
+                    <p class="fw-medium mb-0" id="viewContact">-</p>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label text-muted small">Contact Number</label>
+                    <label class="form-label text-muted small">Phone</label>
                     <p class="fw-medium mb-0" id="viewPhone">-</p>
                 </div>
                 <div class="mb-3">
                     <label class="form-label text-muted small">Email</label>
                     <p class="fw-medium mb-0" id="viewEmail">-</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Address</label>
+                    <p class="fw-medium mb-0" id="viewAddress">-</p>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">City</label>
+                        <p class="fw-medium mb-0" id="viewCity">-</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label text-muted small">Country</label>
+                        <p class="fw-medium mb-0" id="viewCountry">-</p>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Website</label>
+                    <p class="fw-medium mb-0" id="viewWebsite">-</p>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Payment Terms</label>
+                    <p class="fw-medium mb-0" id="viewPaymentTerms">-</p>
                 </div>
                 <div class="mb-3">
                     <label class="form-label text-muted small">Status</label>
@@ -192,15 +236,13 @@
         loadSuppliers();
     });
 
-    // Load suppliers from database
     async function loadSuppliers() {
         try {
             const response = await fetch('/api/suppliers');
-            if (!response.ok) {
-                throw new Error('Failed to fetch suppliers');
-            }
-            suppliers = await response.json();
-            
+            if (!response.ok) throw new Error('Failed to fetch suppliers');
+            const result = await response.json();
+            // Handle both array and { data: [...] } response formats
+            suppliers = Array.isArray(result) ? result : (result.data || []);
             updateStats();
             renderTable(suppliers);
         } catch (error) {
@@ -211,24 +253,20 @@
         }
     }
 
-    // Update stats
     function updateStats() {
         document.getElementById('totalSuppliers').textContent = suppliers.length;
         document.getElementById('activeSuppliers').textContent = suppliers.filter(s => s.status === 'Active').length;
-        document.getElementById('inactiveSuppliers').textContent = suppliers.filter(s => s.status === 'Inactive').length;
+        document.getElementById('inactiveSuppliers').textContent = suppliers.filter(s => s.status !== 'Active').length;
     }
 
-    // Render table
     function renderTable(data) {
         const tbody = document.getElementById('tableBody');
-        
         if (!data || data.length === 0) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="6" class="text-center py-4">
                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="text-muted mb-2">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
                         </svg>
                         <p class="text-muted mb-0">No suppliers found</p>
                     </td>
@@ -236,7 +274,6 @@
             `;
             return;
         }
-
         tbody.innerHTML = data.map(s => `
             <tr>
                 <td>
@@ -246,7 +283,10 @@
                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                             </svg>
                         </div>
-                        <span class="fw-medium">${escapeHtml(s.supplierName || '')}</span>
+                        <div>
+                            <span class="fw-medium">${escapeHtml(s.supplierName || '')}</span>
+                            <br><small class="text-muted">${escapeHtml(s.supplierCode || '')}</small>
+                        </div>
                     </div>
                 </td>
                 <td>${escapeHtml(s.contactPerson || '-')}</td>
@@ -288,7 +328,6 @@
         `).join('');
     }
 
-    // Filter table
     function filterTable() {
         const search = document.getElementById('searchInput').value.toLowerCase();
         const filtered = suppliers.filter(s => 
@@ -300,7 +339,6 @@
         renderTable(filtered);
     }
 
-    // Open add modal
     function openAddModal() {
         document.getElementById('modalTitle').textContent = 'Add New Supplier';
         document.getElementById('supplierForm').reset();
@@ -309,87 +347,79 @@
         modal.show();
     }
 
-    // Edit supplier
     function editSupplier(id) {
         const s = suppliers.find(x => x.supplierId === id);
-        if (!s) {
-            alert('Supplier not found');
-            return;
-        }
-
+        if (!s) { alert('Supplier not found'); return; }
         document.getElementById('modalTitle').textContent = 'Edit Supplier';
         document.getElementById('supplierId').value = s.supplierId;
         document.getElementById('supplierName').value = s.supplierName || '';
-        document.getElementById('companyName').value = s.contactPerson || '';
+        document.getElementById('contactPerson').value = s.contactPerson || '';
         document.getElementById('contactNumber').value = s.phone || '';
         document.getElementById('email').value = s.email || '';
+        document.getElementById('address').value = s.address || '';
+        document.getElementById('city').value = s.city || '';
+        document.getElementById('country').value = s.country || '';
+        document.getElementById('website').value = s.website || '';
+        document.getElementById('paymentTerms').value = s.paymentTerms || '';
         document.getElementById('status').value = s.status || 'Active';
-
         modal.show();
     }
 
-    // View supplier
     function viewSupplier(id) {
         const s = suppliers.find(x => x.supplierId === id);
-        if (!s) {
-            alert('Supplier not found');
-            return;
-        }
-
+        if (!s) { alert('Supplier not found'); return; }
         document.getElementById('viewName').textContent = s.supplierName || '-';
-        document.getElementById('viewCompany').textContent = s.contactPerson || '-';
+        document.getElementById('viewContact').textContent = s.contactPerson || '-';
         document.getElementById('viewPhone').textContent = s.phone || '-';
         document.getElementById('viewEmail').textContent = s.email || '-';
-        
+        document.getElementById('viewAddress').textContent = s.address || '-';
+        document.getElementById('viewCity').textContent = s.city || '-';
+        document.getElementById('viewCountry').textContent = s.country || '-';
+        document.getElementById('viewWebsite').textContent = s.website || '-';
+        document.getElementById('viewPaymentTerms').textContent = s.paymentTerms || '-';
         const statusEl = document.getElementById('viewStatus');
         statusEl.innerHTML = `<span class="badge ${s.status === 'Active' ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'}">${s.status || 'Active'}</span>`;
-
         viewModalInstance.show();
     }
 
-    // Save supplier
     async function saveSupplier() {
         const id = parseInt(document.getElementById('supplierId').value);
         const supplierName = document.getElementById('supplierName').value.trim();
-        const companyName = document.getElementById('companyName').value.trim();
-
-        if (!supplierName || !companyName) {
-            alert('Please fill in Supplier Name and Company Name');
-            return;
-        }
+        if (!supplierName) { alert('Please fill in Supplier Name'); return; }
 
         const data = {
             supplierName: supplierName,
-            contactPerson: companyName,
+            contactPerson: document.getElementById('contactPerson').value.trim() || null,
             phone: document.getElementById('contactNumber').value.trim() || null,
             email: document.getElementById('email').value.trim() || null,
+            address: document.getElementById('address').value.trim() || null,
+            city: document.getElementById('city').value.trim() || null,
+            country: document.getElementById('country').value.trim() || null,
+            website: document.getElementById('website').value.trim() || null,
+            paymentTerms: document.getElementById('paymentTerms').value.trim() || null,
             status: document.getElementById('status').value
         };
 
         try {
             let response;
             if (id === 0) {
-                // Create new
                 response = await fetch('/api/suppliers', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
             } else {
-                // Update existing
                 response = await fetch(`/api/suppliers/${id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
             }
-
             const result = await response.json();
-
             if (result.success) {
                 alert(id === 0 ? 'Supplier added successfully!' : 'Supplier updated successfully!');
                 modal.hide();
-                loadSuppliers(); // Reload the table
+                loadSuppliers();
             } else {
                 alert(result.message || 'Error saving supplier');
             }
@@ -399,33 +429,31 @@
         }
     }
 
-    // Toggle status
     async function toggleStatus(id, currentStatus) {
         const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
         const action = currentStatus === 'Active' ? 'deactivate' : 'activate';
-
         if (!confirm(`Are you sure you want to ${action} this supplier?`)) return;
-
         const s = suppliers.find(x => x.supplierId === id);
         if (!s) return;
-
         const data = {
             supplierName: s.supplierName,
             contactPerson: s.contactPerson,
             phone: s.phone,
             email: s.email,
+            address: s.address,
+            city: s.city,
+            country: s.country,
+            website: s.website,
+            paymentTerms: s.paymentTerms,
             status: newStatus
         };
-
         try {
             const response = await fetch(`/api/suppliers/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-
             const result = await response.json();
-
             if (result.success) {
                 alert(`Supplier ${newStatus === 'Active' ? 'activated' : 'deactivated'} successfully!`);
                 loadSuppliers();
@@ -438,7 +466,6 @@
         }
     }
 
-    // Escape HTML
     function escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');

@@ -26,6 +26,7 @@
                     <th>Type</th>
                     <th>Outstanding</th>
                     <th>Status</th>
+                    <th class="text-center">Actions</th>
                 </tr>
             </thead>
             <tbody id="recordsTableBody">
@@ -46,14 +47,19 @@
 
     async function loadRecords() {
         try {
-            const [customers, invoices] = await Promise.all([
+            const [customersResult, invoicesResult] = await Promise.all([
                 API.get('/customers'),
                 API.get('/invoices')
             ]);
 
+            const customers = customersResult.data || customersResult;
+            const invoices = invoicesResult.data || invoicesResult;
+            const customersList = Array.isArray(customers) ? customers : [];
+            const invoicesList = Array.isArray(invoices) ? invoices : [];
+
             // Calculate outstanding for each customer
-            recordsData = customers.map((c, idx) => {
-                const customerInvoices = invoices.filter(i => i.customerId === c.customerId);
+            recordsData = customersList.map((c, idx) => {
+                const customerInvoices = invoicesList.filter(i => i.customerId === c.customerId);
                 const outstanding = customerInvoices
                     .filter(i => i.status === 'Pending' || i.status === 'Overdue')
                     .reduce((sum, i) => sum + (i.totalAmount || 0), 0);
@@ -81,7 +87,7 @@
         document.getElementById('recordsCount').textContent = data.length + ' accounts';
 
         if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No account records found</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No account records found</td></tr>';
             return;
         }
 
@@ -95,6 +101,11 @@
                 <td><span class="badge ${typeClasses[r.customerType] || 'badge-neutral'}">${r.customerType}</span></td>
                 <td>${Format.currency(r.outstanding)}</td>
                 <td><span class="badge ${statusClasses[r.status]}">${r.status}</span></td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-primary" onclick="viewAccountDetail(${r.customerId})" title="View Details">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                </td>
             </tr>
         `).join('');
     }
@@ -107,6 +118,50 @@
             r.customerType.toLowerCase().includes(search)
         );
         renderRecords(filtered);
+    }
+
+    async function viewAccountDetail(customerId) {
+        try {
+            const [customerResult, invoicesResult] = await Promise.all([
+                API.get(`/customers/${customerId}`),
+                API.get('/invoices')
+            ]);
+            const customer = customerResult.data || customerResult;
+            const allInvoices = invoicesResult.data || invoicesResult;
+            const invoices = Array.isArray(allInvoices) ? allInvoices.filter(i => i.customerId === customerId) : [];
+
+            const name = customer.companyName || ((customer.firstName || '') + ' ' + (customer.lastName || '')).trim();
+            let html = `
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <strong>Customer:</strong> ${name}<br>
+                        <strong>Email:</strong> ${customer.email || '-'}<br>
+                        <strong>Phone:</strong> ${customer.phone || '-'}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Total Invoices:</strong> ${invoices.length}<br>
+                        <strong>Total Invoiced:</strong> ${Format.currency(invoices.reduce((s, i) => s + (i.totalAmount || 0), 0))}<br>
+                        <strong>Outstanding:</strong> <span class="text-danger">${Format.currency(invoices.filter(i => i.status !== 'Paid' && i.status !== 'Cancelled').reduce((s, i) => s + (i.balanceDue || 0), 0))}</span>
+                    </div>
+                </div>`;
+
+            if (invoices.length > 0) {
+                html += `<h6>Invoices</h6>
+                    <table class="table table-sm"><thead><tr><th>Invoice #</th><th>Date</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead>
+                    <tbody>${invoices.map(i => `<tr>
+                        <td>${i.invoiceNumber}</td>
+                        <td>${Format.date(i.invoiceDate)}</td>
+                        <td>${Format.currency(i.totalAmount)}</td>
+                        <td class="text-success">${Format.currency(i.paidAmount)}</td>
+                        <td class="${(i.balanceDue || 0) > 0 ? 'text-danger' : ''}">${Format.currency(i.balanceDue)}</td>
+                        <td>${Format.statusBadge(i.status)}</td>
+                    </tr>`).join('')}</tbody></table>`;
+            }
+
+            Modal.showDynamic('Account Details — ' + name, html);
+        } catch (error) {
+            Toast.error('Failed to load account details');
+        }
     }
 </script>
 }

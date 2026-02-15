@@ -14,7 +14,8 @@ const CONFIG = {
 const Icons = {
     view: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
     edit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
-    resolve: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+    resolve: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    delete: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'
 };
 
 // Toast Notification System
@@ -60,7 +61,8 @@ const API = {
     },
     get(endpoint) { return this.request(endpoint, 'GET'); },
     post(endpoint, data) { return this.request(endpoint, 'POST', data); },
-    put(endpoint, data) { return this.request(endpoint, 'PUT', data); }
+    put(endpoint, data) { return this.request(endpoint, 'PUT', data); },
+    delete(endpoint) { return this.request(endpoint, 'DELETE'); }
 };
 
 // Format Helpers
@@ -122,7 +124,7 @@ const SupportTickets = {
 
     async load() {
         try {
-            this.data = await API.get('/support/tickets');
+            this.data = await API.get('/tickets');
             this.render();
             this.updateStats();
         } catch (error) {
@@ -242,10 +244,27 @@ const SupportTickets = {
         Modal.show('ticketModal');
     },
 
+    openCreateModal() {
+        Modal.reset('ticketForm');
+        document.getElementById('ticketId').value = '';
+        Modal.show('ticketModal');
+    },
+
+    async delete(id) {
+        if (!confirm('Are you sure you want to delete this ticket?')) return;
+        try {
+            await API.delete(`/tickets/${id}`);
+            Toast.success('Ticket deleted successfully');
+            this.load();
+        } catch (error) {
+            Toast.error('Failed to delete ticket');
+        }
+    },
+
     async resolve(id) {
         if (!confirm('Mark this ticket as resolved?')) return;
         try {
-            await API.put(`/support/tickets/${id}/resolve`, {});
+            await API.put(`/tickets/${id}`, { status: 'Resolved' });
             Toast.success('Ticket resolved successfully');
             this.load();
         } catch (error) {
@@ -262,7 +281,7 @@ const SupportTickets = {
         };
 
         try {
-            await API.put(`/support/tickets/${data.ticketId}`, data);
+            await API.put(`/tickets/${data.ticketId}`, data);
             Toast.success('Ticket updated successfully');
             Modal.hide('ticketModal');
             this.load();
@@ -276,7 +295,7 @@ const SupportTickets = {
         if (!message) return;
 
         try {
-            await API.post(`/support/tickets/${id}/messages`, { message });
+            await API.post(`/tickets/${id}/reply`, { message });
             Toast.success('Message added');
             document.getElementById('newMessage').value = '';
             // Reload ticket details
@@ -288,7 +307,8 @@ const SupportTickets = {
 
     async loadMessages(id) {
         try {
-            const messages = await API.get(`/support/tickets/${id}/messages`);
+            const ticket = await API.get(`/tickets/${id}`);
+            const messages = ticket.messages || [];
             const container = document.getElementById('ticketMessages');
             if (!container) return;
 
@@ -354,6 +374,7 @@ const SupportTickets = {
                         <button class="btn btn-sm btn-outline-primary" onclick="SupportTickets.view(${t.ticketId})">${Icons.view}</button>
                         <button class="btn btn-sm btn-outline-warning" onclick="SupportTickets.edit(${t.ticketId})">${Icons.edit}</button>
                         ${t.status !== 'Resolved' && t.status !== 'Closed' ? `<button class="btn btn-sm btn-outline-success" onclick="SupportTickets.resolve(${t.ticketId})">${Icons.resolve}</button>` : ''}
+                        <button class="btn btn-sm btn-outline-danger" onclick="SupportTickets.delete(${t.ticketId})">${Icons.delete}</button>
                     </div>
                 </td>
             </tr>
@@ -584,7 +605,7 @@ document.addEventListener('DOMContentLoaded', function() {
     } else if (path === '/supportstaff' || path === '/supportstaff/') {
         // Dashboard - load stats
         Promise.all([
-            API.get('/support/tickets').catch(() => []),
+            API.get('/tickets').catch(() => []),
             API.get('/customers').catch(() => [])
         ]).then(([tickets, customers]) => {
             const open = tickets.filter(t => t.status === 'Open').length;

@@ -178,7 +178,7 @@
                     fetch('/api/orders').then(r=>r.json()).catch(()=>[]),
                     fetch('/api/customers').then(r=>r.json()).catch(()=>[]),
                     fetch('/api/products').then(r=>r.json()).catch(()=>[]),
-                    fetch('/api/support/tickets').then(r=>r.json()).catch(()=>[])
+                    fetch('/api/tickets').then(r=>r.json()).catch(()=>[])
                 ]);
                 const revenue = orders.reduce((s,o)=>s+(o.totalAmount||0),0);
                 document.getElementById('rptRevenue').textContent = '₱' + revenue.toLocaleString('en-PH',{minimumFractionDigits:2});

@@ -16,7 +16,8 @@ const Icons = {
     edit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
     add: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>',
     minus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>',
-    alert: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+    alert: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    delete: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'
 };
 
 // Toast System
@@ -157,6 +158,7 @@ const Products = {
                         <button class="btn btn-sm btn-outline-warning" onclick="Products.edit(${p.productId})">${Icons.edit}</button>
                         <button class="btn btn-sm btn-outline-success" onclick="Products.adjustStock(${p.productId}, 'add')">${Icons.add}</button>
                         <button class="btn btn-sm btn-outline-danger" onclick="Products.adjustStock(${p.productId}, 'subtract')">${Icons.minus}</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="Products.delete(${p.productId})">${Icons.delete}</button>
                     </div>
                 </td>
             </tr>
@@ -312,6 +314,23 @@ const Products = {
         document.getElementById('productDescription').value = product.description || '';
 
         Modal.show('productModal');
+    },
+
+    openCreateModal() {
+        Modal.reset('productForm');
+        document.getElementById('productId').value = '';
+        Modal.show('productModal');
+    },
+
+    async delete(id) {
+        if (!confirm('Are you sure you want to delete this product?')) return;
+        try {
+            await API.delete(`/products/${id}`);
+            Toast.success('Product deleted successfully');
+            this.load();
+        } catch (error) {
+            Toast.error('Failed to delete product');
+        }
     },
 
     adjustStock(id, type) {
@@ -556,7 +575,9 @@ const Suppliers = {
 
     async load() {
         try {
-            this.data = await API.get('/suppliers');
+            const result = await API.get('/suppliers');
+            // Handle both array and { data: [...] } response formats
+            this.data = Array.isArray(result) ? result : (result.data || []);
             this.render();
         } catch (error) {
             Toast.error('Failed to load suppliers');
@@ -581,7 +602,7 @@ const Suppliers = {
                 </td>
                 <td>${s.email || '-'}</td>
                 <td>${s.phone || '-'}</td>
-                <td><span class="badge bg-${s.isActive ? 'success' : 'secondary'}">${s.isActive ? 'Active' : 'Inactive'}</span></td>
+                <td><span class="badge bg-${s.status === 'Active' ? 'success' : 'secondary'}">${s.status || 'Active'}</span></td>
                 <td class="text-center">
                     <div class="btn-group">
                         <button class="btn btn-sm btn-outline-primary" onclick="Suppliers.view(${s.supplierId})">${Icons.view}</button>
@@ -608,7 +629,7 @@ const Suppliers = {
                         <h5 class="mb-1">${s.supplierName}</h5>
                         <small class="text-muted">${s.supplierCode || 'SUP-' + s.supplierId}</small>
                         <div class="mt-2">
-                            <span class="badge bg-${s.isActive ? 'success' : 'secondary'}">${s.isActive ? 'Active' : 'Inactive'}</span>
+                            <span class="badge bg-${s.status === 'Active' ? 'success' : 'secondary'}">${s.status || 'Active'}</span>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -627,6 +648,22 @@ const Suppliers = {
                         <div class="detail-label">Address</div>
                         <div class="detail-value">${s.address || '-'}</div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">City</div>
+                        <div class="detail-value">${s.city || '-'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Country</div>
+                        <div class="detail-value">${s.country || '-'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Website</div>
+                        <div class="detail-value">${s.website || '-'}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detail-label">Payment Terms</div>
+                        <div class="detail-value">${s.paymentTerms || '-'}</div>
+                    </div>
                 </div>
             `;
         }
@@ -644,8 +681,16 @@ const Suppliers = {
         document.getElementById('supplierEmail').value = supplier.email || '';
         document.getElementById('supplierPhone').value = supplier.phone || '';
         document.getElementById('supplierAddress').value = supplier.address || '';
-        document.getElementById('supplierActive').checked = supplier.isActive;
+        const activeCheckbox = document.getElementById('supplierActive');
+        if (activeCheckbox) activeCheckbox.checked = supplier.status === 'Active';
 
+        Modal.show('supplierModal');
+    },
+
+    openCreateModal() {
+        Modal.reset('supplierForm');
+        document.getElementById('supplierId').value = '';
+        document.getElementById('supplierActive').checked = true;
         Modal.show('supplierModal');
     },
 
@@ -657,7 +702,7 @@ const Suppliers = {
             email: document.getElementById('supplierEmail').value,
             phone: document.getElementById('supplierPhone').value,
             address: document.getElementById('supplierAddress').value,
-            isActive: document.getElementById('supplierActive').checked
+            status: document.getElementById('supplierActive').checked ? 'Active' : 'Inactive'
         };
 
         try {
@@ -687,9 +732,9 @@ const Suppliers = {
         }
         
         if (status === 'active') {
-            filtered = filtered.filter(s => s.isActive);
+            filtered = filtered.filter(s => s.status === 'Active');
         } else if (status === 'inactive') {
-            filtered = filtered.filter(s => !s.isActive);
+            filtered = filtered.filter(s => s.status !== 'Active');
         }
         
         this.renderFiltered(filtered);
@@ -713,7 +758,7 @@ const Suppliers = {
                 </td>
                 <td>${s.email || '-'}</td>
                 <td>${s.phone || '-'}</td>
-                <td><span class="badge bg-${s.isActive ? 'success' : 'secondary'}">${s.isActive ? 'Active' : 'Inactive'}</span></td>
+                <td><span class="badge bg-${s.status === 'Active' ? 'success' : 'secondary'}">${s.status || 'Active'}</span></td>
                 <td class="text-center">
                     <div class="btn-group">
                         <button class="btn btn-sm btn-outline-primary" onclick="Suppliers.view(${s.supplierId})">${Icons.view}</button>

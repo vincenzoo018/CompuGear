@@ -223,7 +223,7 @@
 
         async function loadSupportDashboard() {
             try {
-                const tickets = await fetch('/api/support/tickets').then(r => r.json()).catch(() => []);
+                const tickets = await fetch('/api/tickets').then(r => r.json()).catch(() => []);
 
                 // Calculate stats
                 const openTickets = tickets.filter(t => t.status === 'Open' || t.status === 'In Progress');

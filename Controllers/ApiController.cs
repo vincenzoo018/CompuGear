@@ -2129,64 +2129,7 @@ namespace CompuGear.Controllers
 
         #endregion
 
-        #region Billing - Invoices
-
-        [HttpGet("invoices")]
-        public async Task<IActionResult> GetInvoices()
-        {
-            try
-            {
-                var companyId = GetCompanyId();
-                var invoices = await _context.Invoices
-                    .Include(i => i.Customer)
-                    .Where(i => companyId == null || i.CompanyId == companyId)
-                    .OrderByDescending(i => i.CreatedAt)
-                    .Select(i => new
-                    {
-                        i.InvoiceId,
-                        i.InvoiceNumber,
-                        i.CustomerId,
-                        CustomerName = i.Customer != null ? i.Customer.FirstName + " " + i.Customer.LastName : "",
-                        i.InvoiceDate,
-                        i.DueDate,
-                        i.Status,
-                        i.Subtotal,
-                        i.TaxAmount,
-                        i.TotalAmount,
-                        i.PaidAmount,
-                        Balance = i.TotalAmount - i.PaidAmount,
-                        i.Notes,
-                        i.CreatedAt
-                    })
-                    .ToListAsync();
-
-                return Ok(invoices);
-            }
-            catch (Exception)
-            {
-                return Ok(new List<object>());
-            }
-        }
-
-        [HttpGet("invoices/{id}")]
-        public async Task<IActionResult> GetInvoice(int id)
-        {
-            try
-            {
-                var companyId = GetCompanyId();
-                var invoice = await _context.Invoices
-                    .Include(i => i.Customer)
-                    .Include(i => i.Items)
-                    .FirstOrDefaultAsync(i => i.InvoiceId == id && (companyId == null || i.CompanyId == companyId));
-
-                if (invoice == null) return NotFound();
-                return Ok(invoice);
-            }
-            catch (Exception)
-            {
-                return NotFound();
-            }
-        }
+        #region Billing - Invoices (Create/Update/Delete/PDF/Financial)
 
         [HttpPost("invoices")]
         public async Task<IActionResult> CreateInvoice([FromBody] Invoice invoice)
@@ -2247,38 +2190,6 @@ namespace CompuGear.Controllers
                 await _context.SaveChangesAsync();
 
                 return Ok(new { success = true, message = "Invoice deleted successfully" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { success = false, message = ex.Message });
-            }
-        }
-
-        // PUT: /api/invoices/{id}/status - Toggle invoice status (Activate/Void/Cancel)
-        [HttpPut("invoices/{id}/status")]
-        public async Task<IActionResult> ToggleInvoiceStatus(int id, [FromBody] InvoiceStatusModel model)
-        {
-            try
-            {
-                var companyId = GetCompanyId();
-                var invoice = await _context.Invoices.FindAsync(id);
-                if (invoice == null || (companyId != null && invoice.CompanyId != companyId)) return NotFound(new { success = false, message = "Invoice not found" });
-
-                invoice.Status = model.Status;
-                invoice.UpdatedAt = DateTime.UtcNow;
-
-                // If reactivating, recalculate balance
-                if (model.Status != "Cancelled" && model.Status != "Void")
-                {
-                    invoice.BalanceDue = invoice.TotalAmount - invoice.PaidAmount;
-                    if (invoice.PaidAmount >= invoice.TotalAmount)
-                        invoice.Status = "Paid";
-                    else if (invoice.PaidAmount > 0)
-                        invoice.Status = "Partial";
-                }
-
-                await _context.SaveChangesAsync();
-                return Ok(new { success = true, message = $"Invoice status updated to {model.Status}" });
             }
             catch (Exception ex)
             {
@@ -2457,44 +2368,7 @@ namespace CompuGear.Controllers
 
         #endregion
 
-        #region Billing - Payments
-
-        [HttpGet("payments")]
-        public async Task<IActionResult> GetPayments()
-        {
-            try
-            {
-                var companyId = GetCompanyId();
-                var payments = await _context.Payments
-                    .Where(p => companyId == null || p.CompanyId == companyId)
-                    .Include(p => p.Customer)
-                    .Include(p => p.Invoice)
-                    .OrderByDescending(p => p.PaymentDate)
-                    .Select(p => new
-                    {
-                        p.PaymentId,
-                        p.PaymentNumber,
-                        p.CustomerId,
-                        p.InvoiceId,
-                        CustomerName = p.Customer != null ? p.Customer.FirstName + " " + p.Customer.LastName : "",
-                        InvoiceNumber = p.Invoice != null ? p.Invoice.InvoiceNumber : "",
-                        p.PaymentDate,
-                        p.Amount,
-                        PaymentMethod = p.PaymentMethodType,
-                        p.Status,
-                        TransactionReference = p.ReferenceNumber,
-                        p.Notes,
-                        p.CreatedAt
-                    })
-                    .ToListAsync();
-
-                return Ok(payments);
-            }
-            catch (Exception)
-            {
-                return Ok(new List<object>());
-            }
-        }
+        #region Billing - Payments (Create)
 
         [HttpPost("payments")]
         public async Task<IActionResult> CreatePayment([FromBody] Payment payment)
@@ -2535,52 +2409,7 @@ namespace CompuGear.Controllers
 
         #endregion
 
-        #region Suppliers
-
-        [HttpGet("suppliers")]
-        public async Task<IActionResult> GetSuppliers()
-        {
-            try
-            {
-                var companyId = GetCompanyId();
-                var suppliers = await _context.Suppliers
-                    .Where(s => companyId == null || s.CompanyId == companyId)
-                    .OrderBy(s => s.SupplierName)
-                    .Select(s => new
-                    {
-                        s.SupplierId,
-                        s.SupplierCode,
-                        s.SupplierName,
-                        s.ContactPerson,
-                        s.Email,
-                        s.Phone,
-                        s.Status
-                    })
-                    .ToListAsync();
-
-                return Ok(suppliers);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
-        }
-
-        [HttpGet("suppliers/{id}")]
-        public async Task<IActionResult> GetSupplier(int id)
-        {
-            try
-            {
-                var companyId = GetCompanyId();
-                var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierId == id && (companyId == null || s.CompanyId == companyId));
-                if (supplier == null) return NotFound();
-                return Ok(supplier);
-            }
-            catch (Exception)
-            {
-                return NotFound();
-            }
-        }
+        #region Supplier Products
 
         [HttpGet("suppliers/{id}/products")]
         public async Task<IActionResult> GetSupplierProducts(int id)
@@ -2616,60 +2445,6 @@ namespace CompuGear.Controllers
             catch (Exception)
             {
                 return Ok(new List<object>());
-            }
-        }
-
-        [HttpPost("suppliers")]
-        public async Task<IActionResult> CreateSupplier([FromBody] Supplier supplier)
-        {
-            try
-            {
-                var companyId = GetCompanyId();
-                supplier.CompanyId = companyId;
-                supplier.SupplierCode = $"SUP-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
-                supplier.CreatedAt = DateTime.UtcNow;
-                supplier.UpdatedAt = DateTime.UtcNow;
-
-                _context.Suppliers.Add(supplier);
-                await _context.SaveChangesAsync();
-
-                return Ok(new { success = true, message = "Supplier created successfully", data = supplier });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
-            }
-        }
-
-        [HttpPut("suppliers/{id}")]
-        public async Task<IActionResult> UpdateSupplier(int id, [FromBody] Supplier supplier)
-        {
-            try
-            {
-                var companyId = GetCompanyId();
-                var existing = await _context.Suppliers.FindAsync(id);
-                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
-
-                existing.SupplierName = supplier.SupplierName;
-                existing.ContactPerson = supplier.ContactPerson;
-                existing.Email = supplier.Email;
-                existing.Phone = supplier.Phone;
-                existing.Address = supplier.Address;
-                existing.City = supplier.City;
-                existing.Country = supplier.Country;
-                existing.Website = supplier.Website;
-                existing.PaymentTerms = supplier.PaymentTerms;
-                existing.Status = supplier.Status;
-                existing.Rating = supplier.Rating;
-                existing.Notes = supplier.Notes;
-                existing.UpdatedAt = DateTime.UtcNow;
-
-                await _context.SaveChangesAsync();
-                return Ok(new { success = true, message = "Supplier updated successfully" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
             }
         }
 
@@ -3472,6 +3247,517 @@ namespace CompuGear.Controllers
             {
                 return BadRequest(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
             }
+        }
+
+        #endregion
+
+        #region ===== INVOICES =====
+
+        [HttpGet("invoices")]
+        public async Task<IActionResult> GetInvoices()
+        {
+            var companyId = GetCompanyId();
+            var invoices = await _context.Invoices
+                .Include(i => i.Customer)
+                .Include(i => i.Order)
+                .Include(i => i.Items)
+                .Where(i => companyId == null || i.CompanyId == companyId)
+                .OrderByDescending(i => i.CreatedAt)
+                .Select(i => new
+                {
+                    i.InvoiceId,
+                    i.InvoiceNumber,
+                    i.OrderId,
+                    OrderNumber = i.Order != null ? i.Order.OrderNumber : null,
+                    i.CustomerId,
+                    CustomerName = i.Customer != null ? i.Customer.FirstName + " " + i.Customer.LastName : "N/A",
+                    i.InvoiceDate,
+                    i.DueDate,
+                    i.Subtotal,
+                    i.DiscountAmount,
+                    i.TaxAmount,
+                    i.ShippingAmount,
+                    i.TotalAmount,
+                    i.PaidAmount,
+                    i.BalanceDue,
+                    i.Status,
+                    i.BillingName,
+                    i.BillingAddress,
+                    i.BillingCity,
+                    i.BillingCountry,
+                    i.PaymentTerms,
+                    i.Notes,
+                    i.SentAt,
+                    i.PaidAt,
+                    i.CreatedAt,
+                    Items = i.Items.Select(item => new
+                    {
+                        item.ItemId,
+                        item.ProductId,
+                        item.Description,
+                        item.Quantity,
+                        item.UnitPrice,
+                        item.DiscountAmount,
+                        item.TaxAmount,
+                        item.TotalPrice
+                    })
+                })
+                .ToListAsync();
+
+            return Ok(new { success = true, data = invoices });
+        }
+
+        [HttpGet("invoices/{id}")]
+        public async Task<IActionResult> GetInvoice(int id)
+        {
+            var companyId = GetCompanyId();
+            var invoice = await _context.Invoices
+                .Include(i => i.Customer)
+                .Include(i => i.Order)
+                .Include(i => i.Items)
+                .Where(i => companyId == null || i.CompanyId == companyId)
+                .Where(i => i.InvoiceId == id)
+                .Select(i => new
+                {
+                    i.InvoiceId,
+                    i.InvoiceNumber,
+                    i.OrderId,
+                    OrderNumber = i.Order != null ? i.Order.OrderNumber : null,
+                    i.CustomerId,
+                    CustomerName = i.Customer != null ? i.Customer.FirstName + " " + i.Customer.LastName : "N/A",
+                    CustomerEmail = i.Customer != null ? i.Customer.Email : "",
+                    i.InvoiceDate,
+                    i.DueDate,
+                    i.Subtotal,
+                    i.DiscountAmount,
+                    i.TaxAmount,
+                    i.ShippingAmount,
+                    i.TotalAmount,
+                    i.PaidAmount,
+                    i.BalanceDue,
+                    i.Status,
+                    i.BillingName,
+                    i.BillingAddress,
+                    i.BillingCity,
+                    i.BillingState,
+                    i.BillingZipCode,
+                    i.BillingCountry,
+                    i.BillingEmail,
+                    i.PaymentTerms,
+                    i.Notes,
+                    i.InternalNotes,
+                    i.SentAt,
+                    i.PaidAt,
+                    i.CreatedAt,
+                    Items = i.Items.Select(item => new
+                    {
+                        item.ItemId,
+                        item.ProductId,
+                        item.Description,
+                        item.Quantity,
+                        item.UnitPrice,
+                        item.DiscountAmount,
+                        item.TaxAmount,
+                        item.TotalPrice
+                    })
+                })
+                .FirstOrDefaultAsync();
+
+            if (invoice == null)
+                return NotFound(new { success = false, message = "Invoice not found" });
+
+            return Ok(new { success = true, data = invoice });
+        }
+
+        [HttpPut("invoices/{id}/status")]
+        public async Task<IActionResult> UpdateInvoiceStatus(int id, [FromBody] InvoiceStatusModel model)
+        {
+            var companyId = GetCompanyId();
+            var invoice = await _context.Invoices
+                .Where(i => companyId == null || i.CompanyId == companyId)
+                .FirstOrDefaultAsync(i => i.InvoiceId == id);
+
+            if (invoice == null)
+                return NotFound(new { success = false, message = "Invoice not found" });
+
+            invoice.Status = model.Status;
+            invoice.UpdatedAt = DateTime.UtcNow;
+            if (model.Status == "Sent") invoice.SentAt = DateTime.UtcNow;
+            if (model.Status == "Paid") invoice.PaidAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Invoice status updated" });
+        }
+
+        #endregion
+
+        #region ===== PAYMENTS =====
+
+        [HttpGet("payments")]
+        public async Task<IActionResult> GetPayments()
+        {
+            var companyId = GetCompanyId();
+            var payments = await _context.Payments
+                .Include(p => p.Customer)
+                .Include(p => p.Invoice)
+                .Include(p => p.Order)
+                .Where(p => companyId == null || p.CompanyId == companyId)
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => new
+                {
+                    p.PaymentId,
+                    p.PaymentNumber,
+                    p.InvoiceId,
+                    InvoiceNumber = p.Invoice != null ? p.Invoice.InvoiceNumber : null,
+                    p.OrderId,
+                    OrderNumber = p.Order != null ? p.Order.OrderNumber : null,
+                    p.CustomerId,
+                    CustomerName = p.Customer != null ? p.Customer.FirstName + " " + p.Customer.LastName : "N/A",
+                    p.PaymentDate,
+                    p.Amount,
+                    p.PaymentMethodType,
+                    p.Status,
+                    p.TransactionId,
+                    p.ReferenceNumber,
+                    p.Currency,
+                    p.Notes,
+                    p.FailureReason,
+                    p.ProcessedAt,
+                    p.CreatedAt
+                })
+                .ToListAsync();
+
+            return Ok(new { success = true, data = payments });
+        }
+
+        [HttpGet("payments/{id}")]
+        public async Task<IActionResult> GetPayment(int id)
+        {
+            var companyId = GetCompanyId();
+            var payment = await _context.Payments
+                .Include(p => p.Customer)
+                .Include(p => p.Invoice)
+                .Include(p => p.Order)
+                .Include(p => p.Refunds)
+                .Where(p => companyId == null || p.CompanyId == companyId)
+                .Where(p => p.PaymentId == id)
+                .Select(p => new
+                {
+                    p.PaymentId,
+                    p.PaymentNumber,
+                    p.InvoiceId,
+                    InvoiceNumber = p.Invoice != null ? p.Invoice.InvoiceNumber : null,
+                    p.OrderId,
+                    OrderNumber = p.Order != null ? p.Order.OrderNumber : null,
+                    p.CustomerId,
+                    CustomerName = p.Customer != null ? p.Customer.FirstName + " " + p.Customer.LastName : "N/A",
+                    p.PaymentDate,
+                    p.Amount,
+                    p.PaymentMethodType,
+                    p.Status,
+                    p.TransactionId,
+                    p.ReferenceNumber,
+                    p.Currency,
+                    p.Notes,
+                    p.FailureReason,
+                    p.ProcessedAt,
+                    p.CreatedAt,
+                    Refunds = p.Refunds.Select(r => new
+                    {
+                        r.RefundId,
+                        r.RefundNumber,
+                        r.Amount,
+                        r.Reason,
+                        r.Status,
+                        r.RefundMethod,
+                        r.RequestedAt
+                    })
+                })
+                .FirstOrDefaultAsync();
+
+            if (payment == null)
+                return NotFound(new { success = false, message = "Payment not found" });
+
+            return Ok(new { success = true, data = payment });
+        }
+
+        #endregion
+
+        #region ===== REFUNDS =====
+
+        [HttpGet("refunds")]
+        public async Task<IActionResult> GetRefunds()
+        {
+            var companyId = GetCompanyId();
+            var refunds = await _context.Refunds
+                .Include(r => r.Payment)
+                .Include(r => r.Customer)
+                .Include(r => r.Order)
+                .Where(r => companyId == null || r.CompanyId == companyId)
+                .OrderByDescending(r => r.RequestedAt)
+                .Select(r => new
+                {
+                    r.RefundId,
+                    r.RefundNumber,
+                    r.PaymentId,
+                    PaymentNumber = r.Payment != null ? r.Payment.PaymentNumber : null,
+                    r.OrderId,
+                    OrderNumber = r.Order != null ? r.Order.OrderNumber : null,
+                    r.CustomerId,
+                    CustomerName = r.Customer != null ? r.Customer.FirstName + " " + r.Customer.LastName : "N/A",
+                    r.Amount,
+                    r.Reason,
+                    r.Status,
+                    r.RefundMethod,
+                    r.RequestedAt,
+                    r.ApprovedAt,
+                    r.ProcessedAt
+                })
+                .ToListAsync();
+
+            return Ok(new { success = true, data = refunds });
+        }
+
+        [HttpPut("refunds/{id}/status")]
+        public async Task<IActionResult> UpdateRefundStatus(int id, [FromBody] StatusUpdateRequest model)
+        {
+            var companyId = GetCompanyId();
+            var refund = await _context.Refunds
+                .Where(r => companyId == null || r.CompanyId == companyId)
+                .FirstOrDefaultAsync(r => r.RefundId == id);
+
+            if (refund == null)
+                return NotFound(new { success = false, message = "Refund not found" });
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            refund.Status = model.Status;
+            if (model.Status == "Approved") { refund.ApprovedAt = DateTime.UtcNow; refund.ApprovedBy = userId; }
+            if (model.Status == "Processed") { refund.ProcessedAt = DateTime.UtcNow; refund.ProcessedBy = userId; }
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Refund status updated" });
+        }
+
+        #endregion
+
+        #region ===== SUPPLIERS =====
+
+        [HttpGet("suppliers")]
+        public async Task<IActionResult> GetSuppliers()
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                var suppliers = await _context.Suppliers
+                    .Where(s => companyId == null || s.CompanyId == companyId)
+                    .OrderBy(s => s.SupplierName)
+                    .Select(s => new
+                    {
+                        s.SupplierId,
+                        s.SupplierCode,
+                        s.SupplierName,
+                        s.ContactPerson,
+                        s.Email,
+                        s.Phone,
+                        s.Address,
+                        s.City,
+                        s.Country,
+                        s.Website,
+                        s.PaymentTerms,
+                        s.Status,
+                        s.Rating,
+                        s.Notes,
+                        s.CreatedAt,
+                        PurchaseOrderCount = s.PurchaseOrders.Count()
+                    })
+                    .ToListAsync();
+
+                return Ok(suppliers);
+            }
+            catch (Exception)
+            {
+                return Ok(new List<object>());
+            }
+        }
+
+        [HttpGet("suppliers/{id}")]
+        public async Task<IActionResult> GetSupplier(int id)
+        {
+            var companyId = GetCompanyId();
+            var supplier = await _context.Suppliers
+                .Include(s => s.PurchaseOrders)
+                .Where(s => companyId == null || s.CompanyId == companyId)
+                .Where(s => s.SupplierId == id)
+                .Select(s => new
+                {
+                    s.SupplierId,
+                    s.SupplierCode,
+                    s.SupplierName,
+                    s.ContactPerson,
+                    s.Email,
+                    s.Phone,
+                    s.Address,
+                    s.City,
+                    s.Country,
+                    s.Website,
+                    s.PaymentTerms,
+                    s.Status,
+                    s.Rating,
+                    s.Notes,
+                    s.CreatedAt,
+                    PurchaseOrders = s.PurchaseOrders.Select(po => new
+                    {
+                        po.PurchaseOrderId,
+                        po.OrderDate,
+                        po.ExpectedDeliveryDate,
+                        po.Status,
+                        po.TotalAmount
+                    })
+                })
+                .FirstOrDefaultAsync();
+
+            if (supplier == null)
+                return NotFound(new { success = false, message = "Supplier not found" });
+
+            return Ok(new { success = true, data = supplier });
+        }
+
+        [HttpPost("suppliers")]
+        public async Task<IActionResult> CreateSupplier([FromBody] Supplier model)
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                model.CompanyId = companyId;
+                model.CreatedAt = DateTime.UtcNow;
+                model.UpdatedAt = DateTime.UtcNow;
+
+                // Generate supplier code
+                var lastCode = await _context.Suppliers
+                    .Where(s => s.SupplierCode != null)
+                    .OrderByDescending(s => s.SupplierCode)
+                    .Select(s => s.SupplierCode)
+                    .FirstOrDefaultAsync();
+                int nextNum = 1;
+                if (lastCode != null && lastCode.StartsWith("SUP-"))
+                    int.TryParse(lastCode.Replace("SUP-", ""), out nextNum);
+                model.SupplierCode = $"SUP-{(nextNum + 1):D3}";
+
+                _context.Suppliers.Add(model);
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true, message = "Supplier created", data = new { model.SupplierId } });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
+            }
+        }
+
+        [HttpPut("suppliers/{id}")]
+        public async Task<IActionResult> UpdateSupplier(int id, [FromBody] Supplier model)
+        {
+            var companyId = GetCompanyId();
+            var supplier = await _context.Suppliers
+                .Where(s => companyId == null || s.CompanyId == companyId)
+                .FirstOrDefaultAsync(s => s.SupplierId == id);
+
+            if (supplier == null)
+                return NotFound(new { success = false, message = "Supplier not found" });
+
+            supplier.SupplierName = model.SupplierName;
+            supplier.ContactPerson = model.ContactPerson;
+            supplier.Email = model.Email;
+            supplier.Phone = model.Phone;
+            supplier.Address = model.Address;
+            supplier.City = model.City;
+            supplier.Country = model.Country;
+            supplier.Website = model.Website;
+            supplier.PaymentTerms = model.PaymentTerms;
+            supplier.Status = model.Status;
+            supplier.Rating = model.Rating;
+            supplier.Notes = model.Notes;
+            supplier.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true, message = "Supplier updated" });
+        }
+
+        #endregion
+
+        #region ===== INVENTORY TRANSACTIONS =====
+
+        [HttpGet("inventory-transactions")]
+        public async Task<IActionResult> GetInventoryTransactions([FromQuery] int? productId)
+        {
+            var query = _context.InventoryTransactions
+                .Include(t => t.Product)
+                .Include(t => t.CreatedByUser)
+                .AsQueryable();
+
+            if (productId.HasValue)
+                query = query.Where(t => t.ProductId == productId.Value);
+
+            // Filter by company via product
+            var companyId = GetCompanyId();
+            if (companyId != null)
+                query = query.Where(t => t.Product != null && t.Product.CompanyId == companyId);
+
+            var transactions = await query
+                .OrderByDescending(t => t.TransactionDate)
+                .Select(t => new
+                {
+                    t.TransactionId,
+                    t.ProductId,
+                    ProductName = t.Product != null ? t.Product.ProductName : "N/A",
+                    ProductCode = t.Product != null ? t.Product.ProductCode : "",
+                    t.TransactionType,
+                    t.Quantity,
+                    t.PreviousStock,
+                    t.NewStock,
+                    t.UnitCost,
+                    t.TotalCost,
+                    t.ReferenceType,
+                    t.ReferenceId,
+                    t.Notes,
+                    t.TransactionDate,
+                    CreatedBy = t.CreatedByUser != null ? t.CreatedByUser.FirstName + " " + t.CreatedByUser.LastName : "System"
+                })
+                .Take(100)
+                .ToListAsync();
+
+            return Ok(new { success = true, data = transactions });
+        }
+
+        #endregion
+
+        #region ===== ACTIVITY LOGS =====
+
+        [HttpGet("activity-logs")]
+        public async Task<IActionResult> GetActivityLogs([FromQuery] string? module, [FromQuery] int? limit)
+        {
+            var query = _context.ActivityLogs.AsQueryable();
+
+            if (!string.IsNullOrEmpty(module))
+                query = query.Where(a => a.Module == module);
+
+            var logs = await query
+                .OrderByDescending(a => a.CreatedAt)
+                .Take(limit ?? 50)
+                .Select(a => new
+                {
+                    a.LogId,
+                    a.UserId,
+                    a.UserName,
+                    a.Action,
+                    a.Module,
+                    a.EntityType,
+                    a.EntityId,
+                    a.Description,
+                    a.CreatedAt
+                })
+                .ToListAsync();
+
+            return Ok(new { success = true, data = logs });
         }
 
         #endregion

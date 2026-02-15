@@ -475,7 +475,19 @@
     }
 
     function exportCustomers() {
-        Toast.success('Exporting customer data...');
+        const data = Customers.data || [];
+        if (data.length === 0) { Toast.error('No customers to export'); return; }
+        const rows = [['Customer Code', 'Name', 'Email', 'Phone', 'Company', 'Status']];
+        data.forEach(c => {
+            rows.push([c.customerCode || '', (c.firstName || '') + ' ' + (c.lastName || ''), c.email || '', c.phone || '', c.companyName || '', c.status || '']);
+        });
+        const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `customers_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+        Toast.success('Customers exported!');
     }
 </script>
 }

@@ -14,6 +14,7 @@ const CONFIG = {
 const Icons = {
     view: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
     edit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+    delete: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
     toggleOn: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="16" cy="12" r="3"/></svg>',
     toggleOff: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="8" cy="12" r="3"/></svg>'
 };
@@ -157,6 +158,7 @@ const Campaigns = {
                         <button class="btn btn-sm btn-outline-${c.status === 'Active' ? 'danger' : 'success'}" onclick="Campaigns.toggleStatus(${c.campaignId})">
                             ${c.status === 'Active' ? Icons.toggleOff : Icons.toggleOn}
                         </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="Campaigns.delete(${c.campaignId})">${Icons.delete}</button>
                     </div>
                 </td>
             </tr>
@@ -303,6 +305,17 @@ const Campaigns = {
         }
     },
 
+    async delete(id) {
+        if (!confirm('Are you sure you want to delete this campaign?')) return;
+        try {
+            await API.delete(`/campaigns/${id}`);
+            Toast.success('Campaign deleted successfully');
+            this.load();
+        } catch (error) {
+            Toast.error('Failed to delete campaign');
+        }
+    },
+
     filter(search = '', status = '', type = '') {
         let filtered = this.data;
         
@@ -355,6 +368,7 @@ const Campaigns = {
                         <button class="btn btn-sm btn-outline-${c.status === 'Active' ? 'danger' : 'success'}" onclick="Campaigns.toggleStatus(${c.campaignId})">
                             ${c.status === 'Active' ? Icons.toggleOff : Icons.toggleOn}
                         </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="Campaigns.delete(${c.campaignId})">${Icons.delete}</button>
                     </div>
                 </td>
             </tr>
@@ -398,10 +412,12 @@ const Promotions = {
                 <td>${Format.statusBadge(p.isActive ? 'Active' : 'Inactive')}</td>
                 <td class="text-center">
                     <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-primary" onclick="Promotions.view(${p.promotionId})">${Icons.view}</button>
                         <button class="btn btn-sm btn-outline-warning" onclick="Promotions.edit(${p.promotionId})">${Icons.edit}</button>
                         <button class="btn btn-sm btn-outline-${p.isActive ? 'danger' : 'success'}" onclick="Promotions.toggle(${p.promotionId})">
                             ${p.isActive ? Icons.toggleOff : Icons.toggleOn}
                         </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="Promotions.delete(${p.promotionId})">${Icons.delete}</button>
                     </div>
                 </td>
             </tr>
@@ -422,6 +438,22 @@ const Promotions = {
         this.currentId = id;
         const promo = this.data.find(p => p.promotionId === id);
         if (!promo) return;
+
+        document.getElementById('promotionId').value = id;
+        document.getElementById('promoCode').value = promo.promoCode || '';
+        document.getElementById('promoName').value = promo.promoName || '';
+        document.getElementById('discountType').value = promo.discountType || '';
+        document.getElementById('discountValue').value = promo.discountValue || '';
+        document.getElementById('promoStartDate').value = promo.startDate?.split('T')[0] || '';
+        document.getElementById('promoEndDate').value = promo.endDate?.split('T')[0] || '';
+        document.getElementById('usageLimit').value = promo.usageLimit || '';
+
+        Modal.show('promotionModal');
+    },
+
+    openCreateModal() {
+        Modal.reset('promotionForm');
+        document.getElementById('promotionId').value = '';
         Modal.show('promotionModal');
     },
 
@@ -477,6 +509,17 @@ const Promotions = {
             this.load();
         } catch (error) {
             Toast.error('Failed to update promotion');
+        }
+    },
+
+    async delete(id) {
+        if (!confirm('Are you sure you want to delete this promotion?')) return;
+        try {
+            await API.delete(`/promotions/${id}`);
+            Toast.success('Promotion deleted successfully');
+            this.load();
+        } catch (error) {
+            Toast.error('Failed to delete promotion');
         }
     },
 
@@ -550,6 +593,7 @@ const Promotions = {
                         <button class="btn btn-sm btn-outline-${p.isActive ? 'danger' : 'success'}" onclick="Promotions.toggle(${p.promotionId})">
                             ${p.isActive ? Icons.toggleOff : Icons.toggleOn}
                         </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="Promotions.delete(${p.promotionId})">${Icons.delete}</button>
                     </div>
                 </td>
             </tr>
@@ -573,7 +617,7 @@ const Segments = {
     },
 
     render() {
-        const container = document.getElementById('segmentsContainer');
+        const container = document.getElementById('segmentsGrid') || document.getElementById('segmentsContainer');
         if (!container) return;
 
         if (!this.data || Object.keys(this.data).length === 0) {
@@ -614,15 +658,33 @@ const Analytics = {
                 API.get('/promotions').catch(() => [])
             ]);
 
+            this.renderSummaryCards(campaigns, promotions);
             this.renderCampaignPerformance(campaigns);
             this.renderPromotionUsage(promotions);
+            this.renderTopCampaigns(campaigns);
+            this.renderTopPromotions(promotions);
         } catch (error) {
             Toast.error('Failed to load analytics');
         }
     },
 
+    renderSummaryCards(campaigns, promotions) {
+        const el = id => document.getElementById(id);
+        if (el('totalCampaigns')) el('totalCampaigns').textContent = campaigns.length;
+        const totalReach = campaigns.reduce((sum, c) => sum + (c.totalReach || 0), 0);
+        if (el('totalReach')) el('totalReach').textContent = totalReach >= 1000 ? (totalReach / 1000).toFixed(1) + 'K' : totalReach;
+        const totalClicks = campaigns.reduce((sum, c) => sum + (c.clicks || 0), 0);
+        const totalImpressions = campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0);
+        const engRate = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(1) : 0;
+        if (el('engagementRate')) el('engagementRate').textContent = engRate + '%';
+        const totalSpend = campaigns.reduce((sum, c) => sum + (c.actualSpend || 0), 0);
+        const totalRevenue = campaigns.reduce((sum, c) => sum + (c.revenue || 0), 0);
+        const roi = totalSpend > 0 ? (((totalRevenue - totalSpend) / totalSpend) * 100).toFixed(1) : 0;
+        if (el('roi')) el('roi').textContent = roi + '%';
+    },
+
     renderCampaignPerformance(campaigns) {
-        const ctx = document.getElementById('campaignChart')?.getContext('2d');
+        const ctx = (document.getElementById('performanceChart') || document.getElementById('campaignChart'))?.getContext('2d');
         if (!ctx) return;
 
         const active = campaigns.filter(c => c.status === 'Active').length;
@@ -644,10 +706,10 @@ const Analytics = {
     },
 
     renderPromotionUsage(promotions) {
-        const ctx = document.getElementById('promotionChart')?.getContext('2d');
+        const ctx = (document.getElementById('campaignTypeChart') || document.getElementById('promotionChart'))?.getContext('2d');
         if (!ctx) return;
 
-        const labels = promotions.slice(0, 5).map(p => p.promoCode);
+        const labels = promotions.slice(0, 5).map(p => p.promoCode || p.promotionName || 'N/A');
         const data = promotions.slice(0, 5).map(p => p.usageCount || 0);
 
         new Chart(ctx, {
@@ -662,6 +724,40 @@ const Analytics = {
             },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
+    },
+
+    renderTopCampaigns(campaigns) {
+        const tbody = document.getElementById('topCampaignsTable');
+        if (!tbody) return;
+        const sorted = [...campaigns].sort((a, b) => (b.revenue || 0) - (a.revenue || 0)).slice(0, 5);
+        if (sorted.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No campaigns yet</td></tr>';
+            return;
+        }
+        tbody.innerHTML = sorted.map(c => {
+            const roi = (c.actualSpend || 0) > 0 ? (((c.revenue || 0) - c.actualSpend) / c.actualSpend * 100).toFixed(1) : 0;
+            return `<tr>
+                <td>${c.campaignName || 'N/A'}</td>
+                <td class="text-center">${(c.totalReach || 0).toLocaleString()}</td>
+                <td class="text-center">${c.conversions || 0}</td>
+                <td class="text-end">${roi}%</td>
+            </tr>`;
+        }).join('');
+    },
+
+    renderTopPromotions(promotions) {
+        const tbody = document.getElementById('topPromotionsTable');
+        if (!tbody) return;
+        const sorted = [...promotions].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0)).slice(0, 5);
+        if (sorted.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted">No promotions yet</td></tr>';
+            return;
+        }
+        tbody.innerHTML = sorted.map(p => `<tr>
+            <td>${p.promoCode || p.promotionName || 'N/A'}</td>
+            <td class="text-center">${p.usageCount || 0}</td>
+            <td class="text-end">₱${(p.revenue || 0).toLocaleString()}</td>
+        </tr>`).join('');
     }
 };
 

@@ -19,7 +19,8 @@ const Icons = {
     add: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
     approve: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
     reject: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
-    update: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>'
+    update: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>',
+    delete: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'
 };
 
 // Toast Notification System
@@ -178,6 +179,7 @@ const SalesCustomers = {
                         <button class="btn btn-sm btn-outline-${c.status === 'Active' ? 'danger' : 'success'}" onclick="SalesCustomers.toggleStatus(${c.customerId})" title="${c.status === 'Active' ? 'Deactivate' : 'Activate'}">
                             ${c.status === 'Active' ? Icons.toggleOff : Icons.toggleOn}
                         </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="SalesCustomers.delete(${c.customerId})" title="Delete">${Icons.delete}</button>
                     </div>
                 </td>
             </tr>
@@ -307,6 +309,17 @@ const SalesCustomers = {
         }
     },
 
+    async delete(id) {
+        if (!confirm('Are you sure you want to delete this customer?')) return;
+        try {
+            await API.delete(`/customers/${id}`);
+            Toast.success('Customer deleted successfully');
+            this.load();
+        } catch (error) {
+            Toast.error('Failed to delete customer');
+        }
+    },
+
     filter(search = '', status = '') {
         let filtered = this.data;
         if (search) {
@@ -346,6 +359,7 @@ const SalesCustomers = {
                         <button class="btn btn-sm btn-outline-${c.status === 'Active' ? 'danger' : 'success'}" onclick="SalesCustomers.toggleStatus(${c.customerId})" title="${c.status === 'Active' ? 'Deactivate' : 'Activate'}">
                             ${c.status === 'Active' ? Icons.toggleOff : Icons.toggleOn}
                         </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="SalesCustomers.delete(${c.customerId})" title="Delete">${Icons.delete}</button>
                     </div>
                 </td>
             </tr>
@@ -621,6 +635,7 @@ const SalesLeads = {
                         <button class="btn btn-sm btn-outline-${l.status === 'Inactive' ? 'success' : 'danger'}" onclick="SalesLeads.toggleStatus(${l.leadId})" title="${l.status === 'Inactive' ? 'Activate' : 'Deactivate'}">
                             ${l.status === 'Inactive' ? Icons.toggleOn : Icons.toggleOff}
                         </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="SalesLeads.delete(${l.leadId})" title="Delete">${Icons.delete}</button>
                     </div>
                 </td>
             </tr>
@@ -750,6 +765,17 @@ const SalesLeads = {
         }
     },
 
+    async delete(id) {
+        if (!confirm('Are you sure you want to delete this lead?')) return;
+        try {
+            await API.delete(`/leads/${id}`);
+            Toast.success('Lead deleted successfully');
+            this.load();
+        } catch (error) {
+            Toast.error('Failed to delete lead');
+        }
+    },
+
     filter(search = '', status = '', source = '') {
         let filtered = this.data;
         if (search) {
@@ -789,6 +815,7 @@ const SalesLeads = {
                         <button class="btn btn-sm btn-outline-${l.status === 'Inactive' ? 'success' : 'danger'}" onclick="SalesLeads.toggleStatus(${l.leadId})">
                             ${l.status === 'Inactive' ? Icons.toggleOn : Icons.toggleOff}
                         </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="SalesLeads.delete(${l.leadId})" title="Delete">${Icons.delete}</button>
                     </div>
                 </td>
             </tr>

@@ -45,6 +45,14 @@ namespace CompuGear.Controllers
             return await _context.Users.FirstOrDefaultAsync(u => u.RoleId == 4);
         }
 
+        // Helper: returns CompanyId from session. Super Admin (RoleId=1) gets null → sees all data.
+        private int? GetCompanyId()
+        {
+            var roleId = HttpContext.Session.GetInt32("RoleId");
+            if (roleId == 1) return null; // Super Admin sees everything
+            return HttpContext.Session.GetInt32("CompanyId");
+        }
+
         #region Views
 
         public IActionResult Tickets()

@@ -282,6 +282,34 @@ const Modal = {
         document.body.style.removeProperty('padding-right');
         document.body.style.overflow = '';
         document.body.style.paddingRight = '';
+    },
+
+    // Show a dynamic modal with custom title and HTML body
+    showDynamic(title, bodyHtml) {
+        let dynamicModal = document.getElementById('dynamicViewModal');
+        if (!dynamicModal) {
+            dynamicModal = document.createElement('div');
+            dynamicModal.id = 'dynamicViewModal';
+            dynamicModal.className = 'modal fade';
+            dynamicModal.tabIndex = -1;
+            dynamicModal.innerHTML = `
+                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #008080, #006666); color: white;">
+                            <h5 class="modal-title" id="dynamicModalTitle"></h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body" id="dynamicModalBody"></div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>`;
+            document.body.appendChild(dynamicModal);
+        }
+        document.getElementById('dynamicModalTitle').textContent = title;
+        document.getElementById('dynamicModalBody').innerHTML = bodyHtml;
+        this.show('dynamicViewModal');
     }
 };
 
@@ -2706,7 +2734,9 @@ const Billing = {
 
         async load() {
             try {
-                this.data = await API.get('/invoices');
+                const result = await API.get('/invoices');
+                this.data = result.data || result;
+                if (!Array.isArray(this.data)) this.data = [];
                 this.render();
             } catch (error) {
                 Toast.error('Failed to load invoices');
@@ -2732,7 +2762,7 @@ const Billing = {
                     <td>${Format.date(i.dueDate)}</td>
                     <td class="text-end">${Format.currency(i.totalAmount)}</td>
                     <td class="text-end text-success">${Format.currency(i.paidAmount)}</td>
-                    <td class="text-end ${i.balance > 0 ? 'text-danger' : ''}">${Format.currency(i.balance)}</td>
+                    <td class="text-end ${i.balanceDue > 0 ? 'text-danger' : ''}">${Format.currency(i.balanceDue)}</td>
                     <td>${Format.statusBadge(i.status)}</td>
                     <td class="text-center">
                         <div class="btn-group">
@@ -2756,13 +2786,13 @@ const Billing = {
         updateStats() {
             const total = this.data.reduce((sum, i) => sum + i.totalAmount, 0);
             const paid = this.data.reduce((sum, i) => sum + i.paidAmount, 0);
-            const outstanding = this.data.reduce((sum, i) => sum + i.balance, 0);
-            const overdue = this.data.filter(i => i.status === 'Overdue' || (i.balance > 0 && new Date(i.dueDate) < new Date())).length;
+            const outstanding = this.data.reduce((sum, i) => sum + (i.balanceDue || 0), 0);
+            const overdue = this.data.filter(i => i.status === 'Overdue' || ((i.balanceDue || 0) > 0 && new Date(i.dueDate) < new Date())).length;
 
             const el = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
             el('outstandingAmount', Format.currency(outstanding));
             el('paidAmount', Format.currency(paid));
-            el('overdueAmount', Format.currency(this.data.filter(i => i.status === 'Overdue' || (i.balance > 0 && new Date(i.dueDate) < new Date())).reduce((s, i) => s + i.balance, 0)));
+            el('overdueAmount', Format.currency(this.data.filter(i => i.status === 'Overdue' || ((i.balanceDue || 0) > 0 && new Date(i.dueDate) < new Date())).reduce((s, i) => s + (i.balanceDue || 0), 0)));
             el('totalInvoices', this.data.length);
             el('invoiceCount', this.data.length + ' invoices');
         },
@@ -2844,6 +2874,81 @@ const Billing = {
             }
         },
 
+        async saveAsDraft() {
+            // Temporarily set status before save
+            const invoiceId = document.getElementById('invoiceId').value;
+            const items = [];
+            const rows = document.querySelectorAll('#invoiceItemsBody tr');
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const description = inputs[0]?.value?.trim();
+                const unitPrice = parseFloat(inputs[1]?.value) || 0;
+                const quantity = parseInt(inputs[2]?.value) || 0;
+                if (description && quantity > 0) {
+                    items.push({ description, unitPrice, quantity, totalPrice: unitPrice * quantity });
+                }
+            });
+
+            const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
+            const taxAmount = subtotal * 0.12;
+            const totalAmount = subtotal + taxAmount;
+
+            const data = {
+                customerId: parseInt(document.getElementById('invoiceCustomer').value) || null,
+                invoiceDate: document.getElementById('invoiceDate').value,
+                dueDate: document.getElementById('dueDate').value,
+                paymentTerms: document.getElementById('paymentTerms')?.value || 'NET30',
+                billingAddress: document.getElementById('billingAddress')?.value || '',
+                notes: document.getElementById('invoiceNotes')?.value || '',
+                subtotal, taxAmount, totalAmount,
+                status: 'Draft',
+                items: items
+            };
+
+            try {
+                if (invoiceId) {
+                    await API.put(`/invoices/${invoiceId}`, data);
+                } else {
+                    await API.post('/invoices', data);
+                }
+                Toast.success('Invoice saved as draft');
+                Modal.hide('invoiceModal');
+                this.load();
+            } catch (error) {
+                Toast.error(error.message || 'Failed to save draft');
+            }
+        },
+
+        edit(id) {
+            const invoice = this.data.find(i => i.invoiceId === id);
+            if (!invoice) return;
+            this.showModal(invoice);
+        },
+
+        async toggleStatus(id) {
+            const invoice = this.data.find(i => i.invoiceId === id);
+            if (!invoice) return;
+            const newStatus = (invoice.status === 'Cancelled' || invoice.status === 'Void') ? 'Pending' : 'Void';
+            try {
+                await API.put(`/invoices/${id}/status`, { status: newStatus });
+                Toast.success(`Invoice ${newStatus === 'Void' ? 'voided' : 'reactivated'}`);
+                this.load();
+            } catch (error) {
+                Toast.error('Failed to update invoice status');
+            }
+        },
+
+        async delete(id) {
+            if (!confirm('Are you sure you want to delete this invoice?')) return;
+            try {
+                await API.delete(`/invoices/${id}`);
+                Toast.success('Invoice deleted successfully');
+                this.load();
+            } catch (error) {
+                Toast.error('Failed to delete invoice');
+            }
+        },
+
         async view(id) {
             const i = this.data.find(inv => inv.invoiceId === id);
             if (!i) {
@@ -2866,7 +2971,8 @@ const Billing = {
 
             // Try to fetch full invoice data with items
             try {
-                const full = await API.get(`/invoices/${id}/pdf`);
+                const fullResult = await API.get(`/invoices/${id}/pdf`);
+                const full = fullResult.data || fullResult;
                 // Render items
                 const itemsTbody = document.getElementById('viewInvoiceItems');
                 if (itemsTbody && full.items && full.items.length > 0) {
@@ -2888,7 +2994,7 @@ const Billing = {
                         <thead><tr><th>Date</th><th>Method</th><th>Reference</th><th class="text-end">Amount</th></tr></thead>
                         <tbody>${full.payments.map(p => `<tr>
                             <td>${Format.date(p.paymentDate)}</td>
-                            <td>${p.paymentMethod || '-'}</td>
+                            <td>${p.paymentMethodType || '-'}</td>
                             <td>${p.referenceNumber || '-'}</td>
                             <td class="text-end">${Format.currency(p.amount)}</td>
                         </tr>`).join('')}</tbody>
@@ -2919,10 +3025,10 @@ const Billing = {
             const outEl = document.getElementById('outstandingAmount');
             // Don't overwrite the stat card - use the form text element
             const formText = document.querySelector('#paymentModal .form-text span');
-            if (formText) formText.textContent = Format.currency(invoice.balance);
+            if (formText) formText.textContent = Format.currency(invoice.balanceDue);
             
             const amtInput = document.getElementById('paymentAmount');
-            if (amtInput) { amtInput.value = invoice.balance; amtInput.max = invoice.balance; }
+            if (amtInput) { amtInput.value = invoice.balanceDue; amtInput.max = invoice.balanceDue; }
             const dateInput = document.getElementById('paymentDate');
             if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
             const methodSelect = document.getElementById('paymentMethod');
@@ -2942,8 +3048,8 @@ const Billing = {
             const data = {
                 invoiceId: id,
                 amount: parseFloat(document.getElementById('paymentAmount').value) || 0,
-                paymentMethod: document.getElementById('paymentMethod').value,
-                transactionReference: document.getElementById('paymentReference').value,
+                paymentMethodType: document.getElementById('paymentMethod').value,
+                referenceNumber: document.getElementById('paymentReference').value,
                 notes: document.getElementById('paymentNotes').value,
                 status: 'Completed'
             };
@@ -2967,7 +3073,8 @@ const Billing = {
 
         async print(id) {
             try {
-                const inv = await API.get(`/invoices/${id}/pdf`);
+                const invResult = await API.get(`/invoices/${id}/pdf`);
+                const inv = invResult.data || invResult;
                 const items = inv.items || [];
                 const payments = inv.payments || [];
                 const subtotal = inv.subtotal || (inv.totalAmount / 1.12);
@@ -3039,7 +3146,7 @@ const Billing = {
                             <thead><tr><th>Date</th><th>Method</th><th>Reference</th><th style="text-align:right">Amount</th></tr></thead>
                             <tbody>${payments.map(p => `<tr>
                                 <td>${Format.date(p.paymentDate)}</td>
-                                <td>${p.paymentMethod || '-'}</td>
+                                <td>${p.paymentMethodType || '-'}</td>
                                 <td>${p.referenceNumber || '-'}</td>
                                 <td style="text-align:right">₱${(p.amount || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
                             </tr>`).join('')}</tbody>
@@ -3127,7 +3234,7 @@ const Billing = {
                     <td>${Format.date(i.dueDate)}</td>
                     <td class="text-end">${Format.currency(i.totalAmount)}</td>
                     <td class="text-end text-success">${Format.currency(i.paidAmount)}</td>
-                    <td class="text-end ${i.balance > 0 ? 'text-danger' : ''}">${Format.currency(i.balance)}</td>
+                    <td class="text-end ${i.balanceDue > 0 ? 'text-danger' : ''}">${Format.currency(i.balanceDue)}</td>
                     <td>${Format.statusBadge(i.status)}</td>
                     <td class="text-center">
                         <div class="btn-group">
@@ -3152,36 +3259,114 @@ const Billing = {
 
         async load() {
             try {
-                this.data = await API.get('/payments');
+                const result = await API.get('/payments');
+                this.data = result.data || result;
+                if (!Array.isArray(this.data)) this.data = [];
                 this.render();
             } catch (error) {
                 Toast.error('Failed to load payments');
             }
         },
 
-        render() {
+        render(data) {
+            const list = data || this.data;
             const tbody = document.getElementById('paymentsTableBody');
             if (!tbody) return;
 
-            if (this.data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No payments found.</td></tr>';
+            const countEl = document.getElementById('paymentCount');
+            if (countEl) countEl.textContent = list.length + ' payments';
+
+            if (list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No payments found.</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = this.data.map(p => `
+            tbody.innerHTML = list.map(p => `
                 <tr>
                     <td>
-                        <div class="fw-semibold">${p.paymentNumber}</div>
+                        <div class="fw-semibold">${p.paymentNumber || p.transactionId || '-'}</div>
                         <small class="text-muted">${Format.date(p.paymentDate, true)}</small>
                     </td>
                     <td>${p.customerName || '-'}</td>
-                    <td>${p.invoiceNumber || '-'}</td>
+                    <td>${p.invoiceNumber || p.orderNumber || '-'}</td>
+                    <td>${Format.date(p.paymentDate)}</td>
+                    <td><span class="badge bg-info">${p.paymentMethodType || '-'}</span></td>
                     <td class="text-end fw-semibold text-success">${Format.currency(p.amount)}</td>
-                    <td><span class="badge bg-info">${p.paymentMethod}</span></td>
                     <td>${Format.statusBadge(p.status)}</td>
-                    <td>${p.transactionReference || '-'}</td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="Billing.payments.view(${p.paymentId})" title="View Details">
+                                ${Icons.view}
+                            </button>
+                        </div>
+                    </td>
                 </tr>
             `).join('');
+        },
+
+        filter() {
+            const search = (document.getElementById('searchPayments')?.value || '').toLowerCase();
+            if (!search) {
+                this.render();
+                return;
+            }
+            const filtered = this.data.filter(p =>
+                (p.paymentNumber || '').toLowerCase().includes(search) ||
+                (p.customerName || '').toLowerCase().includes(search) ||
+                (p.invoiceNumber || '').toLowerCase().includes(search) ||
+                (p.transactionId || '').toLowerCase().includes(search) ||
+                (p.paymentMethodType || '').toLowerCase().includes(search)
+            );
+            this.render(filtered);
+        },
+
+        async view(id) {
+            try {
+                const result = await API.get(`/payments/${id}`);
+                const p = result.data || result;
+                
+                let html = `
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <strong>Payment Number:</strong> ${p.paymentNumber || '-'}<br>
+                            <strong>Transaction ID:</strong> ${p.transactionId || '-'}<br>
+                            <strong>Reference:</strong> ${p.referenceNumber || '-'}<br>
+                            <strong>Date:</strong> ${Format.date(p.paymentDate)}<br>
+                            <strong>Method:</strong> ${p.paymentMethodType || '-'}<br>
+                            <strong>Currency:</strong> ${p.currency || 'PHP'}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Customer:</strong> ${p.customerName || '-'}<br>
+                            <strong>Invoice:</strong> ${p.invoiceNumber || '-'}<br>
+                            <strong>Order:</strong> ${p.orderNumber || '-'}<br>
+                            <strong>Amount:</strong> <span class="text-success fw-bold">${Format.currency(p.amount)}</span><br>
+                            <strong>Status:</strong> ${Format.statusBadge(p.status)}<br>
+                            <strong>Processed:</strong> ${p.processedAt ? Format.date(p.processedAt) : 'Pending'}
+                        </div>
+                    </div>`;
+                
+                if (p.notes) {
+                    html += `<div class="mt-2"><strong>Notes:</strong> ${p.notes}</div>`;
+                }
+                if (p.failureReason) {
+                    html += `<div class="mt-2 text-danger"><strong>Failure Reason:</strong> ${p.failureReason}</div>`;
+                }
+                if (p.refunds && p.refunds.length > 0) {
+                    html += `<hr><h6>Refunds</h6>
+                        <table class="table table-sm"><thead><tr><th>Refund #</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
+                        <tbody>${p.refunds.map(r => `<tr>
+                            <td>${r.refundNumber || '-'}</td>
+                            <td>${Format.currency(r.amount)}</td>
+                            <td>${r.refundMethod || '-'}</td>
+                            <td>${Format.statusBadge(r.status)}</td>
+                            <td>${Format.date(r.requestedAt)}</td>
+                        </tr>`).join('')}</tbody></table>`;
+                }
+
+                Modal.showDynamic('Payment Details', html);
+            } catch (error) {
+                Toast.error('Failed to load payment details');
+            }
         }
     }
 };
