@@ -142,6 +142,28 @@
                         </svg>
                     </button>
 
+                    <div class="dropdown">
+                        <button class="topbar-btn position-relative" title="Notifications" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                            </svg>
+                            <span class="topbar-badge notification-badge" id="notificationBadge"></span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end shadow notification-dropdown" style="width: 360px; max-height: 400px; overflow-y: auto;">
+                            <div class="dropdown-header d-flex justify-content-between align-items-center py-2">
+                                <strong>Notifications</strong>
+                                <a href="#" class="text-primary text-decoration-none small">Mark all read</a>
+                            </div>
+                            <div class="dropdown-divider m-0"></div>
+                            <div id="notificationList">
+                                <div class="text-center py-4 text-muted">
+                                    <p class="mb-0">No new notifications</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="topbar-divider"></div>
 
                     <div class="topbar-user dropdown">
@@ -161,6 +183,25 @@
                             <li class="dropdown-header">
                                 <strong>@(Context.Session.GetString("UserName") ?? "Marketing Staff")</strong><br>
                                 <small class="text-muted">@(Context.Session.GetString("UserEmail") ?? "marketing@compugear.com")</small>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                    Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                                        <circle cx="12" cy="12" r="3"/>
+                                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                                    </svg>
+                                    Settings
+                                </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
@@ -185,10 +226,60 @@
         </div>
     </div>
 
+    <!-- Toast Notifications -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    <span id="successMessage">Operation completed successfully!</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999; margin-top: 60px;">
+        <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                    </svg>
+                    <span id="errorMessage">An error occurred!</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 mb-0">Processing...</p>
+        </div>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/marketing.js" asp-append-version="true"></script>
+    <script>
+        function showSuccess(message) {
+            document.getElementById('successMessage').textContent = message;
+            new bootstrap.Toast(document.getElementById('successToast'), { delay: 3000 }).show();
+        }
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            new bootstrap.Toast(document.getElementById('errorToast'), { delay: 4000 }).show();
+        }
+        function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+        function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
