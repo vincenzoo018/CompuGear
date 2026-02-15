@@ -11,6 +11,8 @@ namespace CompuGear.Models
         [Key]
         public int LeadId { get; set; }
 
+        public int? CompanyId { get; set; }
+
         [StringLength(20)]
         public string? LeadCode { get; set; }
 
@@ -99,6 +101,8 @@ namespace CompuGear.Models
     {
         [Key]
         public int OrderId { get; set; }
+
+        public int? CompanyId { get; set; }
 
         [Required]
         [StringLength(30)]

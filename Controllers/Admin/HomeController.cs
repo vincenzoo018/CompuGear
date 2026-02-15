@@ -42,6 +42,11 @@ namespace CompuGear.Controllers
             return View("~/Views/Admin/Approvals.cshtml");
         }
 
+        public IActionResult Reports()
+        {
+            return View("~/Views/Admin/Reports/Index.cshtml");
+        }
+
         public IActionResult Privacy()
         {
             return View();

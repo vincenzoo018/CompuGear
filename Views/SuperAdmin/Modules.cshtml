@@ -1,0 +1,256 @@
+@{
+    ViewData["Title"] = "ERP Modules";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <p class="text-muted mb-0">ERP Modules</p>
+            <h1 class="page-title">Module Management</h1>
+            <p class="page-subtitle">Configure available ERP modules, pricing, and features.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openCreateModuleModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add Module
+        </button>
+    </div>
+</div>
+
+<!-- Module Cards Grid -->
+<div id="modulesGrid" class="row g-3">
+    <div class="col-12 text-center py-4">Loading modules...</div>
+</div>
+
+<!-- Modules Table -->
+<div class="card fade-in mt-3">
+    <div class="card-header">
+        <div><h3 class="card-title">All Modules</h3><p class="card-subtitle">Detailed module list</p></div>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead><tr><th>Module</th><th>Code</th><th class="text-end">Monthly</th><th class="text-end">Annual</th><th class="text-center">Subscribers</th><th>Status</th><th class="text-center">Actions</th></tr></thead>
+                <tbody id="modulesTableBody"><tr><td colspan="7" class="text-center py-4">Loading...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Module Modal -->
+<div class="modal fade" id="moduleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-primary">
+                <h5 class="modal-title" id="moduleModalTitle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    Add Module
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="moduleId">
+                <div class="row g-3">
+                    <div class="col-md-6"><div class="form-group mb-0"><label class="form-label">Module Name *</label><input type="text" class="form-control" id="moduleName" required></div></div>
+                    <div class="col-md-6"><div class="form-group mb-0"><label class="form-label">Module Code *</label><input type="text" class="form-control" id="moduleCode" required placeholder="e.g., SALES"></div></div>
+                    <div class="col-12"><div class="form-group mb-0"><label class="form-label">Description</label><textarea class="form-control" id="moduleDesc" rows="2"></textarea></div></div>
+                    <div class="col-md-4"><div class="form-group mb-0"><label class="form-label">Monthly Price ($)</label><input type="number" class="form-control" id="moduleMonthly" step="0.01" value="0"></div></div>
+                    <div class="col-md-4"><div class="form-group mb-0"><label class="form-label">Annual Price ($)</label><input type="number" class="form-control" id="moduleAnnual" step="0.01" value="0"></div></div>
+                    <div class="col-md-4"><div class="form-group mb-0"><label class="form-label">Sort Order</label><input type="number" class="form-control" id="moduleSortOrder" value="0"></div></div>
+                    <div class="col-12"><div class="form-group mb-0"><label class="form-label">Features (comma-separated)</label><input type="text" class="form-control" id="moduleFeatures" placeholder="Feature 1, Feature 2, Feature 3"></div></div>
+                    <div class="col-md-6"><div class="form-group mb-0"><label class="form-label">Status</label>
+                        <select class="form-control" id="moduleStatus"><option value="true">Active</option><option value="false">Inactive</option></select></div></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveModule()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Save Module
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Module Modal -->
+<div class="modal fade" id="deleteModuleModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-danger">
+                <h5 class="modal-title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Deactivate Module</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body"><p>Are you sure you want to deactivate <strong id="deleteModuleName"></strong>?</p><p class="text-muted mb-0">All companies using this module will lose access.</p></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteModuleBtn">Deactivate</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let allModules = [];
+        const moduleIcons = {
+            'SALES': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>',
+            'SUPPORT': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>',
+            'MARKETING': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>',
+            'BILLING': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
+            'INVENTORY': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+            'CUSTOMERS': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
+        };
+        const moduleColors = ['teal','green','blue','orange','teal','green'];
+
+        document.addEventListener('DOMContentLoaded', loadModules);
+
+        async function loadModules() {
+            try {
+                const res = await fetch('/api/superadmin/modules');
+                allModules = await res.json();
+                renderModulesGrid(allModules);
+                renderModulesTable(allModules);
+            } catch (e) { showError('Failed to load modules'); }
+        }
+
+        function renderModulesGrid(modules) {
+            const grid = document.getElementById('modulesGrid');
+            if (!modules.length) { grid.innerHTML = '<div class="col-12 text-center py-4">No modules configured</div>'; return; }
+            grid.innerHTML = modules.map((m, i) => `
+                <div class="col-md-6 col-lg-4">
+                    <div class="card fade-in h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start justify-content-between mb-3">
+                                <div class="stat-icon ${moduleColors[i % moduleColors.length]}" style="width:48px;height:48px;border-radius:12px;">
+                                    ${moduleIcons[m.moduleCode] || moduleIcons['SALES']}
+                                </div>
+                                <span class="badge ${m.isActive ? 'badge-success' : 'badge-error'}">${m.isActive ? 'Active' : 'Inactive'}</span>
+                            </div>
+                            <h5 class="mb-1">${m.moduleName}</h5>
+                            <p class="text-muted small mb-3">${m.description || 'No description'}</p>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small">Monthly</span><strong>$${(m.monthlyPrice||0).toFixed(2)}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="text-muted small">Annual</span><strong>$${(m.annualPrice||0).toFixed(2)}</strong>
+                            </div>
+                            ${m.features ? `<div class="mb-3">${m.features.split(',').map(f=>'<span class="badge badge-neutral me-1 mb-1">'+f.trim()+'</span>').join('')}</div>` : ''}
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">${m.subscribedCompanies || 0} subscribers</small>
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-sm btn-outline" onclick="editModule(${m.moduleId})" title="Edit">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline text-danger" onclick="confirmDeleteModule(${m.moduleId}, '${m.moduleName}')" title="Deactivate">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderModulesTable(modules) {
+            const tbody = document.getElementById('modulesTableBody');
+            if (!modules.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No modules</td></tr>'; return; }
+            tbody.innerHTML = modules.map(m => `
+                <tr>
+                    <td><strong>${m.moduleName}</strong></td>
+                    <td><code>${m.moduleCode}</code></td>
+                    <td class="text-end">$${(m.monthlyPrice||0).toFixed(2)}</td>
+                    <td class="text-end">$${(m.annualPrice||0).toFixed(2)}</td>
+                    <td class="text-center"><span class="badge badge-info">${m.subscribedCompanies||0}</span></td>
+                    <td><span class="badge ${m.isActive?'badge-success':'badge-error'}">${m.isActive?'Active':'Inactive'}</span></td>
+                    <td class="text-center">
+                        <div class="d-flex gap-1 justify-content-center">
+                            <button class="btn btn-sm btn-outline" onclick="editModule(${m.moduleId})" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                            <button class="btn btn-sm btn-outline text-danger" onclick="confirmDeleteModule(${m.moduleId}, '${m.moduleName}')" title="Deactivate"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openCreateModuleModal() {
+            document.getElementById('moduleId').value = '';
+            document.getElementById('moduleName').value = '';
+            document.getElementById('moduleCode').value = '';
+            document.getElementById('moduleDesc').value = '';
+            document.getElementById('moduleMonthly').value = '0';
+            document.getElementById('moduleAnnual').value = '0';
+            document.getElementById('moduleSortOrder').value = '0';
+            document.getElementById('moduleFeatures').value = '';
+            document.getElementById('moduleStatus').value = 'true';
+            document.getElementById('moduleModalTitle').innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Module';
+            new bootstrap.Modal(document.getElementById('moduleModal')).show();
+        }
+
+        function editModule(id) {
+            const m = allModules.find(x => x.moduleId === id); if(!m) return;
+            document.getElementById('moduleId').value = m.moduleId;
+            document.getElementById('moduleName').value = m.moduleName;
+            document.getElementById('moduleCode').value = m.moduleCode;
+            document.getElementById('moduleDesc').value = m.description || '';
+            document.getElementById('moduleMonthly').value = m.monthlyPrice || 0;
+            document.getElementById('moduleAnnual').value = m.annualPrice || 0;
+            document.getElementById('moduleSortOrder').value = m.sortOrder || 0;
+            document.getElementById('moduleFeatures').value = m.features || '';
+            document.getElementById('moduleStatus').value = m.isActive ? 'true' : 'false';
+            document.getElementById('moduleModalTitle').innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Module';
+            new bootstrap.Modal(document.getElementById('moduleModal')).show();
+        }
+
+        async function saveModule() {
+            const id = document.getElementById('moduleId').value;
+            const data = {
+                moduleName: document.getElementById('moduleName').value,
+                moduleCode: document.getElementById('moduleCode').value.toUpperCase(),
+                description: document.getElementById('moduleDesc').value || null,
+                monthlyPrice: parseFloat(document.getElementById('moduleMonthly').value) || 0,
+                annualPrice: parseFloat(document.getElementById('moduleAnnual').value) || 0,
+                sortOrder: parseInt(document.getElementById('moduleSortOrder').value) || 0,
+                features: document.getElementById('moduleFeatures').value || null,
+                isActive: document.getElementById('moduleStatus').value === 'true'
+            };
+            if (!data.moduleName || !data.moduleCode) { showError('Module name and code are required'); return; }
+
+            try {
+                showLoading();
+                const url = id ? `/api/superadmin/modules/${id}` : '/api/superadmin/modules';
+                const res = await fetch(url, { method: id ? 'PUT' : 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+                const result = await res.json();
+                hideLoading();
+                if (result.success || res.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('moduleModal'))?.hide();
+                    showSuccess(result.message || 'Module saved successfully');
+                    loadModules();
+                } else { showError(result.message || 'Failed to save'); }
+            } catch (e) { hideLoading(); showError('Failed to save module'); }
+        }
+
+        let deleteModuleId = null;
+        function confirmDeleteModule(id, name) {
+            deleteModuleId = id;
+            document.getElementById('deleteModuleName').textContent = name;
+            new bootstrap.Modal(document.getElementById('deleteModuleModal')).show();
+        }
+
+        document.getElementById('confirmDeleteModuleBtn').addEventListener('click', async () => {
+            if (!deleteModuleId) return;
+            try {
+                showLoading();
+                const res = await fetch(`/api/superadmin/modules/${deleteModuleId}`, { method: 'DELETE' });
+                const result = await res.json();
+                hideLoading();
+                bootstrap.Modal.getInstance(document.getElementById('deleteModuleModal'))?.hide();
+                if (result.success) { showSuccess(result.message); loadModules(); }
+                else { showError(result.message); }
+            } catch (e) { hideLoading(); showError('Failed to deactivate module'); }
+        });
+    </script>
+}

@@ -35,6 +35,8 @@ namespace CompuGear.Models
         [Key]
         public int CustomerId { get; set; }
 
+        public int? CompanyId { get; set; }
+
         [StringLength(20)]
         public string? CustomerCode { get; set; }
 

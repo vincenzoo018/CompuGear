@@ -11,6 +11,8 @@ namespace CompuGear.Models
         [Key]
         public int InvoiceId { get; set; }
 
+        public int? CompanyId { get; set; }
+
         [Required]
         [StringLength(30)]
         public string InvoiceNumber { get; set; } = string.Empty;
@@ -221,6 +223,8 @@ namespace CompuGear.Models
         [Key]
         public int PaymentId { get; set; }
 
+        public int? CompanyId { get; set; }
+
         [Required]
         [StringLength(30)]
         public string PaymentNumber { get; set; } = string.Empty;
@@ -304,6 +308,8 @@ namespace CompuGear.Models
     {
         [Key]
         public int RefundId { get; set; }
+
+        public int? CompanyId { get; set; }
 
         [Required]
         [StringLength(30)]

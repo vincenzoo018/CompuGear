@@ -1,0 +1,253 @@
+@{
+    ViewData["Title"] = "Settings";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="page-header">
+    <div>
+        <p class="text-muted mb-0">Settings</p>
+        <h1 class="page-title">Platform Settings</h1>
+        <p class="page-subtitle">Configure system-wide settings and preferences.</p>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- General Settings -->
+    <div class="col-lg-6">
+        <div class="card fade-in">
+            <div class="card-header">
+                <div><h3 class="card-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    General
+                </h3></div>
+            </div>
+            <div class="card-body">
+                <div class="form-group"><label class="form-label">Platform Name</label><input type="text" class="form-control" id="platformName" value="CompuGear ERP"></div>
+                <div class="form-group"><label class="form-label">Support Email</label><input type="email" class="form-control" id="supportEmail" value="support@compugear.com"></div>
+                <div class="form-group"><label class="form-label">Default Currency</label>
+                    <select class="form-control" id="defaultCurrency"><option value="USD" selected>USD ($)</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="PHP">PHP</option></select></div>
+                <div class="form-group"><label class="form-label">Time Zone</label>
+                    <select class="form-control" id="timezone"><option value="UTC">UTC</option><option value="US/Eastern">US/Eastern</option><option value="US/Pacific">US/Pacific</option><option value="Asia/Manila" selected>Asia/Manila</option><option value="Europe/London">Europe/London</option></select></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Settings -->
+    <div class="col-lg-6">
+        <div class="card fade-in">
+            <div class="card-header">
+                <div><h3 class="card-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    Security
+                </h3></div>
+            </div>
+            <div class="card-body">
+                <div class="form-group"><label class="form-label">Session Timeout (minutes)</label><input type="number" class="form-control" id="sessionTimeout" value="30"></div>
+                <div class="form-group"><label class="form-label">Max Login Attempts</label><input type="number" class="form-control" id="maxLoginAttempts" value="5"></div>
+                <div class="form-group"><label class="form-label">Password Min Length</label><input type="number" class="form-control" id="passwordMinLength" value="8"></div>
+                <div class="d-flex justify-content-between align-items-center py-2">
+                    <span>Require Two-Factor Authentication</span>
+                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="require2FA"></div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-2">
+                    <span>Allow Self-Registration</span>
+                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="allowSelfReg" checked></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Billing Settings -->
+    <div class="col-lg-6">
+        <div class="card fade-in">
+            <div class="card-header">
+                <div><h3 class="card-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    Billing
+                </h3></div>
+            </div>
+            <div class="card-body">
+                <div class="form-group"><label class="form-label">Trial Period (days)</label><input type="number" class="form-control" id="trialDays" value="14"></div>
+                <div class="form-group"><label class="form-label">Grace Period (days)</label><input type="number" class="form-control" id="gracePeriod" value="7"></div>
+                <div class="form-group"><label class="form-label">Tax Rate (%)</label><input type="number" class="form-control" id="taxRate" step="0.01" value="12"></div>
+                <div class="d-flex justify-content-between align-items-center py-2">
+                    <span>Auto-Renew Subscriptions</span>
+                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="autoRenew" checked></div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-2">
+                    <span>Send Payment Reminders</span>
+                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="paymentReminders" checked></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Settings -->
+    <div class="col-lg-6">
+        <div class="card fade-in">
+            <div class="card-header">
+                <div><h3 class="card-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    Notifications
+                </h3></div>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center py-2">
+                    <span>New Company Registration</span>
+                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="notifyNewCompany" checked></div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-2">
+                    <span>Subscription Changes</span>
+                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="notifySubChanges" checked></div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-2">
+                    <span>Failed Payments</span>
+                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="notifyPaymentFail" checked></div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-2">
+                    <span>Security Alerts</span>
+                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="notifySecurity" checked></div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center py-2">
+                    <span>Weekly Summary Reports</span>
+                    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="notifyWeekly" checked></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Maintenance -->
+    <div class="col-12">
+        <div class="card fade-in">
+            <div class="card-header">
+                <div><h3 class="card-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                    Maintenance
+                </h3></div>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="d-flex justify-content-between align-items-center py-2">
+                            <span>Maintenance Mode</span>
+                            <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="maintenanceMode"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="form-group mb-0"><label class="form-label">Maintenance Message</label>
+                        <input type="text" class="form-control" id="maintenanceMessage" placeholder="System is under maintenance..." value="We are performing scheduled maintenance. Please check back shortly."></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Save Button -->
+<div class="d-flex justify-content-end mt-3 mb-4">
+    <button class="btn btn-secondary me-2" onclick="resetSettings()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        Reset
+    </button>
+    <button class="btn btn-primary" onclick="saveSettings()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save Settings
+    </button>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', loadSettings);
+
+        async function loadSettings() {
+            try {
+                const res = await fetch('/api/superadmin/settings');
+                if (!res.ok) return;
+                const settings = await res.json();
+                if (settings.platformName) document.getElementById('platformName').value = settings.platformName;
+                if (settings.supportEmail) document.getElementById('supportEmail').value = settings.supportEmail;
+                if (settings.defaultCurrency) document.getElementById('defaultCurrency').value = settings.defaultCurrency;
+                if (settings.timezone) document.getElementById('timezone').value = settings.timezone;
+                if (settings.sessionTimeout) document.getElementById('sessionTimeout').value = settings.sessionTimeout;
+                if (settings.maxLoginAttempts) document.getElementById('maxLoginAttempts').value = settings.maxLoginAttempts;
+                if (settings.passwordMinLength) document.getElementById('passwordMinLength').value = settings.passwordMinLength;
+                if (settings.trialDays) document.getElementById('trialDays').value = settings.trialDays;
+                if (settings.gracePeriod) document.getElementById('gracePeriod').value = settings.gracePeriod;
+                if (settings.taxRate) document.getElementById('taxRate').value = settings.taxRate;
+                document.getElementById('require2FA').checked = settings.require2FA || false;
+                document.getElementById('allowSelfReg').checked = settings.allowSelfReg !== false;
+                document.getElementById('autoRenew').checked = settings.autoRenew !== false;
+                document.getElementById('paymentReminders').checked = settings.paymentReminders !== false;
+                document.getElementById('notifyNewCompany').checked = settings.notifyNewCompany !== false;
+                document.getElementById('notifySubChanges').checked = settings.notifySubChanges !== false;
+                document.getElementById('notifyPaymentFail').checked = settings.notifyPaymentFail !== false;
+                document.getElementById('notifySecurity').checked = settings.notifySecurity !== false;
+                document.getElementById('notifyWeekly').checked = settings.notifyWeekly !== false;
+                document.getElementById('maintenanceMode').checked = settings.maintenanceMode || false;
+                if (settings.maintenanceMessage) document.getElementById('maintenanceMessage').value = settings.maintenanceMessage;
+            } catch (e) { /* use defaults */ }
+        }
+
+        async function saveSettings() {
+            const settings = {
+                platformName: document.getElementById('platformName').value,
+                supportEmail: document.getElementById('supportEmail').value,
+                defaultCurrency: document.getElementById('defaultCurrency').value,
+                timezone: document.getElementById('timezone').value,
+                sessionTimeout: parseInt(document.getElementById('sessionTimeout').value),
+                maxLoginAttempts: parseInt(document.getElementById('maxLoginAttempts').value),
+                passwordMinLength: parseInt(document.getElementById('passwordMinLength').value),
+                trialDays: parseInt(document.getElementById('trialDays').value),
+                gracePeriod: parseInt(document.getElementById('gracePeriod').value),
+                taxRate: parseFloat(document.getElementById('taxRate').value),
+                require2FA: document.getElementById('require2FA').checked,
+                allowSelfReg: document.getElementById('allowSelfReg').checked,
+                autoRenew: document.getElementById('autoRenew').checked,
+                paymentReminders: document.getElementById('paymentReminders').checked,
+                notifyNewCompany: document.getElementById('notifyNewCompany').checked,
+                notifySubChanges: document.getElementById('notifySubChanges').checked,
+                notifyPaymentFail: document.getElementById('notifyPaymentFail').checked,
+                notifySecurity: document.getElementById('notifySecurity').checked,
+                notifyWeekly: document.getElementById('notifyWeekly').checked,
+                maintenanceMode: document.getElementById('maintenanceMode').checked,
+                maintenanceMessage: document.getElementById('maintenanceMessage').value
+            };
+
+            try {
+                showLoading();
+                const res = await fetch('/api/superadmin/settings', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(settings) });
+                const result = await res.json();
+                hideLoading();
+                if (result.success) { showSuccess(result.message || 'Settings saved successfully'); }
+                else { showError(result.message || 'Failed to save settings'); }
+            } catch (e) { hideLoading(); showError('Failed to save settings'); }
+        }
+
+        function resetSettings() {
+            if (confirm('Reset all settings to defaults?')) {
+                document.getElementById('platformName').value = 'CompuGear ERP';
+                document.getElementById('supportEmail').value = 'support@compugear.com';
+                document.getElementById('defaultCurrency').value = 'USD';
+                document.getElementById('timezone').value = 'Asia/Manila';
+                document.getElementById('sessionTimeout').value = '30';
+                document.getElementById('maxLoginAttempts').value = '5';
+                document.getElementById('passwordMinLength').value = '8';
+                document.getElementById('trialDays').value = '14';
+                document.getElementById('gracePeriod').value = '7';
+                document.getElementById('taxRate').value = '12';
+                document.getElementById('require2FA').checked = false;
+                document.getElementById('allowSelfReg').checked = true;
+                document.getElementById('autoRenew').checked = true;
+                document.getElementById('paymentReminders').checked = true;
+                document.getElementById('notifyNewCompany').checked = true;
+                document.getElementById('notifySubChanges').checked = true;
+                document.getElementById('notifyPaymentFail').checked = true;
+                document.getElementById('notifySecurity').checked = true;
+                document.getElementById('notifyWeekly').checked = true;
+                document.getElementById('maintenanceMode').checked = false;
+                document.getElementById('maintenanceMessage').value = 'We are performing scheduled maintenance. Please check back shortly.';
+                showSuccess('Settings reset to defaults');
+            }
+        }
+    </script>
+}

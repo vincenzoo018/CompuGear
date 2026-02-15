@@ -74,6 +74,8 @@ namespace CompuGear.Models
         [Key]
         public int ProductId { get; set; }
 
+        public int? CompanyId { get; set; }
+
         [Required]
         [StringLength(50)]
         public string ProductCode { get; set; } = string.Empty;
@@ -337,6 +339,8 @@ namespace CompuGear.Models
         [Key]
         public int SupplierId { get; set; }
 
+        public int? CompanyId { get; set; }
+
         [StringLength(20)]
         public string? SupplierCode { get; set; }
 
@@ -389,6 +393,8 @@ namespace CompuGear.Models
     {
         [Key]
         public int PurchaseOrderId { get; set; }
+
+        public int? CompanyId { get; set; }
 
         [Required]
         public int SupplierId { get; set; }

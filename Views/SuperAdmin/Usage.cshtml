@@ -1,0 +1,228 @@
+@{
+    ViewData["Title"] = "Platform Usage";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <p class="text-muted mb-0">Platform Usage</p>
+            <h1 class="page-title">Usage Analytics</h1>
+            <p class="page-subtitle">Monitor platform usage, activity logs, and performance metrics.</p>
+        </div>
+        <button class="btn btn-outline" onclick="exportUsageLogs()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export Logs
+        </button>
+    </div>
+</div>
+
+<!-- Usage Stats -->
+<div class="stat-cards">
+    <div class="stat-card fade-in stagger-1">
+        <div class="stat-info"><span class="stat-label">Total Actions</span><span class="stat-value" id="totalActions">0</span></div>
+        <div class="stat-icon teal"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+    </div>
+    <div class="stat-card fade-in stagger-2">
+        <div class="stat-info"><span class="stat-label">Active Companies</span><span class="stat-value" id="activeCompaniesUsage">0</span></div>
+        <div class="stat-icon green"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+    </div>
+    <div class="stat-card fade-in stagger-3">
+        <div class="stat-info"><span class="stat-label">Active Users</span><span class="stat-value" id="activeUsersUsage">0</span></div>
+        <div class="stat-icon blue"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+    </div>
+    <div class="stat-card fade-in stagger-4">
+        <div class="stat-info"><span class="stat-label">Today's Actions</span><span class="stat-value" id="todayActions">0</span></div>
+        <div class="stat-icon orange"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row g-3 mt-1">
+    <div class="col-lg-8">
+        <div class="card fade-in">
+            <div class="card-header"><div><h3 class="card-title">Usage Over Time</h3><p class="card-subtitle">Daily activity for the past 30 days</p></div></div>
+            <div class="card-body"><canvas id="usageChart" height="200"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card fade-in">
+            <div class="card-header"><div><h3 class="card-title">By Module</h3><p class="card-subtitle">Actions per module</p></div></div>
+            <div class="card-body"><canvas id="moduleUsageChart" height="200"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card fade-in mt-3 mb-3">
+    <div class="card-body">
+        <div class="d-flex gap-3 align-items-end flex-wrap">
+            <div class="form-group mb-0 flex-grow-1">
+                <label class="form-label">Search</label>
+                <input type="text" class="form-control" id="searchUsage" placeholder="Search actions, users..." oninput="loadUsageLogs()">
+            </div>
+            <div class="form-group mb-0">
+                <label class="form-label">Module</label>
+                <select class="form-control" id="moduleFilterUsage" onchange="loadUsageLogs()">
+                    <option value="">All Modules</option>
+                    <option value="SALES">Sales</option><option value="SUPPORT">Support</option>
+                    <option value="MARKETING">Marketing</option><option value="BILLING">Billing</option>
+                    <option value="INVENTORY">Inventory</option><option value="CUSTOMERS">Customers</option>
+                </select>
+            </div>
+            <div class="form-group mb-0">
+                <label class="form-label">Period</label>
+                <select class="form-control" id="periodFilter" onchange="loadUsageLogs()">
+                    <option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option><option value="">All Time</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activity Logs Table -->
+<div class="card fade-in">
+    <div class="card-header">
+        <div><h3 class="card-title">Activity Logs</h3><p class="card-subtitle" id="logsCount">0 records</p></div>
+    </div>
+    <div class="card-body" style="padding:0;">
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead><tr><th>Timestamp</th><th>Company</th><th>User</th><th>Module</th><th>Action</th><th>Details</th><th>IP Address</th></tr></thead>
+                <tbody id="usageTableBody"><tr><td colspan="7" class="text-center py-4">Loading...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer d-flex justify-content-between align-items-center">
+        <span class="text-muted small" id="paginationInfo">Showing 0 records</span>
+        <div class="d-flex gap-1">
+            <button class="btn btn-sm btn-outline" id="prevBtn" onclick="changePage(-1)" disabled>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Prev
+            </button>
+            <button class="btn btn-sm btn-outline" id="nextBtn" onclick="changePage(1)" disabled>
+                Next <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let currentPage = 1;
+        const pageSize = 20;
+        let totalLogs = 0;
+        let usageChart, moduleUsageChart;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUsageStats();
+            loadUsageLogs();
+        });
+
+        async function loadUsageStats() {
+            try {
+                const res = await fetch('/api/superadmin/usage/stats');
+                const stats = await res.json();
+                document.getElementById('totalActions').textContent = (stats.totalActions || 0).toLocaleString();
+                document.getElementById('activeCompaniesUsage').textContent = stats.activeCompanies || 0;
+                document.getElementById('activeUsersUsage').textContent = stats.activeUsers || 0;
+                document.getElementById('todayActions').textContent = (stats.todayActions || 0).toLocaleString();
+                renderUsageChart(stats.dailyUsage || []);
+                renderModuleUsageChart(stats.moduleUsage || []);
+            } catch (e) { /* stats will show 0 */ }
+        }
+
+        function renderUsageChart(daily) {
+            const ctx = document.getElementById('usageChart');
+            if (usageChart) usageChart.destroy();
+            const labels = daily.map(d => new Date(d.date).toLocaleDateString('en-US', {month:'short',day:'numeric'}));
+            const data = daily.map(d => d.count);
+            usageChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets: [{ label: 'Actions', data, borderColor: '#008080', backgroundColor: 'rgba(0,128,128,0.1)', fill: true, tension: 0.4 }] },
+                options: { responsive: true, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function renderModuleUsageChart(moduleUsage) {
+            const ctx = document.getElementById('moduleUsageChart');
+            if (moduleUsageChart) moduleUsageChart.destroy();
+            const labels = moduleUsage.map(m => m.module);
+            const data = moduleUsage.map(m => m.count);
+            const colors = ['#008080','#28a745','#007bff','#fd7e14','#6f42c1','#e83e8c'];
+            moduleUsageChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels, datasets: [{ data, backgroundColor: colors.slice(0, labels.length) }] },
+                options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }
+            });
+        }
+
+        async function loadUsageLogs() {
+            const search = document.getElementById('searchUsage').value;
+            const module = document.getElementById('moduleFilterUsage').value;
+            const period = document.getElementById('periodFilter').value;
+            let url = `/api/superadmin/usage?page=${currentPage}&pageSize=${pageSize}`;
+            if (search) url += '&search=' + encodeURIComponent(search);
+            if (module) url += '&module=' + encodeURIComponent(module);
+            if (period) url += '&days=' + period;
+
+            try {
+                const res = await fetch(url);
+                const result = await res.json();
+                totalLogs = result.total || 0;
+                document.getElementById('logsCount').textContent = totalLogs.toLocaleString() + ' records';
+                renderUsageLogs(result.logs || []);
+                updatePagination();
+            } catch (e) { showError('Failed to load usage logs'); }
+        }
+
+        function renderUsageLogs(logs) {
+            const tbody = document.getElementById('usageTableBody');
+            if (!logs.length) { tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No activity logs found</td></tr>'; return; }
+            tbody.innerHTML = logs.map(l => `
+                <tr>
+                    <td><small>${new Date(l.createdAt).toLocaleString()}</small></td>
+                    <td>${l.companyName || '-'}</td>
+                    <td>${l.userName || '-'}</td>
+                    <td><span class="badge badge-info">${l.moduleCode}</span></td>
+                    <td>${l.action}</td>
+                    <td><small class="text-muted">${l.details || '-'}</small></td>
+                    <td><small>${l.ipAddress || '-'}</small></td>
+                </tr>
+            `).join('');
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(totalLogs / pageSize);
+            const start = (currentPage - 1) * pageSize + 1;
+            const end = Math.min(currentPage * pageSize, totalLogs);
+            document.getElementById('paginationInfo').textContent = totalLogs > 0 ? `Showing ${start}-${end} of ${totalLogs}` : 'No records';
+            document.getElementById('prevBtn').disabled = currentPage <= 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+        }
+
+        function changePage(dir) {
+            currentPage += dir;
+            if (currentPage < 1) currentPage = 1;
+            loadUsageLogs();
+        }
+
+        function exportUsageLogs() {
+            showSuccess('Export started. Your download will begin shortly.');
+            // Build CSV from current data
+            const rows = [['Timestamp','Company','User','Module','Action','Details','IP Address']];
+            document.querySelectorAll('#usageTableBody tr').forEach(tr => {
+                const cells = Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim());
+                if (cells.length === 7) rows.push(cells);
+            });
+            const csv = rows.map(r => r.map(c => '"' + c.replace(/"/g, '""') + '"').join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'usage_logs_' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+        }
+    </script>
+}

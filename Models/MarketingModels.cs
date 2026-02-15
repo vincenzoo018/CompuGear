@@ -11,6 +11,8 @@ namespace CompuGear.Models
         [Key]
         public int CampaignId { get; set; }
 
+        public int? CompanyId { get; set; }
+
         [StringLength(20)]
         public string? CampaignCode { get; set; }
 
@@ -100,6 +102,8 @@ namespace CompuGear.Models
         [Key]
         public int SegmentId { get; set; }
 
+        public int? CompanyId { get; set; }
+
         [Required]
         [StringLength(100)]
         public string SegmentName { get; set; } = string.Empty;
@@ -157,6 +161,8 @@ namespace CompuGear.Models
     {
         [Key]
         public int PromotionId { get; set; }
+
+        public int? CompanyId { get; set; }
 
         [Required]
         [StringLength(50)]

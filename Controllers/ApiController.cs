@@ -18,6 +18,14 @@ namespace CompuGear.Controllers
             _configuration = configuration;
         }
 
+        // Helper: returns CompanyId from session. Super Admin (RoleId=1) gets null → sees all data.
+        private int? GetCompanyId()
+        {
+            var roleId = HttpContext.Session.GetInt32("RoleId");
+            if (roleId == 1) return null; // Super Admin sees everything
+            return HttpContext.Session.GetInt32("CompanyId");
+        }
+
         #region Marketing - Campaigns
 
         [HttpGet("campaigns")]
@@ -25,7 +33,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var campaigns = await _context.Campaigns
+                    .Where(c => companyId == null || c.CompanyId == companyId)
                     .OrderByDescending(c => c.CreatedAt)
                     .Select(c => new
                     {
@@ -61,7 +71,8 @@ namespace CompuGear.Controllers
         [HttpGet("campaigns/{id}")]
         public async Task<IActionResult> GetCampaign(int id)
         {
-            var campaign = await _context.Campaigns.FindAsync(id);
+            var companyId = GetCompanyId();
+            var campaign = await _context.Campaigns.FirstOrDefaultAsync(c => c.CampaignId == id && (companyId == null || c.CompanyId == companyId));
             if (campaign == null) return NotFound();
             return Ok(campaign);
         }
@@ -71,6 +82,8 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
+                campaign.CompanyId = companyId;
                 campaign.CampaignCode = $"CMP-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
                 campaign.CreatedAt = DateTime.UtcNow;
                 campaign.UpdatedAt = DateTime.UtcNow;
@@ -91,8 +104,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var existing = await _context.Campaigns.FindAsync(id);
-                if (existing == null) return NotFound();
+                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
 
                 existing.CampaignName = campaign.CampaignName;
                 existing.Description = campaign.Description;
@@ -116,8 +130,9 @@ namespace CompuGear.Controllers
         [HttpDelete("campaigns/{id}")]
         public async Task<IActionResult> DeleteCampaign(int id)
         {
+            var companyId = GetCompanyId();
             var campaign = await _context.Campaigns.FindAsync(id);
-            if (campaign == null) return NotFound();
+            if (campaign == null || (companyId != null && campaign.CompanyId != companyId)) return NotFound();
 
             _context.Campaigns.Remove(campaign);
             await _context.SaveChangesAsync();
@@ -134,7 +149,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var promotions = await _context.Promotions
+                    .Where(p => companyId == null || p.CompanyId == companyId)
                     .OrderByDescending(p => p.CreatedAt)
                     .Select(p => new
                     {
@@ -171,9 +188,10 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var now = DateTime.Now;
                 var promotions = await _context.Promotions
-                    .Where(p => p.IsActive && p.StartDate <= now && p.EndDate >= now)
+                    .Where(p => p.IsActive && p.StartDate <= now && p.EndDate >= now && (companyId == null || p.CompanyId == companyId))
                     .OrderByDescending(p => p.DiscountValue)
                     .ToListAsync();
 
@@ -188,7 +206,8 @@ namespace CompuGear.Controllers
         [HttpGet("promotions/{id}")]
         public async Task<IActionResult> GetPromotion(int id)
         {
-            var promotion = await _context.Promotions.FindAsync(id);
+            var companyId = GetCompanyId();
+            var promotion = await _context.Promotions.FirstOrDefaultAsync(p => p.PromotionId == id && (companyId == null || p.CompanyId == companyId));
             if (promotion == null) return NotFound();
             return Ok(promotion);
         }
@@ -198,6 +217,8 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
+                promotion.CompanyId = companyId;
                 promotion.CreatedAt = DateTime.UtcNow;
                 promotion.UpdatedAt = DateTime.UtcNow;
 
@@ -217,8 +238,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var existing = await _context.Promotions.FindAsync(id);
-                if (existing == null) return NotFound();
+                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
 
                 existing.PromotionCode = promotion.PromotionCode;
                 existing.PromotionName = promotion.PromotionName;
@@ -248,8 +270,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var promotion = await _context.Promotions.FindAsync(id);
-                if (promotion == null) return NotFound();
+                if (promotion == null || (companyId != null && promotion.CompanyId != companyId)) return NotFound();
 
                 promotion.IsActive = !promotion.IsActive;
                 promotion.UpdatedAt = DateTime.UtcNow;
@@ -266,8 +289,9 @@ namespace CompuGear.Controllers
         [HttpDelete("promotions/{id}")]
         public async Task<IActionResult> DeletePromotion(int id)
         {
+            var companyId = GetCompanyId();
             var promotion = await _context.Promotions.FindAsync(id);
-            if (promotion == null) return NotFound();
+            if (promotion == null || (companyId != null && promotion.CompanyId != companyId)) return NotFound();
 
             _context.Promotions.Remove(promotion);
             await _context.SaveChangesAsync();
@@ -284,8 +308,10 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var customers = await _context.Customers
                     .Include(c => c.Category)
+                    .Where(c => companyId == null || c.CompanyId == companyId)
                     .OrderByDescending(c => c.CreatedAt)
                     .Select(c => new
                     {
@@ -326,9 +352,10 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var customer = await _context.Customers
                     .Include(c => c.Category)
-                    .FirstOrDefaultAsync(c => c.CustomerId == id);
+                    .FirstOrDefaultAsync(c => c.CustomerId == id && (companyId == null || c.CompanyId == companyId));
                 if (customer == null) return NotFound();
                 return Ok(customer);
             }
@@ -343,6 +370,8 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
+                customer.CompanyId = companyId;
                 customer.CustomerCode = $"CUST-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
                 customer.CreatedAt = DateTime.UtcNow;
                 customer.UpdatedAt = DateTime.UtcNow;
@@ -364,8 +393,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var existing = await _context.Customers.FindAsync(id);
-                if (existing == null) return NotFound();
+                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
 
                 existing.FirstName = customer.FirstName;
                 existing.LastName = customer.LastName;
@@ -391,8 +421,9 @@ namespace CompuGear.Controllers
         [HttpDelete("customers/{id}")]
         public async Task<IActionResult> DeleteCustomer(int id)
         {
+            var companyId = GetCompanyId();
             var customer = await _context.Customers.FindAsync(id);
-            if (customer == null) return NotFound();
+            if (customer == null || (companyId != null && customer.CompanyId != companyId)) return NotFound();
 
             _context.Customers.Remove(customer);
             await _context.SaveChangesAsync();
@@ -405,8 +436,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var customer = await _context.Customers.FindAsync(id);
-                if (customer == null) return NotFound();
+                if (customer == null || (companyId != null && customer.CompanyId != companyId)) return NotFound();
 
                 customer.Status = customer.Status == "Active" ? "Inactive" : "Active";
                 customer.UpdatedAt = DateTime.UtcNow;
@@ -443,10 +475,12 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var products = await _context.Products
                     .Include(p => p.Category)
                     .Include(p => p.Brand)
                     .Include(p => p.Supplier)
+                    .Where(p => companyId == null || p.CompanyId == companyId)
                     .OrderByDescending(p => p.CreatedAt)
                     .Select(p => new
                     {
@@ -487,10 +521,11 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var product = await _context.Products
                     .Include(p => p.Category)
                     .Include(p => p.Brand)
-                    .FirstOrDefaultAsync(p => p.ProductId == id);
+                    .FirstOrDefaultAsync(p => p.ProductId == id && (companyId == null || p.CompanyId == companyId));
                 if (product == null) return NotFound();
                 return Ok(product);
             }
@@ -505,6 +540,8 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
+                product.CompanyId = companyId;
                 product.ProductCode = $"PRD-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
                 product.CreatedAt = DateTime.UtcNow;
                 product.UpdatedAt = DateTime.UtcNow;
@@ -525,8 +562,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var existing = await _context.Products.FindAsync(id);
-                if (existing == null) return NotFound();
+                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
 
                 existing.ProductName = product.ProductName;
                 existing.ShortDescription = product.ShortDescription;
@@ -558,8 +596,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var product = await _context.Products.FindAsync(id);
-                if (product == null) return NotFound();
+                if (product == null || (companyId != null && product.CompanyId != companyId)) return NotFound();
 
                 var previousStock = product.StockQuantity;
                 product.StockQuantity = request.NewQuantity;
@@ -591,8 +630,9 @@ namespace CompuGear.Controllers
         [HttpDelete("products/{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
+            var companyId = GetCompanyId();
             var product = await _context.Products.FindAsync(id);
-            if (product == null) return NotFound();
+            if (product == null || (companyId != null && product.CompanyId != companyId)) return NotFound();
 
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
@@ -746,9 +786,10 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var alerts = await _context.StockAlerts
                     .Include(a => a.Product)
-                    .Where(a => !a.IsResolved)
+                    .Where(a => !a.IsResolved && (companyId == null || a.Product.CompanyId == companyId))
                     .OrderByDescending(a => a.CreatedAt)
                     .ToListAsync();
 
@@ -765,6 +806,12 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
+                // Verify product belongs to company
+                var product = await _context.Products.FindAsync(request.ProductId);
+                if (product == null || (companyId != null && product.CompanyId != companyId))
+                    return NotFound(new { success = false, message = "Product not found" });
+
                 // Check if alert already exists for this product
                 var existingAlert = await _context.StockAlerts
                     .FirstOrDefaultAsync(a => a.ProductId == request.ProductId && !a.IsResolved);
@@ -830,7 +877,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var orders = await _context.PurchaseOrders
+                    .Where(po => companyId == null || po.CompanyId == companyId)
                     .Include(po => po.Supplier)
                     .Include(po => po.Items)
                     .OrderByDescending(po => po.OrderDate)
@@ -862,6 +911,7 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var purchaseOrder = new PurchaseOrder
                 {
                     SupplierId = request.SupplierId,
@@ -871,6 +921,7 @@ namespace CompuGear.Controllers
                     Notes = request.Notes,
                     CreatedAt = DateTime.UtcNow
                 };
+                purchaseOrder.CompanyId = companyId;
 
                 decimal totalAmount = 0;
                 purchaseOrder.Items = new List<PurchaseOrderItem>();
@@ -913,8 +964,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var order = await _context.PurchaseOrders.FindAsync(id);
-                if (order == null)
+                if (order == null || (companyId != null && order.CompanyId != companyId))
                     return NotFound(new { success = false, message = "Purchase order not found" });
 
                 order.Status = "Approved";
@@ -934,8 +986,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var order = await _context.PurchaseOrders.FindAsync(id);
-                if (order == null)
+                if (order == null || (companyId != null && order.CompanyId != companyId))
                     return NotFound(new { success = false, message = "Purchase order not found" });
 
                 order.Status = "Shipped";
@@ -955,9 +1008,10 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var order = await _context.PurchaseOrders
                     .Include(po => po.Items)
-                    .FirstOrDefaultAsync(po => po.PurchaseOrderId == id);
+                    .FirstOrDefaultAsync(po => po.PurchaseOrderId == id && (companyId == null || po.CompanyId == companyId));
 
                 if (order == null)
                     return NotFound(new { success = false, message = "Purchase order not found" });
@@ -1026,7 +1080,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var orders = await _context.Orders
+                    .Where(o => companyId == null || o.CompanyId == companyId)
                     .Include(o => o.Customer)
                     .Include(o => o.OrderItems)
                     .OrderByDescending(o => o.OrderDate)
@@ -1078,11 +1134,12 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var order = await _context.Orders
                     .Include(o => o.Customer)
                     .Include(o => o.OrderItems)
                         .ThenInclude(i => i.Product)
-                    .FirstOrDefaultAsync(o => o.OrderId == id);
+                    .FirstOrDefaultAsync(o => o.OrderId == id && (companyId == null || o.CompanyId == companyId));
 
                 if (order == null) return NotFound();
                 return Ok(order);
@@ -1098,6 +1155,8 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
+                order.CompanyId = companyId;
                 order.OrderNumber = $"ORD-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
                 order.OrderDate = DateTime.UtcNow;
                 order.CreatedAt = DateTime.UtcNow;
@@ -1119,8 +1178,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var existing = await _context.Orders.FindAsync(id);
-                if (existing == null) return NotFound();
+                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
 
                 existing.OrderStatus = order.OrderStatus;
                 existing.PaymentStatus = order.PaymentStatus;
@@ -1154,8 +1214,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var order = await _context.Orders.FindAsync(id);
-                if (order == null) return NotFound();
+                if (order == null || (companyId != null && order.CompanyId != companyId)) return NotFound();
 
                 var previousStatus = order.OrderStatus;
                 order.OrderStatus = request.Status;
@@ -1197,10 +1258,11 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var order = await _context.Orders
                     .Include(o => o.OrderItems)
                     .Include(o => o.Customer)
-                    .FirstOrDefaultAsync(o => o.OrderId == id);
+                    .FirstOrDefaultAsync(o => o.OrderId == id && (companyId == null || o.CompanyId == companyId));
 
                 if (order == null) return NotFound(new { success = false, message = "Order not found" });
 
@@ -1234,6 +1296,7 @@ namespace CompuGear.Controllers
                         InvoiceNumber = invoiceNumber,
                         OrderId = order.OrderId,
                         CustomerId = order.CustomerId,
+                        CompanyId = order.CompanyId,
                         InvoiceDate = DateTime.UtcNow,
                         DueDate = DateTime.UtcNow.AddDays(30),
                         Subtotal = order.Subtotal,
@@ -1371,8 +1434,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var order = await _context.Orders.FindAsync(id);
-                if (order == null) return NotFound(new { success = false, message = "Order not found" });
+                if (order == null || (companyId != null && order.CompanyId != companyId)) return NotFound(new { success = false, message = "Order not found" });
 
                 if (order.OrderStatus != "Pending")
                     return BadRequest(new { success = false, message = "Only pending orders can be rejected" });
@@ -1424,8 +1488,9 @@ namespace CompuGear.Controllers
         [HttpDelete("orders/{id}")]
         public async Task<IActionResult> DeleteOrder(int id)
         {
+            var companyId = GetCompanyId();
             var order = await _context.Orders.FindAsync(id);
-            if (order == null) return NotFound();
+            if (order == null || (companyId != null && order.CompanyId != companyId)) return NotFound();
 
             _context.Orders.Remove(order);
             await _context.SaveChangesAsync();
@@ -1442,7 +1507,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var leads = await _context.Leads
+                    .Where(l => companyId == null || l.CompanyId == companyId)
                     .OrderByDescending(l => l.CreatedAt)
                     .ToListAsync();
 
@@ -1459,7 +1526,8 @@ namespace CompuGear.Controllers
         {
             try
             {
-                var lead = await _context.Leads.FindAsync(id);
+                var companyId = GetCompanyId();
+                var lead = await _context.Leads.FirstOrDefaultAsync(l => l.LeadId == id && (companyId == null || l.CompanyId == companyId));
                 if (lead == null) return NotFound();
                 return Ok(lead);
             }
@@ -1474,6 +1542,8 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
+                lead.CompanyId = companyId;
                 lead.LeadCode = $"LEAD-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
                 lead.CreatedAt = DateTime.UtcNow;
                 lead.UpdatedAt = DateTime.UtcNow;
@@ -1494,8 +1564,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var existing = await _context.Leads.FindAsync(id);
-                if (existing == null) return NotFound();
+                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
 
                 existing.FirstName = lead.FirstName;
                 existing.LastName = lead.LastName;
@@ -1523,8 +1594,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var lead = await _context.Leads.FindAsync(id);
-                if (lead == null) return NotFound();
+                if (lead == null || (companyId != null && lead.CompanyId != companyId)) return NotFound();
 
                 // Create customer from lead
                 var customer = new Customer
@@ -1539,6 +1611,7 @@ namespace CompuGear.Controllers
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
+                customer.CompanyId = lead.CompanyId;
 
                 _context.Customers.Add(customer);
                 await _context.SaveChangesAsync();
@@ -1562,8 +1635,9 @@ namespace CompuGear.Controllers
         [HttpDelete("leads/{id}")]
         public async Task<IActionResult> DeleteLead(int id)
         {
+            var companyId = GetCompanyId();
             var lead = await _context.Leads.FindAsync(id);
-            if (lead == null) return NotFound();
+            if (lead == null || (companyId != null && lead.CompanyId != companyId)) return NotFound();
 
             _context.Leads.Remove(lead);
             await _context.SaveChangesAsync();
@@ -1576,8 +1650,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var lead = await _context.Leads.FindAsync(id);
-                if (lead == null) return NotFound();
+                if (lead == null || (companyId != null && lead.CompanyId != companyId)) return NotFound();
 
                 lead.Status = lead.Status == "Active" || lead.Status == "New" || lead.Status == "Qualified" || lead.Status == "Hot" ? "Inactive" : "Active";
                 lead.UpdatedAt = DateTime.UtcNow;
@@ -1600,7 +1675,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var tickets = await _context.SupportTickets
+                    .Where(t => companyId == null || t.CompanyId == companyId)
                     .Include(t => t.Customer)
                     .Include(t => t.Category)
                     .OrderByDescending(t => t.CreatedAt)
@@ -1637,11 +1714,12 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var ticket = await _context.SupportTickets
                     .Include(t => t.Customer)
                     .Include(t => t.Category)
                     .Include(t => t.Messages)
-                    .FirstOrDefaultAsync(t => t.TicketId == id);
+                    .FirstOrDefaultAsync(t => t.TicketId == id && (companyId == null || t.CompanyId == companyId));
 
                 if (ticket == null) return NotFound();
                 return Ok(ticket);
@@ -1657,6 +1735,8 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
+                ticket.CompanyId = companyId;
                 ticket.TicketNumber = $"TKT-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
                 ticket.CreatedAt = DateTime.UtcNow;
                 ticket.UpdatedAt = DateTime.UtcNow;
@@ -1678,8 +1758,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var existing = await _context.SupportTickets.FindAsync(id);
-                if (existing == null) return NotFound();
+                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
 
                 existing.Subject = ticket.Subject;
                 existing.Description = ticket.Description;
@@ -1708,8 +1789,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var ticket = await _context.SupportTickets.FindAsync(id);
-                if (ticket == null) return NotFound();
+                if (ticket == null || (companyId != null && ticket.CompanyId != companyId)) return NotFound();
 
                 message.TicketId = id;
                 message.CreatedAt = DateTime.UtcNow;
@@ -1734,8 +1816,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var ticket = await _context.SupportTickets.FindAsync(id);
-                if (ticket == null) return NotFound();
+                if (ticket == null || (companyId != null && ticket.CompanyId != companyId)) return NotFound();
 
                 // Get current user info from session
                 var userId = HttpContext.Session.GetInt32("UserId");
@@ -1780,8 +1863,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var ticket = await _context.SupportTickets.FindAsync(id);
-                if (ticket == null) return NotFound();
+                if (ticket == null || (companyId != null && ticket.CompanyId != companyId)) return NotFound();
 
                 var userId = HttpContext.Session.GetInt32("UserId");
 
@@ -1813,8 +1897,9 @@ namespace CompuGear.Controllers
         [HttpDelete("tickets/{id}")]
         public async Task<IActionResult> DeleteTicket(int id)
         {
+            var companyId = GetCompanyId();
             var ticket = await _context.SupportTickets.FindAsync(id);
-            if (ticket == null) return NotFound();
+            if (ticket == null || (companyId != null && ticket.CompanyId != companyId)) return NotFound();
 
             _context.SupportTickets.Remove(ticket);
             await _context.SaveChangesAsync();
@@ -1845,8 +1930,10 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var users = await _context.Users
                     .Include(u => u.Role)
+                    .Where(u => (companyId == null || u.CompanyId == companyId) && (companyId == null || u.RoleId != 1))
                     .OrderByDescending(u => u.CreatedAt)
                     .Select(u => new
                     {
@@ -1876,9 +1963,10 @@ namespace CompuGear.Controllers
         [HttpGet("users/{id}")]
         public async Task<IActionResult> GetUser(int id)
         {
+            var companyId = GetCompanyId();
             var user = await _context.Users
                 .Include(u => u.Role)
-                .FirstOrDefaultAsync(u => u.UserId == id);
+                .FirstOrDefaultAsync(u => u.UserId == id && (companyId == null || u.CompanyId == companyId));
             if (user == null) return NotFound();
             return Ok(user);
         }
@@ -1908,6 +1996,9 @@ namespace CompuGear.Controllers
                     return BadRequest(new { success = false, message = "Password is required" });
                 }
 
+                var companyId = GetCompanyId();
+                user.CompanyId = companyId;
+
                 // Set default role if not provided
                 if (user.RoleId == 0)
                 {
@@ -1933,8 +2024,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var existing = await _context.Users.FindAsync(id);
-                if (existing == null) return NotFound();
+                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
 
                 existing.FirstName = user.FirstName;
                 existing.LastName = user.LastName;
@@ -1968,8 +2060,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var user = await _context.Users.FindAsync(id);
-                if (user == null) return NotFound();
+                if (user == null || (companyId != null && user.CompanyId != companyId)) return NotFound();
 
                 user.IsActive = !user.IsActive;
                 user.UpdatedAt = DateTime.UtcNow;
@@ -1986,8 +2079,9 @@ namespace CompuGear.Controllers
         [HttpDelete("users/{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
+            var companyId = GetCompanyId();
             var user = await _context.Users.FindAsync(id);
-            if (user == null) return NotFound();
+            if (user == null || (companyId != null && user.CompanyId != companyId)) return NotFound();
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
@@ -2042,8 +2136,10 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var invoices = await _context.Invoices
                     .Include(i => i.Customer)
+                    .Where(i => companyId == null || i.CompanyId == companyId)
                     .OrderByDescending(i => i.CreatedAt)
                     .Select(i => new
                     {
@@ -2077,10 +2173,11 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var invoice = await _context.Invoices
                     .Include(i => i.Customer)
                     .Include(i => i.Items)
-                    .FirstOrDefaultAsync(i => i.InvoiceId == id);
+                    .FirstOrDefaultAsync(i => i.InvoiceId == id && (companyId == null || i.CompanyId == companyId));
 
                 if (invoice == null) return NotFound();
                 return Ok(invoice);
@@ -2096,6 +2193,8 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
+                invoice.CompanyId = companyId;
                 invoice.InvoiceNumber = $"INV-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
                 invoice.InvoiceDate = DateTime.UtcNow;
                 invoice.CreatedAt = DateTime.UtcNow;
@@ -2117,8 +2216,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var existing = await _context.Invoices.FindAsync(id);
-                if (existing == null) return NotFound();
+                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
 
                 existing.Status = invoice.Status;
                 existing.DueDate = invoice.DueDate;
@@ -2139,8 +2239,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var invoice = await _context.Invoices.FindAsync(id);
-                if (invoice == null) return NotFound();
+                if (invoice == null || (companyId != null && invoice.CompanyId != companyId)) return NotFound();
 
                 _context.Invoices.Remove(invoice);
                 await _context.SaveChangesAsync();
@@ -2159,8 +2260,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var invoice = await _context.Invoices.FindAsync(id);
-                if (invoice == null) return NotFound(new { success = false, message = "Invoice not found" });
+                if (invoice == null || (companyId != null && invoice.CompanyId != companyId)) return NotFound(new { success = false, message = "Invoice not found" });
 
                 invoice.Status = model.Status;
                 invoice.UpdatedAt = DateTime.UtcNow;
@@ -2190,12 +2292,13 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var invoice = await _context.Invoices
                     .Include(i => i.Customer)
                     .Include(i => i.Items)
                         .ThenInclude(item => item.Product)
                     .Include(i => i.Order)
-                    .FirstOrDefaultAsync(i => i.InvoiceId == id);
+                    .FirstOrDefaultAsync(i => i.InvoiceId == id && (companyId == null || i.CompanyId == companyId));
 
                 if (invoice == null) return NotFound(new { success = false, message = "Invoice not found" });
 
@@ -2280,16 +2383,18 @@ namespace CompuGear.Controllers
                     _ => new DateTime(now.Year, now.Month, 1) // month
                 };
 
+                var companyId = GetCompanyId();
+
                 var invoices = await _context.Invoices
-                    .Where(i => i.InvoiceDate >= startDate)
+                    .Where(i => i.InvoiceDate >= startDate && (companyId == null || i.CompanyId == companyId))
                     .ToListAsync();
 
                 var payments = await _context.Payments
-                    .Where(p => p.PaymentDate >= startDate && p.Status == "Completed")
+                    .Where(p => p.PaymentDate >= startDate && p.Status == "Completed" && (companyId == null || p.CompanyId == companyId))
                     .ToListAsync();
 
                 var orders = await _context.Orders
-                    .Where(o => o.OrderDate >= startDate)
+                    .Where(o => o.OrderDate >= startDate && (companyId == null || o.CompanyId == companyId))
                     .ToListAsync();
 
                 // Monthly breakdown (12 months)
@@ -2297,13 +2402,13 @@ namespace CompuGear.Controllers
                 var monthlyInvoiced = new decimal[12];
                 var monthlyCollected = new decimal[12];
 
-                foreach (var o in await _context.Orders.Where(o => o.OrderDate.Year == now.Year).ToListAsync())
+                foreach (var o in await _context.Orders.Where(o => o.OrderDate.Year == now.Year && (companyId == null || o.CompanyId == companyId)).ToListAsync())
                     monthlyRevenue[o.OrderDate.Month - 1] += o.TotalAmount;
 
-                foreach (var i in await _context.Invoices.Where(i => i.InvoiceDate.Year == now.Year).ToListAsync())
+                foreach (var i in await _context.Invoices.Where(i => i.InvoiceDate.Year == now.Year && (companyId == null || i.CompanyId == companyId)).ToListAsync())
                     monthlyInvoiced[i.InvoiceDate.Month - 1] += i.TotalAmount;
 
-                foreach (var p in await _context.Payments.Where(p => p.PaymentDate.Year == now.Year && p.Status == "Completed").ToListAsync())
+                foreach (var p in await _context.Payments.Where(p => p.PaymentDate.Year == now.Year && p.Status == "Completed" && (companyId == null || p.CompanyId == companyId)).ToListAsync())
                     monthlyCollected[p.PaymentDate.Month - 1] += p.Amount;
 
                 // Payment method breakdown
@@ -2313,7 +2418,7 @@ namespace CompuGear.Controllers
                     .ToList();
 
                 // Invoice status breakdown
-                var allInvoices = await _context.Invoices.ToListAsync();
+                var allInvoices = await _context.Invoices.Where(i => companyId == null || i.CompanyId == companyId).ToListAsync();
                 var invoiceStatusBreakdown = allInvoices
                     .GroupBy(i => i.Status)
                     .Select(g => new { Status = g.Key, Count = g.Count(), Amount = g.Sum(i => i.TotalAmount) })
@@ -2336,6 +2441,7 @@ namespace CompuGear.Controllers
                         paymentMethods,
                         invoiceStatusBreakdown,
                         topCustomers = await _context.Customers
+                            .Where(c => companyId == null || c.CompanyId == companyId)
                             .OrderByDescending(c => c.TotalSpent)
                             .Take(5)
                             .Select(c => new { c.CustomerId, Name = c.FirstName + " " + c.LastName, c.TotalSpent, c.TotalOrders })
@@ -2358,7 +2464,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var payments = await _context.Payments
+                    .Where(p => companyId == null || p.CompanyId == companyId)
                     .Include(p => p.Customer)
                     .Include(p => p.Invoice)
                     .OrderByDescending(p => p.PaymentDate)
@@ -2393,6 +2501,8 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
+                payment.CompanyId = companyId;
                 payment.PaymentNumber = $"PAY-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
                 payment.PaymentDate = DateTime.UtcNow;
                 payment.CreatedAt = DateTime.UtcNow;
@@ -2432,7 +2542,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var suppliers = await _context.Suppliers
+                    .Where(s => companyId == null || s.CompanyId == companyId)
                     .OrderBy(s => s.SupplierName)
                     .Select(s => new
                     {
@@ -2459,7 +2571,8 @@ namespace CompuGear.Controllers
         {
             try
             {
-                var supplier = await _context.Suppliers.FindAsync(id);
+                var companyId = GetCompanyId();
+                var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierId == id && (companyId == null || s.CompanyId == companyId));
                 if (supplier == null) return NotFound();
                 return Ok(supplier);
             }
@@ -2474,10 +2587,11 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var products = await _context.Products
                     .Include(p => p.Category)
                     .Include(p => p.Brand)
-                    .Where(p => p.SupplierId == id)
+                    .Where(p => p.SupplierId == id && (companyId == null || p.CompanyId == companyId))
                     .OrderBy(p => p.ProductName)
                     .Select(p => new
                     {
@@ -2510,6 +2624,8 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
+                supplier.CompanyId = companyId;
                 supplier.SupplierCode = $"SUP-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
                 supplier.CreatedAt = DateTime.UtcNow;
                 supplier.UpdatedAt = DateTime.UtcNow;
@@ -2530,8 +2646,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var existing = await _context.Suppliers.FindAsync(id);
-                if (existing == null) return NotFound();
+                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
 
                 existing.SupplierName = supplier.SupplierName;
                 existing.ContactPerson = supplier.ContactPerson;
@@ -2565,8 +2682,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var product = await _context.Products.FindAsync(request.ProductId);
-                if (product == null)
+                if (product == null || (companyId != null && product.CompanyId != companyId))
                     return NotFound(new { success = false, message = "Product not found" });
 
                 var previousStock = product.StockQuantity;
@@ -2620,9 +2738,10 @@ namespace CompuGear.Controllers
         {
             try
             {
+                var companyId = GetCompanyId();
                 var adjustments = await _context.InventoryTransactions
                     .Include(t => t.Product)
-                    .Where(t => t.ReferenceType == "Stock Adjustment")
+                    .Where(t => t.ReferenceType == "Stock Adjustment" && (companyId == null || t.Product.CompanyId == companyId))
                     .OrderByDescending(t => t.TransactionDate)
                     .Select(t => new
                     {
@@ -2659,17 +2778,19 @@ namespace CompuGear.Controllers
             var today = DateTime.Today;
             var thisMonth = new DateTime(today.Year, today.Month, 1);
 
+            var companyId = GetCompanyId();
+
             var stats = new
             {
-                TotalCustomers = await _context.Customers.CountAsync(),
-                TotalOrders = await _context.Orders.CountAsync(),
-                TotalRevenue = await _context.Orders.Where(o => o.PaymentStatus == "Paid").SumAsync(o => o.TotalAmount),
-                PendingOrders = await _context.Orders.CountAsync(o => o.OrderStatus == "Pending"),
-                OpenTickets = await _context.SupportTickets.CountAsync(t => t.Status == "Open" || t.Status == "In Progress"),
-                LowStockProducts = await _context.Products.CountAsync(p => p.StockQuantity <= p.ReorderLevel),
-                ActiveCampaigns = await _context.Campaigns.CountAsync(c => c.Status == "Active"),
+                TotalCustomers = await _context.Customers.CountAsync(c => companyId == null || c.CompanyId == companyId),
+                TotalOrders = await _context.Orders.CountAsync(o => companyId == null || o.CompanyId == companyId),
+                TotalRevenue = await _context.Orders.Where(o => o.PaymentStatus == "Paid" && (companyId == null || o.CompanyId == companyId)).SumAsync(o => o.TotalAmount),
+                PendingOrders = await _context.Orders.CountAsync(o => o.OrderStatus == "Pending" && (companyId == null || o.CompanyId == companyId)),
+                OpenTickets = await _context.SupportTickets.CountAsync(t => (t.Status == "Open" || t.Status == "In Progress") && (companyId == null || t.CompanyId == companyId)),
+                LowStockProducts = await _context.Products.CountAsync(p => p.StockQuantity <= p.ReorderLevel && (companyId == null || p.CompanyId == companyId)),
+                ActiveCampaigns = await _context.Campaigns.CountAsync(c => c.Status == "Active" && (companyId == null || c.CompanyId == companyId)),
                 MonthlyRevenue = await _context.Orders
-                    .Where(o => o.OrderDate >= thisMonth && o.PaymentStatus == "Paid")
+                    .Where(o => o.OrderDate >= thisMonth && o.PaymentStatus == "Paid" && (companyId == null || o.CompanyId == companyId))
                     .SumAsync(o => o.TotalAmount)
             };
 
@@ -3207,6 +3328,122 @@ namespace CompuGear.Controllers
         }
 
         #endregion
+
+        #region Role-Based Access Control
+
+        [HttpGet("role-access")]
+        public async Task<IActionResult> GetRoleAccess()
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                if (companyId == null)
+                {
+                    // Super Admin: get companyId from query if provided
+                    var qCompanyId = HttpContext.Request.Query["companyId"].FirstOrDefault();
+                    if (!string.IsNullOrEmpty(qCompanyId) && int.TryParse(qCompanyId, out var cid))
+                        companyId = cid;
+                    else
+                        return BadRequest(new { success = false, message = "CompanyId is required" });
+                }
+
+                var access = await _context.RoleModuleAccess
+                    .Where(r => r.CompanyId == companyId)
+                    .Include(r => r.Role)
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.CompanyId,
+                        r.RoleId,
+                        RoleName = r.Role != null ? r.Role.RoleName : "",
+                        r.ModuleCode,
+                        r.HasAccess
+                    })
+                    .ToListAsync();
+
+                // Get available roles (exclude Super Admin and Customer)
+                var roles = await _context.Roles
+                    .Where(r => r.RoleId != 1 && r.RoleId != 7)
+                    .OrderBy(r => r.RoleId)
+                    .Select(r => new { r.RoleId, r.RoleName })
+                    .ToListAsync();
+
+                var modules = new[]
+                {
+                    new { Code = "SALES", Name = "Sales" },
+                    new { Code = "CUSTOMERS", Name = "Customers" },
+                    new { Code = "INVENTORY", Name = "Inventory" },
+                    new { Code = "BILLING", Name = "Billing" },
+                    new { Code = "MARKETING", Name = "Marketing" },
+                    new { Code = "SUPPORT", Name = "Support" }
+                };
+
+                return Ok(new { success = true, data = access, roles, modules });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost("role-access")]
+        public async Task<IActionResult> SaveRoleAccess([FromBody] RoleAccessSaveRequest request)
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                if (companyId == null)
+                {
+                    if (request.CompanyId.HasValue)
+                        companyId = request.CompanyId.Value;
+                    else
+                        return BadRequest(new { success = false, message = "CompanyId is required" });
+                }
+
+                // Remove existing entries for this company
+                var existing = await _context.RoleModuleAccess
+                    .Where(r => r.CompanyId == companyId)
+                    .ToListAsync();
+                _context.RoleModuleAccess.RemoveRange(existing);
+
+                // Add new entries
+                foreach (var item in request.AccessList)
+                {
+                    _context.RoleModuleAccess.Add(new RoleModuleAccess
+                    {
+                        CompanyId = companyId.Value,
+                        RoleId = item.RoleId,
+                        ModuleCode = item.ModuleCode,
+                        HasAccess = item.HasAccess,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    });
+                }
+
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true, message = "Role access settings saved successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
+            }
+        }
+
+        #endregion
+    }
+
+    // Role Access DTOs
+    public class RoleAccessSaveRequest
+    {
+        public int? CompanyId { get; set; }
+        public List<RoleAccessItem> AccessList { get; set; } = new();
+    }
+
+    public class RoleAccessItem
+    {
+        public int RoleId { get; set; }
+        public string ModuleCode { get; set; } = string.Empty;
+        public bool HasAccess { get; set; }
     }
 
     // Request DTOs

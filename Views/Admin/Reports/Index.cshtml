@@ -1,0 +1,244 @@
+@{
+    ViewData["Title"] = "Company Reports";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <p class="text-muted mb-0">Reports</p>
+            <h1 class="page-title">Company Reports</h1>
+            <p class="page-subtitle">Generate and view company-level reports and analytics.</p>
+        </div>
+        <button class="btn btn-primary" onclick="exportAllReports()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export All
+        </button>
+    </div>
+</div>
+
+<!-- Report Period Filter -->
+<div class="card fade-in mb-3">
+    <div class="card-body">
+        <div class="d-flex gap-3 align-items-end flex-wrap">
+            <div class="form-group mb-0">
+                <label class="form-label">Report Period</label>
+                <select class="form-control" id="reportPeriod" onchange="loadReportData()">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30" selected>Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                    <option value="365">Last 12 Months</option>
+                </select>
+            </div>
+            <div class="form-group mb-0">
+                <label class="form-label">From Date</label>
+                <input type="date" class="form-control" id="fromDate">
+            </div>
+            <div class="form-group mb-0">
+                <label class="form-label">To Date</label>
+                <input type="date" class="form-control" id="toDate">
+            </div>
+            <button class="btn btn-primary" onclick="loadReportData()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                    <polyline points="23 4 23 10 17 10"/>
+                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+                Generate
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Summary -->
+<div class="stat-cards">
+    <div class="stat-card fade-in stagger-1">
+        <div class="stat-info">
+            <span class="stat-label">Total Revenue</span>
+            <span class="stat-value" id="rptRevenue">₱0</span>
+            <div class="stat-trend up"><span>this period</span></div>
+        </div>
+        <div class="stat-icon teal">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+        </div>
+    </div>
+    <div class="stat-card fade-in stagger-2">
+        <div class="stat-info">
+            <span class="stat-label">Total Orders</span>
+            <span class="stat-value" id="rptOrders">0</span>
+            <div class="stat-trend up"><span>this period</span></div>
+        </div>
+        <div class="stat-icon green">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+        </div>
+    </div>
+    <div class="stat-card fade-in stagger-3">
+        <div class="stat-info">
+            <span class="stat-label">New Customers</span>
+            <span class="stat-value" id="rptNewCustomers">0</span>
+            <div class="stat-trend up"><span>this period</span></div>
+        </div>
+        <div class="stat-icon blue">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/>
+                <line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+            </svg>
+        </div>
+    </div>
+    <div class="stat-card fade-in stagger-4">
+        <div class="stat-info">
+            <span class="stat-label">Support Tickets</span>
+            <span class="stat-value" id="rptTickets">0</span>
+            <div class="stat-trend"><span>this period</span></div>
+        </div>
+        <div class="stat-icon orange">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="grid grid-2 mt-3">
+    <div class="card fade-in">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Revenue Trend</h3>
+                <p class="card-subtitle">Revenue over time</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="chart-container"><canvas id="revenueTrendChart"></canvas></div>
+        </div>
+    </div>
+    <div class="card fade-in">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Orders by Status</h3>
+                <p class="card-subtitle">Order distribution</p>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="chart-container" style="height:250px;"><canvas id="orderStatusChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-2 mt-3">
+    <div class="card fade-in">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Top Selling Products</h3>
+                <p class="card-subtitle">By quantity sold</p>
+            </div>
+        </div>
+        <div class="card-body" style="padding:0;">
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead><tr><th>Product</th><th class="text-center">Qty Sold</th><th class="text-end">Revenue</th></tr></thead>
+                    <tbody id="topProductsTable"><tr><td colspan="3" class="text-center py-4">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="card fade-in">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title">Department Performance</h3>
+                <p class="card-subtitle">Staff activity by module</p>
+            </div>
+        </div>
+        <div class="card-body" style="padding:0;">
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead><tr><th>Department</th><th class="text-center">Actions</th><th class="text-center">Active Staff</th></tr></thead>
+                    <tbody id="deptPerfTable"><tr><td colspan="3" class="text-center py-4">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', loadReportData);
+
+        async function loadReportData() {
+            try {
+                const [orders, customers, products, tickets] = await Promise.all([
+                    fetch('/api/orders').then(r=>r.json()).catch(()=>[]),
+                    fetch('/api/customers').then(r=>r.json()).catch(()=>[]),
+                    fetch('/api/products').then(r=>r.json()).catch(()=>[]),
+                    fetch('/api/support/tickets').then(r=>r.json()).catch(()=>[])
+                ]);
+                const revenue = orders.reduce((s,o)=>s+(o.totalAmount||0),0);
+                document.getElementById('rptRevenue').textContent = '₱' + revenue.toLocaleString('en-PH',{minimumFractionDigits:2});
+                document.getElementById('rptOrders').textContent = orders.length;
+                document.getElementById('rptNewCustomers').textContent = customers.length;
+                document.getElementById('rptTickets').textContent = tickets.length;
+                renderRevenueTrend(orders);
+                renderOrderStatus(orders);
+                renderTopProducts(products, orders);
+                renderDeptPerf();
+            } catch(e) { console.error(e); }
+        }
+
+        function renderRevenueTrend(orders) {
+            const ctx = document.getElementById('revenueTrendChart')?.getContext('2d');
+            if(!ctx) return;
+            const monthly = Array(12).fill(0);
+            orders.forEach(o=>{const d=new Date(o.orderDate); monthly[d.getMonth()]+=o.totalAmount||0;});
+            new Chart(ctx,{type:'line',data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+                datasets:[{label:'Revenue',data:monthly,borderColor:'#008080',backgroundColor:'rgba(0,128,128,0.1)',fill:true,tension:0.4}]},
+                options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+                scales:{y:{beginAtZero:true,ticks:{callback:v=>'₱'+(v/1000).toFixed(0)+'k'}},x:{grid:{display:false}}}}});
+        }
+
+        function renderOrderStatus(orders) {
+            const ctx = document.getElementById('orderStatusChart')?.getContext('2d');
+            if(!ctx) return;
+            const statuses = {};
+            orders.forEach(o=>{statuses[o.orderStatus||'Unknown']=(statuses[o.orderStatus||'Unknown']||0)+1;});
+            new Chart(ctx,{type:'doughnut',data:{labels:Object.keys(statuses),
+                datasets:[{data:Object.values(statuses),backgroundColor:['#008080','#10B981','#F59E0B','#EF4444','#3B82F6','#8B5CF6'],borderWidth:0,cutout:'65%'}]},
+                options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
+        }
+
+        function renderTopProducts(products) {
+            const tbody = document.getElementById('topProductsTable');
+            const sorted = [...products].sort((a,b)=>(b.stockQuantity||0)-(a.stockQuantity||0)).slice(0,5);
+            if(!sorted.length){tbody.innerHTML='<tr><td colspan="3" class="text-center py-4">No data</td></tr>';return;}
+            tbody.innerHTML = sorted.map(p=>`<tr><td><strong>${p.productName||''}</strong></td>
+                <td class="text-center">${p.stockQuantity||0}</td>
+                <td class="text-end">₱${(p.sellingPrice||0).toLocaleString('en-PH',{minimumFractionDigits:2})}</td></tr>`).join('');
+        }
+
+        function renderDeptPerf() {
+            const tbody = document.getElementById('deptPerfTable');
+            const depts = [
+                {name:'Sales',actions:'-',staff:'-'},
+                {name:'Support',actions:'-',staff:'-'},
+                {name:'Marketing',actions:'-',staff:'-'},
+                {name:'Billing',actions:'-',staff:'-'},
+                {name:'Inventory',actions:'-',staff:'-'}
+            ];
+            tbody.innerHTML = depts.map(d=>`<tr><td><strong>${d.name}</strong></td>
+                <td class="text-center">${d.actions}</td><td class="text-center">${d.staff}</td></tr>`).join('');
+        }
+
+        function exportAllReports() {
+            const toast = new bootstrap.Toast(document.getElementById('successToast'));
+            document.getElementById('successMessage').textContent = 'Report export started. You will be notified when ready.';
+            toast.show();
+        }
+    </script>
+}

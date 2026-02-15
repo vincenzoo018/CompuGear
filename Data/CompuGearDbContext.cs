@@ -77,6 +77,15 @@ namespace CompuGear.Data
         // Approval Workflow
         public DbSet<ApprovalRequest> ApprovalRequests { get; set; }
 
+        // Role Module Access
+        public DbSet<RoleModuleAccess> RoleModuleAccess { get; set; }
+
+        // Super Admin ERP
+        public DbSet<ERPModule> ERPModules { get; set; }
+        public DbSet<CompanySubscription> CompanySubscriptions { get; set; }
+        public DbSet<CompanyModuleAccess> CompanyModuleAccess { get; set; }
+        public DbSet<PlatformUsageLog> PlatformUsageLogs { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -194,17 +203,50 @@ namespace CompuGear.Data
                 .HasIndex(c => c.IntentName)
                 .IsUnique();
 
+            // ERP Modules
+            modelBuilder.Entity<ERPModule>()
+                .HasIndex(m => m.ModuleCode)
+                .IsUnique();
+
+            // Role Module Access
+            modelBuilder.Entity<RoleModuleAccess>()
+                .HasIndex(r => new { r.CompanyId, r.RoleId, r.ModuleCode })
+                .IsUnique();
+
+            // Company Module Access
+            modelBuilder.Entity<CompanyModuleAccess>()
+                .HasIndex(a => new { a.CompanyId, a.ModuleId })
+                .IsUnique();
+
+            // Platform Usage Logs
+            modelBuilder.Entity<PlatformUsageLog>()
+                .HasIndex(l => l.CompanyId);
+
+            modelBuilder.Entity<PlatformUsageLog>()
+                .HasIndex(l => l.CreatedAt);
+
             // ============ Seed Data ============
 
-            // Seed Roles (7 Actor Types)
+            // Seed Roles (8 Actor Types including Inventory Staff)
             modelBuilder.Entity<Role>().HasData(
-                new Role { RoleId = 1, RoleName = "Super Admin", Description = "Full system access with all privileges", AccessLevel = 7 },
-                new Role { RoleId = 2, RoleName = "Company Admin", Description = "Company-wide administrative access", AccessLevel = 6 },
-                new Role { RoleId = 3, RoleName = "Sales Staff", Description = "Sales and order management access", AccessLevel = 5 },
-                new Role { RoleId = 4, RoleName = "Customer Support Staff", Description = "Customer support and ticket management", AccessLevel = 4 },
-                new Role { RoleId = 5, RoleName = "Marketing Staff", Description = "Marketing campaigns and promotions management", AccessLevel = 3 },
-                new Role { RoleId = 6, RoleName = "Accounting & Billing Staff", Description = "Financial and billing management", AccessLevel = 2 },
-                new Role { RoleId = 7, RoleName = "Customer", Description = "Customer portal access", AccessLevel = 1 }
+                new Role { RoleId = 1, RoleName = "Super Admin", Description = "Full system access with all privileges", AccessLevel = 8 },
+                new Role { RoleId = 2, RoleName = "Company Admin", Description = "Company-wide administrative access", AccessLevel = 7 },
+                new Role { RoleId = 3, RoleName = "Sales Staff", Description = "Sales and order management access", AccessLevel = 6 },
+                new Role { RoleId = 4, RoleName = "Customer Support Staff", Description = "Customer support and ticket management", AccessLevel = 5 },
+                new Role { RoleId = 5, RoleName = "Marketing Staff", Description = "Marketing campaigns and promotions management", AccessLevel = 4 },
+                new Role { RoleId = 6, RoleName = "Accounting & Billing Staff", Description = "Financial and billing management", AccessLevel = 3 },
+                new Role { RoleId = 7, RoleName = "Customer", Description = "Customer portal access", AccessLevel = 1 },
+                new Role { RoleId = 8, RoleName = "Inventory Staff", Description = "Inventory and stock management", AccessLevel = 2 }
+            );
+
+            // Seed ERP Modules
+            modelBuilder.Entity<ERPModule>().HasData(
+                new ERPModule { ModuleId = 1, ModuleName = "Sales Management", ModuleCode = "SALES", Description = "Complete sales pipeline, orders, leads and revenue tracking", MonthlyPrice = 49.99m, AnnualPrice = 499.99m, SortOrder = 1, Features = "Order Management,Lead Tracking,Sales Reports,Revenue Analytics" },
+                new ERPModule { ModuleId = 2, ModuleName = "Customer Support", ModuleCode = "SUPPORT", Description = "Ticket management, live chat, knowledge base and SLA tracking", MonthlyPrice = 39.99m, AnnualPrice = 399.99m, SortOrder = 2, Features = "Ticket System,Live Chat,Knowledge Base,SLA Management" },
+                new ERPModule { ModuleId = 3, ModuleName = "Marketing", ModuleCode = "MARKETING", Description = "Campaign management, promotions, customer segmentation and analytics", MonthlyPrice = 44.99m, AnnualPrice = 449.99m, SortOrder = 3, Features = "Campaigns,Promotions,Segments,Marketing Analytics" },
+                new ERPModule { ModuleId = 4, ModuleName = "Billing & Accounting", ModuleCode = "BILLING", Description = "Invoice generation, payment processing, financial reports", MonthlyPrice = 54.99m, AnnualPrice = 549.99m, SortOrder = 4, Features = "Invoices,Payments,Refunds,Financial Reports" },
+                new ERPModule { ModuleId = 5, ModuleName = "Inventory Management", ModuleCode = "INVENTORY", Description = "Product catalog, stock tracking, purchase orders and suppliers", MonthlyPrice = 44.99m, AnnualPrice = 449.99m, SortOrder = 5, Features = "Products,Stock Levels,Purchase Orders,Suppliers" },
+                new ERPModule { ModuleId = 6, ModuleName = "Customer Management", ModuleCode = "CUSTOMERS", Description = "Customer profiles, categories, addresses and purchase history", MonthlyPrice = 29.99m, AnnualPrice = 299.99m, SortOrder = 6, Features = "Customer Profiles,Categories,History,Addresses" }
             );
 
             // Seed Customer Categories

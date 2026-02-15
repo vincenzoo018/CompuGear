@@ -39,6 +39,8 @@ namespace CompuGear.Models
         [Key]
         public int TicketId { get; set; }
 
+        public int? CompanyId { get; set; }
+
         [Required]
         [StringLength(20)]
         public string TicketNumber { get; set; } = string.Empty;

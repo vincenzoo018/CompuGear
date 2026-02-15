@@ -37,7 +37,8 @@ namespace CompuGear.Controllers
                 roleName,
                 expectedDashboard = roleId switch
                 {
-                    1 or 2 => "/Home (Admin Dashboard)",
+                    1 => "/SuperAdmin (Super Admin Dashboard)",
+                    2 => "/Home (Company Admin Dashboard)",
                     3 => "/SalesStaff (Sales Dashboard)",
                     4 => "/SupportStaff (Support Dashboard)",
                     5 => "/MarketingStaff (Marketing Dashboard)",
@@ -73,7 +74,8 @@ namespace CompuGear.Controllers
                 message = $"User {email} role updated to {roleId}",
                 redirectUrl = roleId switch
                 {
-                    1 or 2 => "/Home/Index",
+                    1 => "/SuperAdmin/Index",
+                    2 => "/Home/Index",
                     3 => "/SalesStaff/Index",
                     4 => "/SupportStaff/Index",
                     5 => "/MarketingStaff/Index",
@@ -121,7 +123,8 @@ namespace CompuGear.Controllers
         {
             return roleId switch
             {
-                1 or 2 => RedirectToAction("Index", "Home"), // Super Admin, Company Admin -> Admin Portal
+                1 => RedirectToAction("Index", "SuperAdmin"), // Super Admin -> Super Admin Portal
+                2 => RedirectToAction("Index", "Home"), // Company Admin -> Admin Portal
                 3 => RedirectToAction("Index", "SalesStaff"), // Sales Staff -> Sales Portal
                 4 => RedirectToAction("Index", "SupportStaff"), // Customer Support -> Support Portal
                 5 => RedirectToAction("Index", "MarketingStaff"), // Marketing Staff -> Marketing Portal
@@ -167,6 +170,10 @@ namespace CompuGear.Controllers
                         HttpContext.Session.SetString("UserEmail", user.Email);
                         HttpContext.Session.SetInt32("RoleId", user.RoleId);
                         HttpContext.Session.SetString("RoleName", user.Role?.RoleName ?? "User");
+                        if (user.CompanyId.HasValue)
+                        {
+                            HttpContext.Session.SetInt32("CompanyId", user.CompanyId.Value);
+                        }
 
                         // If user is a Customer (RoleId = 7), also set customer session
                         if (user.RoleId == 7)
@@ -184,7 +191,8 @@ namespace CompuGear.Controllers
                         // Redirect based on role
                         var redirectUrl = user.RoleId switch
                         {
-                            1 or 2 => "/Home/Index", // Super Admin, Company Admin -> Admin Portal
+                            1 => "/SuperAdmin/Index", // Super Admin -> Super Admin Portal
+                            2 => "/Home/Index", // Company Admin -> Admin Portal
                             3 => "/SalesStaff/Index", // Sales Staff -> Sales Portal
                             4 => "/SupportStaff/Index", // Customer Support -> Support Portal
                             5 => "/MarketingStaff/Index", // Marketing Staff -> Marketing Portal

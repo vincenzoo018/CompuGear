@@ -205,4 +205,34 @@ namespace CompuGear.Models
         [ForeignKey("CompanyId")]
         public virtual Company? Company { get; set; }
     }
+
+    /// <summary>
+    /// RoleModuleAccess - Defines which roles can access which ERP modules per company
+    /// </summary>
+    public class RoleModuleAccess
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public int CompanyId { get; set; }
+
+        public int RoleId { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string ModuleCode { get; set; } = string.Empty;
+
+        public bool HasAccess { get; set; } = true;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        // Navigation
+        [ForeignKey("CompanyId")]
+        public virtual Company Company { get; set; } = null!;
+
+        [ForeignKey("RoleId")]
+        public virtual Role Role { get; set; } = null!;
+    }
 }

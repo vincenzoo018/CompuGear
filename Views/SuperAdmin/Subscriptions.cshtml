@@ -1,0 +1,453 @@
+@{
+    ViewData["Title"] = "Subscriptions";
+    Layout = "~/Views/Shared/_SuperAdminLayout.cshtml";
+}
+
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+            <p class="text-muted mb-0">Subscriptions</p>
+            <h1 class="page-title">Subscription Management</h1>
+            <p class="page-subtitle">Manage company subscription plans and billing cycles.</p>
+        </div>
+        <button class="btn btn-primary" onclick="openCreateSubModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add Subscription
+        </button>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stat-cards">
+    <div class="stat-card fade-in stagger-1">
+        <div class="stat-info"><span class="stat-label">Total Subscriptions</span><span class="stat-value" id="totalSubs">0</span></div>
+        <div class="stat-icon teal"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+    </div>
+    <div class="stat-card fade-in stagger-2">
+        <div class="stat-info"><span class="stat-label">Active</span><span class="stat-value" id="activeSubs">0</span></div>
+        <div class="stat-icon green"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+    </div>
+    <div class="stat-card fade-in stagger-3">
+        <div class="stat-info"><span class="stat-label">Trial</span><span class="stat-value" id="trialSubs">0</span></div>
+        <div class="stat-icon blue"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+    </div>
+    <div class="stat-card fade-in stagger-4">
+        <div class="stat-info"><span class="stat-label">Total MRR</span><span class="stat-value" id="totalMRR">$0</span></div>
+        <div class="stat-icon orange"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card fade-in mb-3 mt-3">
+    <div class="card-body">
+        <div class="d-flex gap-3 align-items-end flex-wrap">
+            <div class="form-group mb-0 flex-grow-1">
+                <label class="form-label">Search</label>
+                <input type="text" class="form-control" id="searchSubs" placeholder="Search by company..." oninput="filterSubs()">
+            </div>
+            <div class="form-group mb-0">
+                <label class="form-label">Status</label>
+                <select class="form-control" id="statusFilterSub" onchange="filterSubs()">
+                    <option value="">All</option><option value="Active">Active</option><option value="Trial">Trial</option><option value="Suspended">Suspended</option><option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="form-group mb-0">
+                <label class="form-label">Plan</label>
+                <select class="form-control" id="planFilter" onchange="filterSubs()">
+                    <option value="">All Plans</option><option value="Basic">Basic</option><option value="Professional">Professional</option><option value="Enterprise">Enterprise</option><option value="Trial">Trial</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card fade-in">
+    <div class="card-body" style="padding:0;">
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead><tr><th>Company</th><th>Plan</th><th>Billing</th><th class="text-end">Monthly Fee</th><th class="text-center">Modules</th><th class="text-center">Max Users</th><th>Status</th><th>Start Date</th><th class="text-center">Actions</th></tr></thead>
+                <tbody id="subsTableBody"><tr><td colspan="9" class="text-center py-4">Loading...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .module-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 10px;
+        margin-top: 8px;
+    }
+    .module-card {
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: #fff;
+    }
+    .module-card:hover {
+        border-color: #008080;
+        background: #f0fafa;
+    }
+    .module-card.active {
+        border-color: #008080;
+        background: #e0f5f5;
+    }
+    .module-card .module-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+    .module-card .module-check {
+        width: 18px;
+        height: 18px;
+        accent-color: #008080;
+    }
+    .module-card .module-name {
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+    }
+    .module-card .module-desc {
+        font-size: 12px;
+        color: #666;
+        margin-left: 26px;
+    }
+    .module-card .module-price {
+        font-size: 12px;
+        color: #008080;
+        font-weight: 600;
+        margin-left: 26px;
+        margin-top: 4px;
+    }
+</style>
+
+<!-- Create/Edit Subscription Modal -->
+<div class="modal fade" id="subModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-primary">
+                <h5 class="modal-title" id="subModalTitle">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    Add Subscription
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="subId">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-group mb-0"><label class="form-label">Company *</label>
+                        <select class="form-control" id="subCompanyId"></select></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-0"><label class="form-label">Plan *</label>
+                        <select class="form-control" id="subPlan">
+                            <option value="Basic">Basic</option><option value="Professional">Professional</option><option value="Enterprise">Enterprise</option><option value="Trial">Trial</option>
+                        </select></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-0"><label class="form-label">Status</label>
+                        <select class="form-control" id="subStatus">
+                            <option value="Active">Active</option><option value="Trial">Trial</option><option value="Suspended">Suspended</option><option value="Cancelled">Cancelled</option>
+                        </select></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-0"><label class="form-label">Billing Cycle</label>
+                        <select class="form-control" id="subBilling">
+                            <option value="Monthly">Monthly</option><option value="Annual">Annual</option>
+                        </select></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-0"><label class="form-label">Monthly Fee ($)</label>
+                        <input type="number" class="form-control" id="subFee" step="0.01" value="0"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-0"><label class="form-label">Max Users</label>
+                        <input type="number" class="form-control" id="subMaxUsers" value="5"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-0"><label class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="subStartDate"></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group mb-0"><label class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="subEndDate"></div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-group mb-0"><label class="form-label">Notes</label>
+                        <textarea class="form-control" id="subNotes" rows="2"></textarea></div>
+                    </div>
+                    <!-- Module Access Section -->
+                    <div class="col-12">
+                        <div id="moduleAccessSection" style="display: none;">
+                            <label class="form-label" style="font-weight: 600;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                                </svg>
+                                Module Access (select modules for this company)
+                            </label>
+                            <div id="moduleCheckboxes" class="module-grid">
+                                <div style="text-align: center; padding: 20px; color: #999;">Select a company to load modules...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveSub()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Confirm Modal -->
+<div class="modal fade" id="cancelSubModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header modal-header-danger">
+                <h5 class="modal-title"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Cancel Subscription</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body"><p>Are you sure you want to cancel this subscription for <strong id="cancelSubCompany"></strong>?</p></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Keep</button>
+                <button type="button" class="btn btn-danger" id="confirmCancelSubBtn">Yes, Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let allSubs = [], allCompaniesForSub = [], allModules = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await Promise.all([loadSubs(), loadCompaniesForSelect()]);
+            // Load modules on company change
+            document.getElementById('subCompanyId').addEventListener('change', onCompanyChange);
+        });
+
+        async function loadCompaniesForSelect() {
+            try {
+                const res = await fetch('/api/superadmin/companies');
+                allCompaniesForSub = await res.json();
+                const sel = document.getElementById('subCompanyId');
+                sel.innerHTML = '<option value="">Select Company</option>' + allCompaniesForSub.map(c => `<option value="${c.companyId}">${c.companyName}</option>`).join('');
+            } catch(e) {}
+        }
+
+        async function onCompanyChange() {
+            const companyId = document.getElementById('subCompanyId').value;
+            const section = document.getElementById('moduleAccessSection');
+            if (!companyId) {
+                section.style.display = 'none';
+                return;
+            }
+            section.style.display = 'block';
+            await loadCompanyModules(companyId);
+        }
+
+        async function loadCompanyModules(companyId) {
+            const container = document.getElementById('moduleCheckboxes');
+            container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">Loading modules...</div>';
+            try {
+                const res = await fetch(`/api/superadmin/company-modules/${companyId}`);
+                allModules = await res.json();
+                renderModuleCheckboxes();
+            } catch(e) {
+                container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">Failed to load modules</div>';
+            }
+        }
+
+        function renderModuleCheckboxes() {
+            const container = document.getElementById('moduleCheckboxes');
+            if (!allModules.length) {
+                container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">No modules available</div>';
+                return;
+            }
+            container.innerHTML = allModules.map(m => `
+                <div class="module-card ${m.isEnabled ? 'active' : ''}" onclick="toggleModule(this, ${m.moduleId})">
+                    <div class="module-header">
+                        <input type="checkbox" class="module-check" data-module-id="${m.moduleId}" ${m.isEnabled ? 'checked' : ''} onclick="event.stopPropagation(); toggleModule(this.closest('.module-card'), ${m.moduleId})">
+                        <span class="module-name">${m.moduleName}</span>
+                    </div>
+                    <div class="module-desc">${m.description || ''}</div>
+                    <div class="module-price">$${(m.monthlyPrice || 0).toFixed(2)}/mo</div>
+                </div>
+            `).join('');
+        }
+
+        function toggleModule(card, moduleId) {
+            const cb = card.querySelector('.module-check');
+            if (event.target !== cb) cb.checked = !cb.checked;
+            card.classList.toggle('active', cb.checked);
+            
+            // Save immediately via API
+            const companyId = parseInt(document.getElementById('subCompanyId').value);
+            fetch('/api/superadmin/company-modules', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ companyId, moduleId, isEnabled: cb.checked })
+            });
+        }
+
+        async function loadSubs() {
+            try {
+                const res = await fetch('/api/superadmin/subscriptions');
+                allSubs = await res.json();
+                // Enrich with module counts
+                for (let s of allSubs) {
+                    try {
+                        const mRes = await fetch(`/api/superadmin/company-modules/${s.companyId}`);
+                        const modules = await mRes.json();
+                        s.moduleCount = modules.filter(m => m.isEnabled).length;
+                        s.totalModules = modules.length;
+                    } catch(e) { s.moduleCount = 0; s.totalModules = 0; }
+                }
+                updateSubStats();
+                renderSubs(allSubs);
+            } catch (e) { showError('Failed to load subscriptions'); }
+        }
+
+        function updateSubStats() {
+            document.getElementById('totalSubs').textContent = allSubs.length;
+            document.getElementById('activeSubs').textContent = allSubs.filter(s => s.status === 'Active').length;
+            document.getElementById('trialSubs').textContent = allSubs.filter(s => s.status === 'Trial').length;
+            const mrr = allSubs.filter(s => s.status === 'Active').reduce((sum, s) => sum + (s.monthlyFee || 0), 0);
+            document.getElementById('totalMRR').textContent = '$' + mrr.toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
+
+        function filterSubs() {
+            const search = document.getElementById('searchSubs').value.toLowerCase();
+            const status = document.getElementById('statusFilterSub').value;
+            const plan = document.getElementById('planFilter').value;
+            let filtered = allSubs;
+            if (search) filtered = filtered.filter(s => (s.companyName||'').toLowerCase().includes(search));
+            if (status) filtered = filtered.filter(s => s.status === status);
+            if (plan) filtered = filtered.filter(s => s.planName === plan);
+            renderSubs(filtered);
+        }
+
+        function renderSubs(subs) {
+            const tbody = document.getElementById('subsTableBody');
+            if (!subs.length) { tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4">No subscriptions found</td></tr>'; return; }
+            tbody.innerHTML = subs.map(s => `
+                <tr>
+                    <td><strong>${s.companyName}</strong></td>
+                    <td><span class="badge ${s.planName==='Enterprise'?'badge-info':s.planName==='Professional'?'badge-success':'badge-warning'}">${s.planName}</span></td>
+                    <td>${s.billingCycle}</td>
+                    <td class="text-end">$${(s.monthlyFee||0).toFixed(2)}</td>
+                    <td class="text-center"><span class="badge badge-info">${s.moduleCount || 0} / ${s.totalModules || 0}</span></td>
+                    <td class="text-center">${s.maxUsers}</td>
+                    <td><span class="badge ${s.status==='Active'?'badge-success':s.status==='Trial'?'badge-info':s.status==='Suspended'?'badge-warning':'badge-error'}">${s.status}</span></td>
+                    <td>${new Date(s.startDate).toLocaleDateString()}</td>
+                    <td class="text-center">
+                        <div class="d-flex gap-1 justify-content-center">
+                            <button class="btn btn-sm btn-outline" onclick="editSub(${s.subscriptionId})" title="Edit">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </button>
+                            <button class="btn btn-sm btn-outline text-danger" onclick="confirmCancelSub(${s.subscriptionId}, '${s.companyName}')" title="Cancel">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openCreateSubModal() {
+            document.getElementById('subId').value = '';
+            document.getElementById('subCompanyId').value = '';
+            document.getElementById('subPlan').value = 'Basic';
+            document.getElementById('subStatus').value = 'Active';
+            document.getElementById('subBilling').value = 'Monthly';
+            document.getElementById('subFee').value = '0';
+            document.getElementById('subMaxUsers').value = '5';
+            document.getElementById('subStartDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('subEndDate').value = '';
+            document.getElementById('subNotes').value = '';
+            document.getElementById('moduleAccessSection').style.display = 'none';
+            document.getElementById('subModalTitle').innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Subscription';
+            new bootstrap.Modal(document.getElementById('subModal')).show();
+        }
+
+        async function editSub(id) {
+            const s = allSubs.find(x => x.subscriptionId === id); if(!s) return;
+            document.getElementById('subId').value = s.subscriptionId;
+            document.getElementById('subCompanyId').value = s.companyId;
+            document.getElementById('subPlan').value = s.planName;
+            document.getElementById('subStatus').value = s.status;
+            document.getElementById('subBilling').value = s.billingCycle;
+            document.getElementById('subFee').value = s.monthlyFee || 0;
+            document.getElementById('subMaxUsers').value = s.maxUsers;
+            document.getElementById('subStartDate').value = s.startDate ? s.startDate.split('T')[0] : '';
+            document.getElementById('subEndDate').value = s.endDate ? s.endDate.split('T')[0] : '';
+            document.getElementById('subNotes').value = s.notes || '';
+            document.getElementById('subModalTitle').innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Subscription';
+            // Load modules for this company
+            document.getElementById('moduleAccessSection').style.display = 'block';
+            await loadCompanyModules(s.companyId);
+            new bootstrap.Modal(document.getElementById('subModal')).show();
+        }
+
+        async function saveSub() {
+            const id = document.getElementById('subId').value;
+            const data = {
+                companyId: parseInt(document.getElementById('subCompanyId').value),
+                planName: document.getElementById('subPlan').value,
+                status: document.getElementById('subStatus').value,
+                billingCycle: document.getElementById('subBilling').value,
+                monthlyFee: parseFloat(document.getElementById('subFee').value) || 0,
+                maxUsers: parseInt(document.getElementById('subMaxUsers').value) || 5,
+                startDate: document.getElementById('subStartDate').value || new Date().toISOString(),
+                endDate: document.getElementById('subEndDate').value || null,
+                notes: document.getElementById('subNotes').value || null
+            };
+            if (!data.companyId) { showError('Please select a company'); return; }
+
+            try {
+                showLoading();
+                const url = id ? `/api/superadmin/subscriptions/${id}` : '/api/superadmin/subscriptions';
+                const res = await fetch(url, { method: id ? 'PUT' : 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+                const result = await res.json();
+                hideLoading();
+                if (result.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('subModal'))?.hide();
+                    showSuccess(result.message);
+                    loadSubs();
+                } else { showError(result.message || 'Failed to save'); }
+            } catch (e) { hideLoading(); showError('Failed to save subscription'); }
+        }
+
+        let cancelSubId = null;
+        function confirmCancelSub(id, name) {
+            cancelSubId = id;
+            document.getElementById('cancelSubCompany').textContent = name;
+            new bootstrap.Modal(document.getElementById('cancelSubModal')).show();
+        }
+
+        document.getElementById('confirmCancelSubBtn').addEventListener('click', async () => {
+            if (!cancelSubId) return;
+            try {
+                showLoading();
+                const res = await fetch(`/api/superadmin/subscriptions/${cancelSubId}`, { method: 'DELETE' });
+                const result = await res.json();
+                hideLoading();
+                bootstrap.Modal.getInstance(document.getElementById('cancelSubModal'))?.hide();
+                if (result.success) { showSuccess(result.message); loadSubs(); }
+                else { showError(result.message); }
+            } catch (e) { hideLoading(); showError('Failed to cancel subscription'); }
+        });
+    </script>
+}

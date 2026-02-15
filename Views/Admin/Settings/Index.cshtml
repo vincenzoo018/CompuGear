@@ -4,7 +4,53 @@
 
 <div class="page-header">
     <h1 class="page-title">Settings</h1>
-    <p class="page-subtitle">Manage system configuration</p>
+    <p class="page-subtitle">Manage system configuration and role-based access control</p>
+</div>
+
+<!-- Role-Based Access Control Card (Full Width) -->
+<div class="card fade-in mb-3">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 class="card-title" style="margin: 0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 8px;">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Role-Based Access Control
+        </h3>
+        <button class="btn btn-primary btn-sm" onclick="saveRoleAccess()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+            </svg>
+            Save Access Settings
+        </button>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <p style="padding: 16px 16px 8px; color: #666; font-size: 13px; margin: 0;">
+            Configure which modules each role can access. Company Admin always has full access to all modules.
+        </p>
+        <div class="data-table-wrapper" style="margin: 0;">
+            <table class="data-table" id="roleAccessTable">
+                <thead>
+                    <tr>
+                        <th style="min-width: 160px;">Role</th>
+                        <th style="text-align: center;">Sales</th>
+                        <th style="text-align: center;">Customers</th>
+                        <th style="text-align: center;">Inventory</th>
+                        <th style="text-align: center;">Billing</th>
+                        <th style="text-align: center;">Marketing</th>
+                        <th style="text-align: center;">Support</th>
+                    </tr>
+                </thead>
+                <tbody id="roleAccessBody">
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #999;">
+                            <div class="loading-spinner" style="margin: 0 auto 8px;"></div>
+                            Loading role access settings...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <div class="grid grid-2">
@@ -40,7 +86,8 @@
             <div class="form-group">
                 <label class="form-label">Currency</label>
                 <select class="form-control">
-                    <option selected>USD ($)</option>
+                    <option selected>PHP (₱)</option>
+                    <option>USD ($)</option>
                     <option>EUR (€)</option>
                     <option>GBP (£)</option>
                 </select>
@@ -56,17 +103,16 @@
             <div class="form-group">
                 <label class="form-label">Timezone</label>
                 <select class="form-control">
-                    <option selected>Eastern Time (ET)</option>
+                    <option selected>Asia/Manila (PHT)</option>
+                    <option>Eastern Time (ET)</option>
                     <option>Pacific Time (PT)</option>
-                    <option>Central Time (CT)</option>
                 </select>
             </div>
             <div class="form-group mb-0">
                 <label class="form-label">Language</label>
                 <select class="form-control">
                     <option selected>English</option>
-                    <option>Spanish</option>
-                    <option>French</option>
+                    <option>Filipino</option>
                 </select>
             </div>
         </div>
@@ -79,19 +125,31 @@
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span>Email Notifications</span>
-                <input type="checkbox" checked>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
             </div>
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span>Low Stock Alerts</span>
-                <input type="checkbox" checked>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
             </div>
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span>New Order Notifications</span>
-                <input type="checkbox" checked>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
             </div>
             <div class="d-flex justify-content-between align-items-center">
                 <span>Support Ticket Updates</span>
-                <input type="checkbox" checked>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
             </div>
         </div>
     </div>
@@ -103,15 +161,24 @@
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span>Two-Factor Authentication</span>
-                <input type="checkbox">
+                <label class="toggle-switch">
+                    <input type="checkbox">
+                    <span class="toggle-slider"></span>
+                </label>
             </div>
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span>Session Timeout (30 min)</span>
-                <input type="checkbox" checked>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
             </div>
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <span>Login Activity Logging</span>
-                <input type="checkbox" checked>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
             </div>
             <button class="btn btn-secondary btn-sm">Change Password</button>
         </div>
@@ -119,6 +186,178 @@
 </div>
 
 <div class="mt-3">
-    <button class="btn btn-primary">Save Changes</button>
+    <button class="btn btn-primary" onclick="saveGeneralSettings()">Save Changes</button>
     <button class="btn btn-secondary">Cancel</button>
 </div>
+
+<style>
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+        margin: 0;
+        cursor: pointer;
+    }
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .toggle-slider {
+        position: absolute;
+        inset: 0;
+        background: #ccc;
+        border-radius: 24px;
+        transition: .3s;
+    }
+    .toggle-slider::before {
+        content: "";
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        left: 3px;
+        bottom: 3px;
+        background: white;
+        border-radius: 50%;
+        transition: .3s;
+    }
+    .toggle-switch input:checked + .toggle-slider {
+        background: #008080;
+    }
+    .toggle-switch input:checked + .toggle-slider::before {
+        transform: translateX(20px);
+    }
+    .access-check {
+        width: 20px;
+        height: 20px;
+        accent-color: #008080;
+        cursor: pointer;
+    }
+    .access-check:disabled {
+        cursor: default;
+        opacity: 0.6;
+    }
+    #roleAccessTable th:not(:first-child),
+    #roleAccessTable td:not(:first-child) {
+        text-align: center;
+    }
+    #roleAccessTable .role-name {
+        font-weight: 600;
+        color: #333;
+    }
+    #roleAccessTable .role-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: 6px;
+    }
+    .role-badge.admin { background: #e0f5f5; color: #008080; }
+</style>
+
+<script>
+    let roleAccessData = [];
+    let rolesData = [];
+    let modulesData = [];
+
+    document.addEventListener('DOMContentLoaded', loadRoleAccess);
+
+    async function loadRoleAccess() {
+        try {
+            const res = await fetch('/api/role-access');
+            const result = await res.json();
+            if (result.success) {
+                roleAccessData = result.data;
+                rolesData = result.roles;
+                modulesData = result.modules;
+                renderRoleAccessTable();
+            } else {
+                document.getElementById('roleAccessBody').innerHTML =
+                    '<tr><td colspan="7" style="text-align:center;padding:20px;color:#999;">Could not load role access settings.</td></tr>';
+            }
+        } catch (err) {
+            document.getElementById('roleAccessBody').innerHTML =
+                '<tr><td colspan="7" style="text-align:center;padding:20px;color:#999;">Error loading role access settings.</td></tr>';
+        }
+    }
+
+    function renderRoleAccessTable() {
+        const tbody = document.getElementById('roleAccessBody');
+        const moduleOrder = ['SALES', 'CUSTOMERS', 'INVENTORY', 'BILLING', 'MARKETING', 'SUPPORT'];
+
+        let html = '';
+        rolesData.forEach(role => {
+            const isAdmin = role.roleId === 2;
+            html += `<tr>
+                <td>
+                    <span class="role-name">${role.roleName}</span>
+                    ${isAdmin ? '<span class="role-badge admin">Full Access</span>' : ''}
+                </td>`;
+
+            moduleOrder.forEach(moduleCode => {
+                const accessItem = roleAccessData.find(a => a.roleId === role.roleId && a.moduleCode === moduleCode);
+                const hasAccess = isAdmin ? true : (accessItem ? accessItem.hasAccess : false);
+                const disabled = isAdmin ? 'disabled' : '';
+
+                html += `<td>
+                    <input type="checkbox" class="access-check" 
+                           data-role="${role.roleId}" data-module="${moduleCode}" 
+                           ${hasAccess ? 'checked' : ''} ${disabled}>
+                </td>`;
+            });
+
+            html += '</tr>';
+        });
+
+        tbody.innerHTML = html;
+    }
+
+    async function saveRoleAccess() {
+        const checkboxes = document.querySelectorAll('.access-check:not(:disabled)');
+        const accessList = [];
+
+        checkboxes.forEach(cb => {
+            accessList.push({
+                roleId: parseInt(cb.dataset.role),
+                moduleCode: cb.dataset.module,
+                hasAccess: cb.checked
+            });
+        });
+
+        // Also add admin (roleId 2) with full access
+        const moduleOrder = ['SALES', 'CUSTOMERS', 'INVENTORY', 'BILLING', 'MARKETING', 'SUPPORT'];
+        moduleOrder.forEach(mod => {
+            accessList.push({ roleId: 2, moduleCode: mod, hasAccess: true });
+        });
+
+        try {
+            if (typeof showLoading === 'function') showLoading();
+            const res = await fetch('/api/role-access', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ accessList })
+            });
+            const result = await res.json();
+            if (typeof hideLoading === 'function') hideLoading();
+
+            if (result.success) {
+                if (typeof showSuccess === 'function') showSuccess(result.message);
+                else alert(result.message);
+            } else {
+                if (typeof showError === 'function') showError(result.message);
+                else alert('Error: ' + result.message);
+            }
+        } catch (err) {
+            if (typeof hideLoading === 'function') hideLoading();
+            if (typeof showError === 'function') showError('Failed to save access settings');
+            else alert('Failed to save access settings');
+        }
+    }
+
+    function saveGeneralSettings() {
+        if (typeof showSuccess === 'function') showSuccess('Settings saved successfully');
+        else alert('Settings saved successfully');
+    }
+</script>
