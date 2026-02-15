@@ -500,6 +500,7 @@ namespace CompuGear.Controllers
                         p.CompareAtPrice,
                         p.StockQuantity,
                         p.ReorderLevel,
+                        p.MaxStockLevel,
                         p.Status,
                         p.IsFeatured,
                         p.IsOnSale,
@@ -903,6 +904,53 @@ namespace CompuGear.Controllers
             catch (Exception)
             {
                 return Ok(new List<object>());
+            }
+        }
+
+        [HttpGet("purchase-orders/{id}")]
+        public async Task<IActionResult> GetPurchaseOrder(int id)
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                var order = await _context.PurchaseOrders
+                    .Include(po => po.Supplier)
+                    .Include(po => po.Items)
+                        .ThenInclude(i => i.Product)
+                    .Where(po => po.PurchaseOrderId == id && (companyId == null || po.CompanyId == companyId))
+                    .Select(po => new
+                    {
+                        po.PurchaseOrderId,
+                        PoNumber = "PO-" + po.PurchaseOrderId.ToString("D4"),
+                        po.SupplierId,
+                        SupplierName = po.Supplier != null ? po.Supplier.SupplierName : "",
+                        po.OrderDate,
+                        po.ExpectedDeliveryDate,
+                        po.ActualDeliveryDate,
+                        po.Status,
+                        po.TotalAmount,
+                        po.Notes,
+                        Items = po.Items.Select(i => new
+                        {
+                            i.PurchaseOrderItemId,
+                            i.ProductId,
+                            ProductName = i.Product != null ? i.Product.ProductName : "Unknown",
+                            ProductSKU = i.Product != null ? i.Product.SKU : "",
+                            i.Quantity,
+                            i.UnitPrice,
+                            i.Subtotal
+                        })
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (order == null)
+                    return NotFound(new { success = false, message = "Purchase order not found" });
+
+                return Ok(new { success = true, data = order });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
 
@@ -3256,55 +3304,62 @@ namespace CompuGear.Controllers
         [HttpGet("invoices")]
         public async Task<IActionResult> GetInvoices()
         {
-            var companyId = GetCompanyId();
-            var invoices = await _context.Invoices
-                .Include(i => i.Customer)
-                .Include(i => i.Order)
-                .Include(i => i.Items)
-                .Where(i => companyId == null || i.CompanyId == companyId)
-                .OrderByDescending(i => i.CreatedAt)
-                .Select(i => new
-                {
-                    i.InvoiceId,
-                    i.InvoiceNumber,
-                    i.OrderId,
-                    OrderNumber = i.Order != null ? i.Order.OrderNumber : null,
-                    i.CustomerId,
-                    CustomerName = i.Customer != null ? i.Customer.FirstName + " " + i.Customer.LastName : "N/A",
-                    i.InvoiceDate,
-                    i.DueDate,
-                    i.Subtotal,
-                    i.DiscountAmount,
-                    i.TaxAmount,
-                    i.ShippingAmount,
-                    i.TotalAmount,
-                    i.PaidAmount,
-                    i.BalanceDue,
-                    i.Status,
-                    i.BillingName,
-                    i.BillingAddress,
-                    i.BillingCity,
-                    i.BillingCountry,
-                    i.PaymentTerms,
-                    i.Notes,
-                    i.SentAt,
-                    i.PaidAt,
-                    i.CreatedAt,
-                    Items = i.Items.Select(item => new
+            try
+            {
+                var companyId = GetCompanyId();
+                var invoices = await _context.Invoices
+                    .Include(i => i.Customer)
+                    .Include(i => i.Order)
+                    .Include(i => i.Items)
+                    .Where(i => companyId == null || i.CompanyId == companyId)
+                    .OrderByDescending(i => i.CreatedAt)
+                    .Select(i => new
                     {
-                        item.ItemId,
-                        item.ProductId,
-                        item.Description,
-                        item.Quantity,
-                        item.UnitPrice,
-                        item.DiscountAmount,
-                        item.TaxAmount,
-                        item.TotalPrice
+                        i.InvoiceId,
+                        i.InvoiceNumber,
+                        i.OrderId,
+                        OrderNumber = i.Order != null ? i.Order.OrderNumber : null,
+                        i.CustomerId,
+                        CustomerName = i.Customer != null ? i.Customer.FirstName + " " + i.Customer.LastName : "N/A",
+                        i.InvoiceDate,
+                        i.DueDate,
+                        i.Subtotal,
+                        i.DiscountAmount,
+                        i.TaxAmount,
+                        i.ShippingAmount,
+                        i.TotalAmount,
+                        i.PaidAmount,
+                        i.BalanceDue,
+                        i.Status,
+                        i.BillingName,
+                        i.BillingAddress,
+                        i.BillingCity,
+                        i.BillingCountry,
+                        i.PaymentTerms,
+                        i.Notes,
+                        i.SentAt,
+                        i.PaidAt,
+                        i.CreatedAt,
+                        Items = i.Items.Select(item => new
+                        {
+                            item.ItemId,
+                            item.ProductId,
+                            item.Description,
+                            item.Quantity,
+                            item.UnitPrice,
+                            item.DiscountAmount,
+                            item.TaxAmount,
+                            item.TotalPrice
+                        })
                     })
-                })
-                .ToListAsync();
+                    .ToListAsync();
 
-            return Ok(new { success = true, data = invoices });
+                return Ok(new { success = true, data = invoices });
+            }
+            catch (Exception)
+            {
+                return Ok(new { success = true, data = new List<object>() });
+            }
         }
 
         [HttpGet("invoices/{id}")]
@@ -3396,38 +3451,50 @@ namespace CompuGear.Controllers
         [HttpGet("payments")]
         public async Task<IActionResult> GetPayments()
         {
-            var companyId = GetCompanyId();
-            var payments = await _context.Payments
-                .Include(p => p.Customer)
-                .Include(p => p.Invoice)
-                .Include(p => p.Order)
-                .Where(p => companyId == null || p.CompanyId == companyId)
-                .OrderByDescending(p => p.CreatedAt)
-                .Select(p => new
-                {
-                    p.PaymentId,
-                    p.PaymentNumber,
-                    p.InvoiceId,
-                    InvoiceNumber = p.Invoice != null ? p.Invoice.InvoiceNumber : null,
-                    p.OrderId,
-                    OrderNumber = p.Order != null ? p.Order.OrderNumber : null,
-                    p.CustomerId,
-                    CustomerName = p.Customer != null ? p.Customer.FirstName + " " + p.Customer.LastName : "N/A",
-                    p.PaymentDate,
-                    p.Amount,
-                    p.PaymentMethodType,
-                    p.Status,
-                    p.TransactionId,
-                    p.ReferenceNumber,
-                    p.Currency,
-                    p.Notes,
-                    p.FailureReason,
-                    p.ProcessedAt,
-                    p.CreatedAt
-                })
-                .ToListAsync();
+            try
+            {
+                var companyId = GetCompanyId();
+                var payments = await _context.Payments
+                    .Include(p => p.Customer)
+                    .Include(p => p.Invoice)
+                    .Include(p => p.Order)
+                    .Where(p => companyId == null || p.CompanyId == companyId)
+                    .OrderByDescending(p => p.CreatedAt)
+                    .Select(p => new
+                    {
+                        p.PaymentId,
+                        p.PaymentNumber,
+                        p.InvoiceId,
+                        InvoiceNumber = p.Invoice != null ? p.Invoice.InvoiceNumber : null,
+                        InvoiceSubtotal = p.Invoice != null ? p.Invoice.Subtotal : 0,
+                        InvoiceTaxAmount = p.Invoice != null ? p.Invoice.TaxAmount : 0,
+                        InvoiceDiscountAmount = p.Invoice != null ? p.Invoice.DiscountAmount : 0,
+                        InvoiceShippingAmount = p.Invoice != null ? p.Invoice.ShippingAmount : 0,
+                        InvoiceTotalAmount = p.Invoice != null ? p.Invoice.TotalAmount : 0,
+                        p.OrderId,
+                        OrderNumber = p.Order != null ? p.Order.OrderNumber : null,
+                        p.CustomerId,
+                        CustomerName = p.Customer != null ? p.Customer.FirstName + " " + p.Customer.LastName : "N/A",
+                        p.PaymentDate,
+                        p.Amount,
+                        p.PaymentMethodType,
+                        p.Status,
+                        p.TransactionId,
+                        p.ReferenceNumber,
+                        p.Currency,
+                        p.Notes,
+                        p.FailureReason,
+                        p.ProcessedAt,
+                        p.CreatedAt
+                    })
+                    .ToListAsync();
 
-            return Ok(new { success = true, data = payments });
+                return Ok(new { success = true, data = payments });
+            }
+            catch (Exception)
+            {
+                return Ok(new { success = true, data = new List<object>() });
+            }
         }
 
         [HttpGet("payments/{id}")]
@@ -3447,6 +3514,11 @@ namespace CompuGear.Controllers
                     p.PaymentNumber,
                     p.InvoiceId,
                     InvoiceNumber = p.Invoice != null ? p.Invoice.InvoiceNumber : null,
+                    InvoiceSubtotal = p.Invoice != null ? p.Invoice.Subtotal : 0,
+                    InvoiceTaxAmount = p.Invoice != null ? p.Invoice.TaxAmount : 0,
+                    InvoiceDiscountAmount = p.Invoice != null ? p.Invoice.DiscountAmount : 0,
+                    InvoiceShippingAmount = p.Invoice != null ? p.Invoice.ShippingAmount : 0,
+                    InvoiceTotalAmount = p.Invoice != null ? p.Invoice.TotalAmount : 0,
                     p.OrderId,
                     OrderNumber = p.Order != null ? p.Order.OrderNumber : null,
                     p.CustomerId,

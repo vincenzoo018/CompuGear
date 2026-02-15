@@ -301,6 +301,94 @@
         function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
         function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
     </script>
+
+    <!-- Global Notification Loader for Low Stock Alerts -->
+    <script>
+        (function() {
+            async function loadGlobalNotifications() {
+                try {
+                    const response = await fetch('/api/products');
+                    if (!response.ok) return;
+                    const products = await response.json();
+                    const productsList = Array.isArray(products) ? products : (products.data || []);
+                    
+                    const LOW_STOCK_THRESHOLD = 15;
+                    const lowStockProducts = productsList.filter(function(p) { 
+                        return p.stockQuantity <= LOW_STOCK_THRESHOLD; 
+                    });
+                    
+                    const badge = document.getElementById('notificationBadge');
+                    const notificationList = document.getElementById('notificationList');
+                    
+                    if (lowStockProducts.length > 0 && badge) {
+                        badge.textContent = lowStockProducts.length;
+                        badge.style.display = 'flex';
+                        
+                        lowStockProducts.sort(function(a, b) { return a.stockQuantity - b.stockQuantity; });
+                        
+                        if (notificationList) {
+                            var html = '';
+                            var maxShow = Math.min(lowStockProducts.length, 8);
+                            for (var i = 0; i < maxShow; i++) {
+                                var p = lowStockProducts[i];
+                                var alertType = p.stockQuantity === 0 ? 'Out of Stock' : 
+                                               p.stockQuantity <= 5 ? 'Critical Stock' : 'Low Stock';
+                                var iconColor = p.stockQuantity === 0 ? '#dc3545' : 
+                                               p.stockQuantity <= 5 ? '#fd7e14' : '#ffc107';
+                                
+                                html += '<a href="/Inventory/Alerts" class="dropdown-item py-2 border-bottom">' +
+                                    '<div class="d-flex align-items-start gap-2">' +
+                                        '<div class="rounded-circle d-flex align-items-center justify-content-center" style="min-width:32px;height:32px;background:' + iconColor + '20;color:' + iconColor + '">' +
+                                            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+                                        '</div>' +
+                                        '<div>' +
+                                            '<div class="fw-semibold small">' + alertType + '</div>' +
+                                            '<div class="text-muted small text-truncate" style="max-width:240px">' + p.productName + '</div>' +
+                                            '<div class="text-muted" style="font-size:11px">Stock: ' + p.stockQuantity + ' units</div>' +
+                                        '</div>' +
+                                    '</div>' +
+                                '</a>';
+                            }
+                            
+                            if (lowStockProducts.length > maxShow) {
+                                html += '<div class="text-center py-2 text-muted small">+' + (lowStockProducts.length - maxShow) + ' more alerts</div>';
+                            }
+                            
+                            notificationList.innerHTML = html;
+                        }
+                    } else if (badge) {
+                        badge.style.display = 'none';
+                    }
+                } catch (e) {
+                    // Silently fail
+                }
+            }
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', loadGlobalNotifications);
+            } else {
+                loadGlobalNotifications();
+            }
+            
+            setInterval(loadGlobalNotifications, 60000);
+            
+            window.markAllRead = function() {
+                var badge = document.getElementById('notificationBadge');
+                if (badge) badge.style.display = 'none';
+                var notificationList = document.getElementById('notificationList');
+                if (notificationList) {
+                    notificationList.innerHTML = '<div class="text-center py-4 text-muted">' +
+                        '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mb-2">' +
+                            '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>' +
+                            '<path d="M13.73 21a2 2 0 0 1-3.46 0"/>' +
+                        '</svg>' +
+                        '<p class="mb-0">No new notifications</p>' +
+                    '</div>';
+                }
+            };
+        })();
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

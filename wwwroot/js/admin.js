@@ -3277,11 +3277,15 @@ const Billing = {
             if (countEl) countEl.textContent = list.length + ' payments';
 
             if (list.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No payments found.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-muted">No payments found.</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = list.map(p => `
+            tbody.innerHTML = list.map(p => {
+                const subtotal = p.invoiceSubtotal || 0;
+                const taxAmount = p.invoiceTaxAmount || 0;
+                const taxLabel = taxAmount > 0 ? `VAT (12%)` : '-';
+                return `
                 <tr>
                     <td>
                         <div class="fw-semibold">${p.paymentNumber || p.transactionId || '-'}</div>
@@ -3291,6 +3295,8 @@ const Billing = {
                     <td>${p.invoiceNumber || p.orderNumber || '-'}</td>
                     <td>${Format.date(p.paymentDate)}</td>
                     <td><span class="badge bg-info">${p.paymentMethodType || '-'}</span></td>
+                    <td class="text-end">${subtotal > 0 ? Format.currency(subtotal) : '-'}</td>
+                    <td class="text-end">${taxAmount > 0 ? `<span class="text-warning">${Format.currency(taxAmount)}</span>` : '-'}</td>
                     <td class="text-end fw-semibold text-success">${Format.currency(p.amount)}</td>
                     <td>${Format.statusBadge(p.status)}</td>
                     <td class="text-center">
@@ -3301,7 +3307,7 @@ const Billing = {
                         </div>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         },
 
         filter() {
@@ -3325,6 +3331,12 @@ const Billing = {
                 const result = await API.get(`/payments/${id}`);
                 const p = result.data || result;
                 
+                const subtotal = p.invoiceSubtotal || 0;
+                const taxAmount = p.invoiceTaxAmount || 0;
+                const discountAmount = p.invoiceDiscountAmount || 0;
+                const shippingAmount = p.invoiceShippingAmount || 0;
+                const invoiceTotal = p.invoiceTotalAmount || 0;
+                
                 let html = `
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
@@ -3339,11 +3351,28 @@ const Billing = {
                             <strong>Customer:</strong> ${p.customerName || '-'}<br>
                             <strong>Invoice:</strong> ${p.invoiceNumber || '-'}<br>
                             <strong>Order:</strong> ${p.orderNumber || '-'}<br>
-                            <strong>Amount:</strong> <span class="text-success fw-bold">${Format.currency(p.amount)}</span><br>
+                            <strong>Amount Paid:</strong> <span class="text-success fw-bold">${Format.currency(p.amount)}</span><br>
                             <strong>Status:</strong> ${Format.statusBadge(p.status)}<br>
                             <strong>Processed:</strong> ${p.processedAt ? Format.date(p.processedAt) : 'Pending'}
                         </div>
                     </div>`;
+                
+                // Tax / VAT breakdown
+                if (p.invoiceId) {
+                    html += `
+                    <hr>
+                    <h6>Invoice Breakdown</h6>
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            <tr><td>Subtotal</td><td class="text-end">${Format.currency(subtotal)}</td></tr>
+                            ${taxAmount > 0 ? `<tr><td>VAT / Tax (12%)</td><td class="text-end text-warning">${Format.currency(taxAmount)}</td></tr>` : ''}
+                            ${discountAmount > 0 ? `<tr><td>Discount</td><td class="text-end text-danger">-${Format.currency(discountAmount)}</td></tr>` : ''}
+                            ${shippingAmount > 0 ? `<tr><td>Shipping</td><td class="text-end">${Format.currency(shippingAmount)}</td></tr>` : ''}
+                            <tr class="fw-bold"><td>Invoice Total</td><td class="text-end">${Format.currency(invoiceTotal)}</td></tr>
+                            <tr class="fw-bold text-success"><td>Amount Paid</td><td class="text-end">${Format.currency(p.amount)}</td></tr>
+                        </tbody>
+                    </table>`;
+                }
                 
                 if (p.notes) {
                     html += `<div class="mt-2"><strong>Notes:</strong> ${p.notes}</div>`;

@@ -2,9 +2,18 @@
     ViewData["Title"] = "Financial Summary";
 }
 
-<div class="page-header">
-    <h1 class="page-title">Financial Summary</h1>
-    <p class="page-subtitle">Overview of financial performance</p>
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Financial Summary</h1>
+        <p class="page-subtitle">Overview of financial performance</p>
+    </div>
+    <button class="btn btn-primary" onclick="generateFinancialPDF()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        Generate PDF Report
+    </button>
 </div>
 
 <div class="stat-cards">
@@ -54,6 +63,34 @@
             <div class="chart-container">
                 <canvas id="categoryChart"></canvas>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Financial Table (also used for PDF) -->
+<div class="card fade-in mb-4">
+    <div class="card-header">
+        <h3 class="card-title">Financial Details</h3>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table" id="financialDetailsTable">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Customer</th>
+                        <th>Subtotal</th>
+                        <th>Tax/VAT</th>
+                        <th>Total</th>
+                        <th>Paid</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="financialDetailsBody">
+                    <!-- Dynamic content -->
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -162,10 +199,142 @@
                         plugins: { legend: { position: 'bottom' } }
                     }
                 });
+                
+                // Render detailed financial table
+                renderFinancialDetails(invoicesList);
             } catch (error) {
                 console.error('Failed to load financial summary:', error);
                 Toast.error('Failed to load financial summary');
             }
+        }
+        
+        function renderFinancialDetails(invoices) {
+            const tbody = document.getElementById('financialDetailsBody');
+            if (!tbody) return;
+            
+            if (invoices.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No invoices found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = invoices.map(i => {
+                const subtotal = i.subtotal || 0;
+                const taxAmount = i.taxAmount || 0;
+                const totalAmount = i.totalAmount || 0;
+                const paidAmount = i.paidAmount || 0;
+                const balance = i.balanceDue || (totalAmount - paidAmount);
+                
+                return `
+                    <tr>
+                        <td class="fw-medium">${i.invoiceNumber || '-'}</td>
+                        <td>${i.customerName || '-'}</td>
+                        <td class="text-end">${Format.currency(subtotal)}</td>
+                        <td class="text-end">${taxAmount > 0 ? `<span class="text-warning">${Format.currency(taxAmount)}</span>` : '-'}</td>
+                        <td class="text-end fw-semibold">${Format.currency(totalAmount)}</td>
+                        <td class="text-end text-success">${Format.currency(paidAmount)}</td>
+                        <td class="text-end ${balance > 0 ? 'text-danger' : ''}">${Format.currency(balance)}</td>
+                        <td>${Format.statusBadge(i.status)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function generateFinancialPDF() {
+            // Get summary data
+            const totalRevenue = document.getElementById('totalRevenue').textContent;
+            const thisMonth = document.getElementById('thisMonthRevenue').textContent;
+            const outstanding = document.getElementById('outstandingAmount').textContent;
+            const totalPaid = document.getElementById('totalPaid').textContent;
+            
+            // Build detailed table rows from the financial details table
+            const tableRows = document.querySelectorAll('#financialDetailsBody tr');
+            let tableHTML = '';
+            tableRows.forEach(row => {
+                tableHTML += '<tr>';
+                row.querySelectorAll('td').forEach(td => {
+                    tableHTML += `<td style="padding: 6px 10px; border: 1px solid #ddd; font-size: 11px;">${td.textContent.trim()}</td>`;
+                });
+                tableHTML += '</tr>';
+            });
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Financial Summary Report</title>
+                    <style>
+                        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; color: #333; }
+                        .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #008080; padding-bottom: 15px; }
+                        .header h1 { margin: 0; color: #008080; font-size: 24px; }
+                        .header p { margin: 5px 0 0; color: #666; }
+                        .summary-cards { display: flex; gap: 15px; margin-bottom: 25px; }
+                        .summary-card { flex: 1; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; text-align: center; }
+                        .summary-card .label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+                        .summary-card .value { font-size: 20px; font-weight: 700; color: #008080; margin-top: 5px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                        th { background: #008080; color: #fff; padding: 8px 10px; font-size: 11px; text-align: left; }
+                        td { padding: 6px 10px; border: 1px solid #ddd; font-size: 11px; }
+                        tr:nth-child(even) { background: #f8f9fa; }
+                        .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
+                        @@media print { body { padding: 10px; } .no-print { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Financial Summary Report</h1>
+                        <p>Generated on ${new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </div>
+                    
+                    <div class="summary-cards">
+                        <div class="summary-card">
+                            <div class="label">Total Revenue (YTD)</div>
+                            <div class="value">${totalRevenue}</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="label">This Month</div>
+                            <div class="value">${thisMonth}</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="label">Outstanding</div>
+                            <div class="value" style="color: #dc3545;">${outstanding}</div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="label">Total Paid</div>
+                            <div class="value" style="color: #198754;">${totalPaid}</div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="color: #008080; border-bottom: 2px solid #008080; padding-bottom: 5px;">Invoice Details</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Customer</th>
+                                <th>Subtotal</th>
+                                <th>Tax/VAT</th>
+                                <th>Total</th>
+                                <th>Paid</th>
+                                <th>Balance</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableHTML}
+                        </tbody>
+                    </table>
+                    
+                    <div class="footer">
+                        <p>CompuGear ERP System &mdash; Financial Summary Report &mdash; Confidential</p>
+                    </div>
+                    
+                    <script>
+                        window.onload = function() { window.print(); };
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
         }
     </script>
 }

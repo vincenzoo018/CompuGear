@@ -90,9 +90,7 @@
                 <label class="form-label">Supplier</label>
                 <select class="form-select" id="filterSupplier">
                     <option value="">All Suppliers</option>
-                    <option value="1">TechSupply Corp</option>
-                    <option value="2">PC Parts Philippines</option>
-                    <option value="3">Gaming Gear Inc.</option>
+                    <!-- Dynamically populated -->
                 </select>
             </div>
             <div class="col-md-2">
@@ -141,97 +139,7 @@
                     </tr>
                 </thead>
                 <tbody id="purchaseOrdersTableBody">
-                    <tr>
-                        <td><span class="fw-medium text-primary">PO-2026-0001</span></td>
-                        <td>TechSupply Corp</td>
-                        <td>Jan 28, 2026</td>
-                        <td><span class="badge bg-info-subtle text-info">5 Items</span></td>
-                        <td class="fw-medium">₱125,500.00</td>
-                        <td><span class="badge bg-warning-subtle text-warning">Pending</span></td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary" onclick="viewOrder(1)" title="View">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-outline-secondary" onclick="editOrder(1)" title="Edit">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-outline-success" onclick="approveOrder(1)" title="Approve">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="20 6 9 17 4 12"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><span class="fw-medium text-primary">PO-2026-0002</span></td>
-                        <td>PC Parts Philippines</td>
-                        <td>Jan 27, 2026</td>
-                        <td><span class="badge bg-info-subtle text-info">3 Items</span></td>
-                        <td class="fw-medium">₱78,900.00</td>
-                        <td><span class="badge bg-success-subtle text-success">Approved</span></td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary" onclick="viewOrder(2)" title="View">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-outline-info" onclick="markShipped(2)" title="Mark Shipped">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
-                                        <circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><span class="fw-medium text-primary">PO-2026-0003</span></td>
-                        <td>Gaming Gear Inc.</td>
-                        <td>Jan 25, 2026</td>
-                        <td><span class="badge bg-info-subtle text-info">8 Items</span></td>
-                        <td class="fw-medium">₱245,000.00</td>
-                        <td><span class="badge bg-info-subtle text-info">Shipped</span></td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary" onclick="viewOrder(3)" title="View">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                                    </svg>
-                                </button>
-                                <button class="btn btn-outline-success" onclick="markCompleted(3)" title="Mark Completed">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                        <polyline points="22 4 12 14.01 9 11.01"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td><span class="fw-medium text-primary">PO-2026-0004</span></td>
-                        <td>TechSupply Corp</td>
-                        <td>Jan 20, 2026</td>
-                        <td><span class="badge bg-info-subtle text-info">12 Items</span></td>
-                        <td class="fw-medium">₱356,750.00</td>
-                        <td><span class="badge bg-success-subtle text-success">Completed</span></td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary" onclick="viewOrder(4)" title="View">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                    <!-- Dynamic content loaded from API -->
                 </tbody>
             </table>
         </div>
@@ -410,6 +318,7 @@
     // Global variables
     let itemCounter = 1;
     let supplierProducts = []; // Products for selected supplier
+    let allOrders = []; // All loaded purchase orders
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', async function() {
@@ -422,11 +331,20 @@
     async function loadSuppliers() {
         try {
             const suppliers = await API.get('/suppliers');
+            const suppliersList = Array.isArray(suppliers) ? suppliers : (suppliers.data || []);
+            
+            // Populate create modal dropdown
             const select = document.getElementById('orderSupplier');
             select.innerHTML = '<option value="">Select Supplier</option>';
-            suppliers.forEach(s => {
+            
+            // Populate filter dropdown
+            const filterSelect = document.getElementById('filterSupplier');
+            filterSelect.innerHTML = '<option value="">All Suppliers</option>';
+            
+            suppliersList.forEach(s => {
                 if (s.status === 'Active') {
                     select.innerHTML += `<option value="${s.supplierId}">${s.supplierName}</option>`;
+                    filterSelect.innerHTML += `<option value="${s.supplierId}">${s.supplierName}</option>`;
                 }
             });
         } catch (error) {
@@ -445,7 +363,8 @@
         }
 
         try {
-            supplierProducts = await API.get(`/suppliers/${supplierId}/products`);
+            const result = await API.get(`/suppliers/${supplierId}/products`);
+            supplierProducts = Array.isArray(result) ? result : (result.data || []);
             updateProductDropdowns();
             
             if (supplierProducts.length === 0) {
@@ -588,7 +507,20 @@
     // Load purchase orders from database
     async function loadPurchaseOrders() {
         try {
-            const orders = await API.get('/purchase-orders');
+            const result = await API.get('/purchase-orders');
+            const orders = Array.isArray(result) ? result : (result.data || []);
+            allOrders = orders;
+            
+            renderPurchaseOrders(orders);
+        } catch (error) {
+            console.error('Failed to load purchase orders:', error);
+            Toast.error('Failed to load purchase orders');
+            const tbody = document.getElementById('purchaseOrdersTableBody');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Failed to load purchase orders</td></tr>';
+        }
+    }
+
+    function renderPurchaseOrders(orders) {
             const tbody = document.getElementById('purchaseOrdersTableBody');
             
             // Update stats
@@ -667,39 +599,142 @@
                     </tr>
                 `;
             }).join('');
+    }
+
+    async function viewOrder(id) {
+        try {
+            const result = await API.get(`/purchase-orders/${id}`);
+            const order = result.data || result;
+            
+            document.getElementById('viewPONumber').textContent = order.poNumber || `PO-${id}`;
+            document.getElementById('viewOrderSupplier').textContent = order.supplierName || '-';
+            
+            const statusClass = {
+                'Pending': 'bg-warning-subtle text-warning',
+                'Approved': 'bg-success-subtle text-success',
+                'Shipped': 'bg-info-subtle text-info',
+                'Completed': 'bg-success-subtle text-success',
+                'Cancelled': 'bg-danger-subtle text-danger'
+            }[order.status] || 'bg-secondary-subtle text-secondary';
+            document.getElementById('viewOrderStatus').innerHTML = `<span class="badge ${statusClass}">${order.status}</span>`;
+            
+            document.getElementById('viewOrderDate').textContent = Format.date(order.orderDate);
+            document.getElementById('viewExpectedDelivery').textContent = order.expectedDeliveryDate ? Format.date(order.expectedDeliveryDate) : '-';
+            document.getElementById('viewTotalAmount').textContent = Format.currency(order.totalAmount);
+            
+            const items = order.items || [];
+            if (items.length === 0) {
+                document.getElementById('viewOrderItems').innerHTML = '<tr><td colspan="4" class="text-center text-muted">No items</td></tr>';
+            } else {
+                document.getElementById('viewOrderItems').innerHTML = items.map(i => `
+                    <tr>
+                        <td>${i.productName || 'Unknown'}</td>
+                        <td>${Format.currency(i.unitPrice)}</td>
+                        <td>${i.quantity}</td>
+                        <td>${Format.currency(i.subtotal)}</td>
+                    </tr>
+                `).join('');
+            }
+            
+            if (order.notes) {
+                // Add notes row if not already shown
+                const notesDiv = document.getElementById('viewOrderNotes');
+                if (notesDiv) notesDiv.textContent = order.notes;
+            }
+            
+            var modal = new bootstrap.Modal(document.getElementById('viewOrderModal'));
+            modal.show();
         } catch (error) {
-            console.error('Failed to load purchase orders:', error);
-            // Show sample data if API fails
-            document.getElementById('totalOrders').textContent = '4';
-            document.getElementById('pendingOrders').textContent = '1';
-            document.getElementById('shippedOrders').textContent = '1';
-            document.getElementById('completedOrders').textContent = '1';
+            console.error('Failed to load order details:', error);
+            Toast.error('Failed to load order details');
         }
     }
 
-    function viewOrder(id) {
-        // Sample data - replace with API call
-        document.getElementById('viewPONumber').textContent = 'PO-2026-0001';
-        document.getElementById('viewOrderSupplier').textContent = 'TechSupply Corp';
-        document.getElementById('viewOrderStatus').innerHTML = '<span class="badge bg-warning-subtle text-warning">Pending</span>';
-        document.getElementById('viewOrderDate').textContent = 'Jan 28, 2026';
-        document.getElementById('viewExpectedDelivery').textContent = 'Feb 5, 2026';
-        document.getElementById('viewTotalAmount').textContent = '₱125,500.00';
-        document.getElementById('viewOrderItems').innerHTML = `
-            <tr><td>Gaming Mouse - Razer DeathAdder</td><td>₱2,500.00</td><td>10</td><td>₱25,000.00</td></tr>
-            <tr><td>Mechanical Keyboard - Logitech G Pro</td><td>₱5,500.00</td><td>5</td><td>₱27,500.00</td></tr>
-            <tr><td>Gaming Headset - HyperX Cloud II</td><td>₱4,200.00</td><td>8</td><td>₱33,600.00</td></tr>
-        `;
-        var modal = new bootstrap.Modal(document.getElementById('viewOrderModal'));
-        modal.show();
-    }
-
-    function editOrder(id) {
-        document.getElementById('purchaseOrderModalLabel').textContent = 'Edit Purchase Order';
-        document.getElementById('orderId').value = id;
-        // Load order data here - API call
-        var modal = new bootstrap.Modal(document.getElementById('purchaseOrderModal'));
-        modal.show();
+    async function editOrder(id) {
+        try {
+            const result = await API.get(`/purchase-orders/${id}`);
+            const order = result.data || result;
+            
+            document.getElementById('purchaseOrderModalLabel').textContent = 'Edit Purchase Order';
+            document.getElementById('orderId').value = id;
+            
+            // Set supplier and load products
+            document.getElementById('orderSupplier').value = order.supplierId || '';
+            if (order.supplierId) {
+                await loadSupplierProducts();
+            }
+            
+            // Set dates
+            if (order.orderDate) {
+                document.getElementById('orderDate').value = new Date(order.orderDate).toISOString().split('T')[0];
+            }
+            if (order.expectedDeliveryDate) {
+                document.getElementById('expectedDelivery').value = new Date(order.expectedDeliveryDate).toISOString().split('T')[0];
+            }
+            document.getElementById('orderNotes').value = order.notes || '';
+            
+            // Populate items
+            const items = order.items || [];
+            const itemsBody = document.getElementById('orderItemsBody');
+            itemsBody.innerHTML = '';
+            
+            if (items.length > 0) {
+                items.forEach((item, index) => {
+                    const rowId = index + 1;
+                    const row = `
+                        <tr id="itemRow_${rowId}">
+                            <td>${getProductSelectHTML(rowId)}</td>
+                            <td><input type="number" class="form-control form-control-sm" id="price_${rowId}" value="${item.unitPrice || 0}" readonly placeholder="0.00"></td>
+                            <td><input type="number" class="form-control form-control-sm" id="qty_${rowId}" min="1" value="${item.quantity}" onchange="updateSubtotal(${rowId})"></td>
+                            <td><input type="text" class="form-control form-control-sm" id="subtotal_${rowId}" readonly value="₱${(item.subtotal || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}"></td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeOrderItem(${rowId})">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    itemsBody.insertAdjacentHTML('beforeend', row);
+                    
+                    // Select the product
+                    setTimeout(() => {
+                        const select = document.getElementById(`product_${rowId}`);
+                        if (select && item.productId) {
+                            select.value = item.productId;
+                        }
+                    }, 100);
+                    
+                    itemCounter = rowId;
+                });
+            } else {
+                itemsBody.innerHTML = `
+                    <tr id="itemRow_1">
+                        <td>${getProductSelectHTML(1)}</td>
+                        <td><input type="number" class="form-control form-control-sm" id="price_1" readonly placeholder="0.00"></td>
+                        <td><input type="number" class="form-control form-control-sm" id="qty_1" min="1" value="1" onchange="updateSubtotal(1)"></td>
+                        <td><input type="text" class="form-control form-control-sm" id="subtotal_1" readonly placeholder="₱0.00"></td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeOrderItem(1)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                itemCounter = 1;
+            }
+            
+            updateOrderTotal();
+            
+            var modal = new bootstrap.Modal(document.getElementById('purchaseOrderModal'));
+            modal.show();
+        } catch (error) {
+            console.error('Failed to load order for editing:', error);
+            Toast.error('Failed to load order for editing');
+        }
     }
 
     async function submitOrder() {
@@ -750,9 +785,46 @@
         }
     }
 
-    function saveDraft() {
-        Toast.success('Purchase Order saved as draft!');
-        bootstrap.Modal.getInstance(document.getElementById('purchaseOrderModal')).hide();
+    async function saveDraft() {
+        const supplier = document.getElementById('orderSupplier').value;
+        if (!supplier) {
+            Toast.error('Please select a supplier');
+            return;
+        }
+        
+        // Collect items (allow empty prices for draft)
+        const items = [];
+        const rows = document.getElementById('orderItemsBody').querySelectorAll('tr');
+        rows.forEach(row => {
+            const select = row.querySelector('select');
+            const qtyInput = row.querySelector('input[id^="qty_"]');
+            const priceInput = row.querySelector('input[id^="price_"]');
+            
+            if (select && select.value && qtyInput) {
+                items.push({
+                    productId: parseInt(select.value),
+                    quantity: parseInt(qtyInput.value) || 1,
+                    unitPrice: parseFloat(priceInput?.value) || 0
+                });
+            }
+        });
+        
+        try {
+            const orderData = {
+                supplierId: parseInt(supplier),
+                orderDate: document.getElementById('orderDate').value || new Date().toISOString().split('T')[0],
+                expectedDelivery: document.getElementById('expectedDelivery').value || null,
+                notes: (document.getElementById('orderNotes').value || '') + ' [DRAFT]',
+                items: items.length > 0 ? items : [{ productId: parseInt(supplierProducts[0]?.productId || 0), quantity: 1, unitPrice: 0 }]
+            };
+            
+            await API.post('/purchase-orders', orderData);
+            Toast.success('Purchase Order saved as draft!');
+            bootstrap.Modal.getInstance(document.getElementById('purchaseOrderModal')).hide();
+            await loadPurchaseOrders();
+        } catch (error) {
+            Toast.error('Failed to save draft: ' + error.message);
+        }
     }
 
     async function approveOrder(id) {
@@ -798,7 +870,27 @@
     }
 
     function filterOrders() {
-        loadPurchaseOrders();
+        let filtered = allOrders;
+        
+        const supplierFilter = document.getElementById('filterSupplier').value;
+        const statusFilter = document.getElementById('filterStatus').value;
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        
+        if (supplierFilter) {
+            filtered = filtered.filter(o => o.supplierId == supplierFilter);
+        }
+        if (statusFilter) {
+            filtered = filtered.filter(o => o.status === statusFilter);
+        }
+        if (dateFrom) {
+            filtered = filtered.filter(o => new Date(o.orderDate) >= new Date(dateFrom));
+        }
+        if (dateTo) {
+            filtered = filtered.filter(o => new Date(o.orderDate) <= new Date(dateTo + 'T23:59:59'));
+        }
+        
+        renderPurchaseOrders(filtered);
     }
 
     // Notification helper

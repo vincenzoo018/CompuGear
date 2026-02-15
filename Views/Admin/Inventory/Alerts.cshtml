@@ -154,7 +154,8 @@
 
     async function loadSuppliers() {
         try {
-            const suppliers = await API.get('/suppliers');
+            const result = await API.get('/suppliers');
+            const suppliers = Array.isArray(result) ? result : (result.data || []);
             const select = document.getElementById('reorderSupplier');
             suppliers.forEach(s => {
                 if (s.status === 'Active') {
@@ -168,7 +169,8 @@
 
     async function loadAlerts() {
         try {
-            const products = await API.get('/products');
+            const result = await API.get('/products');
+            const products = Array.isArray(result) ? result : (result.data || []);
             
             // Filter products with stock <= 15 (low stock threshold)
             const lowStockProducts = products.filter(p => p.stockQuantity <= LOW_STOCK_THRESHOLD);
