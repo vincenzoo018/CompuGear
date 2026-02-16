@@ -148,6 +148,18 @@ namespace CompuGear.Models
         // Warranty
         public int? WarrantyPeriod { get; set; }
 
+        // Batch/Serial Tracking
+        public bool? TrackBatchNumbers { get; set; }
+
+        public bool? TrackSerialNumbers { get; set; }
+
+        public bool? TrackExpiry { get; set; }
+
+        // Auto-reorder Settings
+        public bool? AutoReorderEnabled { get; set; }
+
+        public int? AutoReorderQuantity { get; set; }
+
         // SEO
         [StringLength(200)]
         public string? MetaTitle { get; set; }
@@ -448,6 +460,133 @@ namespace CompuGear.Models
         // Navigation Properties
         [ForeignKey("PurchaseOrderId")]
         public virtual PurchaseOrder? PurchaseOrder { get; set; }
+
+        [ForeignKey("ProductId")]
+        public virtual Product? Product { get; set; }
+    }
+
+    /// <summary>
+    /// Product Batch for batch/serial and expiry tracking
+    /// </summary>
+    public class ProductBatch
+    {
+        [Key]
+        public int BatchId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        [Required]
+        public int ProductId { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string BatchNumber { get; set; } = string.Empty;
+
+        [StringLength(100)]
+        public string? SerialNumber { get; set; }
+
+        public int Quantity { get; set; } = 0;
+
+        public int RemainingQuantity { get; set; } = 0;
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal CostPrice { get; set; } = 0;
+
+        public DateTime? ManufactureDate { get; set; }
+
+        public DateTime? ExpiryDate { get; set; }
+
+        public DateTime ReceivedDate { get; set; } = DateTime.UtcNow;
+
+        [StringLength(20)]
+        public string Status { get; set; } = "Active"; // Active, Expired, Depleted, OnHold
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [NotMapped]
+        public bool IsExpired => ExpiryDate.HasValue && ExpiryDate.Value < DateTime.UtcNow;
+
+        [NotMapped]
+        public int? DaysUntilExpiry => ExpiryDate.HasValue ? (int?)(ExpiryDate.Value - DateTime.UtcNow).TotalDays : null;
+
+        // Navigation Properties
+        [ForeignKey("ProductId")]
+        public virtual Product? Product { get; set; }
+    }
+
+    /// <summary>
+    /// Auto-Reorder Rule for automatic stock replenishment
+    /// </summary>
+    public class AutoReorderRule
+    {
+        [Key]
+        public int RuleId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        [Required]
+        public int ProductId { get; set; }
+
+        public int? SupplierId { get; set; }
+
+        public int ReorderPoint { get; set; } = 10;
+
+        public int ReorderQuantity { get; set; } = 50;
+
+        public int MaxStockLevel { get; set; } = 200;
+
+        public bool IsEnabled { get; set; } = true;
+
+        public DateTime? LastTriggeredAt { get; set; }
+
+        public int? LastPurchaseOrderId { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        // Navigation Properties
+        [ForeignKey("ProductId")]
+        public virtual Product? Product { get; set; }
+
+        [ForeignKey("SupplierId")]
+        public virtual Supplier? Supplier { get; set; }
+    }
+
+    /// <summary>
+    /// Expiry Alert for tracking approaching expiry dates
+    /// </summary>
+    public class ExpiryAlert
+    {
+        [Key]
+        public int AlertId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        [Required]
+        public int BatchId { get; set; }
+
+        public int ProductId { get; set; }
+
+        public DateTime ExpiryDate { get; set; }
+
+        public int DaysBeforeExpiry { get; set; }
+
+        [StringLength(20)]
+        public string AlertStatus { get; set; } = "Pending"; // Pending, Acknowledged, Resolved
+
+        public DateTime AlertTriggeredAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime? AcknowledgedAt { get; set; }
+
+        public int? AcknowledgedBy { get; set; }
+
+        [StringLength(500)]
+        public string? Notes { get; set; }
+
+        // Navigation Properties
+        [ForeignKey("BatchId")]
+        public virtual ProductBatch? Batch { get; set; }
 
         [ForeignKey("ProductId")]
         public virtual Product? Product { get; set; }

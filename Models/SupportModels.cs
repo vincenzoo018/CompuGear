@@ -291,4 +291,428 @@ namespace CompuGear.Models
         [ForeignKey("UpdatedBy")]
         public virtual User? UpdatedByUser { get; set; }
     }
+
+    /// <summary>
+    /// Canned Response / Quick Reply template
+    /// </summary>
+    public class CannedResponse
+    {
+        [Key]
+        public int ResponseId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string Title { get; set; } = string.Empty;
+
+        [StringLength(50)]
+        public string? Shortcut { get; set; }
+
+        [Required]
+        public string Content { get; set; } = string.Empty;
+
+        [StringLength(50)]
+        public string? Category { get; set; }
+
+        public bool IsGlobal { get; set; } = false;
+
+        public int UsageCount { get; set; } = 0;
+
+        public bool IsActive { get; set; } = true;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public int? CreatedBy { get; set; }
+
+        [ForeignKey("CreatedBy")]
+        public virtual User? CreatedByUser { get; set; }
+    }
+
+    /// <summary>
+    /// SLA Configuration
+    /// </summary>
+    public class SLAConfig
+    {
+        [Key]
+        public int SLAId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string SLAName { get; set; } = string.Empty;
+
+        [StringLength(20)]
+        public string Priority { get; set; } = "Medium";
+
+        public int FirstResponseHours { get; set; } = 4;
+
+        public int ResolutionHours { get; set; } = 24;
+
+        public bool EscalateOnBreach { get; set; } = true;
+
+        public int? EscalateToUserId { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [ForeignKey("EscalateToUserId")]
+        public virtual User? EscalateToUser { get; set; }
+    }
+
+    /// <summary>
+    /// Ticket Auto-Assignment Rule
+    /// </summary>
+    public class TicketAssignmentRule
+    {
+        [Key]
+        public int RuleId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string RuleName { get; set; } = string.Empty;
+
+        [StringLength(20)]
+        public string AssignmentType { get; set; } = "RoundRobin"; // RoundRobin, LeastBusy, Skills, Category
+
+        public int? CategoryId { get; set; }
+
+        [StringLength(50)]
+        public string? RequiredSkill { get; set; }
+
+        public int Priority { get; set; } = 0;
+
+        public bool IsActive { get; set; } = true;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // Navigation Properties
+        [ForeignKey("CategoryId")]
+        public virtual TicketCategory? Category { get; set; }
+
+        public virtual ICollection<AssignmentRuleAgent> Agents { get; set; } = new List<AssignmentRuleAgent>();
+    }
+
+    /// <summary>
+    /// Agents assigned to auto-assignment rule
+    /// </summary>
+    public class AssignmentRuleAgent
+    {
+        [Key]
+        public int Id { get; set; }
+
+        public int RuleId { get; set; }
+
+        public int UserId { get; set; }
+
+        public int? MaxTickets { get; set; }
+
+        public bool IsAvailable { get; set; } = true;
+
+        // Navigation Properties
+        [ForeignKey("RuleId")]
+        public virtual TicketAssignmentRule? Rule { get; set; }
+
+        [ForeignKey("UserId")]
+        public virtual User? User { get; set; }
+    }
+
+    /// <summary>
+    /// Customer Satisfaction Survey
+    /// </summary>
+    public class SatisfactionSurvey
+    {
+        [Key]
+        public int SurveyId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        [Required]
+        public int TicketId { get; set; }
+
+        public int CustomerId { get; set; }
+
+        public int? AgentId { get; set; }
+
+        [Range(1, 5)]
+        public int? Rating { get; set; }
+
+        [StringLength(20)]
+        public string? Sentiment { get; set; } // Happy, Neutral, Unhappy
+
+        public string? Feedback { get; set; }
+
+        public bool WouldRecommend { get; set; } = true;
+
+        public DateTime SentAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime? RespondedAt { get; set; }
+
+        // Navigation Properties
+        [ForeignKey("TicketId")]
+        public virtual SupportTicket? Ticket { get; set; }
+
+        [ForeignKey("CustomerId")]
+        public virtual Customer? Customer { get; set; }
+
+        [ForeignKey("AgentId")]
+        public virtual User? Agent { get; set; }
+    }
+
+    /// <summary>
+    /// Ticket Internal Notes
+    /// </summary>
+    public class TicketNote
+    {
+        [Key]
+        public int NoteId { get; set; }
+
+        [Required]
+        public int TicketId { get; set; }
+
+        [Required]
+        public int UserId { get; set; }
+
+        [Required]
+        public string Content { get; set; } = string.Empty;
+
+        public bool IsPrivate { get; set; } = true;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // Navigation Properties
+        [ForeignKey("TicketId")]
+        public virtual SupportTicket? Ticket { get; set; }
+
+        [ForeignKey("UserId")]
+        public virtual User? User { get; set; }
+    }
+
+    /// <summary>
+    /// Ticket Tags for categorization
+    /// </summary>
+    public class TicketTag
+    {
+        [Key]
+        public int TagId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string TagName { get; set; } = string.Empty;
+
+        [StringLength(20)]
+        public string? Color { get; set; } = "#6c757d";
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Ticket-Tag Many-to-Many
+    /// </summary>
+    public class TicketTagMapping
+    {
+        [Key]
+        public int MappingId { get; set; }
+
+        public int TicketId { get; set; }
+
+        public int TagId { get; set; }
+
+        public DateTime AddedAt { get; set; } = DateTime.UtcNow;
+
+        // Navigation Properties
+        [ForeignKey("TicketId")]
+        public virtual SupportTicket? Ticket { get; set; }
+
+        [ForeignKey("TagId")]
+        public virtual TicketTag? Tag { get; set; }
+    }
+
+    /// <summary>
+    /// Ticket Time Tracking
+    /// </summary>
+    public class TicketTimeEntry
+    {
+        [Key]
+        public int EntryId { get; set; }
+
+        [Required]
+        public int TicketId { get; set; }
+
+        [Required]
+        public int UserId { get; set; }
+
+        public DateTime StartTime { get; set; }
+
+        public DateTime? EndTime { get; set; }
+
+        public int DurationMinutes { get; set; } = 0;
+
+        [StringLength(255)]
+        public string? Description { get; set; }
+
+        public bool IsBillable { get; set; } = false;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // Navigation Properties
+        [ForeignKey("TicketId")]
+        public virtual SupportTicket? Ticket { get; set; }
+
+        [ForeignKey("UserId")]
+        public virtual User? User { get; set; }
+    }
+
+    /// <summary>
+    /// Ticket Link/Merge for related tickets
+    /// </summary>
+    public class TicketLink
+    {
+        [Key]
+        public int LinkId { get; set; }
+
+        [Required]
+        public int TicketId { get; set; }
+
+        [Required]
+        public int LinkedTicketId { get; set; }
+
+        [StringLength(20)]
+        public string LinkType { get; set; } = "Related"; // Related, Duplicate, Parent, Child, Blocks, BlockedBy
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public int? CreatedBy { get; set; }
+
+        // Navigation Properties
+        [ForeignKey("TicketId")]
+        public virtual SupportTicket? Ticket { get; set; }
+
+        [ForeignKey("LinkedTicketId")]
+        public virtual SupportTicket? LinkedTicket { get; set; }
+    }
+
+    /// <summary>
+    /// Merged Ticket Record
+    /// </summary>
+    public class TicketMerge
+    {
+        [Key]
+        public int MergeId { get; set; }
+
+        [Required]
+        public int PrimaryTicketId { get; set; }
+
+        [Required]
+        public int MergedTicketId { get; set; }
+
+        public int MergedBy { get; set; }
+
+        public DateTime MergedAt { get; set; } = DateTime.UtcNow;
+
+        [StringLength(255)]
+        public string? MergeReason { get; set; }
+
+        // Navigation Properties
+        [ForeignKey("PrimaryTicketId")]
+        public virtual SupportTicket? PrimaryTicket { get; set; }
+
+        [ForeignKey("MergedTicketId")]
+        public virtual SupportTicket? MergedTicket { get; set; }
+    }
+
+    /// <summary>
+    /// Chat Transfer Record
+    /// </summary>
+    public class ChatTransfer
+    {
+        [Key]
+        public int TransferId { get; set; }
+
+        [Required]
+        public int ChatSessionId { get; set; }
+
+        public int FromUserId { get; set; }
+
+        public int ToUserId { get; set; }
+
+        [StringLength(255)]
+        public string? Reason { get; set; }
+
+        public DateTime TransferredAt { get; set; } = DateTime.UtcNow;
+
+        public bool Accepted { get; set; } = false;
+
+        public DateTime? AcceptedAt { get; set; }
+
+        // Navigation Properties
+        [ForeignKey("ChatSessionId")]
+        public virtual ChatSession? ChatSession { get; set; }
+
+        [ForeignKey("FromUserId")]
+        public virtual User? FromUser { get; set; }
+
+        [ForeignKey("ToUserId")]
+        public virtual User? ToUser { get; set; }
+    }
+
+    /// <summary>
+    /// Chat File Attachment
+    /// </summary>
+    public class ChatAttachment
+    {
+        [Key]
+        public int AttachmentId { get; set; }
+
+        public int ChatMessageId { get; set; }
+
+        [Required]
+        [StringLength(255)]
+        public string FileName { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(500)]
+        public string FilePath { get; set; } = string.Empty;
+
+        [StringLength(100)]
+        public string? ContentType { get; set; }
+
+        public long FileSize { get; set; } = 0;
+
+        public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
+
+        // Navigation Properties
+        [ForeignKey("ChatMessageId")]
+        public virtual ChatMessage? ChatMessage { get; set; }
+    }
+
+    /// <summary>
+    /// Chat Transcript Email Record
+    /// </summary>
+    public class ChatTranscript
+    {
+        [Key]
+        public int TranscriptId { get; set; }
+
+        [Required]
+        public int ChatSessionId { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string RecipientEmail { get; set; } = string.Empty;
+
+        public DateTime SentAt { get; set; } = DateTime.UtcNow;
+
+        public bool DeliverySuccess { get; set; } = true;
+
+        // Navigation Properties
+        [ForeignKey("ChatSessionId")]
+        public virtual ChatSession? ChatSession { get; set; }
+    }
 }

@@ -86,6 +86,66 @@ namespace CompuGear.Data
         public DbSet<CompanyModuleAccess> CompanyModuleAccess { get; set; }
         public DbSet<PlatformUsageLog> PlatformUsageLogs { get; set; }
 
+        // Sales Pipeline & Quotations
+        public DbSet<Quotation> Quotations { get; set; }
+        public DbSet<QuotationItem> QuotationItems { get; set; }
+        public DbSet<SalesTarget> SalesTargets { get; set; }
+        public DbSet<Commission> Commissions { get; set; }
+        public DbSet<PipelineStage> PipelineStages { get; set; }
+
+        // Inventory Batch/Expiry Tracking
+        public DbSet<ProductBatch> ProductBatches { get; set; }
+        public DbSet<AutoReorderRule> AutoReorderRules { get; set; }
+        public DbSet<ExpiryAlert> ExpiryAlerts { get; set; }
+
+        // Support Enhancements
+        public DbSet<CannedResponse> CannedResponses { get; set; }
+        public DbSet<SLAConfig> SLAConfigs { get; set; }
+
+        // Marketing A/B Testing & Social Media
+        public DbSet<ABTest> ABTests { get; set; }
+        public DbSet<ABTestVariant> ABTestVariants { get; set; }
+        public DbSet<SocialMediaPost> SocialMediaPosts { get; set; }
+
+        // Tax Calculations
+        public DbSet<TaxRate> TaxRates { get; set; }
+        public DbSet<ProductTaxCategory> ProductTaxCategories { get; set; }
+        public DbSet<TaxCalculation> TaxCalculations { get; set; }
+
+        // Customer Portal - Reviews & Loyalty
+        public DbSet<ProductReview> ProductReviews { get; set; }
+        public DbSet<ProductComparison> ProductComparisons { get; set; }
+        public DbSet<RecentlyViewed> RecentlyViewed { get; set; }
+        public DbSet<LoyaltyProgram> LoyaltyPrograms { get; set; }
+        public DbSet<LoyaltyPoints> LoyaltyPoints { get; set; }
+
+        // Order Tracking & Shipping
+        public DbSet<OrderShipment> OrderShipments { get; set; }
+        public DbSet<ShipmentTracking> ShipmentTrackings { get; set; }
+
+        // Checkout Enhancements
+        public DbSet<GiftOption> GiftOptions { get; set; }
+        public DbSet<InstallmentPlan> InstallmentPlans { get; set; }
+        public DbSet<InstallmentPayment> InstallmentPayments { get; set; }
+        public DbSet<SubscriptionOrder> SubscriptionOrders { get; set; }
+        public DbSet<SubscriptionItem> SubscriptionItems { get; set; }
+
+        // Support Staff - Ticket Enhancements
+        public DbSet<TicketAssignmentRule> TicketAssignmentRules { get; set; }
+        public DbSet<AssignmentRuleAgent> AssignmentRuleAgents { get; set; }
+        public DbSet<SatisfactionSurvey> SatisfactionSurveys { get; set; }
+        public DbSet<TicketNote> TicketNotes { get; set; }
+        public DbSet<TicketTag> TicketTags { get; set; }
+        public DbSet<TicketTagMapping> TicketTagMappings { get; set; }
+        public DbSet<TicketTimeEntry> TicketTimeEntries { get; set; }
+        public DbSet<TicketLink> TicketLinks { get; set; }
+        public DbSet<TicketMerge> TicketMerges { get; set; }
+
+        // Live Chat Enhancements
+        public DbSet<ChatTransfer> ChatTransfers { get; set; }
+        public DbSet<ChatAttachment> ChatAttachments { get; set; }
+        public DbSet<ChatTranscript> ChatTranscripts { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

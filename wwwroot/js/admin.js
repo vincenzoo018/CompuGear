@@ -92,6 +92,10 @@ const API = {
                 throw new Error(result.message || 'An error occurred');
             }
 
+            // Handle wrapped response format {success: true, data: [...]}
+            if (result && typeof result === 'object' && 'data' in result) {
+                return result.data;
+            }
             return result;
         } catch (error) {
             console.error('API Error:', error);

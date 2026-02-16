@@ -323,4 +323,217 @@ namespace CompuGear.Models
         [ForeignKey("ChangedBy")]
         public virtual User? ChangedByUser { get; set; }
     }
+
+    /// <summary>
+    /// Sales Quotation entity
+    /// </summary>
+    public class Quotation
+    {
+        [Key]
+        public int QuotationId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        [StringLength(20)]
+        public string QuotationNumber { get; set; } = string.Empty;
+
+        public int? CustomerId { get; set; }
+
+        public int? LeadId { get; set; }
+
+        [StringLength(100)]
+        public string? CustomerName { get; set; }
+
+        [StringLength(100)]
+        public string? CustomerEmail { get; set; }
+
+        [StringLength(20)]
+        public string? CustomerPhone { get; set; }
+
+        public DateTime QuotationDate { get; set; } = DateTime.UtcNow;
+
+        public DateTime ValidUntil { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Subtotal { get; set; } = 0;
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal DiscountAmount { get; set; } = 0;
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal TaxAmount { get; set; } = 0;
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal TotalAmount { get; set; } = 0;
+
+        [StringLength(30)]
+        public string Status { get; set; } = "Draft"; // Draft, Sent, Accepted, Rejected, Expired, Converted
+
+        [StringLength(500)]
+        public string? Terms { get; set; }
+
+        public string? Notes { get; set; }
+
+        public int? ConvertedOrderId { get; set; }
+
+        public DateTime? ConvertedAt { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        public int? CreatedBy { get; set; }
+
+        // Navigation Properties
+        [ForeignKey("CustomerId")]
+        public virtual Customer? Customer { get; set; }
+
+        [ForeignKey("LeadId")]
+        public virtual Lead? Lead { get; set; }
+
+        public virtual ICollection<QuotationItem> Items { get; set; } = new List<QuotationItem>();
+    }
+
+    /// <summary>
+    /// Quotation Line Item
+    /// </summary>
+    public class QuotationItem
+    {
+        [Key]
+        public int ItemId { get; set; }
+
+        public int QuotationId { get; set; }
+
+        public int? ProductId { get; set; }
+
+        [StringLength(200)]
+        public string Description { get; set; } = string.Empty;
+
+        public int Quantity { get; set; } = 1;
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal UnitPrice { get; set; } = 0;
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal DiscountAmount { get; set; } = 0;
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal TotalPrice { get; set; } = 0;
+
+        [ForeignKey("QuotationId")]
+        public virtual Quotation Quotation { get; set; } = null!;
+
+        [ForeignKey("ProductId")]
+        public virtual Product? Product { get; set; }
+    }
+
+    /// <summary>
+    /// Sales Target / Goal entity
+    /// </summary>
+    public class SalesTarget
+    {
+        [Key]
+        public int TargetId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        public int? UserId { get; set; }
+
+        [StringLength(50)]
+        public string TargetName { get; set; } = string.Empty;
+
+        [StringLength(20)]
+        public string Period { get; set; } = "Monthly"; // Daily, Weekly, Monthly, Quarterly, Yearly
+
+        public int Year { get; set; }
+
+        public int? Month { get; set; }
+
+        public int? Quarter { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal TargetAmount { get; set; } = 0;
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal AchievedAmount { get; set; } = 0;
+
+        public int TargetOrders { get; set; } = 0;
+
+        public int AchievedOrders { get; set; } = 0;
+
+        [NotMapped]
+        public decimal ProgressPercentage => TargetAmount > 0 ? (AchievedAmount / TargetAmount) * 100 : 0;
+
+        [StringLength(20)]
+        public string Status { get; set; } = "Active"; // Active, Completed, Exceeded
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [ForeignKey("UserId")]
+        public virtual User? User { get; set; }
+    }
+
+    /// <summary>
+    /// Sales Commission record
+    /// </summary>
+    public class Commission
+    {
+        [Key]
+        public int CommissionId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        public int UserId { get; set; }
+
+        public int? OrderId { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal OrderAmount { get; set; } = 0;
+
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal CommissionRate { get; set; } = 0;
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal CommissionAmount { get; set; } = 0;
+
+        [StringLength(20)]
+        public string Status { get; set; } = "Pending"; // Pending, Approved, Paid
+
+        public DateTime? PaidAt { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        [ForeignKey("UserId")]
+        public virtual User User { get; set; } = null!;
+
+        [ForeignKey("OrderId")]
+        public virtual Order? Order { get; set; }
+    }
+
+    /// <summary>
+    /// Sales Pipeline Stage
+    /// </summary>
+    public class PipelineStage
+    {
+        [Key]
+        public int StageId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        [StringLength(50)]
+        public string StageName { get; set; } = string.Empty;
+
+        public int SortOrder { get; set; } = 0;
+
+        [StringLength(7)]
+        public string Color { get; set; } = "#008080";
+
+        public int Probability { get; set; } = 50; // Default win probability
+
+        public bool IsDefault { get; set; } = false;
+
+        public bool IsWonStage { get; set; } = false;
+
+        public bool IsLostStage { get; set; } = false;
+    }
 }

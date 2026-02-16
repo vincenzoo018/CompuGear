@@ -615,14 +615,21 @@
                 const response = getBotResponse(message);
                 addMessage(response, 'bot');
             }, 1200);
-        } else if ((chatMode === 'agent' || chatMode === 'waiting') && sessionId) {
-            // Send to live agent
+        } else if (chatMode === 'waiting' && sessionId) {
+            // Customer is waiting for agent to accept - show warning
+            addMessage('⏳ Please wait for a support agent to accept your chat request before sending messages.', 'system');
+        } else if (chatMode === 'agent' && sessionId) {
+            // Send to live agent (only when agent has accepted)
             try {
-                await fetch('/api/CustomerSendChatMessage', {
+                const response = await fetch('/api/CustomerSendChatMessage', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ sessionId: sessionId, message: message })
                 });
+                const result = await response.json();
+                if (!result.success && result.waitingForAgent) {
+                    addMessage('⏳ Please wait for an agent to accept the chat.', 'system');
+                }
             } catch (error) {
                 console.error('Error sending message:', error);
             }
@@ -713,13 +720,17 @@
 
                 // Show waiting banner
                 document.getElementById('agentStatusBanner').style.display = 'flex';
-                document.getElementById('agentStatusText').textContent = 'Waiting for an agent to connect...';
+                document.getElementById('agentStatusText').textContent = 'Waiting for a support agent to accept your request...';
 
                 // Hide quick replies
                 document.getElementById('quickReplies').style.display = 'none';
 
+                // Disable chat input while waiting for agent approval
+                document.getElementById('chatInput').placeholder = 'Waiting for agent approval...';
+                document.getElementById('chatInput').disabled = true;
+
                 // Add system message
-                addMessage('You requested to chat with a live agent. Please wait...', 'system');
+                addMessage('🔔 You have requested to speak with a live agent. Please wait while a support agent accepts your request. You will be able to chat once an agent is available.', 'system');
 
                 btn.style.display = 'none';
 
@@ -746,7 +757,7 @@
                 const result = await response.json();
 
                 if (result.success && result.data) {
-                    // Check if agent connected
+                    // Check if agent connected (agent has accepted the chat)
                     if (result.data.status === 'Active' && result.data.agentName && chatMode !== 'agent') {
                         chatMode = 'agent';
 
@@ -755,9 +766,16 @@
                         document.getElementById('chatAgentName').textContent = result.data.agentName;
                         document.getElementById('chatStatus').textContent = 'Live Chat';
 
+                        // Enable chat input now that agent accepted
+                        document.getElementById('chatInput').placeholder = 'Type your message...';
+                        document.getElementById('chatInput').disabled = false;
+
                         const banner = document.getElementById('agentStatusBanner');
                         banner.classList.remove('waiting');
-                        document.getElementById('agentStatusText').textContent = `Connected with ${result.data.agentName}`;
+                        document.getElementById('agentStatusText').textContent = `✅ Connected with ${result.data.agentName}`;
+
+                        // Add connected message
+                        addMessage(`🎉 ${result.data.agentName} has accepted your chat request. You can now start chatting!`, 'system');
                     }
 
                     // Add new messages
@@ -817,6 +835,10 @@
         document.getElementById('chatStatus').textContent = 'Online';
         document.getElementById('agentStatusBanner').style.display = 'none';
         document.getElementById('quickReplies').style.display = 'flex';
+
+        // Re-enable chat input
+        document.getElementById('chatInput').placeholder = 'Type your message...';
+        document.getElementById('chatInput').disabled = false;
 
         const btn = document.getElementById('btnRequestAgent');
         btn.style.display = 'flex';

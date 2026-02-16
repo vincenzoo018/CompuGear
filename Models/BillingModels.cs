@@ -368,4 +368,116 @@ namespace CompuGear.Models
         [ForeignKey("ProcessedBy")]
         public virtual User? ProcessedByUser { get; set; }
     }
+
+    /// <summary>
+    /// Tax Rate Configuration
+    /// </summary>
+    public class TaxRate
+    {
+        [Key]
+        public int TaxRateId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string TaxName { get; set; } = string.Empty;
+
+        [StringLength(20)]
+        public string? TaxCode { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal Rate { get; set; }
+
+        [StringLength(20)]
+        public string TaxType { get; set; } = "Percentage"; // Percentage, Fixed
+
+        [StringLength(50)]
+        public string? Region { get; set; }
+
+        [StringLength(50)]
+        public string? Country { get; set; }
+
+        public bool IsDefault { get; set; } = false;
+
+        public bool IsActive { get; set; } = true;
+
+        public bool ApplyToShipping { get; set; } = false;
+
+        public DateTime EffectiveFrom { get; set; } = DateTime.UtcNow;
+
+        public DateTime? EffectiveTo { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Product Tax Category mapping
+    /// </summary>
+    public class ProductTaxCategory
+    {
+        [Key]
+        public int CategoryId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        [Required]
+        [StringLength(50)]
+        public string CategoryName { get; set; } = string.Empty;
+
+        [StringLength(255)]
+        public string? Description { get; set; }
+
+        public int? DefaultTaxRateId { get; set; }
+
+        public bool IsTaxExempt { get; set; } = false;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // Navigation Properties
+        [ForeignKey("DefaultTaxRateId")]
+        public virtual TaxRate? DefaultTaxRate { get; set; }
+    }
+
+    /// <summary>
+    /// Tax Calculation History for auditing
+    /// </summary>
+    public class TaxCalculation
+    {
+        [Key]
+        public int CalculationId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        public int? InvoiceId { get; set; }
+
+        public int? OrderId { get; set; }
+
+        public int TaxRateId { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal TaxableAmount { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal AppliedRate { get; set; }
+
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal TaxAmount { get; set; }
+
+        [StringLength(500)]
+        public string? Notes { get; set; }
+
+        public DateTime CalculatedAt { get; set; } = DateTime.UtcNow;
+
+        // Navigation Properties
+        [ForeignKey("InvoiceId")]
+        public virtual Invoice? Invoice { get; set; }
+
+        [ForeignKey("TaxRateId")]
+        public virtual TaxRate? TaxRate { get; set; }
+    }
 }

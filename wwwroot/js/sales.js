@@ -58,6 +58,10 @@ const API = {
             const response = await fetch(`${CONFIG.apiBase}${endpoint}`, options);
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || 'An error occurred');
+            // Handle wrapped response format {success: true, data: [...]}
+            if (result && typeof result === 'object' && 'data' in result) {
+                return result.data;
+            }
             return result;
         } catch (error) {
             console.error('API Error:', error);

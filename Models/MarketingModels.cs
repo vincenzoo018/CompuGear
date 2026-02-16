@@ -269,4 +269,144 @@ namespace CompuGear.Models
         [ForeignKey("CustomerId")]
         public virtual Customer Customer { get; set; } = null!;
     }
+
+    /// <summary>
+    /// A/B Test entity for campaign testing
+    /// </summary>
+    public class ABTest
+    {
+        [Key]
+        public int TestId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string TestName { get; set; } = string.Empty;
+
+        [StringLength(500)]
+        public string? Description { get; set; }
+
+        public int? CampaignId { get; set; }
+
+        [StringLength(20)]
+        public string TestType { get; set; } = "Email"; // Email, Content, Subject, Landing
+
+        public DateTime StartDate { get; set; }
+
+        public DateTime? EndDate { get; set; }
+
+        [StringLength(20)]
+        public string Status { get; set; } = "Draft"; // Draft, Running, Completed, Cancelled
+
+        public int? WinningVariantId { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public int? CreatedBy { get; set; }
+
+        // Navigation Properties
+        [ForeignKey("CampaignId")]
+        public virtual Campaign? Campaign { get; set; }
+
+        public virtual ICollection<ABTestVariant> Variants { get; set; } = new List<ABTestVariant>();
+    }
+
+    /// <summary>
+    /// A/B Test Variant entity
+    /// </summary>
+    public class ABTestVariant
+    {
+        [Key]
+        public int VariantId { get; set; }
+
+        [Required]
+        public int TestId { get; set; }
+
+        [Required]
+        [StringLength(10)]
+        public string VariantName { get; set; } = "A"; // A, B, C, etc.
+
+        [StringLength(200)]
+        public string? Subject { get; set; }
+
+        public string? Content { get; set; }
+
+        [Column(TypeName = "decimal(5,2)")]
+        public decimal TrafficPercentage { get; set; } = 50;
+
+        // Metrics
+        public int SentCount { get; set; } = 0;
+
+        public int OpenCount { get; set; } = 0;
+
+        public int ClickCount { get; set; } = 0;
+
+        public int ConversionCount { get; set; } = 0;
+
+        [NotMapped]
+        public decimal OpenRate => SentCount > 0 ? (decimal)OpenCount / SentCount * 100 : 0;
+
+        [NotMapped]
+        public decimal ClickRate => OpenCount > 0 ? (decimal)ClickCount / OpenCount * 100 : 0;
+
+        [NotMapped]
+        public decimal ConversionRate => ClickCount > 0 ? (decimal)ConversionCount / ClickCount * 100 : 0;
+
+        // Navigation Properties
+        [ForeignKey("TestId")]
+        public virtual ABTest? Test { get; set; }
+    }
+
+    /// <summary>
+    /// Social Media Post entity
+    /// </summary>
+    public class SocialMediaPost
+    {
+        [Key]
+        public int PostId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        public int? CampaignId { get; set; }
+
+        [Required]
+        [StringLength(20)]
+        public string Platform { get; set; } = "Facebook"; // Facebook, Twitter, Instagram, LinkedIn
+
+        [Required]
+        public string Content { get; set; } = string.Empty;
+
+        [StringLength(500)]
+        public string? MediaUrl { get; set; }
+
+        public DateTime? ScheduledAt { get; set; }
+
+        public DateTime? PublishedAt { get; set; }
+
+        [StringLength(20)]
+        public string Status { get; set; } = "Draft"; // Draft, Scheduled, Published, Failed
+
+        [StringLength(255)]
+        public string? ExternalPostId { get; set; }
+
+        // Engagement Metrics
+        public int Likes { get; set; } = 0;
+
+        public int Shares { get; set; } = 0;
+
+        public int Comments { get; set; } = 0;
+
+        public int Reach { get; set; } = 0;
+
+        public int Impressions { get; set; } = 0;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public int? CreatedBy { get; set; }
+
+        // Navigation Properties
+        [ForeignKey("CampaignId")]
+        public virtual Campaign? Campaign { get; set; }
+    }
 }

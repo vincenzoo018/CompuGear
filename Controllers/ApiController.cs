@@ -3038,6 +3038,10 @@ namespace CompuGear.Controllers
                 if (session == null)
                     return Ok(new { success = false, message = "Chat session not found" });
 
+                // Prevent customer from sending messages until agent accepts
+                if (session.Status == "Pending")
+                    return Ok(new { success = false, message = "Please wait for an agent to accept the chat before sending messages.", waitingForAgent = true });
+
                 var message = new ChatMessage
                 {
                     SessionId = request.SessionId,
