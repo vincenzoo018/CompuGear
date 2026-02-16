@@ -1,0 +1,219 @@
+@{
+    Layout = "~/Views/ERPWebsite/_ERPWebsiteLayout.cshtml";
+    ViewData["Title"] = "Features";
+    ViewData["ActivePage"] = "Features";
+}
+
+@section Styles {
+    .features-hero {
+        background: linear-gradient(180deg, #f0f9f9 0%, #f8f9fc 100%);
+        padding: 80px 24px 60px; text-align: center;
+    }
+    .features-hero h1 { font-size: 2.8rem; font-weight: 800; color: #1a1a2e; margin-bottom: 16px; }
+    .features-hero p { font-size: 1.1rem; color: #666; max-width: 600px; margin: 0 auto; }
+
+    .features-section { padding: 60px 24px; }
+    .feature-block {
+        max-width: 1000px; margin: 0 auto 60px;
+        display: grid; grid-template-columns: 1fr 1fr; gap: 48px;
+        align-items: center;
+    }
+    .feature-block:nth-child(even) { direction: rtl; }
+    .feature-block:nth-child(even) > * { direction: ltr; }
+
+    .feature-visual {
+        background: #f8f9fc; border-radius: 20px; padding: 40px;
+        display: flex; align-items: center; justify-content: center;
+        min-height: 260px; border: 1px solid #eee;
+    }
+    .feature-visual .feat-icon {
+        width: 80px; height: 80px; border-radius: 20px;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .feature-visual .feat-icon svg { width: 40px; height: 40px; }
+
+    .feature-content h2 { font-size: 1.6rem; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; }
+    .feature-content p { font-size: 0.95rem; color: #777; line-height: 1.7; margin-bottom: 20px; }
+    .feature-content .feat-list { list-style: none; }
+    .feature-content .feat-list li {
+        display: flex; align-items: center; gap: 10px;
+        font-size: 0.9rem; color: #555; padding: 6px 0;
+    }
+    .feature-content .feat-list li svg { color: #008080; flex-shrink: 0; }
+
+    .integration-section {
+        background: #fff; padding: 60px 24px; text-align: center;
+        border-top: 1px solid #f0f0f0;
+    }
+    .integration-section h2 { font-size: 2rem; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; }
+    .integration-section p { font-size: 1rem; color: #666; margin-bottom: 40px; }
+    .integration-grid {
+        max-width: 800px; margin: 0 auto;
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+    }
+    .integration-item {
+        background: #f8f9fc; border-radius: 12px; padding: 24px;
+        border: 1px solid #eee; transition: all 0.3s;
+    }
+    .integration-item:hover { border-color: rgba(0,128,128,0.2); transform: translateY(-2px); }
+    .integration-item .int-icon {
+        width: 48px; height: 48px; border-radius: 12px;
+        background: rgba(0,128,128,0.1); color: #008080;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 12px;
+    }
+    .integration-item p { font-size: 0.85rem; font-weight: 600; color: #555; }
+
+    @@media (max-width: 768px) {
+        .features-hero h1 { font-size: 2rem; }
+        .feature-block { grid-template-columns: 1fr; gap: 24px; }
+        .feature-block:nth-child(even) { direction: ltr; }
+        .integration-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+}
+
+<!-- Hero -->
+<section class="features-hero">
+    <h1>Powerful Features for Your Business</h1>
+    <p>Explore the modules and tools that make CompuGear the all-in-one ERP solution for enterprises.</p>
+</section>
+
+<!-- Features -->
+<section class="features-section">
+    <!-- Sales -->
+    <div class="feature-block" id="sales">
+        <div class="feature-visual">
+            <div class="feat-icon" style="background:rgba(59,130,246,0.1);color:#3B82F6;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+            </div>
+        </div>
+        <div class="feature-content">
+            <h2>Sales Management</h2>
+            <p>Complete sales pipeline from lead generation to order fulfillment. Track every deal and optimize your revenue.</p>
+            <ul class="feat-list">
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Lead & Opportunity Tracking</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Quotation & Order Management</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Revenue Analytics & Reports</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Customer Relationship Management</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Inventory -->
+    <div class="feature-block" id="inventory">
+        <div class="feature-visual">
+            <div class="feat-icon" style="background:rgba(16,185,129,0.1);color:#10B981;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+                </svg>
+            </div>
+        </div>
+        <div class="feature-content">
+            <h2>Inventory Control</h2>
+            <p>Full warehouse and stock management with real-time tracking and automated reordering.</p>
+            <ul class="feat-list">
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Real-Time Stock Tracking</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Batch & Serial Number Management</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Low Stock Alerts & Auto-Reorder</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Supplier Management</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Billing -->
+    <div class="feature-block" id="billing">
+        <div class="feature-visual">
+            <div class="feat-icon" style="background:rgba(245,158,11,0.1);color:#F59E0B;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+            </div>
+        </div>
+        <div class="feature-content">
+            <h2>Billing & Invoicing</h2>
+            <p>Automate your financial operations with smart invoicing, payment tracking, and tax management.</p>
+            <ul class="feat-list">
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Automated Invoice Generation</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Payment Processing & Tracking</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Tax Calculation & Reports</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Financial Dashboards</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Support -->
+    <div class="feature-block" id="support">
+        <div class="feature-visual">
+            <div class="feat-icon" style="background:rgba(139,92,246,0.1);color:#8B5CF6;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="feature-content">
+            <h2>Customer Support</h2>
+            <p>Deliver exceptional customer service with integrated ticketing, live chat, and knowledge base.</p>
+            <ul class="feat-list">
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Ticketing System with SLA</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Live Chat Integration</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Knowledge Base Portal</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Satisfaction Tracking</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Marketing -->
+    <div class="feature-block" id="marketing">
+        <div class="feature-visual">
+            <div class="feat-icon" style="background:rgba(236,72,153,0.1);color:#EC4899;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+            </div>
+        </div>
+        <div class="feature-content">
+            <h2>Marketing</h2>
+            <p>Run targeted campaigns, track leads, and measure ROI with powerful marketing automation tools.</p>
+            <ul class="feat-list">
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Campaign Management</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Email Marketing</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Lead Tracking & Scoring</li>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ROI Analytics</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- Integrations -->
+<section class="integration-section">
+    <h2>Built-In Integrations</h2>
+    <p>All modules work together seamlessly — no third-party connectors needed.</p>
+    <div class="integration-grid">
+        <div class="integration-item">
+            <div class="int-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+            <p>Dashboard</p>
+        </div>
+        <div class="integration-item">
+            <div class="int-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <p>Reports</p>
+        </div>
+        <div class="integration-item">
+            <div class="int-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <p>Security</p>
+        </div>
+        <div class="integration-item">
+            <div class="int-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <p>User Roles</p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section style="padding:60px 24px;text-align:center;background:linear-gradient(135deg,#008080,#006666);color:#fff;">
+    <h2 style="font-size:2rem;font-weight:700;margin-bottom:12px;">Ready to Get Started?</h2>
+    <p style="font-size:1rem;opacity:0.9;margin-bottom:28px;">Choose a plan and start streamlining your business today.</p>
+    <a href="/ERPWebsite/Pricing" style="display:inline-block;background:#fff;color:#008080;padding:14px 36px;border-radius:10px;font-weight:600;transition:all 0.3s;">View Pricing</a>
+</section>

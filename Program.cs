@@ -2,11 +2,18 @@ using Microsoft.EntityFrameworkCore;
 using CompuGear.Models;
 using CompuGear.Data;
 using CompuGear.Services;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        // Use camelCase for JSON property names (JavaScript convention)
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+    })
     .ConfigureApiBehaviorOptions(options =>
     {
         // Suppress automatic 400 response for invalid model states

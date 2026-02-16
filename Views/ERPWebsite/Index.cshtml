@@ -1,0 +1,327 @@
+@{
+    Layout = "~/Views/ERPWebsite/_ERPWebsiteLayout.cshtml";
+    ViewData["Title"] = "Enterprise Resource Planning";
+    ViewData["ActivePage"] = "Home";
+}
+
+@section Styles {
+    /* ========== HERO ========== */
+    .hero {
+        background: linear-gradient(180deg, #f0f9f9 0%, #f8f9fc 100%);
+        padding: 100px 24px 80px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .hero::before {
+        content: '';
+        position: absolute;
+        top: -200px; right: -200px;
+        width: 600px; height: 600px;
+        background: radial-gradient(circle, rgba(0,128,128,0.06) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .hero::after {
+        content: '';
+        position: absolute;
+        bottom: -150px; left: -150px;
+        width: 400px; height: 400px;
+        background: radial-gradient(circle, rgba(0,128,128,0.04) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .hero .badge-tag {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: rgba(0,128,128,0.08); border: 1px solid rgba(0,128,128,0.15);
+        padding: 8px 20px; border-radius: 50px;
+        font-size: 0.9rem; font-weight: 500; color: #008080;
+        margin-bottom: 28px;
+    }
+    .hero h1 {
+        font-size: 3.5rem; font-weight: 800; line-height: 1.15;
+        color: #1a1a2e; margin-bottom: 24px;
+        max-width: 800px; margin-left: auto; margin-right: auto;
+    }
+    .hero h1 span { color: #008080; }
+    .hero p {
+        font-size: 1.15rem; color: #666; max-width: 650px;
+        margin: 0 auto 40px; line-height: 1.7;
+    }
+    .hero .btn-hero {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: #008080; color: #fff; padding: 16px 40px;
+        border-radius: 12px; font-weight: 600; font-size: 1.05rem;
+        transition: all 0.3s; border: none; cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0,128,128,0.25);
+    }
+    .hero .btn-hero:hover { background: #006666; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,128,128,0.35); }
+    .hero .trust-line {
+        margin-top: 40px; font-size: 0.85rem; color: #999;
+    }
+    .hero .trust-line span { margin: 0 6px; color: #ccc; }
+
+    /* ========== STATS ========== */
+    .stats-section {
+        padding: 60px 24px;
+        background: #fff;
+        border-top: 1px solid #f0f0f0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .stats-grid {
+        max-width: 1000px; margin: 0 auto;
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px;
+        text-align: center;
+    }
+    .stats-grid .stat-num { font-size: 2.5rem; font-weight: 800; color: #008080; }
+    .stats-grid .stat-label { font-size: 0.9rem; color: #888; margin-top: 4px; }
+
+    /* ========== MODULES PREVIEW ========== */
+    .modules-section { padding: 80px 24px; background: #f8f9fc; }
+    .modules-section .section-header { text-align: center; margin-bottom: 50px; }
+    .modules-section .section-header h2 { font-size: 2.2rem; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; }
+    .modules-section .section-header p { font-size: 1.05rem; color: #666; max-width: 600px; margin: 0 auto; }
+    .modules-grid {
+        max-width: 1100px; margin: 0 auto;
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    }
+    .module-card {
+        background: #fff; border-radius: 16px; padding: 32px;
+        border: 1px solid #eee; transition: all 0.3s;
+    }
+    .module-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+        border-color: rgba(0,128,128,0.2);
+    }
+    .module-card .card-icon {
+        width: 56px; height: 56px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 20px;
+    }
+    .module-card .card-icon svg { width: 28px; height: 28px; }
+    .module-card h3 { font-size: 1.15rem; font-weight: 600; margin-bottom: 10px; color: #1a1a2e; }
+    .module-card p { font-size: 0.9rem; color: #777; line-height: 1.6; }
+
+    /* Icon backgrounds */
+    .icon-sales { background: rgba(59,130,246,0.1); color: #3B82F6; }
+    .icon-inventory { background: rgba(16,185,129,0.1); color: #10B981; }
+    .icon-billing { background: rgba(245,158,11,0.1); color: #F59E0B; }
+    .icon-support { background: rgba(139,92,246,0.1); color: #8B5CF6; }
+    .icon-marketing { background: rgba(236,72,153,0.1); color: #EC4899; }
+    .icon-admin { background: rgba(0,128,128,0.1); color: #008080; }
+
+    /* ========== CTA ========== */
+    .cta-section {
+        padding: 80px 24px; text-align: center;
+        background: linear-gradient(135deg, #008080 0%, #006666 100%);
+        color: #fff;
+    }
+    .cta-section h2 { font-size: 2.2rem; font-weight: 700; margin-bottom: 16px; }
+    .cta-section p { font-size: 1.1rem; opacity: 0.9; margin-bottom: 32px; max-width: 550px; margin-left: auto; margin-right: auto; }
+    .cta-section .btn-cta {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: #fff; color: #008080; padding: 14px 36px;
+        border-radius: 10px; font-weight: 600; font-size: 1rem;
+        transition: all 0.3s; border: none; cursor: pointer;
+    }
+    .cta-section .btn-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+
+    /* ========== WHY CHOOSE ========== */
+    .why-section { padding: 80px 24px; background: #fff; }
+    .why-section .section-header { text-align: center; margin-bottom: 50px; }
+    .why-section .section-header h2 { font-size: 2.2rem; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; }
+    .why-section .section-header p { font-size: 1.05rem; color: #666; }
+    .why-grid {
+        max-width: 1000px; margin: 0 auto;
+        display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;
+    }
+    .why-item { display: flex; gap: 16px; align-items: flex-start; }
+    .why-item .why-icon {
+        flex-shrink: 0; width: 48px; height: 48px; border-radius: 12px;
+        background: rgba(0,128,128,0.1); color: #008080;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .why-item h4 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; color: #1a1a2e; }
+    .why-item p { font-size: 0.88rem; color: #777; }
+
+    @@media (max-width: 768px) {
+        .hero h1 { font-size: 2.2rem; }
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .modules-grid { grid-template-columns: 1fr; }
+        .why-grid { grid-template-columns: 1fr; }
+    }
+}
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="badge-tag">Built for Growing Businesses ⚙️</div>
+    <h1>
+        All-in-One ERP<br>Management<br>
+        <span>for Your Enterprise</span>
+    </h1>
+    <p>
+        Streamline your business operations, automate workflows, and simplify
+        management across Sales, Inventory, Billing, Support, and Marketing.
+    </p>
+    <a href="/ERPWebsite/Pricing" class="btn-hero">
+        Start Your ERP System
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+    </a>
+    <div class="trust-line">
+        Designed for Enterprises <span>•</span> Multi-Module <span>•</span> Scalable <span>•</span> Secure <span>•</span> Cloud-Ready
+    </div>
+</section>
+
+<!-- Stats -->
+<section class="stats-section">
+    <div class="stats-grid">
+        <div>
+            <div class="stat-num">6+</div>
+            <div class="stat-label">ERP Modules</div>
+        </div>
+        <div>
+            <div class="stat-num">500+</div>
+            <div class="stat-label">Active Users</div>
+        </div>
+        <div>
+            <div class="stat-num">99.9%</div>
+            <div class="stat-label">Uptime SLA</div>
+        </div>
+        <div>
+            <div class="stat-num">24/7</div>
+            <div class="stat-label">Support</div>
+        </div>
+    </div>
+</section>
+
+<!-- Modules Preview -->
+<section class="modules-section">
+    <div class="section-header">
+        <h2>Powerful ERP Modules</h2>
+        <p>Everything you need to manage your business operations in one integrated platform.</p>
+    </div>
+    <div class="modules-grid">
+        <div class="module-card">
+            <div class="card-icon icon-sales">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+            </div>
+            <h3>Sales Management</h3>
+            <p>Track leads, manage orders, process quotations, and monitor your sales pipeline with real-time analytics.</p>
+        </div>
+        <div class="module-card">
+            <div class="card-icon icon-inventory">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+                </svg>
+            </div>
+            <h3>Inventory Control</h3>
+            <p>Full warehouse management with stock tracking, batch management, low-stock alerts, and supplier management.</p>
+        </div>
+        <div class="module-card">
+            <div class="card-icon icon-billing">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+            </div>
+            <h3>Billing & Invoicing</h3>
+            <p>Automated invoice generation, payment tracking, tax calculations, and comprehensive financial reports.</p>
+        </div>
+        <div class="module-card">
+            <div class="card-icon icon-support">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+            </div>
+            <h3>Customer Support</h3>
+            <p>Ticketing system, live chat, knowledge base, SLA management, and customer satisfaction tracking.</p>
+        </div>
+        <div class="module-card">
+            <div class="card-icon icon-marketing">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+            </div>
+            <h3>Marketing</h3>
+            <p>Campaign management, email marketing, analytics dashboards, lead tracking, and ROI measurement tools.</p>
+        </div>
+        <div class="module-card">
+            <div class="card-icon icon-admin">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+            </div>
+            <h3>Admin Dashboard</h3>
+            <p>Centralized administration with user management, role-based access, approval workflows, and system settings.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose -->
+<section class="why-section">
+    <div class="section-header">
+        <h2>Why Choose CompuGear?</h2>
+        <p>Purpose-built ERP platform designed for modern enterprises.</p>
+    </div>
+    <div class="why-grid">
+        <div class="why-item">
+            <div class="why-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+            </div>
+            <div>
+                <h4>Enterprise Security</h4>
+                <p>Role-based access control, encrypted data, session management, and audit trails.</p>
+            </div>
+        </div>
+        <div class="why-item">
+            <div class="why-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+            </div>
+            <div>
+                <h4>Cloud-Based SaaS</h4>
+                <p>Access from anywhere, automatic updates, zero infrastructure maintenance.</p>
+            </div>
+        </div>
+        <div class="why-item">
+            <div class="why-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+            </div>
+            <div>
+                <h4>Real-Time Analytics</h4>
+                <p>Live dashboards, reports, and insights across all modules.</p>
+            </div>
+        </div>
+        <div class="why-item">
+            <div class="why-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
+            <div>
+                <h4>Multi-User & Multi-Company</h4>
+                <p>Support for multiple companies, user roles, and departmental access.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+    <h2>Ready to Transform Your Business?</h2>
+    <p>Join hundreds of enterprises already using CompuGear to streamline their operations.</p>
+    <a href="/ERPWebsite/Pricing" class="btn-cta">
+        Get Started Now
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+    </a>
+</section>

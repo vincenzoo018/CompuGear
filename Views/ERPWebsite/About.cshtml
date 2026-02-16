@@ -1,0 +1,153 @@
+@{
+    Layout = "~/Views/ERPWebsite/_ERPWebsiteLayout.cshtml";
+    ViewData["Title"] = "About Us";
+    ViewData["ActivePage"] = "About";
+}
+
+@section Styles {
+    .about-hero {
+        background: linear-gradient(180deg, #f0f9f9 0%, #f8f9fc 100%);
+        padding: 80px 24px 60px; text-align: center;
+    }
+    .about-hero h1 { font-size: 2.8rem; font-weight: 800; color: #1a1a2e; margin-bottom: 16px; }
+    .about-hero p { font-size: 1.1rem; color: #666; max-width: 600px; margin: 0 auto; }
+
+    .about-story {
+        max-width: 900px; margin: 0 auto; padding: 60px 24px;
+        display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;
+    }
+    .about-story .story-visual {
+        background: linear-gradient(135deg, #008080, #006666);
+        border-radius: 20px; padding: 60px; text-align: center; color: #fff;
+    }
+    .about-story .story-visual svg { width: 80px; height: 80px; margin-bottom: 16px; }
+    .about-story .story-visual h3 { font-size: 1.3rem; font-weight: 600; }
+    .about-story .story-text h2 { font-size: 1.8rem; font-weight: 700; color: #1a1a2e; margin-bottom: 16px; }
+    .about-story .story-text p { font-size: 0.95rem; color: #777; line-height: 1.8; margin-bottom: 16px; }
+
+    .values-section {
+        background: #fff; padding: 60px 24px;
+        border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0;
+    }
+    .values-section h2 { text-align: center; font-size: 2rem; font-weight: 700; color: #1a1a2e; margin-bottom: 40px; }
+    .values-grid {
+        max-width: 1000px; margin: 0 auto;
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;
+    }
+    .value-card { text-align: center; padding: 32px; }
+    .value-card .val-icon {
+        width: 64px; height: 64px; border-radius: 16px;
+        background: rgba(0,128,128,0.1); color: #008080;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 16px;
+    }
+    .value-card h3 { font-size: 1.1rem; font-weight: 600; color: #1a1a2e; margin-bottom: 8px; }
+    .value-card p { font-size: 0.9rem; color: #777; line-height: 1.6; }
+
+    .team-section { padding: 60px 24px; text-align: center; }
+    .team-section h2 { font-size: 2rem; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; }
+    .team-section > p { font-size: 1rem; color: #666; margin-bottom: 40px; }
+    .team-grid {
+        max-width: 800px; margin: 0 auto;
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px;
+    }
+    .team-card {
+        background: #fff; border-radius: 16px; padding: 32px;
+        border: 1px solid #eee; transition: all 0.3s;
+    }
+    .team-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+    .team-card .avatar {
+        width: 80px; height: 80px; border-radius: 50%;
+        background: linear-gradient(135deg, #008080, #4dd0e1);
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 16px; font-size: 1.6rem; font-weight: 700; color: #fff;
+    }
+    .team-card h4 { font-size: 1rem; font-weight: 600; color: #1a1a2e; }
+    .team-card p { font-size: 0.85rem; color: #888; }
+
+    @@media (max-width: 768px) {
+        .about-hero h1 { font-size: 2rem; }
+        .about-story { grid-template-columns: 1fr; }
+        .values-grid, .team-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+    }
+}
+
+<!-- Hero -->
+<section class="about-hero">
+    <h1>About CompuGear</h1>
+    <p>We build enterprise software that helps businesses streamline operations and grow efficiently.</p>
+</section>
+
+<!-- Story -->
+<section class="about-story">
+    <div class="story-visual">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        <h3>Since 2024</h3>
+    </div>
+    <div class="story-text">
+        <h2>Our Mission</h2>
+        <p>CompuGear was built to solve a real problem — businesses juggling multiple disconnected tools for sales, inventory, billing, support, and marketing.</p>
+        <p>Our integrated ERP platform brings everything under one roof, giving enterprises a unified view of their operations with role-based access, real-time analytics, and seamless workflows.</p>
+        <p>We believe that every business, regardless of size, deserves enterprise-grade tools that are simple, affordable, and powerful.</p>
+    </div>
+</section>
+
+<!-- Values -->
+<section class="values-section">
+    <h2>Our Core Values</h2>
+    <div class="values-grid">
+        <div class="value-card">
+            <div class="val-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h3>Security First</h3>
+            <p>Enterprise-grade security with role-based access, encrypted data, and comprehensive audit logs.</p>
+        </div>
+        <div class="value-card">
+            <div class="val-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <h3>Reliability</h3>
+            <p>99.9% uptime SLA with automated backups, retry policies, and robust infrastructure.</p>
+        </div>
+        <div class="value-card">
+            <div class="val-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </div>
+            <h3>Innovation</h3>
+            <p>Continuously improving with AI-driven features, smart automation, and modern UX design.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Team -->
+<section class="team-section">
+    <h2>Our Team</h2>
+    <p>Built by passionate engineers and business experts.</p>
+    <div class="team-grid">
+        <div class="team-card">
+            <div class="avatar">CG</div>
+            <h4>CompuGear Team</h4>
+            <p>Engineering</p>
+        </div>
+        <div class="team-card">
+            <div class="avatar">PM</div>
+            <h4>Product Management</h4>
+            <p>Product & Design</p>
+        </div>
+        <div class="team-card">
+            <div class="avatar">CS</div>
+            <h4>Customer Success</h4>
+            <p>Support & Onboarding</p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section style="padding:60px 24px;text-align:center;background:linear-gradient(135deg,#008080,#006666);color:#fff;">
+    <h2 style="font-size:2rem;font-weight:700;margin-bottom:12px;">Join the CompuGear Community</h2>
+    <p style="font-size:1rem;opacity:0.9;margin-bottom:28px;">Start your ERP journey today with our comprehensive platform.</p>
+    <a href="/ERPWebsite/Pricing" style="display:inline-block;background:#fff;color:#008080;padding:14px 36px;border-radius:10px;font-weight:600;">Get Started</a>
+</section>

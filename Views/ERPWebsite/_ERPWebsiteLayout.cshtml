@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CompuGear ERP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ========== RESET & BASE ========== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: #1a1a2e;
+            background: #f8f9fc;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        a { text-decoration: none; color: inherit; }
+        img { max-width: 100%; display: block; }
+
+        /* ========== NAVBAR ========== */
+        .erp-navbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            background: rgba(255,255,255,0.97);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0,128,128,0.08);
+            transition: box-shadow 0.3s;
+        }
+        .erp-navbar.scrolled { box-shadow: 0 2px 20px rgba(0,0,0,0.08); }
+        .erp-navbar .nav-inner {
+            max-width: 1200px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 24px; height: 72px;
+        }
+        .erp-navbar .brand {
+            display: flex; align-items: center; gap: 10px;
+            font-weight: 700; font-size: 1.35rem; color: #008080;
+        }
+        .erp-navbar .brand-icon {
+            width: 40px; height: 40px; background: linear-gradient(135deg, #008080, #006666);
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+        }
+        .erp-navbar .brand-icon svg { width: 22px; height: 22px; color: #fff; }
+        .erp-navbar .nav-links { display: flex; align-items: center; gap: 32px; list-style: none; }
+        .erp-navbar .nav-links a {
+            font-weight: 500; font-size: 0.95rem; color: #555;
+            transition: color 0.2s; position: relative;
+        }
+        .erp-navbar .nav-links a:hover,
+        .erp-navbar .nav-links a.active { color: #008080; }
+        .erp-navbar .nav-links a.active::after {
+            content: ''; position: absolute; bottom: -4px; left: 0; right: 0;
+            height: 2px; background: #008080; border-radius: 2px;
+        }
+        .erp-navbar .btn-signup {
+            background: #008080; color: #fff; padding: 10px 28px;
+            border-radius: 8px; font-weight: 600; font-size: 0.95rem;
+            transition: all 0.3s; border: none; cursor: pointer;
+        }
+        .erp-navbar .btn-signup:hover { background: #006666; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,128,128,0.3); }
+
+        /* Mobile menu */
+        .mobile-toggle { display: none; background: none; border: none; cursor: pointer; padding: 8px; }
+        .mobile-toggle span { display: block; width: 24px; height: 2px; background: #333; margin: 5px 0; transition: 0.3s; }
+
+        /* ========== FOOTER ========== */
+        .erp-footer {
+            background: #1a1a2e; color: #a0a0b8; padding: 60px 24px 24px;
+        }
+        .erp-footer .footer-inner {
+            max-width: 1200px; margin: 0 auto;
+            display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px;
+        }
+        .erp-footer .footer-brand { margin-bottom: 16px; }
+        .erp-footer .footer-brand h3 { color: #fff; font-size: 1.3rem; margin-bottom: 12px; }
+        .erp-footer .footer-brand p { font-size: 0.9rem; line-height: 1.7; }
+        .erp-footer .footer-col h4 { color: #fff; font-size: 0.95rem; margin-bottom: 16px; }
+        .erp-footer .footer-col ul { list-style: none; }
+        .erp-footer .footer-col li { margin-bottom: 10px; }
+        .erp-footer .footer-col a { color: #a0a0b8; font-size: 0.9rem; transition: color 0.2s; }
+        .erp-footer .footer-col a:hover { color: #4dd0e1; }
+        .erp-footer .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 40px; padding-top: 20px;
+            text-align: center; font-size: 0.85rem;
+        }
+
+        /* ========== SCROLL TO TOP ========== */
+        .scroll-top {
+            position: fixed; bottom: 24px; right: 24px; z-index: 999;
+            width: 48px; height: 48px; border-radius: 50%;
+            background: #008080; color: #fff; border: none;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; opacity: 0; visibility: hidden;
+            transition: all 0.3s; box-shadow: 0 4px 12px rgba(0,128,128,0.3);
+        }
+        .scroll-top.visible { opacity: 1; visibility: visible; }
+        .scroll-top:hover { background: #006666; transform: translateY(-2px); }
+
+        /* ========== RESPONSIVE ========== */
+        @@media (max-width: 768px) {
+            .erp-navbar .nav-links { display: none; }
+            .mobile-toggle { display: block; }
+            .erp-navbar .nav-links.open {
+                display: flex; flex-direction: column;
+                position: absolute; top: 72px; left: 0; right: 0;
+                background: #fff; padding: 20px 24px; gap: 16px;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            }
+            .erp-footer .footer-inner { grid-template-columns: 1fr; }
+        }
+
+        /* ========== UTILITY ========== */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+        .section { padding: 80px 0; }
+        .text-center { text-align: center; }
+
+        @RenderSection("Styles", required: false)
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="erp-navbar" id="navbar">
+        <div class="nav-inner">
+            <a href="/ERPWebsite" class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <span>CompuGear</span>
+            </a>
+
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/ERPWebsite" class="@(ViewData["ActivePage"]?.ToString() == "Home" ? "active" : "")">Home</a></li>
+                <li><a href="/ERPWebsite/Features" class="@(ViewData["ActivePage"]?.ToString() == "Features" ? "active" : "")">Features</a></li>
+                <li><a href="/ERPWebsite/About" class="@(ViewData["ActivePage"]?.ToString() == "About" ? "active" : "")">About Us</a></li>
+                <li><a href="/ERPWebsite/Pricing" class="@(ViewData["ActivePage"]?.ToString() == "Pricing" ? "active" : "")">Pricing</a></li>
+                <li><a href="/ERPWebsite/Contact" class="@(ViewData["ActivePage"]?.ToString() == "Contact" ? "active" : "")">Contact</a></li>
+            </ul>
+
+            <div style="display:flex;align-items:center;gap:12px;">
+                <a href="/Auth/Login" style="font-weight:500;color:#008080;font-size:0.95rem;">Login</a>
+                <a href="/ERPWebsite/Pricing" class="btn-signup">Sign Up</a>
+            </div>
+
+            <button class="mobile-toggle" id="mobileToggle" onclick="document.getElementById('navLinks').classList.toggle('open')">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Page Content -->
+    <main style="margin-top: 72px;">
+        @RenderBody()
+    </main>
+
+    <!-- Footer -->
+    <footer class="erp-footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <h3>CompuGear ERP</h3>
+                <p>Comprehensive ERP solution designed for businesses. Streamline your operations with our integrated modules for Sales, Inventory, Billing, Support, and Marketing.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="/ERPWebsite/Features">Features</a></li>
+                    <li><a href="/ERPWebsite/Pricing">Pricing</a></li>
+                    <li><a href="/ERPWebsite/About">About Us</a></li>
+                    <li><a href="/ERPWebsite/Contact">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Modules</h4>
+                <ul>
+                    <li><a href="/ERPWebsite/Features#sales">Sales</a></li>
+                    <li><a href="/ERPWebsite/Features#inventory">Inventory</a></li>
+                    <li><a href="/ERPWebsite/Features#billing">Billing</a></li>
+                    <li><a href="/ERPWebsite/Features#support">Support</a></li>
+                    <li><a href="/ERPWebsite/Features#marketing">Marketing</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="/ERPWebsite/Contact">Help Center</a></li>
+                    <li><a href="/ERPWebsite/Contact">Documentation</a></li>
+                    <li><a href="/Auth/Login">Login</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; @DateTime.Now.Year CompuGear ERP. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top -->
+    <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="18 15 12 9 6 15"/>
+        </svg>
+    </button>
+
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            const scrollTop = document.getElementById('scrollTop');
+            if (window.scrollY > 50) { navbar.classList.add('scrolled'); } else { navbar.classList.remove('scrolled'); }
+            if (window.scrollY > 300) { scrollTop.classList.add('visible'); } else { scrollTop.classList.remove('visible'); }
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

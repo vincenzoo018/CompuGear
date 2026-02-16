@@ -1,0 +1,167 @@
+@{
+    Layout = "~/Views/ERPWebsite/_ERPWebsiteLayout.cshtml";
+    ViewData["Title"] = "Contact Us";
+    ViewData["ActivePage"] = "Contact";
+}
+
+@section Styles {
+    .contact-hero {
+        background: linear-gradient(180deg, #f0f9f9 0%, #f8f9fc 100%);
+        padding: 80px 24px 60px; text-align: center;
+    }
+    .contact-hero h1 { font-size: 2.8rem; font-weight: 800; color: #1a1a2e; margin-bottom: 16px; }
+    .contact-hero p { font-size: 1.1rem; color: #666; max-width: 550px; margin: 0 auto; }
+
+    .contact-section {
+        max-width: 1000px; margin: 0 auto; padding: 60px 24px;
+        display: grid; grid-template-columns: 1fr 1fr; gap: 48px;
+    }
+
+    .contact-info h2 { font-size: 1.5rem; font-weight: 700; color: #1a1a2e; margin-bottom: 24px; }
+    .contact-item {
+        display: flex; align-items: flex-start; gap: 16px;
+        margin-bottom: 28px;
+    }
+    .contact-item .ci-icon {
+        flex-shrink: 0; width: 48px; height: 48px; border-radius: 12px;
+        background: rgba(0,128,128,0.1); color: #008080;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .contact-item h4 { font-size: 0.95rem; font-weight: 600; color: #1a1a2e; margin-bottom: 4px; }
+    .contact-item p { font-size: 0.9rem; color: #777; }
+
+    .contact-form {
+        background: #fff; border-radius: 16px; padding: 36px;
+        border: 1px solid #eee; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+    .contact-form .form-group { margin-bottom: 16px; }
+    .contact-form label {
+        display: block; font-size: 0.85rem; font-weight: 500;
+        color: #555; margin-bottom: 6px;
+    }
+    .contact-form input, .contact-form textarea, .contact-form select {
+        width: 100%; padding: 10px 14px; border: 1.5px solid #e0e0e0;
+        border-radius: 8px; font-size: 0.95rem; font-family: 'Poppins', sans-serif;
+        color: #333; transition: border-color 0.2s;
+    }
+    .contact-form input:focus, .contact-form textarea:focus, .contact-form select:focus {
+        outline: none; border-color: #008080; box-shadow: 0 0 0 3px rgba(0,128,128,0.08);
+    }
+    .contact-form textarea { resize: vertical; min-height: 120px; }
+    .contact-form .btn-send {
+        width: 100%; padding: 14px 0; background: #008080; color: #fff;
+        border: none; border-radius: 10px; font-size: 1rem; font-weight: 600;
+        cursor: pointer; transition: all 0.3s; font-family: 'Poppins', sans-serif;
+    }
+    .contact-form .btn-send:hover { background: #006666; }
+
+    @@media (max-width: 768px) {
+        .contact-hero h1 { font-size: 2rem; }
+        .contact-section { grid-template-columns: 1fr; }
+    }
+}
+
+<!-- Hero -->
+<section class="contact-hero">
+    <h1>Get In Touch</h1>
+    <p>Have questions about CompuGear ERP? We're here to help. Reach out to our team anytime.</p>
+</section>
+
+<!-- Contact Content -->
+<section class="contact-section">
+    <div class="contact-info">
+        <h2>Contact Information</h2>
+
+        <div class="contact-item">
+            <div class="ci-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                </svg>
+            </div>
+            <div>
+                <h4>Email Us</h4>
+                <p>support@compugear.com</p>
+                <p>sales@compugear.com</p>
+            </div>
+        </div>
+
+        <div class="contact-item">
+            <div class="ci-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+            </div>
+            <div>
+                <h4>Call Us</h4>
+                <p>+63 (2) 8888-GEAR</p>
+                <p>Mon-Fri, 9AM-6PM PHT</p>
+            </div>
+        </div>
+
+        <div class="contact-item">
+            <div class="ci-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                </svg>
+            </div>
+            <div>
+                <h4>Visit Us</h4>
+                <p>CompuGear Headquarters</p>
+                <p>Manila, Philippines</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Form -->
+    <div class="contact-form">
+        <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" placeholder="Your name" id="contactName">
+        </div>
+        <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" placeholder="your@email.com" id="contactEmail">
+        </div>
+        <div class="form-group">
+            <label>Subject</label>
+            <select id="contactSubject">
+                <option value="">Select a subject</option>
+                <option value="Sales Inquiry">Sales Inquiry</option>
+                <option value="Technical Support">Technical Support</option>
+                <option value="Enterprise Plan">Enterprise Plan</option>
+                <option value="Partnership">Partnership</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Message</label>
+            <textarea placeholder="How can we help you?" id="contactMessage"></textarea>
+        </div>
+        <button class="btn-send" onclick="sendContact()">Send Message</button>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        function sendContact() {
+            const name = document.getElementById('contactName').value.trim();
+            const email = document.getElementById('contactEmail').value.trim();
+            const subject = document.getElementById('contactSubject').value;
+            const message = document.getElementById('contactMessage').value.trim();
+
+            if (!name || !email || !subject || !message) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            // For now, show a success message (can be wired to an API later)
+            alert('Thank you for your message! Our team will get back to you within 24 hours.');
+            document.getElementById('contactName').value = '';
+            document.getElementById('contactEmail').value = '';
+            document.getElementById('contactSubject').value = '';
+            document.getElementById('contactMessage').value = '';
+        }
+    </script>
+}
