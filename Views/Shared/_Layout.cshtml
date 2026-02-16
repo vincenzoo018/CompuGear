@@ -6,8 +6,21 @@
     <title>@ViewData["Title"] - CompuGear CRM</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style id="sidebar-preload-style">
+        /* Hide sidebar briefly until JS restores state - prevents flicker */
+        .sidebar .nav-submenu { transition: none !important; }
+    </style>
+    <script>
+        // Immediately restore sidebar state before render (prevents flicker)
+        (function() {
+            try {
+                var openSections = JSON.parse(localStorage.getItem('sidebarOpenSections') || '{}');
+                window.__sidebarOpenSections = openSections;
+            } catch(e) { window.__sidebarOpenSections = {}; }
+        })();
+    </script>
 </head>
-<body>
+<body class="sidebar-loading">
     <div class="app-wrapper">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">

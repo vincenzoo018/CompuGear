@@ -270,7 +270,7 @@
                 '<tr class="total-row"><td colspan="4" class="text-end"><strong>Grand Total:</strong></td><td class="text-end"><strong>' + Format.currency(totalRevenue) + '</strong></td><td colspan="2"></td></tr>' +
                 '</tbody></table>' +
                 '<div class="footer"><p>CompuGear Sales Report - Generated on ' + now.toLocaleString('en-PH') + ' - Confidential</p></div>' +
-                '<' + 'script>window.onload=function(){window.print();}</' + 'script></body></html>';
+                '<' + 'script>window.onload=function(){window.print();}</' + 'script>' + '</body></html>';
 
             var printWindow = window.open('', '_blank');
             printWindow.document.write(html);

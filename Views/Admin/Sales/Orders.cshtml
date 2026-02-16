@@ -642,7 +642,7 @@
             (o.shippingAmount > 0 ? '<tr><td></td><td>Shipping:</td><td>' + fmt(o.shippingAmount) + '</td></tr>' : '') +
             '<tr class="total-row"><td></td><td>Total:</td><td>' + fmt(o.totalAmount) + '</td></tr>' +
             '</tbody></table>' +
-            '<script>window.onload = function() { window.print(); }</' + 'script>' +
+            '<' + 'script>window.onload = function() { window.print(); }</' + 'script>' +
             '</body></html>';
 
         var printWindow = window.open('', '_blank');
@@ -650,28 +650,10 @@
         printWindow.document.close();
     }
 
-    // Export Orders
+    // Export Orders - Use API endpoint for comprehensive data
     function exportOrders() {
-        var rows = [['Order #', 'Customer', 'Date', 'Items', 'Amount', 'Order Status', 'Payment Status', 'Payment Method']];
-        for (var i = 0; i < adminOrders.length; i++) {
-            var o = adminOrders[i];
-            rows.push([o.orderNumber, o.customerName || '', new Date(o.orderDate).toLocaleDateString(), o.itemCount, o.totalAmount.toFixed(2), o.orderStatus, o.paymentStatus, o.paymentMethod || '-']);
-        }
-        var csvContent = '';
-        for (var i = 0; i < rows.length; i++) {
-            var line = '';
-            for (var j = 0; j < rows[i].length; j++) {
-                if (j > 0) line += ',';
-                line += '"' + rows[i][j] + '"';
-            }
-            csvContent += line + '\n';
-        }
-        var blob = new Blob([csvContent], { type: 'text/csv' });
-        var a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'orders_' + new Date().toISOString().split('T')[0] + '.csv';
-        a.click();
-        Toast.success('Orders exported!');
+        window.location.href = '/api/export/orders?format=csv';
+        Toast.success('Orders export started!');
     }
 </script>
 }

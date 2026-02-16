@@ -470,8 +470,10 @@
             .header-btn { width: 40px; height: 40px; }
         }
     </style>
+    <style id="sidebar-preload-style">.sidebar .nav-submenu { transition: none !important; }</style>
+    <script>(function(){try{window.__sidebarOpenSections=JSON.parse(localStorage.getItem('sidebarOpenSections')||'{}');}catch(e){window.__sidebarOpenSections={};}})();</script>
 </head>
-<body>
+<body class="sidebar-loading">
     @{
         var customerName = Context.Session.GetString("CustomerName") ?? "Guest";
         var customerEmail = Context.Session.GetString("CustomerEmail") ?? "";
@@ -494,7 +496,7 @@
     <!-- Tier 2: Main Header -->
     <header class="main-header">
         <div class="container">
-            <a href="/CustomerPortal" class="logo">
+            <a href="/CustomerPortal/Index" class="logo">
                 <div class="logo-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -575,7 +577,7 @@
         <div class="container">
             <ul class="nav-menu">
                 <li>
-                    <a href="/CustomerPortal" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                    <a href="/CustomerPortal/Index" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
                         <span>Home</span>
                     </a>

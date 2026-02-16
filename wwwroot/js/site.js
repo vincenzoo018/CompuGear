@@ -1,5 +1,54 @@
 // CompuGear CRM - JavaScript
 
+// Immediately apply sidebar state from preloaded data (before DOMContentLoaded)
+(function() {
+    var openSections = window.__sidebarOpenSections || {};
+    
+    // Wait for sidebar to exist, then apply state immediately
+    function applySidebarState() {
+        var sidebar = document.getElementById('sidebar');
+        if (!sidebar) {
+            // Sidebar not in DOM yet, try again on next frame
+            requestAnimationFrame(applySidebarState);
+            return;
+        }
+        
+        // Restore collapsed state
+        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+            sidebar.classList.add('collapsed');
+        }
+        
+        // Apply expanded classes to sections based on stored state
+        var allNavItems = sidebar.querySelectorAll('.nav-item');
+        allNavItems.forEach(function(navItem) {
+            var textEl = navItem.querySelector('.nav-item-text');
+            var key = textEl ? textEl.textContent.trim() : '';
+            
+            // If localStorage says this section should be open, expand it
+            if (key && openSections[key] === true) {
+                navItem.classList.add('expanded');
+            }
+            // Also expand if it contains the active link
+            if (navItem.querySelector('.nav-submenu .nav-link.active')) {
+                navItem.classList.add('expanded');
+            }
+        });
+        
+        // Remove loading state and re-enable transitions
+        document.body.classList.remove('sidebar-loading');
+        var preloadStyle = document.getElementById('sidebar-preload-style');
+        if (preloadStyle) preloadStyle.remove();
+    }
+    
+    // Start checking immediately
+    if (document.readyState === 'loading') {
+        // DOM not ready yet, wait for it
+        document.addEventListener('DOMContentLoaded', applySidebarState);
+    } else {
+        applySidebarState();
+    }
+})();
+
 document.addEventListener('DOMContentLoaded', function () {
     // Sidebar Toggle
     const sidebar = document.getElementById('sidebar');
@@ -18,13 +67,53 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Submenu Toggle
+    // Submenu Toggle with localStorage persistence
     const navToggles = document.querySelectorAll('.nav-link-toggle');
+    
+    // Get stored open sections (or empty object)
+    function getOpenSections() {
+        try {
+            return JSON.parse(localStorage.getItem('sidebarOpenSections') || '{}');
+        } catch (e) { return {}; }
+    }
+    
+    function saveOpenSections(sections) {
+        localStorage.setItem('sidebarOpenSections', JSON.stringify(sections));
+    }
+    
+    // Build a key from the nav-item's toggle text
+    function getSectionKey(navItem) {
+        var textEl = navItem.querySelector('.nav-item-text');
+        return textEl ? textEl.textContent.trim() : '';
+    }
+    
+    // Sidebar state was already restored by the immediate script above
+    // Just update localStorage if active sections changed
+    var openSections = getOpenSections();
+    var allNavItems = document.querySelectorAll('.nav-item');
+    allNavItems.forEach(function (navItem) {
+        // Keep sections expanded if they contain the active link
+        if (navItem.querySelector('.nav-submenu .nav-link.active')) {
+            var key = getSectionKey(navItem);
+            if (key) { openSections[key] = true; }
+        }
+    });
+    saveOpenSections(openSections);
+    
+    // Handle toggle clicks and persist state
     navToggles.forEach(function (toggle) {
         toggle.addEventListener('click', function (e) {
             e.preventDefault();
             const navItem = this.closest('.nav-item');
             navItem.classList.toggle('expanded');
+            
+            // Save state
+            var key = getSectionKey(navItem);
+            if (key) {
+                var sections = getOpenSections();
+                sections[key] = navItem.classList.contains('expanded');
+                saveOpenSections(sections);
+            }
         });
     });
 

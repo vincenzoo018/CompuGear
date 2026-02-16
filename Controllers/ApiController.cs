@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CompuGear.Data;
 using CompuGear.Models;
+using CompuGear.Services;
+using System.Text;
 
 namespace CompuGear.Controllers
 {
@@ -11,11 +13,13 @@ namespace CompuGear.Controllers
     {
         private readonly CompuGearDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IAuditService _auditService;
 
-        public ApiController(CompuGearDbContext context, IConfiguration configuration)
+        public ApiController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService)
         {
             _context = context;
             _configuration = configuration;
+            _auditService = auditService;
         }
 
         // Helper: returns CompanyId from session. Super Admin (RoleId=1) gets null → sees all data.
@@ -3833,6 +3837,677 @@ namespace CompuGear.Controllers
         }
 
         #endregion
+
+        #region Audit Trail & Activity Logs
+
+        [HttpGet("audit-logs")]
+        public async Task<IActionResult> GetAuditLogs([FromQuery] string? module, [FromQuery] string? action, 
+            [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        {
+            try
+            {
+                var query = _context.ActivityLogs.AsQueryable();
+
+                if (!string.IsNullOrEmpty(module))
+                    query = query.Where(a => a.Module == module);
+
+                if (!string.IsNullOrEmpty(action))
+                    query = query.Where(a => a.Action == action);
+
+                if (startDate.HasValue)
+                    query = query.Where(a => a.CreatedAt >= startDate.Value);
+
+                if (endDate.HasValue)
+                    query = query.Where(a => a.CreatedAt <= endDate.Value.AddDays(1));
+
+                var totalCount = await query.CountAsync();
+                var logs = await query
+                    .OrderByDescending(a => a.CreatedAt)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(a => new
+                    {
+                        a.LogId,
+                        a.UserId,
+                        a.UserName,
+                        a.Action,
+                        a.Module,
+                        a.EntityType,
+                        a.EntityId,
+                        a.Description,
+                        a.IPAddress,
+                        a.CreatedAt
+                    })
+                    .ToListAsync();
+
+                return Ok(new { 
+                    success = true, 
+                    data = logs, 
+                    totalCount, 
+                    page, 
+                    pageSize,
+                    totalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("audit-logs/modules")]
+        public async Task<IActionResult> GetAuditModules()
+        {
+            var modules = await _context.ActivityLogs
+                .Select(a => a.Module)
+                .Distinct()
+                .OrderBy(m => m)
+                .ToListAsync();
+            return Ok(modules);
+        }
+
+        [HttpGet("audit-logs/actions")]
+        public async Task<IActionResult> GetAuditActions()
+        {
+            var actions = await _context.ActivityLogs
+                .Select(a => a.Action)
+                .Distinct()
+                .OrderBy(a => a)
+                .ToListAsync();
+            return Ok(actions);
+        }
+
+        #endregion
+
+        #region Export APIs
+
+        [HttpGet("export/orders")]
+        public async Task<IActionResult> ExportOrders([FromQuery] string format = "csv")
+        {
+            var companyId = GetCompanyId();
+            var orders = await _context.Orders
+                .Where(o => companyId == null || o.CompanyId == companyId)
+                .Include(o => o.Customer)
+                .Include(o => o.OrderItems)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+
+            if (format == "csv")
+            {
+                var csv = new StringBuilder();
+                csv.AppendLine("Order #,Customer,Date,Items,Subtotal,Discount,Tax,Shipping,Total,Status,Payment Status,Payment Method");
+                foreach (var o in orders)
+                {
+                    csv.AppendLine($"\"{o.OrderNumber}\",\"{o.Customer?.FirstName} {o.Customer?.LastName}\",\"{o.OrderDate:yyyy-MM-dd}\",{o.OrderItems.Count},{o.Subtotal:F2},{o.DiscountAmount:F2},{o.TaxAmount:F2},{o.ShippingAmount:F2},{o.TotalAmount:F2},\"{o.OrderStatus}\",\"{o.PaymentStatus}\",\"{o.PaymentMethod}\"");
+                }
+                return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", $"orders_{DateTime.Now:yyyyMMdd}.csv");
+            }
+
+            return Ok(orders);
+        }
+
+        [HttpGet("export/products")]
+        public async Task<IActionResult> ExportProducts([FromQuery] string format = "csv")
+        {
+            var companyId = GetCompanyId();
+            var products = await _context.Products
+                .Where(p => companyId == null || p.CompanyId == companyId)
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .OrderBy(p => p.ProductName)
+                .ToListAsync();
+
+            if (format == "csv")
+            {
+                var csv = new StringBuilder();
+                csv.AppendLine("SKU,Product Name,Category,Brand,Cost Price,Selling Price,Stock,Reorder Level,Status");
+                foreach (var p in products)
+                {
+                    csv.AppendLine($"\"{p.SKU}\",\"{p.ProductName}\",\"{p.Category?.CategoryName}\",\"{p.Brand?.BrandName}\",{p.CostPrice:F2},{p.SellingPrice:F2},{p.StockQuantity},{p.ReorderLevel},\"{p.Status}\"");
+                }
+                return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", $"products_{DateTime.Now:yyyyMMdd}.csv");
+            }
+
+            return Ok(products);
+        }
+
+        [HttpGet("export/customers")]
+        public async Task<IActionResult> ExportCustomers([FromQuery] string format = "csv")
+        {
+            var companyId = GetCompanyId();
+            var customers = await _context.Customers
+                .Where(c => companyId == null || c.CompanyId == companyId)
+                .Include(c => c.Category)
+                .OrderBy(c => c.LastName)
+                .ToListAsync();
+
+            if (format == "csv")
+            {
+                var csv = new StringBuilder();
+                csv.AppendLine("Customer #,First Name,Last Name,Email,Phone,Category,Total Orders,Total Spent,Status,Created");
+                foreach (var c in customers)
+                {
+                    csv.AppendLine($"\"{c.CustomerCode}\",\"{c.FirstName}\",\"{c.LastName}\",\"{c.Email}\",\"{c.Phone}\",\"{c.Category?.CategoryName}\",{c.TotalOrders},{c.TotalSpent:F2},\"{c.Status}\",\"{c.CreatedAt:yyyy-MM-dd}\"");
+                }
+                return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", $"customers_{DateTime.Now:yyyyMMdd}.csv");
+            }
+
+            return Ok(customers);
+        }
+
+        [HttpGet("export/invoices")]
+        public async Task<IActionResult> ExportInvoices([FromQuery] string format = "csv")
+        {
+            var companyId = GetCompanyId();
+            var invoices = await _context.Invoices
+                .Where(i => companyId == null || i.CompanyId == companyId)
+                .Include(i => i.Customer)
+                .OrderByDescending(i => i.InvoiceDate)
+                .ToListAsync();
+
+            if (format == "csv")
+            {
+                var csv = new StringBuilder();
+                csv.AppendLine("Invoice #,Customer,Date,Due Date,Subtotal,Tax,Discount,Total,Paid,Balance,Status");
+                foreach (var i in invoices)
+                {
+                    csv.AppendLine($"\"{i.InvoiceNumber}\",\"{i.Customer?.FirstName} {i.Customer?.LastName}\",\"{i.InvoiceDate:yyyy-MM-dd}\",\"{i.DueDate:yyyy-MM-dd}\",{i.Subtotal:F2},{i.TaxAmount:F2},{i.DiscountAmount:F2},{i.TotalAmount:F2},{i.PaidAmount:F2},{i.BalanceDue:F2},\"{i.Status}\"");
+                }
+                return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", $"invoices_{DateTime.Now:yyyyMMdd}.csv");
+            }
+
+            return Ok(invoices);
+        }
+
+        [HttpGet("export/audit-logs")]
+        public async Task<IActionResult> ExportAuditLogs([FromQuery] DateTime? startDate = null, [FromQuery] DateTime? endDate = null, [FromQuery] string format = "csv")
+        {
+            var query = _context.ActivityLogs.AsQueryable();
+
+            if (startDate.HasValue)
+                query = query.Where(a => a.CreatedAt >= startDate.Value);
+
+            if (endDate.HasValue)
+                query = query.Where(a => a.CreatedAt <= endDate.Value.AddDays(1));
+
+            var logs = await query
+                .OrderByDescending(a => a.CreatedAt)
+                .Take(10000) // Limit to 10k records
+                .ToListAsync();
+
+            if (format == "csv")
+            {
+                var csv = new StringBuilder();
+                csv.AppendLine("Date/Time,User,Action,Module,Entity Type,Entity ID,Description,IP Address");
+                foreach (var a in logs)
+                {
+                    csv.AppendLine($"\"{a.CreatedAt:yyyy-MM-dd HH:mm:ss}\",\"{a.UserName}\",\"{a.Action}\",\"{a.Module}\",\"{a.EntityType}\",{a.EntityId},\"{a.Description?.Replace("\"", "\"\"")}\",\"{a.IPAddress}\"");
+                }
+                return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", $"audit_logs_{DateTime.Now:yyyyMMdd}.csv");
+            }
+
+            return Ok(logs);
+        }
+
+        #endregion
+
+        #region Dashboard Analytics
+
+        [HttpGet("analytics/dashboard")]
+        public async Task<IActionResult> GetDashboardAnalytics()
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                var now = DateTime.UtcNow;
+                var thisMonth = new DateTime(now.Year, now.Month, 1);
+                var lastMonth = thisMonth.AddMonths(-1);
+                var thisYear = new DateTime(now.Year, 1, 1);
+
+                // Revenue metrics
+                var totalRevenue = await _context.Orders
+                    .Where(o => o.PaymentStatus == "Paid" && (companyId == null || o.CompanyId == companyId))
+                    .SumAsync(o => o.TotalAmount);
+
+                var monthlyRevenue = await _context.Orders
+                    .Where(o => o.OrderDate >= thisMonth && o.PaymentStatus == "Paid" && (companyId == null || o.CompanyId == companyId))
+                    .SumAsync(o => o.TotalAmount);
+
+                var lastMonthRevenue = await _context.Orders
+                    .Where(o => o.OrderDate >= lastMonth && o.OrderDate < thisMonth && o.PaymentStatus == "Paid" && (companyId == null || o.CompanyId == companyId))
+                    .SumAsync(o => o.TotalAmount);
+
+                // Order metrics
+                var totalOrders = await _context.Orders.Where(o => companyId == null || o.CompanyId == companyId).CountAsync();
+                var monthlyOrders = await _context.Orders.Where(o => o.OrderDate >= thisMonth && (companyId == null || o.CompanyId == companyId)).CountAsync();
+                var pendingOrders = await _context.Orders.Where(o => o.OrderStatus == "Pending" && (companyId == null || o.CompanyId == companyId)).CountAsync();
+
+                // Customer metrics
+                var totalCustomers = await _context.Customers.Where(c => companyId == null || c.CompanyId == companyId).CountAsync();
+                var newCustomersThisMonth = await _context.Customers.Where(c => c.CreatedAt >= thisMonth && (companyId == null || c.CompanyId == companyId)).CountAsync();
+
+                // Product metrics
+                var totalProducts = await _context.Products.Where(p => companyId == null || p.CompanyId == companyId).CountAsync();
+                var lowStockProducts = await _context.Products.Where(p => p.StockQuantity <= p.ReorderLevel && (companyId == null || p.CompanyId == companyId)).CountAsync();
+                var outOfStockProducts = await _context.Products.Where(p => p.StockQuantity == 0 && (companyId == null || p.CompanyId == companyId)).CountAsync();
+
+                // Support metrics  
+                var openTickets = await _context.SupportTickets.Where(t => t.Status != "Closed" && t.Status != "Resolved" && (companyId == null || t.CompanyId == companyId)).CountAsync();
+
+                // Monthly sales data for chart
+                var monthlySales = await _context.Orders
+                    .Where(o => o.OrderDate >= thisYear && o.PaymentStatus == "Paid" && (companyId == null || o.CompanyId == companyId))
+                    .GroupBy(o => o.OrderDate.Month)
+                    .Select(g => new { Month = g.Key, Revenue = g.Sum(o => o.TotalAmount), Orders = g.Count() })
+                    .ToListAsync();
+
+                // Top products
+                var topProducts = await _context.OrderItems
+                    .Include(oi => oi.Order)
+                    .Where(oi => oi.Order.OrderDate >= thisMonth && (companyId == null || oi.Order.CompanyId == companyId))
+                    .GroupBy(oi => new { oi.ProductId, oi.ProductName })
+                    .Select(g => new { g.Key.ProductName, Quantity = g.Sum(x => x.Quantity), Revenue = g.Sum(x => x.TotalPrice) })
+                    .OrderByDescending(x => x.Revenue)
+                    .Take(5)
+                    .ToListAsync();
+
+                // Recent orders
+                var recentOrders = await _context.Orders
+                    .Where(o => companyId == null || o.CompanyId == companyId)
+                    .Include(o => o.Customer)
+                    .OrderByDescending(o => o.OrderDate)
+                    .Take(5)
+                    .Select(o => new { o.OrderNumber, CustomerName = o.Customer != null ? o.Customer.FirstName + " " + o.Customer.LastName : "Guest", o.TotalAmount, o.OrderStatus, o.OrderDate })
+                    .ToListAsync();
+
+                var revenueGrowth = lastMonthRevenue > 0 ? ((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0;
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        revenue = new { total = totalRevenue, monthly = monthlyRevenue, lastMonth = lastMonthRevenue, growth = revenueGrowth },
+                        orders = new { total = totalOrders, monthly = monthlyOrders, pending = pendingOrders },
+                        customers = new { total = totalCustomers, newThisMonth = newCustomersThisMonth },
+                        products = new { total = totalProducts, lowStock = lowStockProducts, outOfStock = outOfStockProducts },
+                        support = new { openTickets },
+                        charts = new { monthlySales, topProducts },
+                        recentOrders
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        #endregion
+
+        #region Bulk Operations
+
+        [HttpPost("bulk/products/update-status")]
+        public async Task<IActionResult> BulkUpdateProductStatus([FromBody] BulkStatusUpdate request)
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                var products = await _context.Products
+                    .Where(p => request.Ids.Contains(p.ProductId) && (companyId == null || p.CompanyId == companyId))
+                    .ToListAsync();
+
+                foreach (var product in products)
+                {
+                    product.Status = request.Status;
+                    product.UpdatedAt = DateTime.UtcNow;
+                }
+
+                await _context.SaveChangesAsync();
+                await _auditService.LogAsync("Bulk Update", "Products", "Product", null, $"Bulk updated {products.Count} products status to {request.Status}");
+
+                return Ok(new { success = true, message = $"{products.Count} products updated", count = products.Count });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost("bulk/products/delete")]
+        public async Task<IActionResult> BulkDeleteProducts([FromBody] BulkDeleteRequest request)
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                var products = await _context.Products
+                    .Where(p => request.Ids.Contains(p.ProductId) && (companyId == null || p.CompanyId == companyId))
+                    .ToListAsync();
+
+                _context.Products.RemoveRange(products);
+                await _context.SaveChangesAsync();
+                await _auditService.LogAsync("Bulk Delete", "Products", "Product", null, $"Bulk deleted {products.Count} products");
+
+                return Ok(new { success = true, message = $"{products.Count} products deleted", count = products.Count });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost("bulk/orders/update-status")]
+        public async Task<IActionResult> BulkUpdateOrderStatus([FromBody] BulkStatusUpdate request)
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                var orders = await _context.Orders
+                    .Where(o => request.Ids.Contains(o.OrderId) && (companyId == null || o.CompanyId == companyId))
+                    .ToListAsync();
+
+                foreach (var order in orders)
+                {
+                    order.OrderStatus = request.Status;
+                    order.UpdatedAt = DateTime.UtcNow;
+                }
+
+                await _context.SaveChangesAsync();
+                await _auditService.LogAsync("Bulk Update", "Orders", "Order", null, $"Bulk updated {orders.Count} orders status to {request.Status}");
+
+                return Ok(new { success = true, message = $"{orders.Count} orders updated", count = orders.Count });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost("bulk/customers/update-status")]
+        public async Task<IActionResult> BulkUpdateCustomerStatus([FromBody] BulkStatusUpdate request)
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                var customers = await _context.Customers
+                    .Where(c => request.Ids.Contains(c.CustomerId) && (companyId == null || c.CompanyId == companyId))
+                    .ToListAsync();
+
+                foreach (var customer in customers)
+                {
+                    customer.Status = request.Status;
+                    customer.UpdatedAt = DateTime.UtcNow;
+                }
+
+                await _context.SaveChangesAsync();
+                await _auditService.LogAsync("Bulk Update", "Customers", "Customer", null, $"Bulk updated {customers.Count} customers status to {request.Status}");
+
+                return Ok(new { success = true, message = $"{customers.Count} customers updated", count = customers.Count });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost("bulk/invoices/update-status")]
+        public async Task<IActionResult> BulkUpdateInvoiceStatus([FromBody] BulkStatusUpdate request)
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                var invoices = await _context.Invoices
+                    .Where(i => request.Ids.Contains(i.InvoiceId) && (companyId == null || i.CompanyId == companyId))
+                    .ToListAsync();
+
+                foreach (var invoice in invoices)
+                {
+                    invoice.Status = request.Status;
+                    invoice.UpdatedAt = DateTime.UtcNow;
+                }
+
+                await _context.SaveChangesAsync();
+                await _auditService.LogAsync("Bulk Update", "Invoices", "Invoice", null, $"Bulk updated {invoices.Count} invoices status to {request.Status}");
+
+                return Ok(new { success = true, message = $"{invoices.Count} invoices updated", count = invoices.Count });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        #endregion
+
+        #region Advanced Search
+
+        [HttpGet("search/global")]
+        public async Task<IActionResult> GlobalSearch([FromQuery] string q)
+        {
+            if (string.IsNullOrWhiteSpace(q) || q.Length < 2)
+                return Ok(new { success = true, data = new { products = new List<object>(), customers = new List<object>(), orders = new List<object>() } });
+
+            try
+            {
+                var companyId = GetCompanyId();
+                var searchTerm = q.ToLower();
+
+                // Search products
+                var products = await _context.Products
+                    .Where(p => (companyId == null || p.CompanyId == companyId) &&
+                        (p.ProductName.ToLower().Contains(searchTerm) || 
+                         (p.SKU != null && p.SKU.ToLower().Contains(searchTerm)) ||
+                         (p.ShortDescription != null && p.ShortDescription.ToLower().Contains(searchTerm))))
+                    .Take(10)
+                    .Select(p => new { p.ProductId, p.ProductName, p.SKU, p.SellingPrice, ImageUrl = p.MainImageUrl, Type = "Product" })
+                    .ToListAsync();
+
+                // Search customers
+                var customers = await _context.Customers
+                    .Where(c => (companyId == null || c.CompanyId == companyId) &&
+                        (c.FirstName.ToLower().Contains(searchTerm) ||
+                         c.LastName.ToLower().Contains(searchTerm) ||
+                         c.Email.ToLower().Contains(searchTerm) ||
+                         (c.CustomerCode != null && c.CustomerCode.ToLower().Contains(searchTerm))))
+                    .Take(10)
+                    .Select(c => new { c.CustomerId, Name = c.FirstName + " " + c.LastName, c.Email, CustomerNumber = c.CustomerCode, Type = "Customer" })
+                    .ToListAsync();
+
+                // Search orders
+                var orders = await _context.Orders
+                    .Where(o => (companyId == null || o.CompanyId == companyId) &&
+                        (o.OrderNumber.ToLower().Contains(searchTerm)))
+                    .Take(10)
+                    .Select(o => new { o.OrderId, o.OrderNumber, o.TotalAmount, o.OrderStatus, o.OrderDate, Type = "Order" })
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new { products, customers, orders },
+                    totalCount = products.Count + customers.Count + orders.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("search/products")]
+        public async Task<IActionResult> SearchProducts([FromQuery] string? q, [FromQuery] int? categoryId, [FromQuery] int? brandId,
+            [FromQuery] decimal? minPrice, [FromQuery] decimal? maxPrice, [FromQuery] string? status, 
+            [FromQuery] bool? inStock, [FromQuery] string? sortBy, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                var query = _context.Products
+                    .Include(p => p.Category)
+                    .Include(p => p.Brand)
+                    .Where(p => companyId == null || p.CompanyId == companyId);
+
+                // Apply filters
+                if (!string.IsNullOrEmpty(q))
+                {
+                    var searchTerm = q.ToLower();
+                    query = query.Where(p => p.ProductName.ToLower().Contains(searchTerm) || 
+                                            (p.SKU != null && p.SKU.ToLower().Contains(searchTerm)) ||
+                                            (p.ShortDescription != null && p.ShortDescription.ToLower().Contains(searchTerm)));
+                }
+
+                if (categoryId.HasValue)
+                    query = query.Where(p => p.CategoryId == categoryId);
+
+                if (brandId.HasValue)
+                    query = query.Where(p => p.BrandId == brandId);
+
+                if (minPrice.HasValue)
+                    query = query.Where(p => p.SellingPrice >= minPrice);
+
+                if (maxPrice.HasValue)
+                    query = query.Where(p => p.SellingPrice <= maxPrice);
+
+                if (!string.IsNullOrEmpty(status))
+                    query = query.Where(p => p.Status == status);
+
+                if (inStock == true)
+                    query = query.Where(p => p.StockQuantity > 0);
+
+                // Apply sorting
+                query = sortBy switch
+                {
+                    "name_asc" => query.OrderBy(p => p.ProductName),
+                    "name_desc" => query.OrderByDescending(p => p.ProductName),
+                    "price_asc" => query.OrderBy(p => p.SellingPrice),
+                    "price_desc" => query.OrderByDescending(p => p.SellingPrice),
+                    "stock_asc" => query.OrderBy(p => p.StockQuantity),
+                    "stock_desc" => query.OrderByDescending(p => p.StockQuantity),
+                    "newest" => query.OrderByDescending(p => p.CreatedAt),
+                    _ => query.OrderBy(p => p.ProductName)
+                };
+
+                var totalCount = await query.CountAsync();
+                var products = await query
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(p => new
+                    {
+                        p.ProductId,
+                        p.SKU,
+                        p.ProductName,
+                        CategoryName = p.Category != null ? p.Category.CategoryName : null,
+                        BrandName = p.Brand != null ? p.Brand.BrandName : null,
+                        p.CostPrice,
+                        p.SellingPrice,
+                        p.StockQuantity,
+                        p.ReorderLevel,
+                        p.Status,
+                        ImageUrl = p.MainImageUrl
+                    })
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    data = products,
+                    totalCount,
+                    page,
+                    pageSize,
+                    totalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("search/orders")]
+        public async Task<IActionResult> SearchOrders([FromQuery] string? q, [FromQuery] string? status,
+            [FromQuery] string? paymentStatus, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate,
+            [FromQuery] decimal? minAmount, [FromQuery] decimal? maxAmount, [FromQuery] string? sortBy,
+            [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                var query = _context.Orders
+                    .Include(o => o.Customer)
+                    .Where(o => companyId == null || o.CompanyId == companyId);
+
+                // Apply filters
+                if (!string.IsNullOrEmpty(q))
+                {
+                    var searchTerm = q.ToLower();
+                    query = query.Where(o => o.OrderNumber.ToLower().Contains(searchTerm) ||
+                                            (o.Customer != null && (o.Customer.FirstName.ToLower().Contains(searchTerm) ||
+                                            o.Customer.LastName.ToLower().Contains(searchTerm))));
+                }
+
+                if (!string.IsNullOrEmpty(status))
+                    query = query.Where(o => o.OrderStatus == status);
+
+                if (!string.IsNullOrEmpty(paymentStatus))
+                    query = query.Where(o => o.PaymentStatus == paymentStatus);
+
+                if (startDate.HasValue)
+                    query = query.Where(o => o.OrderDate >= startDate.Value);
+
+                if (endDate.HasValue)
+                    query = query.Where(o => o.OrderDate <= endDate.Value.AddDays(1));
+
+                if (minAmount.HasValue)
+                    query = query.Where(o => o.TotalAmount >= minAmount);
+
+                if (maxAmount.HasValue)
+                    query = query.Where(o => o.TotalAmount <= maxAmount);
+
+                // Apply sorting
+                query = sortBy switch
+                {
+                    "date_asc" => query.OrderBy(o => o.OrderDate),
+                    "date_desc" => query.OrderByDescending(o => o.OrderDate),
+                    "amount_asc" => query.OrderBy(o => o.TotalAmount),
+                    "amount_desc" => query.OrderByDescending(o => o.TotalAmount),
+                    "newest" => query.OrderByDescending(o => o.OrderDate),
+                    _ => query.OrderByDescending(o => o.OrderDate)
+                };
+
+                var totalCount = await query.CountAsync();
+                var orders = await query
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(o => new
+                    {
+                        o.OrderId,
+                        o.OrderNumber,
+                        CustomerName = o.Customer != null ? o.Customer.FirstName + " " + o.Customer.LastName : "Guest",
+                        o.OrderDate,
+                        o.TotalAmount,
+                        o.OrderStatus,
+                        o.PaymentStatus,
+                        o.PaymentMethod
+                    })
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    data = orders,
+                    totalCount,
+                    page,
+                    pageSize,
+                    totalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+                });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        #endregion
     }
 
     // Role Access DTOs
@@ -3939,6 +4614,18 @@ namespace CompuGear.Controllers
     {
         public string Reason { get; set; } = string.Empty;
         public string? Notes { get; set; }
+    }
+
+    // Bulk Operation DTOs
+    public class BulkStatusUpdate
+    {
+        public List<int> Ids { get; set; } = new();
+        public string Status { get; set; } = string.Empty;
+    }
+
+    public class BulkDeleteRequest
+    {
+        public List<int> Ids { get; set; } = new();
     }
 
 }

@@ -85,7 +85,7 @@
                 <span>Critical</span>
             </div>
         </div>
-        <div class="stat-icon blue">
+        <div class="stat-icon" style="background: var(--error-bg); color: var(--error);">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="15" y1="9" x2="9" y2="15"/>
@@ -218,32 +218,51 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="~/js/inventory.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async function() {
-            await loadInventoryDashboard();
+        document.addEventListener('DOMContentLoaded', function() {
+            loadInventoryDashboard();
         });
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        function updateEl(id, value) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = value;
+        }
 
         async function loadInventoryDashboard() {
             try {
-                const products = await fetch('/api/products').then(r => r.json()).catch(() => []);
+                var response = await fetch('/api/products');
+                var result = await response.json();
+                var products = Array.isArray(result) ? result : (result && result.data ? result.data : []);
                 
                 // Update Stats Cards
-                document.getElementById('totalProducts').textContent = products.length.toLocaleString();
+                updateEl('totalProducts', products.length.toLocaleString());
                 
-                const inventoryValue = products.reduce((sum, p) => sum + ((p.price || 0) * (p.stockQuantity || 0)), 0);
-                document.getElementById('inventoryValue').textContent = '₱' + inventoryValue.toLocaleString('en-PH', {minimumFractionDigits: 2});
+                var inventoryValue = products.reduce(function(sum, p) {
+                    return sum + ((p.sellingPrice || p.price || p.costPrice || 0) * (p.stockQuantity || 0));
+                }, 0);
+                updateEl('inventoryValue', '₱' + inventoryValue.toLocaleString('en-PH', {minimumFractionDigits: 2}));
                 
-                const lowStock = products.filter(p => p.stockQuantity > 0 && p.stockQuantity <= (p.reorderLevel || 10));
-                const outOfStock = products.filter(p => (p.stockQuantity || 0) <= 0);
+                var lowStock = products.filter(function(p) { return (p.stockQuantity || 0) > 0 && (p.stockQuantity || 0) <= (p.reorderLevel || 10); });
+                var outOfStock = products.filter(function(p) { return (p.stockQuantity || 0) <= 0; });
                 
-                document.getElementById('lowStockCount').textContent = lowStock.length;
-                document.getElementById('outOfStockCount').textContent = outOfStock.length;
+                updateEl('lowStockCount', lowStock.length);
+                updateEl('outOfStockCount', outOfStock.length);
                 
                 // Update trends
-                document.getElementById('productsTrend').querySelector('span:last-child').textContent = `${products.filter(p => p.isActive).length} active`;
-                document.getElementById('valueTrend').querySelector('span:last-child').textContent = 'Total value';
+                var activeCount = products.filter(function(p) { return p.isActive !== false; }).length;
+                var ptEl = document.getElementById('productsTrend');
+                if (ptEl) ptEl.querySelector('span:last-child').textContent = activeCount + ' active';
+                var vtEl = document.getElementById('valueTrend');
+                if (vtEl) vtEl.querySelector('span:last-child').textContent = 'Total value';
                 
-                // Render Alerts Table
-                renderAlerts([...outOfStock, ...lowStock].slice(0, 5));
+                // Render Alerts Table (top 5 critical items)
+                var alertItems = outOfStock.concat(lowStock).slice(0, 5);
+                renderAlerts(alertItems);
                 
                 // Render Charts
                 renderStockChart(products);
@@ -255,29 +274,36 @@
         }
 
         function renderAlerts(products) {
-            const tbody = document.getElementById('alertsTable');
-            if (products.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No alerts</td></tr>';
+            var tbody = document.getElementById('alertsTable');
+            if (!tbody) return;
+
+            if (!products || products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4" style="color: var(--success);">All products are well stocked!</td></tr>';
                 return;
             }
-            tbody.innerHTML = products.map(p => `
-                <tr>
-                    <td><strong>${p.sku || 'N/A'}</strong></td>
-                    <td>${p.productName}</td>
-                    <td class="text-center">${p.stockQuantity || 0}</td>
-                    <td class="text-center">${p.reorderLevel || 10}</td>
-                    <td><span class="badge ${(p.stockQuantity || 0) <= 0 ? 'badge-danger' : 'badge-warning'}">${(p.stockQuantity || 0) <= 0 ? 'Out of Stock' : 'Low Stock'}</span></td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = products.map(function(p) {
+                var stock = p.stockQuantity || 0;
+                var badgeClass = stock <= 0 ? 'badge-error' : 'badge-warning';
+                var statusText = stock <= 0 ? 'Out of Stock' : 'Low Stock';
+                var stockColor = stock <= 0 ? 'var(--error)' : 'var(--warning)';
+                return '<tr>' +
+                    '<td><strong>' + escapeHtml(p.sku || 'N/A') + '</strong></td>' +
+                    '<td>' + escapeHtml(p.productName) + '</td>' +
+                    '<td class="text-center" style="font-weight: 600; color: ' + stockColor + ';">' + stock + '</td>' +
+                    '<td class="text-center">' + (p.reorderLevel || 10) + '</td>' +
+                    '<td><span class="badge ' + badgeClass + '">' + statusText + '</span></td>' +
+                '</tr>';
+            }).join('');
         }
 
         function renderStockChart(products) {
-            const ctx = document.getElementById('stockChart')?.getContext('2d');
-            if (!ctx) return;
+            var canvas = document.getElementById('stockChart');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
 
-            const inStock = products.filter(p => p.stockQuantity > (p.reorderLevel || 10)).length;
-            const lowStock = products.filter(p => p.stockQuantity > 0 && p.stockQuantity <= (p.reorderLevel || 10)).length;
-            const outStock = products.filter(p => (p.stockQuantity || 0) <= 0).length;
+            var inStock = products.filter(function(p) { return (p.stockQuantity || 0) > (p.reorderLevel || 10); }).length;
+            var lowStock = products.filter(function(p) { var s = p.stockQuantity || 0; return s > 0 && s <= (p.reorderLevel || 10); }).length;
+            var outStock = products.filter(function(p) { return (p.stockQuantity || 0) <= 0; }).length;
 
             new Chart(ctx, {
                 type: 'doughnut',
@@ -297,29 +323,28 @@
                 }
             });
 
-            const legend = document.getElementById('stockLegend');
+            var legend = document.getElementById('stockLegend');
             if (legend) {
-                legend.innerHTML = `
-                    <div class="chart-legend-item"><span class="chart-legend-dot" style="background: #10B981;"></span>In Stock (${inStock})</div>
-                    <div class="chart-legend-item"><span class="chart-legend-dot" style="background: #F59E0B;"></span>Low Stock (${lowStock})</div>
-                    <div class="chart-legend-item"><span class="chart-legend-dot" style="background: #EF4444;"></span>Out of Stock (${outStock})</div>
-                `;
+                legend.innerHTML = '<div class="chart-legend-item"><span class="chart-legend-dot" style="background: #10B981;"></span>In Stock (' + inStock + ')</div>' +
+                    '<div class="chart-legend-item"><span class="chart-legend-dot" style="background: #F59E0B;"></span>Low Stock (' + lowStock + ')</div>' +
+                    '<div class="chart-legend-item"><span class="chart-legend-dot" style="background: #EF4444;"></span>Out of Stock (' + outStock + ')</div>';
             }
         }
 
         function renderCategoryChart(products) {
-            const ctx = document.getElementById('categoryChart')?.getContext('2d');
-            if (!ctx) return;
+            var canvas = document.getElementById('categoryChart');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
 
-            const categories = {};
-            products.forEach(p => {
-                const cat = p.categoryName || 'Other';
+            var categories = {};
+            products.forEach(function(p) {
+                var cat = p.categoryName || 'Other';
                 categories[cat] = (categories[cat] || 0) + 1;
             });
 
-            const labels = Object.keys(categories);
-            const data = Object.values(categories);
-            const colors = ['#008080', '#10B981', '#3B82F6', '#F59E0B', '#F97316', '#EF4444', '#8B5CF6'];
+            var labels = Object.keys(categories);
+            var data = Object.values(categories);
+            var colors = ['#008080', '#10B981', '#3B82F6', '#F59E0B', '#F97316', '#EF4444', '#8B5CF6'];
 
             new Chart(ctx, {
                 type: 'bar',
@@ -328,7 +353,8 @@
                     datasets: [{
                         data: data,
                         backgroundColor: colors.slice(0, labels.length),
-                        borderWidth: 0
+                        borderWidth: 0,
+                        borderRadius: 4
                     }]
                 },
                 options: {
@@ -336,8 +362,8 @@
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        y: { beginAtZero: true, grid: { color: '#E5E7EB' } },
-                        x: { grid: { display: false } }
+                        y: { beginAtZero: true, grid: { color: '#E5E7EB' }, ticks: { font: { size: 12 } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 12 } } }
                     }
                 }
             });

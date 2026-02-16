@@ -679,19 +679,8 @@
     }
 
     function exportProducts() {
-        const data = Inventory.products.data || [];
-        if (data.length === 0) { Toast.error('No products to export'); return; }
-        const rows = [['SKU', 'Product Name', 'Category', 'Brand', 'Cost Price', 'Selling Price', 'Stock', 'Reorder Level', 'Status']];
-        data.forEach(p => {
-            rows.push([p.sku || '', p.productName || '', p.categoryName || '', p.brandName || '', (p.costPrice || 0).toFixed(2), (p.sellingPrice || p.price || 0).toFixed(2), p.stockQuantity || 0, p.reorderLevel || 10, p.stockQuantity <= 0 ? 'Out of Stock' : p.stockQuantity <= (p.reorderLevel || 10) ? 'Low Stock' : 'In Stock']);
-        });
-        const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `products_${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-        Toast.success('Products exported!');
+        window.location.href = '/api/export/products?format=csv';
+        Toast.success('Products export started!');
     }
 </script>
 }

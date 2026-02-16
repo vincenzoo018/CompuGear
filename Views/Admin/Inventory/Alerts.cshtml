@@ -7,11 +7,18 @@
     <p class="page-subtitle">Products that need restocking (threshold: 15 units or less)</p>
 </div>
 
+<!-- Stats Cards -->
 <div class="stat-cards">
-    <div class="stat-card fade-in">
+    <div class="stat-card fade-in stagger-1">
         <div class="stat-info">
             <span class="stat-label">Total Alerts</span>
             <span class="stat-value" id="totalAlerts">0</span>
+            <div class="stat-trend down">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                </svg>
+                <span>Need attention</span>
+            </div>
         </div>
         <div class="stat-icon" style="background: var(--error-bg); color: var(--error);">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -20,10 +27,16 @@
             </svg>
         </div>
     </div>
-    <div class="stat-card fade-in">
+    <div class="stat-card fade-in stagger-2">
         <div class="stat-info">
             <span class="stat-label">Out of Stock</span>
             <span class="stat-value" id="outOfStockAlerts">0</span>
+            <div class="stat-trend down">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+                <span>Critical</span>
+            </div>
         </div>
         <div class="stat-icon" style="background: var(--error-bg); color: var(--error);">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -31,10 +44,16 @@
             </svg>
         </div>
     </div>
-    <div class="stat-card fade-in">
+    <div class="stat-card fade-in stagger-3">
         <div class="stat-info">
             <span class="stat-label">Critical (≤5)</span>
             <span class="stat-value" id="criticalAlerts">0</span>
+            <div class="stat-trend down">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                </svg>
+                <span>Urgent</span>
+            </div>
         </div>
         <div class="stat-icon orange">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -43,12 +62,18 @@
             </svg>
         </div>
     </div>
-    <div class="stat-card fade-in">
+    <div class="stat-card fade-in stagger-4">
         <div class="stat-info">
             <span class="stat-label">Low Stock (6-15)</span>
             <span class="stat-value" id="lowStockAlerts">0</span>
+            <div class="stat-trend down">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                </svg>
+                <span>Warning</span>
+            </div>
         </div>
-        <div class="stat-icon" style="background: #fff3cd; color: #856404;">
+        <div class="stat-icon" style="background: var(--warning-bg); color: var(--warning);">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                 <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
@@ -57,43 +82,49 @@
     </div>
 </div>
 
+<!-- Alert Items Table -->
 <div class="card fade-in">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Alert Items</h5>
-        <div class="d-flex gap-2">
-            <select class="form-select form-select-sm" id="alertFilter" style="width: auto;" onchange="filterAlerts()">
+    <div class="card-header">
+        <div>
+            <h3 class="card-title">Alert Items</h3>
+            <p class="card-subtitle">Products below reorder threshold</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <select class="form-select form-select-sm" id="alertFilter" style="width: auto; font-size: 0.85rem;" onchange="filterAlerts()">
                 <option value="">All Alerts</option>
                 <option value="out-of-stock">Out of Stock</option>
                 <option value="critical">Critical (≤5)</option>
                 <option value="low">Low Stock (6-15)</option>
             </select>
-            <button class="btn btn-sm btn-outline-success" onclick="exportAlerts()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button class="btn btn-outline-success btn-sm" onclick="exportAlerts()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="7 10 12 15 17 10"/>
                     <line x1="12" y1="15" x2="12" y2="3"/>
                 </svg>
-                Export
+                Export CSV
             </button>
         </div>
     </div>
     <div class="card-body" style="padding: 0;">
-        <table class="data-table" id="alertsTable">
-            <thead>
-                <tr>
-                    <th>SKU</th>
-                    <th>Product</th>
-                    <th>Category</th>
-                    <th>Current Stock</th>
-                    <th>Alert Threshold</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="alertsTableBody">
-                <!-- Dynamic content loaded from products -->
-            </tbody>
-        </table>
+        <div class="data-table-wrapper">
+            <table class="data-table" id="alertsTable">
+                <thead>
+                    <tr>
+                        <th>SKU</th>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th class="text-center">Current Stock</th>
+                        <th class="text-center">Threshold</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="alertsTableBody">
+                    <tr><td colspan="7" class="text-center py-4" style="color: var(--gray-400);">Loading alerts...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -101,40 +132,50 @@
 <div class="modal fade" id="reorderModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Quick Reorder</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header" style="background: var(--primary); color: white;">
+                <h5 class="modal-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                        <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+                    </svg>
+                    Quick Reorder
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="reorderForm">
                     <input type="hidden" id="reorderProductId">
                     <div class="mb-3">
-                        <label class="form-label">Product</label>
-                        <input type="text" class="form-control" id="reorderProductName" readonly>
+                        <label class="form-label fw-semibold">Product</label>
+                        <input type="text" class="form-control" id="reorderProductName" readonly style="background: var(--gray-50);">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Current Stock</label>
-                        <input type="number" class="form-control" id="reorderCurrentStock" readonly>
+                        <label class="form-label fw-semibold">Current Stock</label>
+                        <input type="number" class="form-control" id="reorderCurrentStock" readonly style="background: var(--gray-50);">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Quantity to Order <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="reorderQuantity" min="1" required>
+                        <label class="form-label fw-semibold">Quantity to Order <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="reorderQuantity" min="1" required placeholder="Enter order quantity">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Supplier</label>
+                        <label class="form-label fw-semibold">Supplier</label>
                         <select class="form-select" id="reorderSupplier">
                             <option value="">Select Supplier</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Notes</label>
-                        <textarea class="form-control" id="reorderNotes" rows="2"></textarea>
+                        <label class="form-label fw-semibold">Notes</label>
+                        <textarea class="form-control" id="reorderNotes" rows="2" placeholder="Additional notes..."></textarea>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitReorder()">Create Purchase Order</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitReorder()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Create Purchase Order
+                </button>
             </div>
         </div>
     </div>
@@ -143,220 +184,217 @@
 @section Scripts {
 <script src="~/js/admin.js"></script>
 <script>
-    const LOW_STOCK_THRESHOLD = 15; // Alert threshold
-    const CRITICAL_THRESHOLD = 5; // Critical threshold
-    let allAlertProducts = [];
+    var LOW_STOCK_THRESHOLD = 15;
+    var CRITICAL_THRESHOLD = 5;
+    var allAlertProducts = [];
 
-    document.addEventListener('DOMContentLoaded', async function() {
-        await loadAlerts();
-        await loadSuppliers();
+    document.addEventListener('DOMContentLoaded', function() {
+        loadAlerts();
+        loadSuppliers();
     });
+
+    function escapeHtml(text) {
+        var div = document.createElement('div');
+        div.textContent = text || '';
+        return div.innerHTML;
+    }
+
+    function updateEl(id, value) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = value;
+    }
 
     async function loadSuppliers() {
         try {
-            const result = await API.get('/suppliers');
-            const suppliers = Array.isArray(result) ? result : (result.data || []);
-            const select = document.getElementById('reorderSupplier');
-            suppliers.forEach(s => {
-                if (s.status === 'Active') {
-                    select.innerHTML += `<option value="${s.supplierId}">${s.supplierName}</option>`;
-                }
-            });
+            var response = await fetch('/api/suppliers');
+            var result = await response.json();
+            var suppliers = Array.isArray(result) ? result : (result && result.data ? result.data : []);
+            var select = document.getElementById('reorderSupplier');
+            if (select) {
+                suppliers.forEach(function(s) {
+                    if (s.status === 'Active') {
+                        var opt = document.createElement('option');
+                        opt.value = s.supplierId;
+                        opt.textContent = s.supplierName;
+                        select.appendChild(opt);
+                    }
+                });
+            }
         } catch (error) {
-            console.error('Failed to load suppliers');
+            console.error('Failed to load suppliers:', error);
         }
     }
 
     async function loadAlerts() {
         try {
-            const result = await API.get('/products');
-            const products = Array.isArray(result) ? result : (result.data || []);
-            
-            // Filter products with stock <= 15 (low stock threshold)
-            const lowStockProducts = products.filter(p => p.stockQuantity <= LOW_STOCK_THRESHOLD);
+            var response = await fetch('/api/products');
+            var result = await response.json();
+            var products = Array.isArray(result) ? result : (result && result.data ? result.data : []);
+
+            // Filter products with stock <= threshold
+            var lowStockProducts = products.filter(function(p) {
+                return (p.stockQuantity || 0) <= LOW_STOCK_THRESHOLD;
+            });
             allAlertProducts = lowStockProducts;
-            
+
             // Calculate alert counts
-            const outOfStock = lowStockProducts.filter(p => p.stockQuantity === 0).length;
-            const critical = lowStockProducts.filter(p => p.stockQuantity > 0 && p.stockQuantity <= CRITICAL_THRESHOLD).length;
-            const lowStock = lowStockProducts.filter(p => p.stockQuantity > CRITICAL_THRESHOLD && p.stockQuantity <= LOW_STOCK_THRESHOLD).length;
-            
+            var outOfStock = lowStockProducts.filter(function(p) { return (p.stockQuantity || 0) === 0; }).length;
+            var critical = lowStockProducts.filter(function(p) { var s = p.stockQuantity || 0; return s > 0 && s <= CRITICAL_THRESHOLD; }).length;
+            var lowStock = lowStockProducts.filter(function(p) { var s = p.stockQuantity || 0; return s > CRITICAL_THRESHOLD && s <= LOW_STOCK_THRESHOLD; }).length;
+
             // Update stat cards
-            document.getElementById('totalAlerts').textContent = lowStockProducts.length;
-            document.getElementById('outOfStockAlerts').textContent = outOfStock;
-            document.getElementById('criticalAlerts').textContent = critical;
-            document.getElementById('lowStockAlerts').textContent = lowStock;
-            
-            // Update notification badge in topbar
-            if (lowStockProducts.length > 0) {
-                const badge = document.querySelector('.topbar-badge');
-                if (badge) {
-                    badge.textContent = lowStockProducts.length;
-                    badge.style.display = 'flex';
-                }
-            }
-            
+            updateEl('totalAlerts', lowStockProducts.length);
+            updateEl('outOfStockAlerts', outOfStock);
+            updateEl('criticalAlerts', critical);
+            updateEl('lowStockAlerts', lowStock);
+
             renderAlertsTable(lowStockProducts);
-            
-            // Auto-create stock alerts for products below threshold
-            await autoCreateStockAlerts(lowStockProducts);
-            
+
         } catch (error) {
             console.error('Failed to load alerts:', error);
-            Toast.error('Failed to load stock alerts');
+            var tbody = document.getElementById('alertsTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4" style="color: var(--error);">Failed to load alerts. Please refresh the page.</td></tr>';
         }
     }
 
     function renderAlertsTable(products) {
-        const tbody = document.getElementById('alertsTableBody');
-        
-        if (products.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No low stock alerts. All products are well stocked!</td></tr>';
+        var tbody = document.getElementById('alertsTableBody');
+        if (!tbody) return;
+
+        if (!products || products.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">' +
+                '<div style="color: var(--success);">' +
+                    '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 8px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' +
+                    '<p style="margin: 0; font-weight: 500;">No low stock alerts. All products are well stocked!</p>' +
+                '</div></td></tr>';
             return;
         }
-        
+
         // Sort by stock level (critical first)
-        products.sort((a, b) => a.stockQuantity - b.stockQuantity);
-        
-        tbody.innerHTML = products.map(p => {
-            let statusClass, statusText, alertLevel;
-            
-            if (p.stockQuantity === 0) {
-                statusClass = 'badge-error';
-                statusText = 'Out of Stock';
-                alertLevel = 'out-of-stock';
-            } else if (p.stockQuantity <= CRITICAL_THRESHOLD) {
-                statusClass = 'badge-error';
-                statusText = 'Critical';
-                alertLevel = 'critical';
+        products.sort(function(a, b) { return (a.stockQuantity || 0) - (b.stockQuantity || 0); });
+
+        tbody.innerHTML = products.map(function(p) {
+            var stock = p.stockQuantity || 0;
+            var statusClass, statusText;
+
+            if (stock === 0) {
+                statusClass = 'badge-error'; statusText = 'Out of Stock';
+            } else if (stock <= CRITICAL_THRESHOLD) {
+                statusClass = 'badge-error'; statusText = 'Critical';
             } else {
-                statusClass = 'badge-warning';
-                statusText = 'Low Stock';
-                alertLevel = 'low';
+                statusClass = 'badge-warning'; statusText = 'Low Stock';
             }
-            
-            const stockClass = p.stockQuantity === 0 ? 'text-error fw-bold' : 
-                              p.stockQuantity <= CRITICAL_THRESHOLD ? 'text-error fw-600' : 'text-warning fw-600';
-            
-            return `
-                <tr data-id="${p.productId}" data-alert-level="${alertLevel}">
-                    <td>${p.sku || 'N/A'}</td>
-                    <td><strong>${p.productName}</strong></td>
-                    <td>${p.categoryName || 'Uncategorized'}</td>
-                    <td><span class="${stockClass}">${p.stockQuantity}</span></td>
-                    <td>${LOW_STOCK_THRESHOLD}</td>
-                    <td><span class="badge ${statusClass}">${statusText}</span></td>
-                    <td>
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-primary btn-sm" onclick="reorderProduct(${p.productId}, '${p.productName.replace(/'/g, "\\'")}', ${p.stockQuantity}, ${p.supplierId || 0})">
-                                Reorder
-                            </button>
-                            <button class="btn btn-outline-success btn-sm" onclick="quickAddStock(${p.productId}, '${p.productName.replace(/'/g, "\\'")}')" title="Quick Add Stock">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
+
+            var stockColor = stock === 0 ? 'var(--error)' : stock <= CRITICAL_THRESHOLD ? 'var(--error)' : 'var(--warning)';
+
+            return '<tr>' +
+                '<td><strong>' + escapeHtml(p.sku || 'N/A') + '</strong></td>' +
+                '<td style="font-weight: 500; color: var(--gray-800);">' + escapeHtml(p.productName) + '</td>' +
+                '<td>' + escapeHtml(p.categoryName || 'Uncategorized') + '</td>' +
+                '<td class="text-center"><span style="font-weight: 700; color: ' + stockColor + ';">' + stock + '</span></td>' +
+                '<td class="text-center">' + LOW_STOCK_THRESHOLD + '</td>' +
+                '<td><span class="badge ' + statusClass + '">' + statusText + '</span></td>' +
+                '<td class="text-center">' +
+                    '<div class="btn-group btn-group-sm">' +
+                        '<button class="btn btn-primary btn-sm" onclick="reorderProduct(' + p.productId + ')" style="font-size: 0.8rem;">Reorder</button>' +
+                        '<button class="btn btn-outline-success btn-sm" onclick="quickAddStock(' + p.productId + ')" title="Quick Add Stock">' +
+                            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>' +
+                        '</button>' +
+                    '</div>' +
+                '</td>' +
+            '</tr>';
         }).join('');
     }
 
     function filterAlerts() {
-        const filter = document.getElementById('alertFilter').value;
-        
-        let filtered = allAlertProducts;
-        
-        if (filter) {
-            filtered = allAlertProducts.filter(p => {
-                if (filter === 'out-of-stock') return p.stockQuantity === 0;
-                if (filter === 'critical') return p.stockQuantity > 0 && p.stockQuantity <= CRITICAL_THRESHOLD;
-                if (filter === 'low') return p.stockQuantity > CRITICAL_THRESHOLD && p.stockQuantity <= LOW_STOCK_THRESHOLD;
-                return true;
-            });
+        var filter = document.getElementById('alertFilter').value;
+        var filtered = allAlertProducts;
+
+        if (filter === 'out-of-stock') {
+            filtered = allAlertProducts.filter(function(p) { return (p.stockQuantity || 0) === 0; });
+        } else if (filter === 'critical') {
+            filtered = allAlertProducts.filter(function(p) { var s = p.stockQuantity || 0; return s > 0 && s <= CRITICAL_THRESHOLD; });
+        } else if (filter === 'low') {
+            filtered = allAlertProducts.filter(function(p) { var s = p.stockQuantity || 0; return s > CRITICAL_THRESHOLD && s <= LOW_STOCK_THRESHOLD; });
         }
-        
+
         renderAlertsTable(filtered);
     }
 
-    async function autoCreateStockAlerts(products) {
-        // Automatically create stock alerts for products that fall below threshold
-        for (const product of products) {
-            try {
-                const alertType = product.stockQuantity === 0 ? 'Out of Stock' : 
-                                 product.stockQuantity <= CRITICAL_THRESHOLD ? 'Critical' : 'Low Stock';
-                
-                await API.post('/stock-alerts', {
-                    productId: product.productId,
-                    alertType: alertType,
-                    currentStock: product.stockQuantity,
-                    thresholdLevel: LOW_STOCK_THRESHOLD
-                });
-            } catch (e) {
-                // Alert may already exist, ignore
-            }
-        }
+    function getProductById(id) {
+        return allAlertProducts.find(function(p) { return p.productId === id; });
     }
 
-    function reorderProduct(id, name, currentStock, supplierId) {
+    function reorderProduct(id) {
+        var product = getProductById(id);
+        if (!product) return;
+
         document.getElementById('reorderProductId').value = id;
-        document.getElementById('reorderProductName').value = name;
-        document.getElementById('reorderCurrentStock').value = currentStock;
-        document.getElementById('reorderQuantity').value = Math.max(20 - currentStock, 10); // Suggest quantity
-        document.getElementById('reorderSupplier').value = supplierId || '';
+        document.getElementById('reorderProductName').value = product.productName;
+        document.getElementById('reorderCurrentStock').value = product.stockQuantity || 0;
+        document.getElementById('reorderQuantity').value = Math.max(20 - (product.stockQuantity || 0), 10);
+        document.getElementById('reorderSupplier').value = product.supplierId || '';
         document.getElementById('reorderNotes').value = '';
-        
+
         var modal = new bootstrap.Modal(document.getElementById('reorderModal'));
         modal.show();
     }
 
     async function submitReorder() {
-        const productId = document.getElementById('reorderProductId').value;
-        const quantity = document.getElementById('reorderQuantity').value;
-        const supplierId = document.getElementById('reorderSupplier').value;
-        
+        var productId = document.getElementById('reorderProductId').value;
+        var quantity = document.getElementById('reorderQuantity').value;
+        var supplierId = document.getElementById('reorderSupplier').value;
+
         if (!quantity || parseInt(quantity) <= 0) {
             Toast.error('Please enter a valid quantity');
             return;
         }
 
         try {
-            // Create purchase order for this product
             if (supplierId) {
-                await API.post('/purchase-orders', {
-                    supplierId: parseInt(supplierId),
-                    orderDate: new Date().toISOString().split('T')[0],
-                    notes: document.getElementById('reorderNotes').value || 'Auto-generated from low stock alert',
-                    items: [{
-                        productId: parseInt(productId),
-                        quantity: parseInt(quantity),
-                        unitPrice: 0 // Will be determined by supplier
-                    }]
+                var response = await fetch('/api/purchase-orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        supplierId: parseInt(supplierId),
+                        orderDate: new Date().toISOString().split('T')[0],
+                        notes: document.getElementById('reorderNotes').value || 'Auto-generated from low stock alert',
+                        items: [{ productId: parseInt(productId), quantity: parseInt(quantity), unitPrice: 0 }]
+                    })
                 });
+                if (!response.ok) throw new Error('Failed');
                 Toast.success('Purchase order created successfully!');
             } else {
                 Toast.warning('Reorder request submitted. Please select a supplier to create a purchase order.');
             }
-            
-            bootstrap.Modal.getInstance(document.getElementById('reorderModal')).hide();
+
+            var modalEl = document.getElementById('reorderModal');
+            var modalInst = bootstrap.Modal.getInstance(modalEl);
+            if (modalInst) modalInst.hide();
         } catch (error) {
-            Toast.error('Failed to create reorder: ' + error.message);
+            Toast.error('Failed to create reorder: ' + (error.message || 'Unknown error'));
         }
     }
 
-    async function quickAddStock(productId, productName) {
-        const quantity = prompt(`Enter quantity to add for ${productName}:`, '20');
+    async function quickAddStock(productId) {
+        var product = getProductById(productId);
+        var name = product ? product.productName : 'Product';
+        var quantity = prompt('Enter quantity to add for ' + name + ':', '20');
         if (quantity && parseInt(quantity) > 0) {
             try {
-                await API.post('/stock-adjustments', {
-                    productId: productId,
-                    adjustmentType: 'Add',
-                    quantity: parseInt(quantity),
-                    reason: 'Quick restock from low stock alert'
+                var response = await fetch('/api/stock-adjustments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        productId: productId,
+                        adjustmentType: 'Add',
+                        quantity: parseInt(quantity),
+                        reason: 'Quick restock from low stock alert'
+                    })
                 });
-                Toast.success(`Added ${quantity} units to ${productName}`);
-                await loadAlerts(); // Refresh alerts
+                if (!response.ok) throw new Error('Failed');
+                Toast.success('Added ' + quantity + ' units to ' + name);
+                await loadAlerts();
             } catch (error) {
                 Toast.error('Failed to add stock');
             }
@@ -364,22 +402,25 @@
     }
 
     function exportAlerts() {
-        // Export alerts to CSV
-        const headers = ['SKU', 'Product', 'Category', 'Current Stock', 'Threshold', 'Status'];
-        const rows = allAlertProducts.map(p => {
-            const status = p.stockQuantity === 0 ? 'Out of Stock' : 
-                          p.stockQuantity <= CRITICAL_THRESHOLD ? 'Critical' : 'Low Stock';
-            return [p.sku || 'N/A', p.productName, p.categoryName || 'Uncategorized', p.stockQuantity, LOW_STOCK_THRESHOLD, status];
+        var headers = ['SKU', 'Product', 'Category', 'Current Stock', 'Threshold', 'Status'];
+        var rows = allAlertProducts.map(function(p) {
+            var stock = p.stockQuantity || 0;
+            var status = stock === 0 ? 'Out of Stock' : stock <= CRITICAL_THRESHOLD ? 'Critical' : 'Low Stock';
+            return [p.sku || 'N/A', p.productName, p.categoryName || 'Uncategorized', stock, LOW_STOCK_THRESHOLD, status];
         });
-        
-        const csvContent = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+
+        var csvContent = [headers].concat(rows).map(function(row) {
+            return row.map(function(cell) { return '"' + String(cell).replace(/"/g, '""') + '"'; }).join(',');
+        }).join('\n');
+
+        var blob = new Blob([csvContent], { type: 'text/csv' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
         a.href = url;
-        a.download = `low_stock_alerts_${new Date().toISOString().split('T')[0]}.csv`;
+        a.download = 'low_stock_alerts_' + new Date().toISOString().split('T')[0] + '.csv';
         a.click();
-        
+        URL.revokeObjectURL(url);
+
         Toast.success('Alerts exported successfully!');
     }
 </script>

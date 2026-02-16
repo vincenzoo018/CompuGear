@@ -625,17 +625,8 @@
 
     function applyFilters() { filterInvoices(); Toast.success('Filters applied!'); }
     function exportInvoices() {
-        const rows = [['Invoice #', 'Customer', 'Date', 'Due Date', 'Amount', 'Paid', 'Balance', 'Status']];
-        Billing.invoices.data.forEach(i => {
-            rows.push([i.invoiceNumber, i.customerName || '', new Date(i.invoiceDate).toLocaleDateString(), new Date(i.dueDate).toLocaleDateString(), i.totalAmount.toFixed(2), (i.paidAmount || 0).toFixed(2), (i.balance || 0).toFixed(2), i.status]);
-        });
-        const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `invoices_${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-        Toast.success('Invoices exported!');
+        window.location.href = '/api/export/invoices?format=csv';
+        Toast.success('Invoices export started!');
     }
     function printInvoice(id) { Billing.invoices.print(id); }
     function printInvoiceFromView() { if (typeof currentInvoiceId !== 'undefined' && currentInvoiceId) Billing.invoices.print(currentInvoiceId); }

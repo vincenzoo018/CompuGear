@@ -287,6 +287,11 @@ body {
     transition: max-height var(--transition-base);
 }
 
+/* Prevent animation on initial page load - JS removes this class */
+body.no-sidebar-transition .nav-submenu {
+    transition: none !important;
+}
+
 .nav-item.expanded .nav-submenu {
     max-height: 500px;
 }

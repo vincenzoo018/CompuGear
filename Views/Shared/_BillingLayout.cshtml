@@ -6,13 +6,15 @@
     <title>@ViewData["Title"] - CompuGear Billing</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style id="sidebar-preload-style">.sidebar .nav-submenu { transition: none !important; }</style>
+    <script>(function(){try{window.__sidebarOpenSections=JSON.parse(localStorage.getItem('sidebarOpenSections')||'{}');}catch(e){window.__sidebarOpenSections={};}})();</script>
 </head>
-<body>
+<body class="sidebar-loading">
     <div class="app-wrapper">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <a href="/BillingStaff" class="sidebar-brand">
+                <a href="/BillingStaff/Index" class="sidebar-brand">
                     <div class="sidebar-brand-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;color:#008080">
                             <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
@@ -34,7 +36,7 @@
             <nav class="sidebar-nav">
                 <!-- Dashboard -->
                 <div class="nav-item">
-                    <a href="/BillingStaff" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                    <a href="/BillingStaff/Index" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
                         <span class="nav-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="3" y="3" width="7" height="7" rx="1"/>

@@ -6,8 +6,10 @@
     <title>@ViewData["Title"] - CompuGear Platform Admin</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style id="sidebar-preload-style">.sidebar .nav-submenu { transition: none !important; }</style>
+    <script>(function(){try{window.__sidebarOpenSections=JSON.parse(localStorage.getItem('sidebarOpenSections')||'{}');}catch(e){window.__sidebarOpenSections={};}})();</script>
 </head>
-<body>
+<body class="sidebar-loading">
     <div class="app-wrapper">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">

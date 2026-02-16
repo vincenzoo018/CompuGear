@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using CompuGear.Models;
 using CompuGear.Data;
+using CompuGear.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,9 +14,23 @@ builder.Services.AddControllersWithViews()
         options.SuppressModelStateInvalidFilter = true;
     });
 
-// Add Entity Framework DbContext
+// Add Entity Framework DbContext with retry policy and performance optimizations
 builder.Services.AddDbContext<CompuGearDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions =>
+    {
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(5),
+            errorNumbersToAdd: null);
+        sqlOptions.CommandTimeout(30);
+    })
+    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+
+// Add HttpContextAccessor for services that need HTTP context
+builder.Services.AddHttpContextAccessor();
+
+// Register Audit Service
+builder.Services.AddScoped<IAuditService, AuditService>();
 
 // Add session support (for user sessions)
 builder.Services.AddDistributedMemoryCache();
