@@ -6,9 +6,7 @@
 <style>
     /* ========== PRODUCTS PAGE STYLES ========== */
     .products-page {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 24px 20px;
+        padding: 24px 0;
         min-height: 100vh;
     }
 
@@ -66,21 +64,22 @@
     .header-search input {
         width: 100%;
         padding: 10px 16px 10px 42px;
-        border: 1px solid var(--border);
-        border-radius: 50px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
         font-size: 0.875rem;
+        font-family: 'Poppins', sans-serif;
         background: var(--card);
-        transition: all 0.2s;
+        transition: all 0.3s;
     }
 
     .header-search input:focus {
         outline: none;
         border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.1);
+        box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.08);
     }
 
     .header-search input::placeholder {
-        color: var(--muted-foreground);
+        color: #999;
     }
 
     .header-search-icon {
@@ -230,7 +229,7 @@
         background: var(--card);
         border-radius: var(--radius);
         border: 1px solid var(--border);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
     }
 
     .filter-header {
@@ -452,14 +451,15 @@
     .btn-apply-filters {
         width: 100%;
         padding: 12px 16px;
-        background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+        background: var(--primary);
         color: white;
         border: none;
         border-radius: var(--radius-sm);
         font-size: 0.875rem;
         font-weight: 600;
+        font-family: 'Poppins', sans-serif;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s;
         margin-top: 20px;
         display: flex;
         align-items: center;
@@ -468,8 +468,9 @@
     }
 
     .btn-apply-filters:hover {
+        background: var(--primary-hover);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
+        box-shadow: 0 4px 12px rgba(0, 128, 128, 0.25);
     }
 
     .btn-apply-filters svg {
@@ -523,9 +524,9 @@
     }
 
     .product-card:hover {
-        border-color: var(--primary);
-        box-shadow: 0 8px 24px rgba(0, 128, 128, 0.12);
-        transform: translateY(-4px) scale(1.01);
+        border-color: rgba(0, 128, 128, 0.2);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+        transform: translateY(-4px);
     }
 
     .product-image {
@@ -719,14 +720,15 @@
     .btn-add-cart {
         width: 100%;
         padding: 12px 16px;
-        background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+        background: var(--primary);
         color: white;
         border: none;
         border-radius: var(--radius-sm);
         font-size: 0.875rem;
         font-weight: 600;
+        font-family: 'Poppins', sans-serif;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -734,8 +736,9 @@
     }
 
     .btn-add-cart:hover {
-        transform: scale(1.02);
-        box-shadow: 0 4px 12px rgba(0, 128, 128, 0.3);
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 128, 128, 0.25);
     }
 
     .btn-add-cart.added {
@@ -1203,8 +1206,8 @@
         params.set('page', page);
         params.set('pageSize', 12);
 
-        const sortSelect = document.getElementById('sortSelect');
-        if (sortSelect && sortSelect.value) params.set('sort', sortSelect.value);
+        const sortDropdown = document.getElementById('sortDropdown');
+        if (sortDropdown && sortDropdown.value) params.set('sort', sortDropdown.value);
 
         const categoryFilter = document.getElementById('categoryFilter');
         if (categoryFilter && categoryFilter.value) params.set('categoryId', categoryFilter.value);
@@ -1212,8 +1215,21 @@
         const searchInput = document.getElementById('searchInput');
         if (searchInput && searchInput.value.trim()) params.set('search', searchInput.value.trim());
 
+        // Price range filter
         const priceSlider = document.getElementById('priceSlider');
+        if (priceSlider && parseInt(priceSlider.value) < parseInt(priceSlider.max)) {
+            params.set('maxPrice', priceSlider.value);
+        }
+
+        // In stock filter
         const inStockToggle = document.getElementById('inStockToggle');
+        if (inStockToggle && inStockToggle.checked) params.set('inStock', 'true');
+
+        // Brand filter (checked brands)
+        const checkedBrands = document.querySelectorAll('.brand-checkbox input:checked');
+        if (checkedBrands.length === 1) {
+            params.set('brandId', checkedBrands[0].value);
+        }
 
         const onSaleChecked = document.querySelector('.brand-checkbox input[value="onSale"]');
         if (onSaleChecked && onSaleChecked.checked) params.set('onSale', 'true');
@@ -1274,6 +1290,10 @@
                 <div class="product-content">
                     <div class="product-category">${escapeHtml(p.categoryName || 'General')}</div>
                     <h3 class="product-name">${safeName}</h3>
+                    <div class="product-rating" onclick="event.stopPropagation(); showProductReviews(${p.productId}, '${jsName}');" style="cursor:pointer;" title="View reviews">
+                        <div class="rating-stars">${generateStars(p.averageRating || 0)}</div>
+                        <span class="rating-count">(${p.reviewCount || 0})</span>
+                    </div>
                     <div class="product-pricing">
                         <span class="current-price">₱${(p.sellingPrice || 0).toLocaleString('en-PH', { minimumFractionDigits: 0 })}</span>
                         ${hasDiscount ? `<span class="original-price">₱${p.compareAtPrice.toLocaleString('en-PH', { minimumFractionDigits: 0 })}</span><span class="discount-badge">-${discountPct}%</span>` : ''}
@@ -1501,10 +1521,10 @@
         }
     });
 
-    // Sort change handler
-    const sortSelect = document.getElementById('sortSelect');
-    if (sortSelect) {
-        sortSelect.addEventListener('change', function() {
+    // Sort change handler — use the actual DOM id 'sortDropdown'
+    const sortDropdown = document.getElementById('sortDropdown');
+    if (sortDropdown) {
+        sortDropdown.addEventListener('change', function() {
             loadProducts(1);
         });
     }
@@ -1514,8 +1534,121 @@
         const slider = document.getElementById('priceSlider');
         if (slider) updatePriceDisplay(slider.value);
         loadCategories();
+        loadBrands();
         loadProducts(1);
         updateCartBadge();
     });
+
+    // Load brands from API
+    async function loadBrands() {
+        try {
+            const res = await fetch('/CustomerPortal/GetBrands');
+            const result = await res.json();
+            const brands = result.data || [];
+            const brandList = document.querySelector('.brand-list');
+            if (brandList && brands.length > 0) {
+                brandList.innerHTML = brands.map(b => `
+                    <label class="brand-checkbox">
+                        <input type="checkbox" value="${b.brandId}" onchange="loadProducts(1)">
+                        <span>${b.brandName} (${b.productCount})</span>
+                    </label>`).join('');
+            }
+        } catch (e) { console.error('Error loading brands:', e); }
+    }
+
+    function generateStars(rating) {
+        let html = '';
+        for (let i = 1; i <= 5; i++) {
+            if (i <= Math.floor(rating)) html += '<svg class="filled" viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+            else if (i - 0.5 <= rating) html += '<svg class="filled" viewBox="0 0 24 24" fill="currentColor" width="14" height="14" style="opacity:0.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+            else html += '<svg class="empty" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+        }
+        return html;
+    }
+
+    async function showProductReviews(productId, productName) {
+        const modal = document.createElement('div');
+        modal.id = 'reviewsModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+        modal.innerHTML = `<div style="background:white;border-radius:16px;padding:32px;width:95%;max-width:600px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h3 style="margin:0;">Reviews for ${productName}</h3>
+                <button onclick="this.closest('#reviewsModal').remove()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;">✕</button>
+            </div>
+            <div id="reviewsSummary" style="margin-bottom:20px;">Loading reviews...</div>
+            <div id="reviewsList"></div>
+            <hr style="margin:20px 0;border-color:#e5e7eb;">
+            <h4>Write a Review</h4>
+            <div style="display:grid;gap:12px;">
+                <div>
+                    <label style="font-weight:600;font-size:0.9rem;">Rating *</label>
+                    <div id="starInput" style="display:flex;gap:4px;margin-top:4px;cursor:pointer;">
+                        ${[1,2,3,4,5].map(i => `<svg onclick="setReviewRating(${i})" data-star="${i}" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" width="28" height="28" style="cursor:pointer;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`).join('')}
+                    </div>
+                    <input type="hidden" id="reviewRatingValue" value="0">
+                </div>
+                <div><label style="font-weight:600;font-size:0.9rem;">Title</label><input type="text" id="reviewTitle" class="form-input" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;margin-top:4px;" placeholder="Short summary"></div>
+                <div><label style="font-weight:600;font-size:0.9rem;">Review *</label><textarea id="reviewText" rows="3" style="width:100%;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;margin-top:4px;font-family:Poppins,sans-serif;resize:vertical;" placeholder="Share your experience..."></textarea></div>
+                <button onclick="submitProductReview(${productId})" style="padding:10px;background:#008080;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-family:Poppins,sans-serif;">Submit Review</button>
+            </div>
+        </div>`;
+        document.body.appendChild(modal);
+        // Load existing reviews
+        try {
+            const res = await fetch(`/CustomerPortal/GetProductReviews?productId=${productId}`);
+            const result = await res.json();
+            if (result.success) {
+                const d = result.data;
+                document.getElementById('reviewsSummary').innerHTML = `
+                    <div style="display:flex;align-items:center;gap:16px;">
+                        <div style="text-align:center;"><div style="font-size:2.5rem;font-weight:800;color:#008080;">${(d.averageRating||0).toFixed(1)}</div><div>${generateStars(d.averageRating||0)}</div><div style="font-size:0.8rem;color:#6b7280;">${d.totalReviews||0} reviews</div></div>
+                        <div style="flex:1;">${(d.ratingBreakdown||[]).map(r => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><span style="font-size:0.8rem;width:30px;">${r.stars}★</span><div style="flex:1;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;"><div style="height:100%;background:#008080;width:${d.totalReviews ? (r.count/d.totalReviews*100) : 0}%;border-radius:4px;"></div></div><span style="font-size:0.8rem;color:#6b7280;width:30px;">${r.count}</span></div>`).join('')}</div>
+                    </div>`;
+                const list = d.reviews || [];
+                document.getElementById('reviewsList').innerHTML = list.length > 0 ? list.map(r => `
+                    <div style="padding:12px 0;border-bottom:1px solid #e5e7eb;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;"><strong>${r.customerName||'Customer'}</strong><span style="font-size:0.8rem;color:#6b7280;">${new Date(r.reviewDate).toLocaleDateString()}</span></div>
+                        <div style="margin:4px 0;">${generateStars(r.rating)}</div>
+                        ${r.reviewTitle ? `<div style="font-weight:600;margin-bottom:4px;">${r.reviewTitle}</div>` : ''}
+                        <p style="color:#374151;margin:4px 0;">${r.reviewText||''}</p>
+                        <button onclick="markHelpful(${r.reviewId}, this)" style="background:none;border:1px solid #e5e7eb;padding:4px 10px;border-radius:12px;cursor:pointer;font-size:0.8rem;color:#6b7280;">👍 Helpful (${r.helpfulCount||0})</button>
+                    </div>`).join('') : '<p style="color:#6b7280;text-align:center;">No reviews yet. Be the first!</p>';
+            }
+        } catch(e) { document.getElementById('reviewsSummary').textContent = 'Could not load reviews'; }
+    }
+
+    let selectedRating = 0;
+    function setReviewRating(n) {
+        selectedRating = n;
+        document.getElementById('reviewRatingValue').value = n;
+        document.querySelectorAll('#starInput svg').forEach(svg => {
+            const star = parseInt(svg.getAttribute('data-star'));
+            svg.setAttribute('fill', star <= n ? '#f59e0b' : 'none');
+            svg.setAttribute('stroke', star <= n ? '#f59e0b' : '#d1d5db');
+        });
+    }
+
+    async function submitProductReview(productId) {
+        const rating = parseInt(document.getElementById('reviewRatingValue').value);
+        const title = document.getElementById('reviewTitle').value;
+        const text = document.getElementById('reviewText').value;
+        if (!rating) { alert('Please select a rating'); return; }
+        if (!text) { alert('Please write a review'); return; }
+        try {
+            const res = await fetch('/CustomerPortal/SubmitReview', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ productId, rating, reviewTitle:title, reviewText:text }) });
+            const result = await res.json();
+            if (result.success) { alert('Thank you for your review! +50 loyalty points earned.'); document.getElementById('reviewsModal').remove(); loadProducts(currentPage); }
+            else alert(result.message || 'Failed to submit review');
+        } catch(e) { alert('Error submitting review'); }
+    }
+
+    async function markHelpful(reviewId, btn) {
+        try {
+            const res = await fetch('/CustomerPortal/MarkReviewHelpful', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ reviewId }) });
+            const result = await res.json();
+            if (result.success) { btn.textContent = `👍 Helpful (${result.helpfulCount})`; btn.disabled = true; }
+        } catch(e) { }
+    }
 </script>
 }

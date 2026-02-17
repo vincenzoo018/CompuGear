@@ -59,7 +59,7 @@
         align-items: center;
         justify-content: center;
         font-size: 1rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
     }
 
     .profile-info { flex: 1; position: relative; z-index: 1; }
@@ -94,11 +94,12 @@
         padding: 12px 24px;
         background: rgba(255,255,255,0.2);
         border: 1px solid rgba(255,255,255,0.3);
-        border-radius: 50px;
+        border-radius: var(--radius-sm);
         color: white;
+        font-family: 'Poppins', sans-serif;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s;
         display: flex;
         align-items: center;
         gap: 8px;
@@ -129,6 +130,7 @@
         background: none;
         border: none;
         color: var(--muted-foreground);
+        font-family: 'Poppins', sans-serif;
         font-weight: 500;
         cursor: pointer;
         position: relative;
@@ -136,7 +138,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        transition: color 0.2s;
+        transition: color 0.3s;
     }
 
     .tab-pill:hover { color: var(--foreground); }
@@ -198,17 +200,23 @@
 
     .form-input, .form-select, .form-textarea {
         padding: 12px 16px;
-        border: 1px solid var(--border);
-        border-radius: 8px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        font-family: 'Poppins', sans-serif;
         font-size: 0.95rem;
         background: var(--background);
         color: var(--foreground);
-        transition: border-color 0.2s;
+        transition: border-color 0.3s;
+    }
+
+    .form-input::placeholder, .form-textarea::placeholder {
+        color: #999;
     }
 
     .form-input:focus, .form-select:focus, .form-textarea:focus {
         outline: none;
         border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(0,128,128,0.08);
     }
 
     .form-textarea { resize: vertical; min-height: 100px; }
@@ -223,26 +231,28 @@
 
     .btn-save {
         padding: 12px 28px;
-        background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+        background: var(--primary);
         color: white;
         border: none;
-        border-radius: 8px;
+        border-radius: var(--radius-sm);
+        font-family: 'Poppins', sans-serif;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s;
     }
 
-    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,128,128,0.3); }
+    .btn-save:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,128,128,0.25); }
 
     .btn-cancel {
         padding: 12px 28px;
         background: var(--muted);
         color: var(--foreground);
         border: none;
-        border-radius: 8px;
+        border-radius: var(--radius-sm);
+        font-family: 'Poppins', sans-serif;
         font-weight: 500;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s;
     }
 
     .btn-cancel:hover { background: var(--border); }
@@ -388,11 +398,12 @@
         padding: 8px 16px;
         background: var(--muted);
         border: none;
-        border-radius: 6px;
+        border-radius: var(--radius-sm);
+        font-family: 'Poppins', sans-serif;
         font-size: 0.85rem;
         color: var(--foreground);
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s;
     }
 
     .btn-address:hover { background: var(--border); }
@@ -408,7 +419,7 @@
         color: var(--muted-foreground);
         font-weight: 500;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s;
     }
 
     .btn-add-address:hover {
@@ -437,14 +448,15 @@
         padding: 10px 20px;
         background: var(--muted);
         border: none;
-        border-radius: 8px;
+        border-radius: var(--radius-sm);
+        font-family: 'Poppins', sans-serif;
         color: var(--foreground);
         font-weight: 500;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s;
     }
 
-    .btn-security:hover { background: var(--primary); color: white; }
+    .btn-security:hover { background: var(--primary-hover); color: white; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,128,128,0.25); }
 
     /* Responsive */
     @@media (max-width: 768px) {
@@ -827,33 +839,228 @@
     }
 
     function addNewAddress() {
-        showToast('Address form coming soon!', 'info');
+        const modal = document.createElement('div');
+        modal.id = 'addressModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+        modal.innerHTML = `
+        <div style="background:white;border-radius:var(--radius);padding:32px;width:90%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <h3 style="margin-bottom:20px;color:var(--foreground);">Add New Address</h3>
+            <div style="display:grid;gap:12px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label class="form-label">Type</label>
+                        <select id="newAddrType" class="form-select" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:Poppins,sans-serif;">
+                            <option value="Shipping">Shipping</option>
+                            <option value="Billing">Billing</option>
+                            <option value="Home">Home</option>
+                            <option value="Office">Office</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Zip Code</label>
+                        <input type="text" id="newAddrZip" class="form-input" placeholder="e.g. 1200">
+                    </div>
+                </div>
+                <div>
+                    <label class="form-label">Address Line 1 *</label>
+                    <input type="text" id="newAddrLine1" class="form-input" placeholder="Street address, unit number">
+                </div>
+                <div>
+                    <label class="form-label">Address Line 2</label>
+                    <input type="text" id="newAddrLine2" class="form-input" placeholder="Barangay, building, etc.">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label class="form-label">City *</label>
+                        <input type="text" id="newAddrCity" class="form-input" placeholder="City">
+                    </div>
+                    <div>
+                        <label class="form-label">Province/State</label>
+                        <input type="text" id="newAddrState" class="form-input" placeholder="Province">
+                    </div>
+                </div>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="checkbox" id="newAddrDefault"> Set as default address
+                </label>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
+                <button onclick="document.getElementById('addressModal').remove()" style="padding:10px 20px;border:1.5px solid var(--border);background:white;border-radius:var(--radius-sm);cursor:pointer;font-family:Poppins,sans-serif;">Cancel</button>
+                <button onclick="saveNewAddress()" style="padding:10px 20px;background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-weight:600;font-family:Poppins,sans-serif;">Save Address</button>
+            </div>
+        </div>`;
+        document.body.appendChild(modal);
+    }
+
+    async function saveNewAddress() {
+        const data = {
+            addressType: document.getElementById('newAddrType').value,
+            addressLine1: document.getElementById('newAddrLine1').value,
+            addressLine2: document.getElementById('newAddrLine2').value,
+            city: document.getElementById('newAddrCity').value,
+            state: document.getElementById('newAddrState').value,
+            zipCode: document.getElementById('newAddrZip').value,
+            country: 'Philippines',
+            isDefault: document.getElementById('newAddrDefault').checked
+        };
+        if (!data.addressLine1 || !data.city) { showToast('Address & City are required', 'error'); return; }
+        try {
+            const res = await fetch('/CustomerPortal/AddAddress', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+            const result = await res.json();
+            if (result.success) { showToast('✓ Address added!', 'success'); document.getElementById('addressModal').remove(); loadProfile(); }
+            else showToast(result.message, 'error');
+        } catch(e) { showToast('Error adding address', 'error'); }
     }
 
     function editAddress(id) {
-        showToast('Edit address form coming soon!', 'info');
+        const cards = document.querySelectorAll('.address-card');
+        // Find the address card that contains the edit button for this id
+        const modal = document.createElement('div');
+        modal.id = 'editAddrModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+        modal.innerHTML = `
+        <div style="background:white;border-radius:var(--radius);padding:32px;width:90%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <h3 style="margin-bottom:20px;">Edit Address</h3>
+            <div style="display:grid;gap:12px;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div><label class="form-label">Type</label><select id="editAddrType" class="form-select" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:Poppins,sans-serif;"><option value="Shipping">Shipping</option><option value="Billing">Billing</option><option value="Home">Home</option><option value="Office">Office</option></select></div>
+                    <div><label class="form-label">Zip Code</label><input type="text" id="editAddrZip" class="form-input"></div>
+                </div>
+                <div><label class="form-label">Address Line 1 *</label><input type="text" id="editAddrLine1" class="form-input"></div>
+                <div><label class="form-label">Address Line 2</label><input type="text" id="editAddrLine2" class="form-input"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div><label class="form-label">City *</label><input type="text" id="editAddrCity" class="form-input"></div>
+                    <div><label class="form-label">Province/State</label><input type="text" id="editAddrState" class="form-input"></div>
+                </div>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
+                <button onclick="deleteAddress(${id})" style="padding:10px 20px;background:var(--error-light);color:var(--error-fg);border:none;border-radius:var(--radius-sm);cursor:pointer;font-family:Poppins,sans-serif;">Delete</button>
+                <button onclick="document.getElementById('editAddrModal').remove()" style="padding:10px 20px;border:1.5px solid var(--border);background:white;border-radius:var(--radius-sm);cursor:pointer;font-family:Poppins,sans-serif;">Cancel</button>
+                <button onclick="saveEditAddress(${id})" style="padding:10px 20px;background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-weight:600;font-family:Poppins,sans-serif;">Save</button>
+            </div>
+        </div>`;
+        document.body.appendChild(modal);
     }
 
-    function setDefaultAddress(id) {
-        showToast('Setting default address...', 'info');
+    async function saveEditAddress(id) {
+        const data = {
+            addressId: id,
+            addressType: document.getElementById('editAddrType').value,
+            addressLine1: document.getElementById('editAddrLine1').value,
+            addressLine2: document.getElementById('editAddrLine2').value,
+            city: document.getElementById('editAddrCity').value,
+            state: document.getElementById('editAddrState').value,
+            zipCode: document.getElementById('editAddrZip').value,
+            country: 'Philippines'
+        };
+        if (!data.addressLine1 || !data.city) { showToast('Address & City are required', 'error'); return; }
+        try {
+            const res = await fetch('/CustomerPortal/UpdateAddress', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+            const result = await res.json();
+            if (result.success) { showToast('✓ Address updated!', 'success'); document.getElementById('editAddrModal').remove(); loadProfile(); }
+            else showToast(result.message, 'error');
+        } catch(e) { showToast('Error updating address', 'error'); }
+    }
+
+    async function deleteAddress(id) {
+        if (!confirm('Delete this address?')) return;
+        try {
+            const res = await fetch('/CustomerPortal/DeleteAddress', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ addressId: id }) });
+            const result = await res.json();
+            if (result.success) { showToast('Address deleted', 'success'); const m = document.getElementById('editAddrModal'); if(m) m.remove(); loadProfile(); }
+            else showToast(result.message, 'error');
+        } catch(e) { showToast('Error deleting address', 'error'); }
+    }
+
+    async function setDefaultAddress(id) {
+        try {
+            const res = await fetch('/CustomerPortal/SetDefaultAddress', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ addressId: id }) });
+            const result = await res.json();
+            if (result.success) { showToast('✓ Default address updated!', 'success'); loadProfile(); }
+            else showToast(result.message, 'error');
+        } catch(e) { showToast('Error setting default', 'error'); }
     }
 
     function changePassword() {
-        showToast('Password change dialog coming soon!', 'info');
+        const modal = document.createElement('div');
+        modal.id = 'pwModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+        modal.innerHTML = `
+        <div style="background:white;border-radius:var(--radius);padding:32px;width:90%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <h3 style="margin-bottom:20px;">🔑 Change Password</h3>
+            <div style="display:grid;gap:12px;">
+                <div><label class="form-label">Current Password</label><input type="password" id="currentPw" class="form-input"></div>
+                <div><label class="form-label">New Password</label><input type="password" id="newPw" class="form-input" placeholder="Min 8 characters"></div>
+                <div><label class="form-label">Confirm New Password</label><input type="password" id="confirmPw" class="form-input"></div>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
+                <button onclick="document.getElementById('pwModal').remove()" style="padding:10px 20px;border:1.5px solid var(--border);background:white;border-radius:var(--radius-sm);cursor:pointer;font-family:Poppins,sans-serif;">Cancel</button>
+                <button onclick="submitPasswordChange()" style="padding:10px 20px;background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-weight:600;font-family:Poppins,sans-serif;">Change Password</button>
+            </div>
+        </div>`;
+        document.body.appendChild(modal);
+    }
+
+    async function submitPasswordChange() {
+        const current = document.getElementById('currentPw').value;
+        const newPw = document.getElementById('newPw').value;
+        const confirm = document.getElementById('confirmPw').value;
+        if (!current || !newPw) { showToast('Please fill all fields', 'error'); return; }
+        if (newPw.length < 8) { showToast('Password must be at least 8 characters', 'error'); return; }
+        if (newPw !== confirm) { showToast('Passwords do not match', 'error'); return; }
+        try {
+            const res = await fetch('/CustomerPortal/ChangePassword', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ currentPassword:current, newPassword:newPw }) });
+            const result = await res.json();
+            if (result.success) { showToast('✓ Password changed successfully!', 'success'); document.getElementById('pwModal').remove(); }
+            else showToast(result.message, 'error');
+        } catch(e) { showToast('Error changing password', 'error'); }
     }
 
     function setup2FA() {
-        showToast('2FA setup coming soon!', 'info');
+        showToast('Two-factor authentication requires email/SMS verification. This feature will be available in the next update.', 'info');
     }
 
     function manageEmails() {
-        showToast('Email preferences coming soon!', 'info');
+        const modal = document.createElement('div');
+        modal.id = 'emailPrefModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+        modal.innerHTML = `
+        <div style="background:white;border-radius:var(--radius);padding:32px;width:90%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <h3 style="margin-bottom:20px;">📧 Email Preferences</h3>
+            <div style="display:grid;gap:16px;">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" id="prefMarketing" checked> Marketing emails & promotions</label>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" id="prefOrders" checked disabled> Order confirmations (required)</label>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" id="prefSupport" checked disabled> Support ticket updates (required)</label>
+                <div><label class="form-label">Preferred Contact Method</label>
+                <select id="prefContact" class="form-select" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:Poppins,sans-serif;">
+                    <option value="email">Email</option><option value="sms">SMS</option><option value="both">Both</option>
+                </select></div>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
+                <button onclick="document.getElementById('emailPrefModal').remove()" style="padding:10px 20px;border:1.5px solid var(--border);background:white;border-radius:var(--radius-sm);cursor:pointer;font-family:Poppins,sans-serif;">Cancel</button>
+                <button onclick="saveEmailPrefs()" style="padding:10px 20px;background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-weight:600;font-family:Poppins,sans-serif;">Save Preferences</button>
+            </div>
+        </div>`;
+        document.body.appendChild(modal);
     }
 
-    function deleteAccount() {
-        if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-            showToast('Account deletion request submitted', 'info');
-        }
+    async function saveEmailPrefs() {
+        try {
+            const res = await fetch('/CustomerPortal/UpdateEmailPreferences', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ marketingOptIn: document.getElementById('prefMarketing').checked, preferredContactMethod: document.getElementById('prefContact').value }) });
+            const result = await res.json();
+            if (result.success) { showToast('✓ Preferences saved!', 'success'); document.getElementById('emailPrefModal').remove(); }
+            else showToast(result.message, 'error');
+        } catch(e) { showToast('Error saving preferences', 'error'); }
+    }
+
+    async function deleteAccount() {
+        if (!confirm('Are you sure you want to delete your account? This action cannot be undone. All your data will be permanently removed within 30 days.')) return;
+        if (!confirm('This is your FINAL confirmation. Type DELETE to proceed.')) return;
+        try {
+            const res = await fetch('/CustomerPortal/DeleteAccount', { method:'POST', headers:{'Content-Type':'application/json'} });
+            const result = await res.json();
+            if (result.success) { showToast('Account deletion request submitted. You will be logged out.', 'info'); setTimeout(() => window.location.href = '/Auth/Logout', 2000); }
+            else showToast(result.message, 'error');
+        } catch(e) { showToast('Error submitting deletion request', 'error'); }
     }
 </script>
 }

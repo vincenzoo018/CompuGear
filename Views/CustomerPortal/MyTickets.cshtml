@@ -5,6 +5,7 @@
 
 <style>
     .tickets-page { padding: 30px 0; background: #f8f9fa; min-height: 100vh; }
+    .tickets-page .container { /* full width */ }
     
     .page-header {
         background: linear-gradient(135deg, #008080 0%, #20b2aa 100%);
@@ -25,15 +26,16 @@
         background: white;
         color: #008080;
         border: none;
-        border-radius: 12px;
+        border-radius: var(--radius-sm);
+        font-family: 'Poppins', sans-serif;
         font-weight: 600;
         text-decoration: none;
         transition: all 0.3s;
     }
     
     .btn-new-ticket:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,128,128,0.25);
         color: #006666;
     }
     
@@ -52,8 +54,15 @@
         background: white;
         border-radius: 16px;
         padding: 25px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
         text-align: center;
+        transition: all 0.3s;
+    }
+
+    .stat-card:hover {
+        border-color: rgba(0,128,128,0.2);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+        transform: translateY(-4px);
     }
     
     .stat-icon { font-size: 2rem; margin-bottom: 10px; }
@@ -63,7 +72,7 @@
     .tickets-container {
         background: white;
         border-radius: 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
         overflow: hidden;
     }
     
@@ -79,15 +88,16 @@
         padding: 10px 20px;
         border: none;
         background: #f3f4f6;
-        border-radius: 10px;
+        border-radius: var(--radius-sm);
         cursor: pointer;
+        font-family: 'Poppins', sans-serif;
         font-weight: 500;
         color: #6b7280;
         transition: all 0.3s;
     }
     
     .filter-tab:hover, .filter-tab.active {
-        background: #008080;
+        background: var(--primary);
         color: white;
     }
     
@@ -103,7 +113,9 @@
     
     .ticket-card:hover {
         background: #fafafa;
-        transform: translateX(5px);
+        border-color: rgba(0,128,128,0.2);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+        transform: translateY(-4px);
     }
     
     .ticket-card:last-child { border-bottom: none; }
@@ -195,15 +207,18 @@
         padding: 10px 15px;
         border: 2px solid #e5e7eb;
         background: white;
-        border-radius: 8px;
+        border-radius: var(--radius-sm);
         cursor: pointer;
+        font-family: 'Poppins', sans-serif;
         transition: all 0.3s;
     }
     
     .page-btn:hover, .page-btn.active {
-        background: #008080;
+        background: var(--primary);
         color: white;
-        border-color: #008080;
+        border-color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,128,128,0.25);
     }
 </style>
 

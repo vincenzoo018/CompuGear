@@ -35,10 +35,11 @@
         background: var(--error-light);
         color: var(--error-fg);
         border: none;
-        border-radius: 8px;
+        border-radius: var(--radius-sm);
+        font-family: 'Poppins', sans-serif;
         font-weight: 500;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s;
         display: flex;
         align-items: center;
         gap: 8px;
@@ -63,7 +64,8 @@
     }
 
     .wishlist-card:hover {
-        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        border-color: rgba(0,128,128,0.2);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
         transform: translateY(-4px);
     }
 
@@ -94,7 +96,7 @@
         background: var(--error);
         color: white;
         padding: 12px 24px;
-        border-radius: 8px;
+        border-radius: var(--radius-sm);
         font-weight: 700;
         font-size: 1rem;
     }
@@ -122,16 +124,17 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        font-family: 'Poppins', sans-serif;
         font-size: 1.1rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        transition: all 0.2s;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        transition: all 0.3s;
         z-index: 20;
     }
 
     .remove-btn:hover {
         background: var(--error);
         color: white;
-        transform: scale(1.1);
+        transform: translateY(-2px);
     }
 
     .discount-badge {
@@ -223,13 +226,14 @@
     .btn-add-cart {
         flex: 1;
         padding: 12px;
-        background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+        background: var(--primary);
         color: white;
         border: none;
-        border-radius: 8px;
+        border-radius: var(--radius-sm);
+        font-family: 'Poppins', sans-serif;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -237,8 +241,9 @@
     }
 
     .btn-add-cart:hover:not(:disabled) {
-        transform: scale(1.02);
-        box-shadow: 0 4px 12px rgba(0,128,128,0.3);
+        background: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,128,128,0.25);
     }
 
     .btn-add-cart:disabled {
@@ -256,13 +261,14 @@
         height: 48px;
         background: var(--muted);
         border: none;
-        border-radius: 8px;
+        border-radius: var(--radius-sm);
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
+        font-family: 'Poppins', sans-serif;
         font-size: 1.2rem;
-        transition: all 0.2s;
+        transition: all 0.3s;
     }
 
     .btn-view:hover { background: var(--border); }
@@ -285,18 +291,20 @@
         align-items: center;
         gap: 8px;
         padding: 14px 28px;
-        background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+        background: var(--primary);
         color: white;
         text-decoration: none;
-        border-radius: 50px;
+        border-radius: var(--radius-sm);
+        font-family: 'Poppins', sans-serif;
         font-weight: 600;
-        transition: all 0.2s;
+        transition: all 0.3s;
     }
 
     .btn-browse:hover {
         color: white;
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(0,128,128,0.3);
+        background: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,128,128,0.25);
     }
 
     /* Summary Bar */
@@ -333,21 +341,23 @@
 
     .btn-add-all {
         padding: 14px 28px;
-        background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+        background: var(--primary);
         color: white;
         border: none;
-        border-radius: 8px;
+        border-radius: var(--radius-sm);
+        font-family: 'Poppins', sans-serif;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s;
         display: flex;
         align-items: center;
         gap: 8px;
     }
 
     .btn-add-all:hover {
-        transform: scale(1.02);
-        box-shadow: 0 4px 12px rgba(0,128,128,0.3);
+        background: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,128,128,0.25);
     }
 
     /* Responsive */

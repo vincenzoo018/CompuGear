@@ -11,7 +11,6 @@
     }
     
     .checkout-container {
-        max-width: 1100px;
         margin: 0 auto;
     }
     
@@ -42,8 +41,8 @@
         gap: 10px;
         padding: 12px 25px;
         background: white;
-        border-radius: 50px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        border-radius: var(--radius-sm);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
     }
     
     .step.active { background: #008080; color: white; }
@@ -73,8 +72,15 @@
     .checkout-card {
         background: white;
         border-radius: 20px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
         overflow: hidden;
+        transition: all 0.3s;
+    }
+
+    .checkout-card:hover {
+        border-color: rgba(0,128,128,0.2);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+        transform: translateY(-4px);
     }
     
     .card-header {
@@ -100,16 +106,21 @@
     .form-input {
         width: 100%;
         padding: 14px 18px;
-        border: 2px solid #e5e7eb;
-        border-radius: 12px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
         font-size: 1rem;
+        font-family: 'Poppins', sans-serif;
         transition: all 0.3s;
+    }
+
+    .form-input::placeholder {
+        color: #999;
     }
     
     .form-input:focus {
         outline: none;
         border-color: #008080;
-        box-shadow: 0 0 0 4px rgba(0, 128, 128, 0.1);
+        box-shadow: 0 0 0 3px rgba(0,128,128,0.08);
     }
     
     .form-row {
@@ -130,8 +141,8 @@
         align-items: center;
         gap: 15px;
         padding: 20px;
-        border: 2px solid #e5e7eb;
-        border-radius: 14px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
         cursor: pointer;
         transition: all 0.3s;
     }
@@ -221,20 +232,22 @@
     .checkout-btn {
         width: 100%;
         padding: 18px;
-        background: linear-gradient(135deg, #008080 0%, #006666 100%);
+        background: var(--primary);
         color: white;
         border: none;
-        border-radius: 14px;
+        border-radius: var(--radius-sm);
         font-size: 1.1rem;
         font-weight: 700;
+        font-family: 'Poppins', sans-serif;
         cursor: pointer;
         margin-top: 25px;
         transition: all 0.3s;
     }
     
     .checkout-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 15px 40px rgba(0, 128, 128, 0.3);
+        background: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,128,128,0.25);
     }
     
     .checkout-btn:disabled {

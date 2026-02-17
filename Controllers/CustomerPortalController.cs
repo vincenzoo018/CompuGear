@@ -240,7 +240,7 @@ namespace CompuGear.Controllers
 
         // GET: /CustomerPortal/GetProducts
         [HttpGet]
-        public async Task<IActionResult> GetProducts(int page = 1, int pageSize = 12, int? categoryId = null, int? brandId = null, string? search = null, string? sort = "featured", bool? onSale = null)
+        public async Task<IActionResult> GetProducts(int page = 1, int pageSize = 12, int? categoryId = null, int? brandId = null, string? search = null, string? sort = "featured", bool? onSale = null, decimal? minPrice = null, decimal? maxPrice = null, bool? inStock = null)
         {
             var companyId = GetPortalCompanyId();
             var query = _context.Products
@@ -263,6 +263,16 @@ namespace CompuGear.Controllers
 
             if (onSale == true)
                 query = query.Where(p => p.IsOnSale);
+
+            // Price range filter
+            if (minPrice.HasValue)
+                query = query.Where(p => p.SellingPrice >= minPrice.Value);
+            if (maxPrice.HasValue)
+                query = query.Where(p => p.SellingPrice <= maxPrice.Value);
+
+            // In stock filter
+            if (inStock == true)
+                query = query.Where(p => p.StockQuantity > 0);
 
             // Sorting
             query = sort switch
@@ -1747,9 +1757,943 @@ namespace CompuGear.Controllers
         }
 
         #endregion
-    }
 
-    // Request Models
+        #region New API Endpoints - Full Implementation
+
+        // ========== PROFILE: Address Management ==========
+
+        // POST: /CustomerPortal/AddAddress
+        [HttpPost]
+        public async Task<IActionResult> AddAddress([FromBody] AddAddressModel model)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            var address = new CustomerAddress
+            {
+                CustomerId = customer.CustomerId,
+                AddressType = model.AddressType ?? "Shipping",
+                AddressLine1 = model.AddressLine1,
+                AddressLine2 = model.AddressLine2,
+                City = model.City,
+                State = model.State,
+                ZipCode = model.ZipCode,
+                Country = model.Country ?? "Philippines",
+                IsDefault = model.IsDefault,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            // If setting as default, unset existing defaults
+            if (model.IsDefault)
+            {
+                var existingDefaults = await _context.CustomerAddresses
+                    .Where(a => a.CustomerId == customer.CustomerId && a.IsDefault)
+                    .ToListAsync();
+                foreach (var a in existingDefaults) a.IsDefault = false;
+            }
+
+            _context.CustomerAddresses.Add(address);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Address added successfully", data = new { address.AddressId } });
+        }
+
+        // POST: /CustomerPortal/UpdateAddress
+        [HttpPost]
+        public async Task<IActionResult> UpdateAddress([FromBody] UpdateAddressModel model)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            var address = await _context.CustomerAddresses
+                .FirstOrDefaultAsync(a => a.AddressId == model.AddressId && a.CustomerId == customer.CustomerId);
+            if (address == null)
+                return Json(new { success = false, message = "Address not found" });
+
+            address.AddressType = model.AddressType ?? address.AddressType;
+            address.AddressLine1 = model.AddressLine1 ?? address.AddressLine1;
+            address.AddressLine2 = model.AddressLine2;
+            address.City = model.City ?? address.City;
+            address.State = model.State ?? address.State;
+            address.ZipCode = model.ZipCode ?? address.ZipCode;
+            address.Country = model.Country ?? address.Country;
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Address updated successfully" });
+        }
+
+        // POST: /CustomerPortal/SetDefaultAddress
+        [HttpPost]
+        public async Task<IActionResult> SetDefaultAddress([FromBody] SetDefaultAddressModel model)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            var allAddresses = await _context.CustomerAddresses
+                .Where(a => a.CustomerId == customer.CustomerId)
+                .ToListAsync();
+
+            foreach (var a in allAddresses)
+                a.IsDefault = (a.AddressId == model.AddressId);
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Default address updated" });
+        }
+
+        // POST: /CustomerPortal/DeleteAddress
+        [HttpPost]
+        public async Task<IActionResult> DeleteAddress([FromBody] DeleteAddressModel model)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            var address = await _context.CustomerAddresses
+                .FirstOrDefaultAsync(a => a.AddressId == model.AddressId && a.CustomerId == customer.CustomerId);
+            if (address == null)
+                return Json(new { success = false, message = "Address not found" });
+
+            _context.CustomerAddresses.Remove(address);
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Address deleted" });
+        }
+
+        // ========== PROFILE: Security ==========
+
+        // POST: /CustomerPortal/ChangePassword
+        [HttpPost]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordModel model)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            if (customer.UserId == null)
+                return Json(new { success = false, message = "No linked user account" });
+
+            var user = await _context.Users.FindAsync(customer.UserId);
+            if (user == null)
+                return Json(new { success = false, message = "User account not found" });
+
+            // Verify current password using simple hash comparison
+            // (Since BCrypt is not installed, compare with stored hash directly)
+            var currentHash = Convert.ToBase64String(System.Security.Cryptography.SHA256.Create().ComputeHash(System.Text.Encoding.UTF8.GetBytes(model.CurrentPassword)));
+            if (user.PasswordHash != currentHash && user.PasswordHash != model.CurrentPassword)
+                return Json(new { success = false, message = "Current password is incorrect" });
+
+            if (model.NewPassword.Length < 8)
+                return Json(new { success = false, message = "New password must be at least 8 characters" });
+
+            user.PasswordHash = Convert.ToBase64String(System.Security.Cryptography.SHA256.Create().ComputeHash(System.Text.Encoding.UTF8.GetBytes(model.NewPassword)));
+            user.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Password changed successfully" });
+        }
+
+        // POST: /CustomerPortal/UpdateEmailPreferences
+        [HttpPost]
+        public async Task<IActionResult> UpdateEmailPreferences([FromBody] EmailPreferencesModel model)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            customer.MarketingOptIn = model.MarketingOptIn;
+            customer.PreferredContactMethod = model.PreferredContactMethod;
+            customer.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Email preferences updated" });
+        }
+
+        // POST: /CustomerPortal/DeleteAccount
+        [HttpPost]
+        public async Task<IActionResult> DeleteAccountRequest()
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            customer.Status = "PendingDeletion";
+            customer.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Account deletion request submitted. Your account will be deleted within 30 days." });
+        }
+
+        // ========== PRODUCT REVIEWS ==========
+
+        // GET: /CustomerPortal/GetProductReviews
+        [HttpGet]
+        public async Task<IActionResult> GetProductReviews(int productId, int page = 1, int pageSize = 10)
+        {
+            var query = _context.ProductReviews
+                .Include(r => r.Customer)
+                .Where(r => r.ProductId == productId && r.Status == "Approved");
+
+            var total = await query.CountAsync();
+            var reviews = await query
+                .OrderByDescending(r => r.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(r => new
+                {
+                    r.ReviewId,
+                    r.Rating,
+                    r.Title,
+                    r.Comment,
+                    r.Pros,
+                    r.Cons,
+                    r.IsVerifiedPurchase,
+                    r.HelpfulCount,
+                    r.CreatedAt,
+                    CustomerName = r.Customer != null ? r.Customer.FirstName + " " + r.Customer.LastName.Substring(0, 1) + "." : "Anonymous"
+                })
+                .ToListAsync();
+
+            // Calculate rating summary
+            var allRatings = await _context.ProductReviews
+                .Where(r => r.ProductId == productId && r.Status == "Approved")
+                .GroupBy(r => r.Rating)
+                .Select(g => new { Rating = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var totalReviews = allRatings.Sum(r => r.Count);
+            var avgRating = totalReviews > 0 ? allRatings.Sum(r => r.Rating * r.Count) / (double)totalReviews : 0;
+
+            return Json(new
+            {
+                success = true,
+                data = reviews,
+                summary = new
+                {
+                    averageRating = Math.Round(avgRating, 1),
+                    totalReviews,
+                    breakdown = Enumerable.Range(1, 5).Select(i => new
+                    {
+                        rating = i,
+                        count = allRatings.FirstOrDefault(r => r.Rating == i)?.Count ?? 0
+                    })
+                },
+                pagination = new { page, pageSize, total, totalPages = (int)Math.Ceiling(total / (double)pageSize) }
+            });
+        }
+
+        // POST: /CustomerPortal/SubmitReview
+        [HttpPost]
+        public async Task<IActionResult> SubmitReview([FromBody] SubmitReviewModel model)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in to leave a review" });
+
+            // Check if already reviewed
+            var existingReview = await _context.ProductReviews
+                .FirstOrDefaultAsync(r => r.ProductId == model.ProductId && r.CustomerId == customer.CustomerId);
+            if (existingReview != null)
+                return Json(new { success = false, message = "You have already reviewed this product" });
+
+            // Check if verified purchase
+            var hasPurchased = await _context.OrderItems
+                .AnyAsync(oi => oi.ProductId == model.ProductId &&
+                    oi.Order.CustomerId == customer.CustomerId &&
+                    oi.Order.OrderStatus == "Delivered");
+
+            var review = new ProductReview
+            {
+                ProductId = model.ProductId,
+                CustomerId = customer.CustomerId,
+                OrderId = model.OrderId,
+                Rating = model.Rating,
+                Title = model.Title,
+                Comment = model.Comment,
+                Pros = model.Pros,
+                Cons = model.Cons,
+                IsVerifiedPurchase = hasPurchased,
+                Status = "Approved", // Auto-approve for now
+                CreatedAt = DateTime.UtcNow,
+                ApprovedAt = DateTime.UtcNow
+            };
+
+            _context.ProductReviews.Add(review);
+
+            // Award loyalty points for review
+            var loyaltyEntry = new LoyaltyPoints
+            {
+                CustomerId = customer.CustomerId,
+                TransactionType = "Earned",
+                Points = 50,
+                Description = "Product review submitted",
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.LoyaltyPoints.Add(loyaltyEntry);
+            customer.LoyaltyPoints += 50;
+
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Review submitted successfully! You earned 50 loyalty points." });
+        }
+
+        // POST: /CustomerPortal/MarkReviewHelpful
+        [HttpPost]
+        public async Task<IActionResult> MarkReviewHelpful([FromBody] ReviewHelpfulModel model)
+        {
+            var review = await _context.ProductReviews.FindAsync(model.ReviewId);
+            if (review == null)
+                return Json(new { success = false, message = "Review not found" });
+
+            review.HelpfulCount += 1;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, helpfulCount = review.HelpfulCount });
+        }
+
+        // ========== ORDER CANCELLATION & RETURNS ==========
+
+        // POST: /CustomerPortal/CancelOrder
+        [HttpPost]
+        public async Task<IActionResult> CancelOrder([FromBody] CancelOrderModel model)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.OrderId == model.OrderId && o.CustomerId == customer.CustomerId);
+
+            if (order == null)
+                return Json(new { success = false, message = "Order not found" });
+
+            if (!new[] { "Pending", "Confirmed", "Processing" }.Contains(order.OrderStatus))
+                return Json(new { success = false, message = "This order cannot be cancelled. Only pending, confirmed or processing orders can be cancelled." });
+
+            // Restore stock
+            foreach (var item in order.OrderItems)
+            {
+                var product = await _context.Products.FindAsync(item.ProductId);
+                if (product != null)
+                    product.StockQuantity += item.Quantity;
+            }
+
+            order.OrderStatus = "Cancelled";
+            order.CancelledAt = DateTime.UtcNow;
+            order.Notes = string.IsNullOrEmpty(order.Notes)
+                ? $"Cancelled by customer: {model.Reason}"
+                : order.Notes + $"\nCancelled by customer: {model.Reason}";
+            order.UpdatedAt = DateTime.UtcNow;
+
+            // Add status history
+            _context.Set<OrderStatusHistory>().Add(new OrderStatusHistory
+            {
+                OrderId = order.OrderId,
+                PreviousStatus = order.OrderStatus,
+                NewStatus = "Cancelled",
+                Notes = $"Cancelled by customer: {model.Reason}",
+                ChangedAt = DateTime.UtcNow
+            });
+
+            // If paid, create refund record
+            if (order.PaymentStatus == "Paid")
+            {
+                var refund = new Refund
+                {
+                    RefundNumber = $"RFD-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}",
+                    OrderId = order.OrderId,
+                    CustomerId = customer.CustomerId,
+                    CompanyId = order.CompanyId,
+                    Amount = order.TotalAmount,
+                    Reason = model.Reason ?? "Customer cancelled order",
+                    Status = "Pending",
+                    RequestedAt = DateTime.UtcNow
+                };
+                _context.Refunds.Add(refund);
+                order.PaymentStatus = "Refund Pending";
+            }
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Order cancelled successfully" });
+        }
+
+        // POST: /CustomerPortal/RequestReturn
+        [HttpPost]
+        public async Task<IActionResult> RequestReturn([FromBody] ReturnRequestModel model)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.OrderId == model.OrderId && o.CustomerId == customer.CustomerId);
+
+            if (order == null)
+                return Json(new { success = false, message = "Order not found" });
+
+            if (order.OrderStatus != "Delivered")
+                return Json(new { success = false, message = "Only delivered orders can be returned" });
+
+            // Check 7-day return window
+            if (order.DeliveredAt.HasValue && (DateTime.UtcNow - order.DeliveredAt.Value).TotalDays > 7)
+                return Json(new { success = false, message = "Return window has expired (7 days after delivery)" });
+
+            order.OrderStatus = "Return Requested";
+            order.Notes = string.IsNullOrEmpty(order.Notes)
+                ? $"Return requested: {model.Reason}"
+                : order.Notes + $"\nReturn requested: {model.Reason}";
+            order.UpdatedAt = DateTime.UtcNow;
+
+            _context.Set<OrderStatusHistory>().Add(new OrderStatusHistory
+            {
+                OrderId = order.OrderId,
+                PreviousStatus = "Delivered",
+                NewStatus = "Return Requested",
+                Notes = $"Return requested by customer: {model.Reason}",
+                ChangedAt = DateTime.UtcNow
+            });
+
+            // Create refund record
+            var refund = new Refund
+            {
+                RefundNumber = $"RFD-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}",
+                OrderId = order.OrderId,
+                CustomerId = customer.CustomerId,
+                CompanyId = order.CompanyId,
+                Amount = order.TotalAmount,
+                Reason = model.Reason ?? "Customer return request",
+                Status = "Pending",
+                RequestedAt = DateTime.UtcNow
+            };
+            _context.Refunds.Add(refund);
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Return request submitted successfully. You will be contacted within 24-48 hours." });
+        }
+
+        // ========== LOYALTY SYSTEM ==========
+
+        // GET: /CustomerPortal/GetLoyaltyInfo
+        [HttpGet]
+        public async Task<IActionResult> GetLoyaltyInfo()
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            var companyId = GetPortalCompanyId();
+
+            // Get loyalty program config
+            var program = await _context.LoyaltyPrograms
+                .FirstOrDefaultAsync(p => p.IsActive && (p.CompanyId == companyId || p.CompanyId == null));
+
+            // Get points history
+            var history = await _context.LoyaltyPoints
+                .Where(lp => lp.CustomerId == customer.CustomerId)
+                .OrderByDescending(lp => lp.CreatedAt)
+                .Take(20)
+                .Select(lp => new
+                {
+                    lp.PointId,
+                    lp.TransactionType,
+                    lp.Points,
+                    lp.Description,
+                    lp.CreatedAt,
+                    OrderNumber = lp.Order != null ? lp.Order.OrderNumber : null
+                })
+                .ToListAsync();
+
+            // Tier calculation
+            var points = customer.LoyaltyPoints;
+            string tier = "Bronze";
+            string nextTier = "Silver";
+            int pointsToNext = 1000 - points;
+            if (points >= 10000) { tier = "Platinum"; nextTier = "Max"; pointsToNext = 0; }
+            else if (points >= 5000) { tier = "Gold"; nextTier = "Platinum"; pointsToNext = 10000 - points; }
+            else if (points >= 1000) { tier = "Silver"; nextTier = "Gold"; pointsToNext = 5000 - points; }
+
+            return Json(new
+            {
+                success = true,
+                data = new
+                {
+                    currentPoints = customer.LoyaltyPoints,
+                    tier,
+                    nextTier,
+                    pointsToNext = Math.Max(0, pointsToNext),
+                    pointsPerCurrency = program?.PointsPerCurrency ?? 1m,
+                    pointsValue = program?.PointsValue ?? 0.01m,
+                    minRedeemPoints = program?.MinRedeemPoints ?? 100,
+                    history
+                }
+            });
+        }
+
+        // POST: /CustomerPortal/RedeemPoints
+        [HttpPost]
+        public async Task<IActionResult> RedeemPoints([FromBody] RedeemPointsModel model)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            var program = await _context.LoyaltyPrograms
+                .FirstOrDefaultAsync(p => p.IsActive);
+
+            var minRedeem = program?.MinRedeemPoints ?? 100;
+            if (model.Points < minRedeem)
+                return Json(new { success = false, message = $"Minimum {minRedeem} points required to redeem" });
+
+            if (customer.LoyaltyPoints < model.Points)
+                return Json(new { success = false, message = "Insufficient points" });
+
+            var pointValue = program?.PointsValue ?? 0.01m;
+            var discountAmount = model.Points * pointValue;
+
+            customer.LoyaltyPoints -= model.Points;
+            customer.UpdatedAt = DateTime.UtcNow;
+
+            _context.LoyaltyPoints.Add(new LoyaltyPoints
+            {
+                CustomerId = customer.CustomerId,
+                TransactionType = "Redeemed",
+                Points = -model.Points,
+                Description = $"Redeemed {model.Points} points for ₱{discountAmount:N2} discount",
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+
+            return Json(new
+            {
+                success = true,
+                message = $"Redeemed {model.Points} points for ₱{discountAmount:N2} discount!",
+                data = new
+                {
+                    remainingPoints = customer.LoyaltyPoints,
+                    discountAmount
+                }
+            });
+        }
+
+        // ========== DASHBOARD STATS ==========
+
+        // GET: /CustomerPortal/GetDashboardStats
+        [HttpGet]
+        public async Task<IActionResult> GetDashboardStats()
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            var customerId = customer.CustomerId;
+            var companyId = GetPortalCompanyId();
+
+            var ordersQuery = _context.Orders.Where(o => o.CustomerId == customerId);
+            if (companyId.HasValue)
+                ordersQuery = ordersQuery.Where(o => o.CompanyId == companyId);
+
+            var totalOrders = await ordersQuery.CountAsync();
+            var inProgress = await ordersQuery.CountAsync(o => new[] { "Pending", "Confirmed", "Processing", "Shipped" }.Contains(o.OrderStatus));
+            var delivered = await ordersQuery.CountAsync(o => o.OrderStatus == "Delivered");
+            var totalSpent = await ordersQuery.SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+
+            // Monthly order counts for chart (last 6 months)
+            var sixMonthsAgo = DateTime.UtcNow.AddMonths(-6);
+            var monthlyOrders = await ordersQuery
+                .Where(o => o.OrderDate >= sixMonthsAgo)
+                .GroupBy(o => new { o.OrderDate.Year, o.OrderDate.Month })
+                .Select(g => new
+                {
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
+                    Count = g.Count(),
+                    Amount = g.Sum(o => o.TotalAmount)
+                })
+                .OrderBy(g => g.Year).ThenBy(g => g.Month)
+                .ToListAsync();
+
+            // Category breakdown for pie chart
+            var categoryBreakdown = await ordersQuery
+                .SelectMany(o => o.OrderItems)
+                .Where(oi => oi.Product != null && oi.Product.Category != null)
+                .GroupBy(oi => oi.Product!.Category!.CategoryName)
+                .Select(g => new
+                {
+                    Category = g.Key,
+                    Count = g.Sum(oi => oi.Quantity),
+                    Amount = g.Sum(oi => oi.TotalPrice)
+                })
+                .OrderByDescending(g => g.Amount)
+                .Take(5)
+                .ToListAsync();
+
+            return Json(new
+            {
+                success = true,
+                data = new
+                {
+                    totalOrders,
+                    inProgress,
+                    delivered,
+                    totalSpent,
+                    loyaltyPoints = customer.LoyaltyPoints,
+                    monthlyOrders,
+                    categoryBreakdown
+                }
+            });
+        }
+
+        // ========== SUBMIT TICKET WITH FILES ==========
+
+        // POST: /CustomerPortal/CreateTicketWithFiles
+        [HttpPost]
+        public async Task<IActionResult> CreateTicketWithFiles([FromForm] string subject, [FromForm] string description,
+            [FromForm] string? priority, [FromForm] string? contactName, [FromForm] string? contactEmail,
+            [FromForm] string? contactPhone, [FromForm] int? categoryId, [FromForm] string? relatedOrderNumber,
+            List<IFormFile>? attachments)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            var customerId = customer?.CustomerId;
+            var companyId = GetPortalCompanyId();
+
+            var ticketCount = await _context.SupportTickets.CountAsync() + 1;
+            var ticketNumber = $"TKT-{DateTime.Now:yyyy}-{ticketCount:D4}";
+
+            var ticket = new SupportTicket
+            {
+                TicketNumber = ticketNumber,
+                CustomerId = customerId,
+                CompanyId = companyId,
+                CategoryId = categoryId,
+                Subject = subject,
+                Description = description,
+                ContactName = contactName ?? customer?.FullName,
+                ContactEmail = contactEmail ?? customer?.Email ?? "",
+                ContactPhone = contactPhone ?? customer?.Phone,
+                Priority = priority ?? "Medium",
+                Status = "Open",
+                Source = "Web",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.SupportTickets.Add(ticket);
+            await _context.SaveChangesAsync();
+
+            // Handle file attachments
+            if (attachments != null && attachments.Count > 0)
+            {
+                var uploadsDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "tickets", ticket.TicketId.ToString());
+                Directory.CreateDirectory(uploadsDir);
+
+                foreach (var file in attachments.Take(5))
+                {
+                    if (file.Length > 10 * 1024 * 1024) continue; // Skip files > 10MB
+
+                    var safeFileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+                    var filePath = Path.Combine(uploadsDir, safeFileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    _context.TicketAttachments.Add(new TicketAttachment
+                    {
+                        TicketId = ticket.TicketId,
+                        FileName = file.FileName,
+                        FileUrl = $"/uploads/tickets/{ticket.TicketId}/{safeFileName}",
+                        FileSize = (int?)file.Length,
+                        FileType = file.ContentType,
+                        UploadedAt = DateTime.UtcNow
+                    });
+                }
+                await _context.SaveChangesAsync();
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = "Ticket created successfully",
+                data = new { ticket.TicketId, ticket.TicketNumber }
+            });
+        }
+
+        // GET: /CustomerPortal/GetCustomerOrders (lightweight, for dropdowns)
+        [HttpGet]
+        public async Task<IActionResult> GetCustomerOrders()
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = true, data = new List<object>() });
+
+            var orders = await _context.Orders
+                .Where(o => o.CustomerId == customer.CustomerId)
+                .OrderByDescending(o => o.OrderDate)
+                .Take(20)
+                .Select(o => new
+                {
+                    o.OrderId,
+                    o.OrderNumber,
+                    o.OrderDate,
+                    o.TotalAmount,
+                    o.OrderStatus,
+                    FirstItem = o.OrderItems.Select(oi => oi.ProductName).FirstOrDefault()
+                })
+                .ToListAsync();
+
+            return Json(new { success = true, data = orders });
+        }
+
+        // ========== PROMOTIONS (Real Data) ==========
+
+        // GET: /CustomerPortal/GetActiveCampaigns
+        [HttpGet]
+        public async Task<IActionResult> GetActiveCampaigns()
+        {
+            var companyId = GetPortalCompanyId();
+            var now = DateTime.UtcNow;
+
+            var campaignQuery = _context.Campaigns
+                .Where(c => c.Status == "Active" && c.StartDate <= now && c.EndDate >= now);
+
+            if (companyId.HasValue)
+                campaignQuery = campaignQuery.Where(c => c.CompanyId == companyId);
+
+            var campaigns = await campaignQuery
+                .OrderByDescending(c => c.CreatedAt)
+                .Select(c => new
+                {
+                    c.CampaignId,
+                    c.CampaignName,
+                    c.Description,
+                    c.Type,
+                    c.StartDate,
+                    c.EndDate,
+                    c.Subject,
+                    c.Content
+                })
+                .ToListAsync();
+
+            return Json(new { success = true, data = campaigns });
+        }
+
+        // ========== GIFT OPTIONS ==========
+
+        // POST: /CustomerPortal/AddGiftOption
+        [HttpPost]
+        public async Task<IActionResult> AddGiftOption([FromBody] AddGiftOptionModel model)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.OrderId == model.OrderId && o.CustomerId == customer.CustomerId);
+            if (order == null)
+                return Json(new { success = false, message = "Order not found" });
+
+            var giftOption = new GiftOption
+            {
+                OrderId = model.OrderId,
+                CompanyId = order.CompanyId,
+                IsGift = true,
+                GiftWrap = model.GiftWrap,
+                GiftWrapPrice = model.GiftWrap ? 50m : 0m,
+                GiftMessage = model.GiftMessage,
+                RecipientName = model.RecipientName,
+                RecipientEmail = model.RecipientEmail,
+                HidePrice = model.HidePrice,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.GiftOptions.Add(giftOption);
+
+            if (model.GiftWrap)
+            {
+                order.TotalAmount += 50m;
+                order.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = "Gift options saved" });
+        }
+
+        // ========== INSTALLMENT PLANS ==========
+
+        // GET: /CustomerPortal/GetInstallmentOptions
+        [HttpGet]
+        public Task<IActionResult> GetInstallmentOptions(decimal amount)
+        {
+            var options = new[]
+            {
+                new { months = 3, interestRate = 0m, monthly = Math.Round(amount / 3, 2), total = amount },
+                new { months = 6, interestRate = 3.5m, monthly = Math.Round(amount * 1.035m / 6, 2), total = Math.Round(amount * 1.035m, 2) },
+                new { months = 12, interestRate = 7m, monthly = Math.Round(amount * 1.07m / 12, 2), total = Math.Round(amount * 1.07m, 2) }
+            };
+
+            return Task.FromResult<IActionResult>(Json(new { success = true, data = options }));
+        }
+
+        // POST: /CustomerPortal/CreateInstallmentPlan
+        [HttpPost]
+        public async Task<IActionResult> CreateInstallmentPlan([FromBody] CreateInstallmentModel model)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.OrderId == model.OrderId && o.CustomerId == customer.CustomerId);
+            if (order == null)
+                return Json(new { success = false, message = "Order not found" });
+
+            var interestRate = model.Months switch { 6 => 3.5m, 12 => 7m, _ => 0m };
+            var totalAmount = order.TotalAmount * (1 + interestRate / 100);
+            var installmentAmount = Math.Round(totalAmount / model.Months, 2);
+
+            var plan = new InstallmentPlan
+            {
+                OrderId = order.OrderId,
+                CustomerId = customer.CustomerId,
+                CompanyId = order.CompanyId,
+                TotalAmount = totalAmount,
+                NumberOfInstallments = model.Months,
+                InstallmentAmount = installmentAmount,
+                InterestRate = interestRate,
+                Status = "Active",
+                StartDate = DateTime.UtcNow,
+                NextDueDate = DateTime.UtcNow.AddMonths(1),
+                CreatedAt = DateTime.UtcNow
+            };
+
+            // Create individual payment schedules
+            for (int i = 1; i <= model.Months; i++)
+            {
+                plan.Payments.Add(new InstallmentPayment
+                {
+                    InstallmentNumber = i,
+                    Amount = installmentAmount,
+                    DueDate = DateTime.UtcNow.AddMonths(i),
+                    Status = "Pending"
+                });
+            }
+
+            _context.InstallmentPlans.Add(plan);
+            order.PaymentMethod = $"Installment ({model.Months} months)";
+            order.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = $"Installment plan created: {model.Months} payments of ₱{installmentAmount:N2}" });
+        }
+
+        // ========== SUBSCRIPTION ORDERS ==========
+
+        // GET: /CustomerPortal/GetSubscriptions
+        [HttpGet]
+        public async Task<IActionResult> GetSubscriptions()
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            var subscriptions = await _context.SubscriptionOrders
+                .Include(s => s.Items)
+                .ThenInclude(si => si.Product)
+                .Where(s => s.CustomerId == customer.CustomerId)
+                .OrderByDescending(s => s.CreatedAt)
+                .Select(s => new
+                {
+                    s.SubscriptionId,
+                    s.SubscriptionCode,
+                    s.Frequency,
+                    s.NextOrderDate,
+                    s.LastOrderDate,
+                    s.EstimatedTotal,
+                    s.Status,
+                    Items = s.Items.Select(i => new
+                    {
+                        i.ProductId,
+                        ProductName = i.Product != null ? i.Product.ProductName : "Unknown",
+                        i.Quantity,
+                        i.UnitPrice
+                    })
+                })
+                .ToListAsync();
+
+            return Json(new { success = true, data = subscriptions });
+        }
+
+        // POST: /CustomerPortal/CreateSubscription
+        [HttpPost]
+        public async Task<IActionResult> CreateSubscription([FromBody] CreateSubscriptionModel model)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            var companyId = GetPortalCompanyId();
+            var subCount = await _context.SubscriptionOrders.CountAsync() + 1;
+
+            var subscription = new SubscriptionOrder
+            {
+                CustomerId = customer.CustomerId,
+                CompanyId = companyId,
+                SubscriptionCode = $"SUB-{DateTime.Now:yyyyMMdd}-{subCount:D4}",
+                Frequency = model.Frequency ?? "Monthly",
+                NextOrderDate = DateTime.UtcNow.AddDays(model.Frequency == "Weekly" ? 7 : model.Frequency == "BiWeekly" ? 14 : 30),
+                Status = "Active",
+                ShippingAddressId = model.ShippingAddressId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            decimal total = 0;
+            foreach (var item in model.Items)
+            {
+                var product = await _context.Products.FindAsync(item.ProductId);
+                if (product == null) continue;
+
+                subscription.Items.Add(new SubscriptionItem
+                {
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    UnitPrice = product.SellingPrice
+                });
+                total += product.SellingPrice * item.Quantity;
+            }
+            subscription.EstimatedTotal = total;
+
+            _context.SubscriptionOrders.Add(subscription);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Subscription created", data = new { subscription.SubscriptionId, subscription.SubscriptionCode } });
+        }
+
+        // POST: /CustomerPortal/CancelSubscription
+        [HttpPost]
+        public async Task<IActionResult> CancelSubscription([FromBody] CancelSubscriptionModel model)
+        {
+            var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in" });
+
+            var sub = await _context.SubscriptionOrders
+                .FirstOrDefaultAsync(s => s.SubscriptionId == model.SubscriptionId && s.CustomerId == customer.CustomerId);
+            if (sub == null)
+                return Json(new { success = false, message = "Subscription not found" });
+
+            sub.Status = "Cancelled";
+            sub.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Subscription cancelled" });
+        }
+
+        #endregion
+    }
 
     public class CustomerProfileUpdateModel
     {
@@ -1838,5 +2782,120 @@ namespace CompuGear.Controllers
     {
         public int TicketId { get; set; }
         public string Message { get; set; } = string.Empty;
+    }
+
+    // ========== New Request Models ==========
+
+    public class AddAddressModel
+    {
+        public string? AddressType { get; set; }
+        public string AddressLine1 { get; set; } = string.Empty;
+        public string? AddressLine2 { get; set; }
+        public string City { get; set; } = string.Empty;
+        public string? State { get; set; }
+        public string? ZipCode { get; set; }
+        public string? Country { get; set; }
+        public bool IsDefault { get; set; }
+    }
+
+    public class UpdateAddressModel
+    {
+        public int AddressId { get; set; }
+        public string? AddressType { get; set; }
+        public string? AddressLine1 { get; set; }
+        public string? AddressLine2 { get; set; }
+        public string? City { get; set; }
+        public string? State { get; set; }
+        public string? ZipCode { get; set; }
+        public string? Country { get; set; }
+    }
+
+    public class SetDefaultAddressModel
+    {
+        public int AddressId { get; set; }
+    }
+
+    public class DeleteAddressModel
+    {
+        public int AddressId { get; set; }
+    }
+
+    public class ChangePasswordModel
+    {
+        public string CurrentPassword { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
+    }
+
+    public class EmailPreferencesModel
+    {
+        public bool MarketingOptIn { get; set; }
+        public string? PreferredContactMethod { get; set; }
+    }
+
+    public class SubmitReviewModel
+    {
+        public int ProductId { get; set; }
+        public int? OrderId { get; set; }
+        public int Rating { get; set; }
+        public string? Title { get; set; }
+        public string? Comment { get; set; }
+        public string? Pros { get; set; }
+        public string? Cons { get; set; }
+    }
+
+    public class ReviewHelpfulModel
+    {
+        public int ReviewId { get; set; }
+    }
+
+    public class CancelOrderModel
+    {
+        public int OrderId { get; set; }
+        public string? Reason { get; set; }
+    }
+
+    public class ReturnRequestModel
+    {
+        public int OrderId { get; set; }
+        public string? Reason { get; set; }
+    }
+
+    public class RedeemPointsModel
+    {
+        public int Points { get; set; }
+    }
+
+    public class AddGiftOptionModel
+    {
+        public int OrderId { get; set; }
+        public bool GiftWrap { get; set; }
+        public string? GiftMessage { get; set; }
+        public string? RecipientName { get; set; }
+        public string? RecipientEmail { get; set; }
+        public bool HidePrice { get; set; } = true;
+    }
+
+    public class CreateInstallmentModel
+    {
+        public int OrderId { get; set; }
+        public int Months { get; set; } = 3;
+    }
+
+    public class CreateSubscriptionModel
+    {
+        public string? Frequency { get; set; }
+        public int? ShippingAddressId { get; set; }
+        public List<SubscriptionItemModel> Items { get; set; } = new();
+    }
+
+    public class SubscriptionItemModel
+    {
+        public int ProductId { get; set; }
+        public int Quantity { get; set; } = 1;
+    }
+
+    public class CancelSubscriptionModel
+    {
+        public int SubscriptionId { get; set; }
     }
 }

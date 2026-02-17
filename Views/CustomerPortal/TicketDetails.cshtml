@@ -64,8 +64,15 @@
         background: white;
         border-radius: 20px;
         padding: 25px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
         margin-bottom: 20px;
+        transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+    }
+
+    .portal-card:hover {
+        border-color: rgba(0,128,128,0.2);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+        transform: translateY(-4px);
     }
     
     .card-title {
@@ -144,30 +151,38 @@
         width: 100%;
         min-height: 100px;
         padding: 15px;
-        border: 2px solid #e5e7eb;
-        border-radius: 12px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
         resize: vertical;
         font-size: 0.95rem;
+        font-family: 'Poppins', sans-serif;
         margin-bottom: 15px;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .reply-input::placeholder {
+        color: #999;
     }
     
     .reply-input:focus {
         outline: none;
-        border-color: #008080;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(0,128,128,0.08);
     }
     
     .reply-btn {
         padding: 12px 30px;
-        background: linear-gradient(135deg, #008080, #006666);
+        background: var(--primary);
         color: white;
         border: none;
-        border-radius: 10px;
+        border-radius: var(--radius-sm);
         font-weight: 600;
+        font-family: 'Poppins', sans-serif;
         cursor: pointer;
         transition: all 0.3s;
     }
     
-    .reply-btn:hover { transform: translateY(-2px); }
+    .reply-btn:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,128,128,0.25); }
     .reply-btn:disabled { background: #9ca3af; cursor: not-allowed; }
     
     .info-row {

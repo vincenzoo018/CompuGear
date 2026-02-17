@@ -69,16 +69,18 @@
         padding: 14px 28px;
         background: var(--primary);
         color: white;
-        border-radius: 50px;
+        border-radius: var(--radius-sm);
         text-decoration: none;
         font-weight: 600;
+        font-family: 'Poppins', sans-serif;
         transition: all 0.3s;
         box-shadow: 0 4px 15px rgba(0,128,128,0.25);
     }
 
     .hero-cta:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(0,128,128,0.35);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,128,128,0.3);
+        background: var(--primary-hover);
         color: white;
     }
 
@@ -95,14 +97,14 @@
         background: var(--card);
         border-radius: var(--radius);
         border: 1px solid var(--border);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        transition: all 0.2s;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        transition: all 0.3s;
     }
 
     .perk-card:hover {
-        transform: translateX(8px);
-        box-shadow: 0 4px 12px rgba(0,128,128,0.1);
-        border-color: var(--primary);
+        transform: translateX(6px);
+        box-shadow: 0 4px 16px rgba(0,128,128,0.1);
+        border-color: rgba(0,128,128,0.2);
     }
 
     .perk-icon {
@@ -141,8 +143,9 @@
     }
 
     .stat-card:hover {
-        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
         transform: translateY(-2px);
+        border-color: rgba(0,128,128,0.15);
     }
 
     .stat-header {
@@ -478,9 +481,9 @@
     }
 
     .product-card:hover {
-        border-color: var(--primary);
-        box-shadow: 0 12px 32px rgba(0,128,128,0.15);
-        transform: translateY(-6px) scale(1.02);
+        border-color: rgba(0,128,128,0.2);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+        transform: translateY(-4px);
     }
 
     .product-image {
@@ -575,17 +578,19 @@
         border-radius: var(--radius-sm);
         font-weight: 600;
         font-size: 0.85rem;
+        font-family: 'Poppins', sans-serif;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        transition: all 0.2s;
+        transition: all 0.3s;
     }
 
     .btn-add-cart:hover {
         background: var(--primary-hover);
-        transform: scale(1.02);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,128,128,0.25);
     }
 
     .btn-add-cart svg { width: 16px; height: 16px; }
@@ -718,22 +723,13 @@
         </div>
         <div class="chart-container">
             <div class="area-chart-wrapper">
-                <svg class="area-chart-svg" viewBox="0 0 400 200" preserveAspectRatio="none">
+                <svg id="areaChartSvg" class="area-chart-svg" viewBox="0 0 400 200" preserveAspectRatio="none">
                     <defs>
                         <linearGradient id="areaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                             <stop offset="0%" style="stop-color:#008080;stop-opacity:0.3" />
                             <stop offset="100%" style="stop-color:#008080;stop-opacity:0.05" />
                         </linearGradient>
                     </defs>
-                    <path d="M0,180 L67,140 L133,160 L200,100 L267,120 L333,60 L400,80 L400,200 L0,200 Z" fill="url(#areaGrad)" />
-                    <path d="M0,180 L67,140 L133,160 L200,100 L267,120 L333,60 L400,80" stroke="#008080" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" />
-                    <circle cx="0" cy="180" r="5" fill="#008080" />
-                    <circle cx="67" cy="140" r="5" fill="#008080" />
-                    <circle cx="133" cy="160" r="5" fill="#008080" />
-                    <circle cx="200" cy="100" r="5" fill="#008080" />
-                    <circle cx="267" cy="120" r="5" fill="#008080" />
-                    <circle cx="333" cy="60" r="5" fill="#008080" />
-                    <circle cx="400" cy="80" r="5" fill="#008080" />
                 </svg>
             </div>
         </div>
@@ -747,47 +743,15 @@
         </div>
         <div class="pie-wrapper">
             <div class="pie-chart">
-                <svg viewBox="0 0 36 36" style="width: 100%; height: 100%;">
+                <svg id="pieChartSvg" viewBox="0 0 36 36" style="width: 100%; height: 100%;">
                     <circle cx="18" cy="18" r="16" fill="none" stroke="#E5E7EB" stroke-width="3" />
-                    <circle cx="18" cy="18" r="16" fill="none" stroke="#008080" stroke-width="3" stroke-dasharray="40 100" stroke-dashoffset="25" />
-                    <circle cx="18" cy="18" r="16" fill="none" stroke="#FF6B35" stroke-width="3" stroke-dasharray="25 100" stroke-dashoffset="65" />
-                    <circle cx="18" cy="18" r="16" fill="none" stroke="#3B82F6" stroke-width="3" stroke-dasharray="20 100" stroke-dashoffset="90" />
-                    <circle cx="18" cy="18" r="16" fill="none" stroke="#10B981" stroke-width="3" stroke-dasharray="15 100" stroke-dashoffset="110" />
                 </svg>
                 <div class="pie-center">
-                    <div class="pie-center-value">24</div>
+                    <div class="pie-center-value" id="pieCenterValue">0</div>
                     <div class="pie-center-label">Orders</div>
                 </div>
             </div>
-            <div class="pie-legend">
-                <div class="legend-item">
-                    <div class="legend-left">
-                        <span class="legend-color" style="background: #008080;"></span>
-                        <span class="legend-label">Peripherals</span>
-                    </div>
-                    <span class="legend-value">40%</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-left">
-                        <span class="legend-color" style="background: #FF6B35;"></span>
-                        <span class="legend-label">Components</span>
-                    </div>
-                    <span class="legend-value">25%</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-left">
-                        <span class="legend-color" style="background: #3B82F6;"></span>
-                        <span class="legend-label">Accessories</span>
-                    </div>
-                    <span class="legend-value">20%</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-left">
-                        <span class="legend-color" style="background: #10B981;"></span>
-                        <span class="legend-label">Storage</span>
-                    </div>
-                    <span class="legend-value">15%</span>
-                </div>
+            <div class="pie-legend" id="pieLegend">
             </div>
         </div>
     </div>
@@ -869,10 +833,11 @@
 
     async function loadDashboard() {
         try {
-            const [ordersRes, productsRes, profileRes] = await Promise.all([
+            const [ordersRes, productsRes, profileRes, statsRes] = await Promise.all([
                 fetch('/CustomerPortal/GetOrders?pageSize=50').catch(() => null),
                 fetch('/CustomerPortal/GetProducts?pageSize=4').catch(() => null),
-                fetch('/CustomerPortal/GetProfile').catch(() => null)
+                fetch('/CustomerPortal/GetProfile').catch(() => null),
+                fetch('/CustomerPortal/GetDashboardStats').catch(() => null)
             ]);
 
             // Orders Stats
@@ -881,8 +846,8 @@
                 const orders = Array.isArray(ordersData) ? ordersData : (ordersData.data || ordersData.orders || []);
 
                 const total = orders.length;
-                const inProgress = orders.filter(o => ['Processing', 'Pending', 'Confirmed', 'Shipped'].includes(o.status)).length;
-                const delivered = orders.filter(o => o.status === 'Delivered' || o.status === 'Completed').length;
+                const inProgress = orders.filter(o => ['Processing', 'Pending', 'Confirmed', 'Shipped'].includes(o.orderStatus || o.status)).length;
+                const delivered = orders.filter(o => (o.orderStatus || o.status) === 'Delivered' || (o.orderStatus || o.status) === 'Completed').length;
                 const totalSpent = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
                 document.getElementById('statTotalOrders').textContent = total;
@@ -890,20 +855,51 @@
                 document.getElementById('statDelivered').textContent = delivered;
                 document.getElementById('statTotalSpent').textContent = '₱' + totalSpent.toLocaleString('en-PH', { minimumFractionDigits: 2 });
 
-                // Pie chart center
-                const pieCenter = document.querySelector('.pie-center-value');
-                if (pieCenter) pieCenter.textContent = total;
-
                 // Recent Orders
                 renderRecentOrders(orders.slice(0, 5));
+            }
+
+            // Dashboard Stats (charts)
+            if (statsRes && statsRes.ok) {
+                const statsData = await statsRes.json();
+                if (statsData.success) {
+                    const stats = statsData.data;
+                    // Render area chart from monthlyOrders
+                    if (stats.monthlyOrders && stats.monthlyOrders.length > 0) {
+                        renderAreaChart(stats.monthlyOrders);
+                    }
+                    // Render pie chart from categoryBreakdown
+                    if (stats.categoryBreakdown && stats.categoryBreakdown.length > 0) {
+                        renderPieChart(stats.categoryBreakdown, stats.totalOrders || 0);
+                    }
+                    // Update pie center value
+                    const pieCenterVal = document.getElementById('pieCenterValue');
+                    if (pieCenterVal) pieCenterVal.textContent = stats.totalOrders || 0;
+                }
             }
 
             // Profile / Loyalty
             if (profileRes && profileRes.ok) {
                 const profile = await profileRes.json();
                 const data = profile.data || profile;
-                const points = data.loyaltyPoints || data.totalOrders || 0;
+                const points = data.loyaltyPoints || 0;
                 document.getElementById('loyaltyPoints').textContent = points.toLocaleString();
+                // Update loyalty progress bar and next tier text
+                const progressBar = document.querySelector('.loyalty-progress-bar');
+                const nextTierText = document.querySelector('.loyalty-next');
+                if (points >= 5000) {
+                    if (progressBar) progressBar.style.width = '100%';
+                    if (nextTierText) nextTierText.textContent = '✨ Platinum Member';
+                } else if (points >= 2000) {
+                    if (progressBar) progressBar.style.width = `${((points - 2000) / 3000) * 100}%`;
+                    if (nextTierText) nextTierText.textContent = `${5000 - points} points to Platinum status`;
+                } else if (points >= 500) {
+                    if (progressBar) progressBar.style.width = `${((points - 500) / 1500) * 100}%`;
+                    if (nextTierText) nextTierText.textContent = `${2000 - points} points to Gold status`;
+                } else {
+                    if (progressBar) progressBar.style.width = `${(points / 500) * 100}%`;
+                    if (nextTierText) nextTierText.textContent = `${500 - points} points to Silver status`;
+                }
             }
 
             // Featured Products
@@ -917,6 +913,72 @@
         }
     }
 
+    function renderAreaChart(monthlyData) {
+        const svg = document.getElementById('areaChartSvg');
+        if (!svg || monthlyData.length === 0) return;
+        const maxCount = Math.max(...monthlyData.map(m => m.count), 1);
+        const w = 400, h = 200, pad = 10;
+        const step = (w - pad) / Math.max(monthlyData.length - 1, 1);
+        const points = monthlyData.map((m, i) => ({
+            x: pad / 2 + i * step,
+            y: h - pad - ((m.count / maxCount) * (h - 2 * pad))
+        }));
+        const pathLine = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+        const pathArea = pathLine + ` L${points[points.length - 1].x},${h} L${points[0].x},${h} Z`;
+        // Clear existing paths
+        const existing = svg.querySelectorAll('path:not(defs path), circle');
+        existing.forEach(el => el.remove());
+        // Add area fill
+        const area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        area.setAttribute('d', pathArea);
+        area.setAttribute('fill', 'url(#areaGrad)');
+        svg.appendChild(area);
+        // Add line
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        line.setAttribute('d', pathLine);
+        line.setAttribute('stroke', '#008080');
+        line.setAttribute('stroke-width', '3');
+        line.setAttribute('fill', 'none');
+        line.setAttribute('stroke-linecap', 'round');
+        line.setAttribute('stroke-linejoin', 'round');
+        svg.appendChild(line);
+        // Add dots
+        points.forEach(p => {
+            const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            c.setAttribute('cx', p.x); c.setAttribute('cy', p.y);
+            c.setAttribute('r', '5'); c.setAttribute('fill', '#008080');
+            svg.appendChild(c);
+        });
+    }
+
+    function renderPieChart(categories, totalOrders) {
+        const svg = document.getElementById('pieChartSvg');
+        const legend = document.getElementById('pieLegend');
+        if (!svg || !legend) return;
+        const colors = ['#008080', '#FF6B35', '#3B82F6', '#10B981', '#8B5CF6', '#F59E0B'];
+        let offset = 25;
+        // Clear existing circles except first background circle
+        const circles = svg.querySelectorAll('circle:not(:first-child)');
+        circles.forEach(c => c.remove());
+        legend.innerHTML = '';
+        const total = categories.reduce((s, c) => s + c.count, 0) || 1;
+        categories.forEach((cat, i) => {
+            const pct = (cat.count / total) * 100;
+            const dash = (pct / 100) * 100.53; // circumference 2*pi*16 ≈ 100.53
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', '18'); circle.setAttribute('cy', '18');
+            circle.setAttribute('r', '16'); circle.setAttribute('fill', 'none');
+            circle.setAttribute('stroke', colors[i % colors.length]);
+            circle.setAttribute('stroke-width', '3');
+            circle.setAttribute('stroke-dasharray', `${dash} ${100.53 - dash}`);
+            circle.setAttribute('stroke-dashoffset', `${offset}`);
+            svg.appendChild(circle);
+            offset -= dash;
+            // Legend
+            legend.innerHTML += `<div class="legend-item"><div class="legend-left"><span class="legend-color" style="background:${colors[i % colors.length]};"></span><span class="legend-label">${cat.category}</span></div><span class="legend-value">${Math.round(pct)}%</span></div>`;
+        });
+    }
+
     function renderRecentOrders(orders) {
         const container = document.getElementById('recentOrdersContainer');
         if (!container) return;
@@ -925,9 +987,10 @@
             return;
         }
         container.innerHTML = orders.map(o => {
-            const badgeClass = o.status === 'Delivered' || o.status === 'Completed' ? 'badge-success'
-                : o.status === 'Shipped' ? 'badge-info'
-                : o.status === 'Cancelled' ? 'badge-danger' : 'badge-warning';
+            const status = o.orderStatus || o.status || 'Pending';
+            const badgeClass = status === 'Delivered' || status === 'Completed' ? 'badge-success'
+                : status === 'Shipped' ? 'badge-info'
+                : status === 'Cancelled' ? 'badge-danger' : 'badge-warning';
             const date = new Date(o.orderDate || o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             return `<div class="order-item">
                 <div class="order-icon">
@@ -939,7 +1002,7 @@
                 </div>
                 <div class="order-status">
                     <div class="order-amount">₱${(o.totalAmount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
-                    <span class="${badgeClass}">${(o.status || 'Pending').toUpperCase()}</span>
+                    <span class="${badgeClass}">${status.toUpperCase()}</span>
                 </div>
             </div>`;
         }).join('');

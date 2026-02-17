@@ -8,7 +8,7 @@
         background: white;
         border-radius: 20px;
         padding: 40px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
     }
 
     .form-label {
@@ -18,16 +18,25 @@
     }
 
     .form-control, .form-select {
-        border: 2px solid #e5e7eb;
-        border-radius: 12px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
         padding: 12px 16px;
+        font-family: 'Poppins', sans-serif;
         font-size: 0.95rem;
         transition: all 0.3s;
     }
 
+    .form-control::placeholder, .form-select::placeholder {
+        color: #999;
+    }
+
+    textarea.form-control {
+        font-family: 'Poppins', sans-serif;
+    }
+
     .form-control:focus, .form-select:focus {
         border-color: #008080;
-        box-shadow: 0 0 0 4px rgba(0,128,128,0.1);
+        box-shadow: 0 0 0 3px rgba(0,128,128,0.08);
     }
 
     .required-asterisk {
@@ -35,8 +44,8 @@
     }
 
     .file-upload-area {
-        border: 2px dashed #d1d5db;
-        border-radius: 12px;
+        border: 1.5px dashed #d1d5db;
+        border-radius: var(--radius-sm);
         padding: 30px;
         text-align: center;
         cursor: pointer;
@@ -55,8 +64,8 @@
     }
 
     .ticket-type-card {
-        border: 2px solid #e5e7eb;
-        border-radius: 12px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
         padding: 20px;
         cursor: pointer;
         transition: all 0.3s;
@@ -64,7 +73,9 @@
     }
 
     .ticket-type-card:hover {
-        border-color: #008080;
+        border-color: rgba(0,128,128,0.2);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+        transform: translateY(-4px);
     }
 
     .ticket-type-card.selected {
@@ -87,37 +98,40 @@
         display: inline-flex;
         align-items: center;
         padding: 8px 16px;
-        border-radius: 20px;
+        border-radius: var(--radius-sm);
+        font-family: 'Poppins', sans-serif;
         font-size: 0.85rem;
         font-weight: 500;
         cursor: pointer;
         transition: all 0.3s;
-        border: 2px solid transparent;
+        border: 1.5px solid transparent;
     }
 
     .priority-badge:hover {
-        transform: scale(1.05);
+        transform: translateY(-2px);
     }
 
     .priority-badge.selected {
-        transform: scale(1.05);
+        transform: translateY(-2px);
         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
 
     .btn-submit-ticket {
-        background: linear-gradient(135deg, #008080, #006666);
+        background: var(--primary);
         border: none;
         color: white;
         padding: 15px 40px;
-        border-radius: 12px;
+        border-radius: var(--radius-sm);
+        font-family: 'Poppins', sans-serif;
         font-weight: 600;
         font-size: 1rem;
         transition: all 0.3s;
     }
 
     .btn-submit-ticket:hover {
+        background: var(--primary-hover);
         transform: translateY(-2px);
-        box-shadow: 0 10px 30px rgba(0,128,128,0.3);
+        box-shadow: 0 4px 12px rgba(0,128,128,0.25);
         color: white;
     }
 
@@ -125,15 +139,17 @@
         display: flex;
         align-items: center;
         padding: 15px;
-        border-radius: 12px;
+        border-radius: var(--radius-sm);
         cursor: pointer;
         transition: all 0.3s;
-        border: 2px solid #e5e7eb;
+        border: 1.5px solid var(--border);
         margin-bottom: 10px;
     }
 
     .order-select-item:hover {
-        border-color: #008080;
+        border-color: rgba(0,128,128,0.2);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+        transform: translateY(-4px);
     }
 
     .order-select-item.selected {
@@ -205,11 +221,7 @@
                 <div class="mb-4" id="orderSection" style="display: none;">
                     <label class="form-label">Related Order (if applicable)</label>
                     <select class="form-select" id="relatedOrder" name="relatedOrder">
-                        <option value="">-- Select an order --</option>
-                        <option value="ORD-2026-0892">ORD-2026-0892 - HyperX Gaming Headset (Jan 15, 2026)</option>
-                        <option value="ORD-2026-0756">ORD-2026-0756 - Razer Keyboard + Mouse Bundle (Jan 10, 2026)</option>
-                        <option value="ORD-2026-0698">ORD-2026-0698 - Samsung 1TB SSD (Jan 5, 2026)</option>
-                        <option value="ORD-2025-0543">ORD-2025-0543 - Logitech Webcam (Dec 20, 2025)</option>
+                        <option value="">-- Loading orders... --</option>
                     </select>
                 </div>
 
@@ -475,6 +487,26 @@
         button.parentElement.remove();
     }
 
+    // Load real customer orders for the dropdown
+    async function loadCustomerOrders() {
+        try {
+            const res = await fetch('/CustomerPortal/GetCustomerOrders');
+            const result = await res.json();
+            const select = document.getElementById('relatedOrder');
+            select.innerHTML = '<option value="">-- Select an order --</option>';
+            if (result.success && result.data) {
+                result.data.forEach(o => {
+                    const opt = document.createElement('option');
+                    opt.value = o.orderNumber;
+                    const d = new Date(o.orderDate).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'});
+                    opt.textContent = `${o.orderNumber} - ${o.itemSummary || 'Order'} (${d})`;
+                    select.appendChild(opt);
+                });
+            }
+        } catch(e) { console.error('Error loading orders:', e); }
+    }
+    loadCustomerOrders();
+
     document.getElementById('ticketForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
@@ -499,17 +531,22 @@
         submitBtn.textContent = 'Submitting...';
 
         try {
-            const response = await fetch('/CustomerPortal/CreateTicket', {
+            // Use FormData so file attachments are included
+            const formData = new FormData();
+            formData.append('Subject', subject || ticketType);
+            formData.append('Description', description);
+            formData.append('Priority', priority);
+            formData.append('ContactName', document.getElementById('contactName')?.value || '');
+            formData.append('ContactEmail', document.getElementById('contactEmail')?.value || '');
+            formData.append('ContactPhone', document.getElementById('contactPhone')?.value || '');
+            const relatedOrder = document.getElementById('relatedOrder')?.value;
+            if (relatedOrder) formData.append('RelatedOrder', relatedOrder);
+            // Append all selected files
+            selectedFiles.forEach(f => formData.append('Attachments', f));
+
+            const response = await fetch('/CustomerPortal/CreateTicketWithFiles', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    subject: subject || ticketType,
-                    description: description,
-                    priority: priority,
-                    contactName: document.getElementById('contactName')?.value,
-                    contactEmail: document.getElementById('contactEmail')?.value,
-                    contactPhone: document.getElementById('contactPhone')?.value
-                })
+                body: formData
             });
 
             const result = await response.json();

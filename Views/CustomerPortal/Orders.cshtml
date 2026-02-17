@@ -41,6 +41,8 @@
         padding: 24px;
         position: relative;
         overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        transition: all 0.3s;
     }
 
     .stat-card::before {
@@ -81,6 +83,7 @@
         border-radius: var(--radius);
         border: 1px solid var(--border);
         overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
     }
 
     .tabs-header {
@@ -96,6 +99,7 @@
         background: none;
         border: none;
         color: var(--muted-foreground);
+        font-family: 'Poppins', sans-serif;
         font-weight: 500;
         cursor: pointer;
         position: relative;
@@ -103,7 +107,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        transition: color 0.2s;
+        transition: color 0.3s;
     }
 
     .tab-btn:hover { color: var(--foreground); }
@@ -148,13 +152,14 @@
         border-radius: 12px;
         margin-bottom: 12px;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s;
         border: 1px solid transparent;
     }
 
     .order-row:hover {
-        border-color: var(--primary);
-        box-shadow: 0 4px 12px rgba(0,128,128,0.1);
+        border-color: rgba(0,128,128,0.2);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+        transform: translateY(-4px);
     }
 
     .order-icon { font-size: 2rem; }
@@ -282,7 +287,7 @@
         padding: 8px;
         line-height: 1;
         border-radius: 8px;
-        transition: all 0.2s;
+        transition: all 0.3s;
     }
 
     .cg-modal-close:hover { 
@@ -438,15 +443,17 @@
         align-items: center;
         gap: 8px;
         padding: 12px 24px;
-        background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+        background: var(--primary);
         color: white;
         border: none;
-        border-radius: 8px;
+        border-radius: var(--radius-sm);
+        font-family: 'Poppins', sans-serif;
         font-weight: 600;
         text-decoration: none;
+        transition: all 0.3s;
     }
 
-    .btn-shop:hover { color: white; transform: translateY(-2px); }
+    .btn-shop:hover { color: white; background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,128,128,0.25); }
 
     /* Responsive */
     @@media (max-width: 1024px) {
@@ -540,7 +547,7 @@
         border: none;
         font-size: 1.4rem;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s;
     }
 
     .tracking-modal-header .cg-modal-close:hover {
@@ -736,22 +743,24 @@
         align-items: center;
         gap: 8px;
         padding: 12px 24px;
-        background: linear-gradient(135deg, #008080, #006666);
+        background: var(--primary);
         color: white;
         border: none;
-        border-radius: 10px;
+        border-radius: var(--radius-sm);
+        font-family: 'Poppins', sans-serif;
         font-weight: 600;
         font-size: 0.9rem;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s;
         width: 100%;
         justify-content: center;
         margin-top: 16px;
     }
 
     .btn-track-order:hover {
+        background: var(--primary-hover);
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0,128,128,0.3);
+        box-shadow: 0 4px 12px rgba(0,128,128,0.25);
     }
 
     /* Tracking Items in Modal */
@@ -1154,6 +1163,18 @@
                 📍 Track My Order
             </button>` : '';
 
+        // Determine if cancel/return buttons should show
+        const canCancel = ['Pending', 'Processing', 'Confirmed'].includes(order.orderStatus);
+        const canReturn = order.orderStatus === 'Delivered';
+        const cancelBtnHtml = canCancel ? `
+            <button onclick="event.stopPropagation(); showCancelOrderModal(${order.orderId}, '${order.orderNumber || order.orderId}')" style="width:100%;padding:12px;margin-top:8px;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;border-radius:10px;cursor:pointer;font-weight:600;font-family:Poppins,sans-serif;font-size:0.95rem;">
+                ❌ Cancel Order
+            </button>` : '';
+        const returnBtnHtml = canReturn ? `
+            <button onclick="event.stopPropagation(); showReturnRequestModal(${order.orderId}, '${order.orderNumber || order.orderId}')" style="width:100%;padding:12px;margin-top:8px;background:#eff6ff;color:#2563eb;border:1.5px solid #bfdbfe;border-radius:10px;cursor:pointer;font-weight:600;font-family:Poppins,sans-serif;font-size:0.95rem;">
+                ↩️ Request Return
+            </button>` : '';
+
         document.getElementById('modalBody').innerHTML = `
             <div class="order-detail-status">
                 <div class="detail-status-emoji">${config.emoji}</div>
@@ -1216,7 +1237,9 @@
                 <span>₱${order.totalAmount.toLocaleString('en-PH', { minimumFractionDigits: 2 })}</span>
             </div>
 
-            ${trackBtnHtml}`;
+            ${trackBtnHtml}
+            ${cancelBtnHtml}
+            ${returnBtnHtml}`;
 
         document.getElementById('orderModal').classList.add('active');
         document.getElementById('orderModal').style.display = 'flex';
@@ -1612,7 +1635,92 @@
         if (e.key === 'Escape') {
             closeModal();
             closeTrackingModal();
+            const cm = document.getElementById('cancelReturnModal'); if (cm) cm.remove();
         }
     });
+
+    function showCancelOrderModal(orderId, orderNumber) {
+        closeModal();
+        const modal = document.createElement('div');
+        modal.id = 'cancelReturnModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;';
+        modal.innerHTML = `
+        <div style="background:white;border-radius:16px;padding:32px;width:90%;max-width:450px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <h3 style="margin-bottom:8px;color:#dc2626;">❌ Cancel Order #${orderNumber}</h3>
+            <p style="color:#6b7280;font-size:0.9rem;margin-bottom:20px;">This action cannot be undone. If you've already paid, a refund will be issued.</p>
+            <div style="margin-bottom:16px;">
+                <label style="font-weight:600;font-size:0.9rem;display:block;margin-bottom:6px;">Reason for cancellation *</label>
+                <select id="cancelReason" style="width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:Poppins,sans-serif;">
+                    <option value="">Select a reason...</option>
+                    <option value="Changed my mind">Changed my mind</option>
+                    <option value="Found a better price">Found a better price elsewhere</option>
+                    <option value="Ordered by mistake">Ordered by mistake</option>
+                    <option value="Taking too long">Taking too long to process</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:flex-end;">
+                <button onclick="document.getElementById('cancelReturnModal').remove()" style="padding:10px 20px;border:1.5px solid #e5e7eb;background:white;border-radius:8px;cursor:pointer;font-family:Poppins,sans-serif;">Keep Order</button>
+                <button onclick="submitCancelOrder(${orderId})" style="padding:10px 20px;background:#dc2626;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-family:Poppins,sans-serif;">Confirm Cancel</button>
+            </div>
+        </div>`;
+        document.body.appendChild(modal);
+    }
+
+    async function submitCancelOrder(orderId) {
+        const reason = document.getElementById('cancelReason').value;
+        if (!reason) { alert('Please select a reason'); return; }
+        try {
+            const res = await fetch('/CustomerPortal/CancelOrder', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ orderId, reason }) });
+            const result = await res.json();
+            if (result.success) {
+                document.getElementById('cancelReturnModal').remove();
+                alert('Order cancelled successfully.' + (result.message.includes('refund') ? ' A refund has been initiated.' : ''));
+                loadOrders();
+            } else { alert(result.message || 'Failed to cancel order'); }
+        } catch(e) { alert('Error cancelling order'); }
+    }
+
+    function showReturnRequestModal(orderId, orderNumber) {
+        closeModal();
+        const modal = document.createElement('div');
+        modal.id = 'cancelReturnModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;';
+        modal.innerHTML = `
+        <div style="background:white;border-radius:16px;padding:32px;width:90%;max-width:450px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <h3 style="margin-bottom:8px;color:#2563eb;">↩️ Return Order #${orderNumber}</h3>
+            <p style="color:#6b7280;font-size:0.9rem;margin-bottom:20px;">Returns must be requested within 7 days of delivery. Items must be in original condition.</p>
+            <div style="margin-bottom:16px;">
+                <label style="font-weight:600;font-size:0.9rem;display:block;margin-bottom:6px;">Reason for return *</label>
+                <select id="returnReason" style="width:100%;padding:10px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:Poppins,sans-serif;">
+                    <option value="">Select a reason...</option>
+                    <option value="Defective product">Defective / damaged product</option>
+                    <option value="Wrong item received">Wrong item received</option>
+                    <option value="Item not as described">Item not as described</option>
+                    <option value="Changed my mind">Changed my mind</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:flex-end;">
+                <button onclick="document.getElementById('cancelReturnModal').remove()" style="padding:10px 20px;border:1.5px solid #e5e7eb;background:white;border-radius:8px;cursor:pointer;font-family:Poppins,sans-serif;">Cancel</button>
+                <button onclick="submitReturnRequest(${orderId})" style="padding:10px 20px;background:#2563eb;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-family:Poppins,sans-serif;">Submit Return</button>
+            </div>
+        </div>`;
+        document.body.appendChild(modal);
+    }
+
+    async function submitReturnRequest(orderId) {
+        const reason = document.getElementById('returnReason').value;
+        if (!reason) { alert('Please select a reason'); return; }
+        try {
+            const res = await fetch('/CustomerPortal/RequestReturn', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ orderId, reason }) });
+            const result = await res.json();
+            if (result.success) {
+                document.getElementById('cancelReturnModal').remove();
+                alert('Return request submitted! You will receive instructions via email.');
+                loadOrders();
+            } else { alert(result.message || 'Failed to submit return request'); }
+        } catch(e) { alert('Error submitting return request'); }
+    }
 </script>
 }
