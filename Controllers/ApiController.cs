@@ -40,6 +40,18 @@ namespace CompuGear.Controllers
             return false;
         }
 
+        private bool HasAdminOrderAccess()
+        {
+            var roleId = GetRoleId();
+            return roleId == 1 || roleId == 2;
+        }
+
+        private bool HasMarketingAccess()
+        {
+            var roleId = GetRoleId();
+            return roleId == 1 || roleId == 2 || roleId == 5;
+        }
+
         private static void SyncInvoiceFromOrderState(Invoice invoice, Order order)
         {
             var isOrderConfirmed = order.OrderStatus == "Confirmed";
@@ -83,6 +95,9 @@ namespace CompuGear.Controllers
         [HttpGet("campaigns")]
         public async Task<IActionResult> GetCampaigns()
         {
+            if (!HasMarketingAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "You do not have permission to access campaigns." });
+
             try
             {
                 var companyId = GetCompanyId();
@@ -123,6 +138,9 @@ namespace CompuGear.Controllers
         [HttpGet("campaigns/{id}")]
         public async Task<IActionResult> GetCampaign(int id)
         {
+            if (!HasMarketingAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "You do not have permission to access campaigns." });
+
             var companyId = GetCompanyId();
             var campaign = await _context.Campaigns.FirstOrDefaultAsync(c => c.CampaignId == id && (companyId == null || c.CompanyId == companyId));
             if (campaign == null) return NotFound();
@@ -132,6 +150,9 @@ namespace CompuGear.Controllers
         [HttpPost("campaigns")]
         public async Task<IActionResult> CreateCampaign([FromBody] Campaign campaign)
         {
+            if (!HasMarketingAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "You do not have permission to create campaigns." });
+
             try
             {
                 var companyId = GetCompanyId();
@@ -154,6 +175,9 @@ namespace CompuGear.Controllers
         [HttpPut("campaigns/{id}")]
         public async Task<IActionResult> UpdateCampaign(int id, [FromBody] Campaign campaign)
         {
+            if (!HasMarketingAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "You do not have permission to update campaigns." });
+
             try
             {
                 var companyId = GetCompanyId();
@@ -182,6 +206,9 @@ namespace CompuGear.Controllers
         [HttpDelete("campaigns/{id}")]
         public async Task<IActionResult> DeleteCampaign(int id)
         {
+            if (!HasMarketingAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "You do not have permission to delete campaigns." });
+
             var companyId = GetCompanyId();
             var campaign = await _context.Campaigns.FindAsync(id);
             if (campaign == null || (companyId != null && campaign.CompanyId != companyId)) return NotFound();
@@ -199,6 +226,9 @@ namespace CompuGear.Controllers
         [HttpGet("promotions")]
         public async Task<IActionResult> GetPromotions()
         {
+            if (!HasMarketingAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "You do not have permission to access promotions." });
+
             try
             {
                 var companyId = GetCompanyId();
@@ -238,6 +268,9 @@ namespace CompuGear.Controllers
         [HttpGet("promotions/active")]
         public async Task<IActionResult> GetActivePromotions()
         {
+            if (!HasMarketingAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "You do not have permission to access promotions." });
+
             try
             {
                 var companyId = GetCompanyId();
@@ -258,6 +291,9 @@ namespace CompuGear.Controllers
         [HttpGet("promotions/{id}")]
         public async Task<IActionResult> GetPromotion(int id)
         {
+            if (!HasMarketingAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "You do not have permission to access promotions." });
+
             var companyId = GetCompanyId();
             var promotion = await _context.Promotions.FirstOrDefaultAsync(p => p.PromotionId == id && (companyId == null || p.CompanyId == companyId));
             if (promotion == null) return NotFound();
@@ -267,6 +303,9 @@ namespace CompuGear.Controllers
         [HttpPost("promotions")]
         public async Task<IActionResult> CreatePromotion([FromBody] Promotion promotion)
         {
+            if (!HasMarketingAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "You do not have permission to create promotions." });
+
             try
             {
                 var companyId = GetCompanyId();
@@ -288,6 +327,9 @@ namespace CompuGear.Controllers
         [HttpPut("promotions/{id}")]
         public async Task<IActionResult> UpdatePromotion(int id, [FromBody] Promotion promotion)
         {
+            if (!HasMarketingAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "You do not have permission to update promotions." });
+
             try
             {
                 var companyId = GetCompanyId();
@@ -320,6 +362,9 @@ namespace CompuGear.Controllers
         [HttpPut("promotions/{id}/toggle")]
         public async Task<IActionResult> TogglePromotionVisibility(int id)
         {
+            if (!HasMarketingAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "You do not have permission to update promotions." });
+
             try
             {
                 var companyId = GetCompanyId();
@@ -341,6 +386,9 @@ namespace CompuGear.Controllers
         [HttpDelete("promotions/{id}")]
         public async Task<IActionResult> DeletePromotion(int id)
         {
+            if (!HasMarketingAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "You do not have permission to delete promotions." });
+
             var companyId = GetCompanyId();
             var promotion = await _context.Promotions.FindAsync(id);
             if (promotion == null || (companyId != null && promotion.CompanyId != companyId)) return NotFound();
@@ -349,6 +397,138 @@ namespace CompuGear.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { success = true, message = "Promotion deleted successfully" });
+        }
+
+        [HttpGet("marketing/segments")]
+        public async Task<IActionResult> GetMarketingSegments()
+        {
+            if (!HasMarketingAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "You do not have permission to access customer segments." });
+
+            try
+            {
+                var companyId = GetCompanyId();
+                var customers = await _context.Customers
+                    .Where(c => (companyId == null || c.CompanyId == companyId || c.CompanyId == null) && c.Status == "Active")
+                    .ToListAsync();
+
+                var now = DateTime.UtcNow;
+                var thirtyDaysAgo = now.AddDays(-30);
+
+                var highSpendThreshold = customers.Any()
+                    ? customers.OrderByDescending(c => c.TotalSpent).Take(Math.Max(1, customers.Count / 10)).Min(c => c.TotalSpent)
+                    : 500m;
+                highSpendThreshold = Math.Max(highSpendThreshold, 500m);
+
+                var segments = new
+                {
+                    vip = new
+                    {
+                        name = "VIP & Premium Customers",
+                        description = "High-value customers with significant purchase history",
+                        count = customers.Count(c => c.TotalSpent >= highSpendThreshold || c.LoyaltyPoints >= 500),
+                        color = "#10b981"
+                    },
+                    business = new
+                    {
+                        name = "Business Accounts",
+                        description = "B2B and enterprise customers",
+                        count = customers.Count(c => !string.IsNullOrWhiteSpace(c.CompanyName)),
+                        color = "#3b82f6"
+                    },
+                    newCustomers = new
+                    {
+                        name = "New Customers",
+                        description = "Customers acquired in the last 30 days",
+                        count = customers.Count(c => c.CreatedAt >= thirtyDaysAgo),
+                        color = "#f59e0b"
+                    },
+                    regular = new
+                    {
+                        name = "Regular Customers",
+                        description = "Standard customer accounts",
+                        count = customers.Count(c => c.TotalSpent < highSpendThreshold && string.IsNullOrWhiteSpace(c.CompanyName) && c.CreatedAt < thirtyDaysAgo),
+                        color = "#6b7280"
+                    },
+                    all = new
+                    {
+                        name = "All Customers",
+                        description = "Complete active customer base",
+                        count = customers.Count,
+                        color = "#008080"
+                    }
+                };
+
+                return Ok(new { success = true, data = segments });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message, data = new { } });
+            }
+        }
+
+        [HttpGet("marketing/analytics")]
+        public async Task<IActionResult> GetMarketingAnalytics()
+        {
+            if (!HasMarketingAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "You do not have permission to access marketing analytics." });
+
+            try
+            {
+                var companyId = GetCompanyId();
+                var campaigns = await _context.Campaigns
+                    .Where(c => companyId == null || c.CompanyId == companyId || c.CompanyId == null)
+                    .ToListAsync();
+                var promotions = await _context.Promotions
+                    .Where(p => companyId == null || p.CompanyId == companyId || p.CompanyId == null)
+                    .ToListAsync();
+
+                var totalReach = campaigns.Sum(c => c.TotalReach);
+                var totalClicks = campaigns.Sum(c => c.Clicks);
+                var totalImpressions = campaigns.Sum(c => c.Impressions);
+                var totalSpend = campaigns.Sum(c => c.ActualSpend);
+                var totalRevenue = campaigns.Sum(c => c.Revenue);
+
+                var data = new
+                {
+                    totalCampaigns = campaigns.Count,
+                    totalReach,
+                    engagementRate = totalImpressions > 0 ? ((decimal)totalClicks / totalImpressions) * 100 : 0,
+                    roi = totalSpend > 0 ? ((totalRevenue - totalSpend) / totalSpend) * 100 : 0,
+                    activeCampaigns = campaigns.Count(c => c.Status == "Active"),
+                    promotionsCount = promotions.Count,
+                    topCampaigns = campaigns
+                        .OrderByDescending(c => c.Revenue)
+                        .Take(5)
+                        .Select(c => new
+                        {
+                            c.CampaignId,
+                            c.CampaignName,
+                            c.TotalReach,
+                            c.Conversions,
+                            c.ActualSpend,
+                            c.Revenue
+                        })
+                        .ToList(),
+                    topPromotions = promotions
+                        .OrderByDescending(p => p.TimesUsed)
+                        .Take(5)
+                        .Select(p => new
+                        {
+                            p.PromotionId,
+                            p.PromotionName,
+                            p.PromotionCode,
+                            UsageCount = p.TimesUsed
+                        })
+                        .ToList()
+                };
+
+                return Ok(new { success = true, data });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message, data = new { } });
+            }
         }
 
         #endregion
@@ -1276,6 +1456,9 @@ namespace CompuGear.Controllers
         [HttpPut("orders/{id}")]
         public async Task<IActionResult> UpdateOrder(int id, [FromBody] Order order)
         {
+            if (!HasAdminOrderAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "Only admins can update orders." });
+
             try
             {
                 var companyId = GetCompanyId();
@@ -1326,6 +1509,9 @@ namespace CompuGear.Controllers
         [HttpPut("orders/{id}/status")]
         public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] StatusUpdateRequest request)
         {
+            if (!HasAdminOrderAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "Only admins can update order status." });
+
             try
             {
                 var companyId = GetCompanyId();
@@ -1387,6 +1573,9 @@ namespace CompuGear.Controllers
         [HttpPut("orders/{id}/approve")]
         public async Task<IActionResult> ApproveOrder(int id)
         {
+            if (!HasAdminOrderAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "Only admins can approve orders." });
+
             try
             {
                 var companyId = GetCompanyId();
@@ -1570,6 +1759,9 @@ namespace CompuGear.Controllers
         [HttpPut("orders/{id}/reject")]
         public async Task<IActionResult> RejectOrder(int id, [FromBody] StatusUpdateRequest? request)
         {
+            if (!HasAdminOrderAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "Only admins can reject orders." });
+
             try
             {
                 var companyId = GetCompanyId();
@@ -1628,6 +1820,9 @@ namespace CompuGear.Controllers
         [HttpDelete("orders/{id}")]
         public async Task<IActionResult> DeleteOrder(int id)
         {
+            if (!HasAdminOrderAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "Only admins can delete orders." });
+
             var companyId = GetCompanyId();
             var order = await _context.Orders.FindAsync(id);
             if (order == null || (companyId != null && order.CompanyId != companyId)) return NotFound();
@@ -3699,6 +3894,24 @@ namespace CompuGear.Controllers
                     .Select(a => a.Module.ModuleCode)
                     .ToListAsync();
 
+                // If explicit role-module access exists, return intersection of company subscription + role access
+                if (roleId.HasValue && roleId != 1 && roleId != 2)
+                {
+                    var roleAllowedModules = await _context.RoleModuleAccess
+                        .Where(r => r.CompanyId == companyId && r.RoleId == roleId.Value && r.HasAccess)
+                        .Select(r => r.ModuleCode)
+                        .Distinct()
+                        .ToListAsync();
+
+                    if (roleAllowedModules.Any())
+                    {
+                        var allowedSet = roleAllowedModules.ToHashSet(StringComparer.OrdinalIgnoreCase);
+                        subscribedModules = subscribedModules
+                            .Where(m => allowedSet.Contains(m))
+                            .ToList();
+                    }
+                }
+
                 return Ok(new { success = true, modules = subscribedModules });
             }
             catch (Exception ex)
@@ -4123,7 +4336,7 @@ namespace CompuGear.Controllers
                     .Include(p => p.Customer)
                     .Include(p => p.Invoice)
                     .Include(p => p.Order)
-                    .Where(p => companyId == null || p.CompanyId == companyId)
+                    .Where(p => companyId == null || p.CompanyId == companyId || p.CompanyId == null)
                     .Select(p => new
                     {
                         p.PaymentId,
@@ -4160,29 +4373,79 @@ namespace CompuGear.Controllers
                     .Distinct()
                     .ToHashSet();
 
-                var derivedFromOrders = await _context.Orders
+                var recordedInvoiceIds = recordedPayments
+                    .Where(p => p.InvoiceId.HasValue)
+                    .Select(p => p.InvoiceId!.Value)
+                    .Distinct()
+                    .ToHashSet();
+
+                var ordersForDerivation = await _context.Orders
                     .Include(o => o.Customer)
-                    .Where(o => (companyId == null || o.CompanyId == companyId) &&
-                                (o.OrderStatus == "Pending" || o.OrderStatus == "Confirmed") &&
-                                !string.IsNullOrEmpty(o.PaymentMethod) &&
-                                !recordedOrderIds.Contains(o.OrderId))
+                    .Where(o => (companyId == null || o.CompanyId == companyId || o.CompanyId == null) &&
+                                o.OrderStatus != "Cancelled" &&
+                                o.OrderStatus != "Rejected" &&
+                                !recordedOrderIds.Contains(o.OrderId) &&
+                                (!string.IsNullOrEmpty(o.PaymentMethod) ||
+                                 !string.IsNullOrEmpty(o.PaymentReference) ||
+                                 o.PaidAmount > 0 ||
+                                 o.PaymentStatus == "Paid" ||
+                                 o.PaymentStatus == "Pending"))
+                    .Select(o => new
+                    {
+                        o.OrderId,
+                        o.OrderNumber,
+                        o.CustomerId,
+                        CustomerName = o.Customer != null ? o.Customer.FirstName + " " + o.Customer.LastName : "N/A",
+                        o.ConfirmedAt,
+                        o.UpdatedAt,
+                        o.CreatedAt,
+                        o.PaymentMethod,
+                        o.PaymentReference,
+                        o.PaymentStatus,
+                        o.PaidAmount,
+                        o.TotalAmount
+                    })
+                    .ToListAsync();
+
+                var orderIds = ordersForDerivation.Select(o => o.OrderId).Distinct().ToList();
+                var invoiceByOrderId = await _context.Invoices
+                    .Where(i => orderIds.Contains(i.OrderId ?? 0) && (companyId == null || i.CompanyId == companyId || i.CompanyId == null))
+                    .Select(i => new
+                    {
+                        i.InvoiceId,
+                        i.OrderId,
+                        i.InvoiceNumber,
+                        i.Subtotal,
+                        i.TaxAmount,
+                        i.DiscountAmount,
+                        i.ShippingAmount,
+                        i.TotalAmount
+                    })
+                    .ToListAsync();
+
+                var invoiceByOrder = invoiceByOrderId
+                    .Where(i => i.OrderId.HasValue)
+                    .GroupBy(i => i.OrderId!.Value)
+                    .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.InvoiceId).First());
+
+                var derivedFromOrders = ordersForDerivation
                     .Select(o => new
                     {
                         PaymentId = -o.OrderId,
                         PaymentNumber = "AUTO-" + o.OrderNumber,
-                        InvoiceId = _context.Invoices.Where(i => i.OrderId == o.OrderId).Select(i => (int?)i.InvoiceId).FirstOrDefault(),
-                        InvoiceNumber = _context.Invoices.Where(i => i.OrderId == o.OrderId).Select(i => i.InvoiceNumber).FirstOrDefault(),
-                        InvoiceSubtotal = _context.Invoices.Where(i => i.OrderId == o.OrderId).Select(i => (decimal?)i.Subtotal).FirstOrDefault() ?? 0,
-                        InvoiceTaxAmount = _context.Invoices.Where(i => i.OrderId == o.OrderId).Select(i => (decimal?)i.TaxAmount).FirstOrDefault() ?? 0,
-                        InvoiceDiscountAmount = _context.Invoices.Where(i => i.OrderId == o.OrderId).Select(i => (decimal?)i.DiscountAmount).FirstOrDefault() ?? 0,
-                        InvoiceShippingAmount = _context.Invoices.Where(i => i.OrderId == o.OrderId).Select(i => (decimal?)i.ShippingAmount).FirstOrDefault() ?? 0,
-                        InvoiceTotalAmount = _context.Invoices.Where(i => i.OrderId == o.OrderId).Select(i => (decimal?)i.TotalAmount).FirstOrDefault() ?? o.TotalAmount,
+                        InvoiceId = invoiceByOrder.ContainsKey(o.OrderId) ? (int?)invoiceByOrder[o.OrderId].InvoiceId : null,
+                        InvoiceNumber = invoiceByOrder.ContainsKey(o.OrderId) ? invoiceByOrder[o.OrderId].InvoiceNumber : null,
+                        InvoiceSubtotal = invoiceByOrder.ContainsKey(o.OrderId) ? invoiceByOrder[o.OrderId].Subtotal : 0,
+                        InvoiceTaxAmount = invoiceByOrder.ContainsKey(o.OrderId) ? invoiceByOrder[o.OrderId].TaxAmount : 0,
+                        InvoiceDiscountAmount = invoiceByOrder.ContainsKey(o.OrderId) ? invoiceByOrder[o.OrderId].DiscountAmount : 0,
+                        InvoiceShippingAmount = invoiceByOrder.ContainsKey(o.OrderId) ? invoiceByOrder[o.OrderId].ShippingAmount : 0,
+                        InvoiceTotalAmount = invoiceByOrder.ContainsKey(o.OrderId) ? invoiceByOrder[o.OrderId].TotalAmount : o.TotalAmount,
                         OrderId = (int?)o.OrderId,
                         OrderNumber = (string?)o.OrderNumber,
                         CustomerId = o.CustomerId,
-                        CustomerName = o.Customer != null ? o.Customer.FirstName + " " + o.Customer.LastName : "N/A",
+                        CustomerName = o.CustomerName,
                         PaymentDate = o.ConfirmedAt ?? o.UpdatedAt,
-                        Amount = o.PaidAmount,
+                        Amount = o.PaidAmount > 0 ? o.PaidAmount : o.TotalAmount,
                         PaymentMethodType = o.PaymentMethod ?? "Order Confirmation",
                         Status = o.PaymentStatus == "Paid" ? "Completed" : "Pending",
                         TransactionId = o.PaymentReference,
@@ -4194,10 +4457,56 @@ namespace CompuGear.Controllers
                         CreatedAt = o.CreatedAt,
                         IsDerived = true
                     })
+                    .ToList();
+
+                foreach (var item in derivedFromOrders)
+                {
+                    if (item.InvoiceId.HasValue)
+                        recordedInvoiceIds.Add(item.InvoiceId.Value);
+                }
+
+                const int derivedInvoiceOffset = 1000000;
+                var derivedFromInvoices = await _context.Invoices
+                    .Include(i => i.Customer)
+                    .Include(i => i.Order)
+                    .Where(i => (companyId == null || i.CompanyId == companyId || i.CompanyId == null) &&
+                                !recordedInvoiceIds.Contains(i.InvoiceId) &&
+                                i.Status != "Cancelled" &&
+                                i.Status != "Void" &&
+                                (i.PaidAmount > 0 || i.TotalAmount > 0))
+                    .Select(i => new
+                    {
+                        PaymentId = -(derivedInvoiceOffset + i.InvoiceId),
+                        PaymentNumber = "AUTO-" + i.InvoiceNumber,
+                        InvoiceId = (int?)i.InvoiceId,
+                        InvoiceNumber = i.InvoiceNumber,
+                        InvoiceSubtotal = i.Subtotal,
+                        InvoiceTaxAmount = i.TaxAmount,
+                        InvoiceDiscountAmount = i.DiscountAmount,
+                        InvoiceShippingAmount = i.ShippingAmount,
+                        InvoiceTotalAmount = i.TotalAmount,
+                        OrderId = i.OrderId,
+                        OrderNumber = i.Order != null ? i.Order.OrderNumber : null,
+                        CustomerId = i.CustomerId,
+                        CustomerName = i.Customer != null ? i.Customer.FirstName + " " + i.Customer.LastName : "N/A",
+                        PaymentDate = i.PaidAt ?? i.SentAt ?? i.InvoiceDate,
+                        Amount = i.PaidAmount > 0 ? i.PaidAmount : i.TotalAmount,
+                        PaymentMethodType = i.Order != null ? i.Order.PaymentMethod : "Invoice Record",
+                        Status = (i.PaidAmount > 0 || i.Status == "Paid") ? "Completed" : "Pending",
+                        TransactionId = i.Order != null ? i.Order.PaymentReference : null,
+                        ReferenceNumber = i.Order != null ? i.Order.PaymentReference : null,
+                        Currency = "PHP",
+                        Notes = (string?)"Auto-derived from customer invoice",
+                        FailureReason = (string?)null,
+                        ProcessedAt = i.PaidAt,
+                        CreatedAt = i.CreatedAt,
+                        IsDerived = true
+                    })
                     .ToListAsync();
 
                 var payments = recordedPayments
                     .Concat(derivedFromOrders)
+                    .Concat(derivedFromInvoices)
                     .OrderByDescending(p => p.PaymentDate)
                     .ThenByDescending(p => p.CreatedAt)
                     .ToList();
@@ -4213,6 +4522,56 @@ namespace CompuGear.Controllers
         [HttpGet("payments/{id}")]
         public async Task<IActionResult> GetPayment(int id)
         {
+            const int derivedInvoiceOffset = 1000000;
+
+            if (id <= -derivedInvoiceOffset)
+            {
+                var companyIdFromSession = GetCompanyId();
+                var derivedInvoiceId = (-id) - derivedInvoiceOffset;
+
+                var invoice = await _context.Invoices
+                    .Include(i => i.Customer)
+                    .Include(i => i.Order)
+                    .FirstOrDefaultAsync(i => i.InvoiceId == derivedInvoiceId &&
+                                              (companyIdFromSession == null || i.CompanyId == companyIdFromSession || i.CompanyId == null));
+
+                if (invoice == null)
+                    return NotFound(new { success = false, message = "Payment not found" });
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        PaymentId = -(derivedInvoiceOffset + invoice.InvoiceId),
+                        PaymentNumber = "AUTO-" + invoice.InvoiceNumber,
+                        InvoiceId = invoice.InvoiceId,
+                        InvoiceNumber = invoice.InvoiceNumber,
+                        InvoiceSubtotal = invoice.Subtotal,
+                        InvoiceTaxAmount = invoice.TaxAmount,
+                        InvoiceDiscountAmount = invoice.DiscountAmount,
+                        InvoiceShippingAmount = invoice.ShippingAmount,
+                        InvoiceTotalAmount = invoice.TotalAmount,
+                        OrderId = invoice.OrderId,
+                        OrderNumber = invoice.Order?.OrderNumber,
+                        CustomerId = invoice.CustomerId,
+                        CustomerName = invoice.Customer != null ? invoice.Customer.FirstName + " " + invoice.Customer.LastName : "N/A",
+                        PaymentDate = invoice.PaidAt ?? invoice.SentAt ?? invoice.InvoiceDate,
+                        Amount = invoice.PaidAmount > 0 ? invoice.PaidAmount : invoice.TotalAmount,
+                        PaymentMethodType = invoice.Order?.PaymentMethod ?? "Invoice Record",
+                        Status = (invoice.PaidAmount > 0 || invoice.Status == "Paid") ? "Completed" : "Pending",
+                        TransactionId = invoice.Order?.PaymentReference,
+                        ReferenceNumber = invoice.Order?.PaymentReference,
+                        Currency = "PHP",
+                        Notes = "Auto-derived from customer invoice",
+                        FailureReason = (string?)null,
+                        ProcessedAt = invoice.PaidAt,
+                        CreatedAt = invoice.CreatedAt,
+                        Refunds = new List<object>()
+                    }
+                });
+            }
+
             if (id < 0)
             {
                 var companyIdFromSession = GetCompanyId();
@@ -4221,14 +4580,14 @@ namespace CompuGear.Controllers
                 var order = await _context.Orders
                     .Include(o => o.Customer)
                     .FirstOrDefaultAsync(o => o.OrderId == derivedOrderId &&
-                                              (companyIdFromSession == null || o.CompanyId == companyIdFromSession));
+                                              (companyIdFromSession == null || o.CompanyId == companyIdFromSession || o.CompanyId == null));
 
                 if (order == null)
                     return NotFound(new { success = false, message = "Payment not found" });
 
                 var linkedInvoice = await _context.Invoices
                     .FirstOrDefaultAsync(i => i.OrderId == order.OrderId &&
-                                              (companyIdFromSession == null || i.CompanyId == companyIdFromSession));
+                                              (companyIdFromSession == null || i.CompanyId == companyIdFromSession || i.CompanyId == null));
 
                 return Ok(new
                 {
@@ -4959,6 +5318,9 @@ namespace CompuGear.Controllers
         [HttpPost("bulk/orders/update-status")]
         public async Task<IActionResult> BulkUpdateOrderStatus([FromBody] BulkStatusUpdate request)
         {
+            if (!HasAdminOrderAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "Only admins can bulk update orders." });
+
             try
             {
                 var companyId = GetCompanyId();

@@ -407,14 +407,24 @@ const Products = {
 // ===========================================
 const StockLevels = {
     data: [],
+    initialized: false,
+    loading: false,
+    chart: null,
 
     async load() {
+        if (this.loading) return;
+        this.loading = true;
+
         try {
-            this.data = await API.get('/products');
+            const result = await API.get('/products');
+            this.data = Array.isArray(result) ? result : (result?.data || []);
             this.render();
             this.renderChart();
         } catch (error) {
             Toast.error('Failed to load stock levels');
+        } finally {
+            this.initialized = true;
+            this.loading = false;
         }
     },
 
@@ -454,7 +464,12 @@ const StockLevels = {
         const lowStock = this.data.filter(p => p.stockQuantity > 0 && p.stockQuantity <= (p.reorderLevel || 10)).length;
         const outOfStock = this.data.filter(p => (p.stockQuantity || 0) <= 0).length;
 
-        new Chart(ctx, {
+        if (this.chart) {
+            this.chart.destroy();
+            this.chart = null;
+        }
+
+        this.chart = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: ['In Stock', 'Low Stock', 'Out of Stock'],
@@ -778,14 +793,26 @@ const Suppliers = {
 // INVENTORY REPORTS MODULE
 // ===========================================
 const InventoryReports = {
+    initialized: false,
+    loading: false,
+    categoryChart: null,
+    valueChart: null,
+
     async load() {
+        if (this.loading) return;
+        this.loading = true;
+
         try {
-            const products = await API.get('/products');
+            const result = await API.get('/products');
+            const products = Array.isArray(result) ? result : (result?.data || []);
             this.renderCategoryChart(products);
             this.renderValueChart(products);
             this.updateSummary(products);
         } catch (error) {
             Toast.error('Failed to load inventory reports');
+        } finally {
+            this.initialized = true;
+            this.loading = false;
         }
     },
 
@@ -799,7 +826,12 @@ const InventoryReports = {
             categories[cat] = (categories[cat] || 0) + 1;
         });
 
-        new Chart(ctx, {
+        if (this.categoryChart) {
+            this.categoryChart.destroy();
+            this.categoryChart = null;
+        }
+
+        this.categoryChart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: Object.keys(categories),
@@ -820,10 +852,16 @@ const InventoryReports = {
         const categories = {};
         products.forEach(p => {
             const cat = p.categoryName || 'Uncategorized';
-            categories[cat] = (categories[cat] || 0) + ((p.price || 0) * (p.stockQuantity || 0));
+            const unitPrice = p.sellingPrice || p.costPrice || p.price || 0;
+            categories[cat] = (categories[cat] || 0) + (unitPrice * (p.stockQuantity || 0));
         });
 
-        new Chart(ctx, {
+        if (this.valueChart) {
+            this.valueChart.destroy();
+            this.valueChart = null;
+        }
+
+        this.valueChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: Object.keys(categories),
@@ -839,7 +877,10 @@ const InventoryReports = {
     updateSummary(products) {
         const totalProducts = products.length;
         const totalStock = products.reduce((sum, p) => sum + (p.stockQuantity || 0), 0);
-        const totalValue = products.reduce((sum, p) => sum + ((p.price || 0) * (p.stockQuantity || 0)), 0);
+        const totalValue = products.reduce((sum, p) => {
+            const unitPrice = p.sellingPrice || p.costPrice || p.price || 0;
+            return sum + (unitPrice * (p.stockQuantity || 0));
+        }, 0);
         const avgValue = totalProducts > 0 ? totalValue / totalProducts : 0;
 
         if (document.getElementById('totalProducts')) document.getElementById('totalProducts').textContent = Format.number(totalProducts);
@@ -856,18 +897,22 @@ document.addEventListener('DOMContentLoaded', function() {
     if (path.includes('/inventorystaff/products') || path.endsWith('/products')) {
         Products.load();
     } else if (path.includes('/inventorystaff/stock') || path.endsWith('/stock')) {
-        StockLevels.load();
+        if (!StockLevels.initialized) StockLevels.load();
     } else if (path.includes('/inventorystaff/alerts') || path.endsWith('/alerts')) {
         StockAlerts.load();
     } else if (path.includes('/inventorystaff/suppliers') || path.endsWith('/suppliers')) {
         Suppliers.load();
     } else if (path.includes('/inventorystaff/reports') || path.endsWith('/reports')) {
-        InventoryReports.load();
+        if (!InventoryReports.initialized) InventoryReports.load();
     } else if (path === '/inventorystaff' || path === '/inventorystaff/') {
         // Dashboard
-        API.get('/products').then(products => {
+        API.get('/products').then(result => {
+            const products = Array.isArray(result) ? result : (result?.data || []);
             const totalProducts = products.length;
-            const totalValue = products.reduce((sum, p) => sum + ((p.price || 0) * (p.stockQuantity || 0)), 0);
+            const totalValue = products.reduce((sum, p) => {
+                const unitPrice = p.sellingPrice || p.costPrice || p.price || 0;
+                return sum + (unitPrice * (p.stockQuantity || 0));
+            }, 0);
             const lowStock = products.filter(p => p.stockQuantity > 0 && p.stockQuantity <= (p.reorderLevel || 10)).length;
             const outOfStock = products.filter(p => (p.stockQuantity || 0) <= 0).length;
 

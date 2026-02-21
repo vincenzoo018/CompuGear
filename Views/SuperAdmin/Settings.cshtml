@@ -25,7 +25,7 @@
                 <div class="form-group"><label class="form-label">Platform Name</label><input type="text" class="form-control" id="platformName" value="CompuGear ERP"></div>
                 <div class="form-group"><label class="form-label">Support Email</label><input type="email" class="form-control" id="supportEmail" value="support@compugear.com"></div>
                 <div class="form-group"><label class="form-label">Default Currency</label>
-                    <select class="form-control" id="defaultCurrency"><option value="USD" selected>USD ($)</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="PHP">PHP</option></select></div>
+                    <select class="form-control" id="defaultCurrency"><option value="PHP" selected>PHP (₱)</option><option value="USD">USD ($)</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div>
                 <div class="form-group"><label class="form-label">Time Zone</label>
                     <select class="form-control" id="timezone"><option value="UTC">UTC</option><option value="US/Eastern">US/Eastern</option><option value="US/Pacific">US/Pacific</option><option value="Asia/Manila" selected>Asia/Manila</option><option value="Europe/London">Europe/London</option></select></div>
             </div>
@@ -227,7 +227,7 @@
             if (confirm('Reset all settings to defaults?')) {
                 document.getElementById('platformName').value = 'CompuGear ERP';
                 document.getElementById('supportEmail').value = 'support@compugear.com';
-                document.getElementById('defaultCurrency').value = 'USD';
+                document.getElementById('defaultCurrency').value = 'PHP';
                 document.getElementById('timezone').value = 'Asia/Manila';
                 document.getElementById('sessionTimeout').value = '30';
                 document.getElementById('maxLoginAttempts').value = '5';

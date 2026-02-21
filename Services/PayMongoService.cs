@@ -70,7 +70,7 @@ namespace CompuGear.Services
                                     quantity = 1
                                 }
                             },
-                            payment_method_types = new[] { "gcash", "grab_pay", "paymaya", "card", "dob", "billease" },
+                            payment_method_types = new[] { "gcash", "grab_pay", "paymaya", "card" },
                             success_url = request.SuccessUrl,
                             cancel_url = request.CancelUrl,
                             metadata = new Dictionary<string, string>

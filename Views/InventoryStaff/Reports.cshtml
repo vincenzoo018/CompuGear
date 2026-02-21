@@ -3,100 +3,80 @@
     Layout = "~/Views/Shared/_InventoryLayout.cshtml";
 }
 
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0">Inventory Reports</h1>
-            <p class="text-muted mb-0">Analyze inventory performance</p>
+<div class="page-header">
+    <h1 class="page-title">Inventory Reports</h1>
+    <p class="page-subtitle">Analyze inventory performance and trends</p>
+</div>
+
+<div class="stat-cards">
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Total Products</span>
+            <span class="stat-value" id="totalProducts">0</span>
+        </div>
+        <div class="stat-icon teal">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            </svg>
         </div>
     </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Total Stock Units</span>
+            <span class="stat-value" id="totalStock">0</span>
+        </div>
+        <div class="stat-icon green">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Total Inventory Value</span>
+            <span class="stat-value" id="totalValue">₱0</span>
+        </div>
+        <div class="stat-icon" style="background: var(--info-bg); color: var(--info);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+        </div>
+    </div>
+    <div class="stat-card fade-in">
+        <div class="stat-info">
+            <span class="stat-label">Avg. Value / Product</span>
+            <span class="stat-value" id="avgValue">₱0</span>
+        </div>
+        <div class="stat-icon orange">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+        </div>
+    </div>
+</div>
 
-    <!-- Summary Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="text-muted mb-1">Total Products</p>
-                            <h3 class="mb-0" id="totalProducts">0</h3>
-                        </div>
-                        <div class="bg-primary bg-opacity-10 p-2 rounded">
-                            <i class="bi bi-box-seam text-primary fs-4"></i>
-                        </div>
-                    </div>
-                </div>
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card fade-in h-100">
+            <div class="card-header">
+                <h3 class="card-title">Products by Category</h3>
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="text-muted mb-1">Total Stock</p>
-                            <h3 class="mb-0" id="totalStock">0</h3>
-                        </div>
-                        <div class="bg-info bg-opacity-10 p-2 rounded">
-                            <i class="bi bi-boxes text-info fs-4"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="text-muted mb-1">Total Value</p>
-                            <h3 class="mb-0" id="totalValue">₱0</h3>
-                        </div>
-                        <div class="bg-success bg-opacity-10 p-2 rounded">
-                            <i class="bi bi-currency-dollar text-success fs-4"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="text-muted mb-1">Avg. Value</p>
-                            <h3 class="mb-0" id="avgValue">₱0</h3>
-                        </div>
-                        <div class="bg-warning bg-opacity-10 p-2 rounded">
-                            <i class="bi bi-calculator text-warning fs-4"></i>
-                        </div>
-                    </div>
+            <div class="card-body">
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="categoryChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
-        <!-- Products by Category -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0">
-                    <h5 class="mb-0">Products by Category</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="categoryChart" height="300"></canvas>
-                </div>
+    <div class="col-lg-6">
+        <div class="card fade-in h-100">
+            <div class="card-header">
+                <h3 class="card-title">Value by Category</h3>
             </div>
-        </div>
-
-        <!-- Value Distribution -->
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0">
-                    <h5 class="mb-0">Value by Category</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="valueChart" height="300"></canvas>
+            <div class="card-body">
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="valueChart"></canvas>
                 </div>
             </div>
         </div>
@@ -105,10 +85,4 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="~/js/inventory.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            InventoryReports.load();
-        });
-    </script>
 }

@@ -34,7 +34,7 @@
         <div class="stat-icon blue"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
     </div>
     <div class="stat-card fade-in stagger-4">
-        <div class="stat-info"><span class="stat-label">Total MRR</span><span class="stat-value" id="totalMRR">$0</span></div>
+        <div class="stat-info"><span class="stat-label">Total MRR</span><span class="stat-value" id="totalMRR">₱0</span></div>
         <div class="stat-icon orange"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
     </div>
 </div>
@@ -165,7 +165,7 @@
                         </select></div>
                     </div>
                     <div class="col-md-4">
-                        <div class="form-group mb-0"><label class="form-label">Monthly Fee ($)</label>
+                        <div class="form-group mb-0"><label class="form-label">Monthly Fee (₱)</label>
                         <input type="number" class="form-control" id="subFee" step="0.01" value="0"></div>
                     </div>
                     <div class="col-md-4">
@@ -283,7 +283,7 @@
                         <span class="module-name">${m.moduleName}</span>
                     </div>
                     <div class="module-desc">${m.description || ''}</div>
-                    <div class="module-price">$${(m.monthlyPrice || 0).toFixed(2)}/mo</div>
+                    <div class="module-price">₱${(m.monthlyPrice || 0).toFixed(2)}/mo</div>
                 </div>
             `).join('');
         }
@@ -325,7 +325,7 @@
             document.getElementById('activeSubs').textContent = allSubs.filter(s => s.status === 'Active').length;
             document.getElementById('trialSubs').textContent = allSubs.filter(s => s.status === 'Trial').length;
             const mrr = allSubs.filter(s => s.status === 'Active').reduce((sum, s) => sum + (s.monthlyFee || 0), 0);
-            document.getElementById('totalMRR').textContent = '$' + mrr.toLocaleString('en-US', {minimumFractionDigits: 2});
+            document.getElementById('totalMRR').textContent = '₱' + mrr.toLocaleString('en-PH', {minimumFractionDigits: 2});
         }
 
         function filterSubs() {
@@ -347,7 +347,7 @@
                     <td><strong>${s.companyName}</strong></td>
                     <td><span class="badge ${s.planName==='Enterprise'?'badge-info':s.planName==='Professional'?'badge-success':'badge-warning'}">${s.planName}</span></td>
                     <td>${s.billingCycle}</td>
-                    <td class="text-end">$${(s.monthlyFee||0).toFixed(2)}</td>
+                    <td class="text-end">₱${(s.monthlyFee||0).toFixed(2)}</td>
                     <td class="text-center"><span class="badge badge-info">${s.moduleCount || 0} / ${s.totalModules || 0}</span></td>
                     <td class="text-center">${s.maxUsers}</td>
                     <td><span class="badge ${s.status==='Active'?'badge-success':s.status==='Trial'?'badge-info':s.status==='Suspended'?'badge-warning':'badge-error'}">${s.status}</span></td>

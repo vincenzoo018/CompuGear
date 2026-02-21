@@ -57,6 +57,34 @@
     }
     .form-check a { color: #008080; text-decoration: underline; }
 
+    .module-selector {
+        border: 1.5px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 12px;
+        background: #fff;
+    }
+    .module-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+    .module-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border: 1px solid #e6e6e6;
+        border-radius: 8px;
+        background: #fafafa;
+        font-size: 0.9rem;
+        color: #444;
+    }
+    .module-item input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: #008080;
+    }
+
     .btn-subscribe {
         width: 100%; padding: 14px 0; background: #008080; color: #fff;
         border: none; border-radius: 10px; font-size: 1rem; font-weight: 600;
@@ -102,36 +130,53 @@
         font-weight: 700; font-size: 1.05rem; color: #1a1a2e;
     }
 
-    /* Success overlay */
-    .success-overlay {
-        display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.5); z-index: 2000;
-        align-items: center; justify-content: center;
+    /* Toast notification */
+    .toast-container {
+        position: fixed; top: 90px; right: 24px; z-index: 3000;
+        display: flex; flex-direction: column; gap: 12px;
+        pointer-events: none;
     }
-    .success-overlay.show { display: flex; }
-    .success-box {
-        background: #fff; border-radius: 20px; padding: 48px; text-align: center;
-        max-width: 450px; width: 90%; animation: scaleIn 0.3s ease;
+    .toast-card {
+        pointer-events: auto;
+        display: flex; align-items: flex-start; gap: 14px;
+        background: #fff; border-radius: 14px; padding: 20px 24px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        border-left: 5px solid #10B981;
+        max-width: 440px; width: 100%;
+        animation: toastSlideIn 0.4s ease;
+        transition: opacity 0.3s, transform 0.3s;
     }
-    @@keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    .success-box .check-circle {
-        width: 72px; height: 72px; border-radius: 50%;
-        background: rgba(16,185,129,0.1); color: #10B981;
+    .toast-card.error { border-left-color: #ef4444; }
+    .toast-card .toast-icon {
+        flex-shrink: 0; width: 42px; height: 42px; border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
-        margin: 0 auto 20px;
     }
-    .success-box h2 { font-size: 1.5rem; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; }
-    .success-box p { font-size: 0.95rem; color: #777; margin-bottom: 28px; line-height: 1.6; }
-    .success-box .btn-login {
-        display: inline-block; padding: 12px 40px; background: #008080; color: #fff;
-        border-radius: 10px; font-weight: 600; transition: all 0.3s;
+    .toast-card .toast-icon.success { background: rgba(16,185,129,0.12); color: #10B981; }
+    .toast-card .toast-icon.error { background: rgba(239,68,68,0.12); color: #ef4444; }
+    .toast-card .toast-body { flex: 1; }
+    .toast-card .toast-title { font-weight: 700; font-size: 1rem; color: #1a1a2e; margin-bottom: 4px; }
+    .toast-card .toast-msg { font-size: 0.88rem; color: #666; line-height: 1.5; }
+    .toast-card .toast-actions { margin-top: 12px; display: flex; gap: 10px; }
+    .toast-card .toast-btn {
+        padding: 8px 22px; border-radius: 8px; font-weight: 600; font-size: 0.85rem;
+        cursor: pointer; transition: all 0.2s; border: none; font-family: 'Poppins', sans-serif;
     }
-    .success-box .btn-login:hover { background: #006666; }
+    .toast-card .toast-btn-primary { background: #008080; color: #fff; }
+    .toast-card .toast-btn-primary:hover { background: #006666; }
+    .toast-card .toast-btn-secondary { background: #f0f0f0; color: #555; }
+    .toast-card .toast-btn-secondary:hover { background: #e0e0e0; }
+    .toast-card .toast-close {
+        flex-shrink: 0; background: none; border: none; cursor: pointer;
+        color: #aaa; padding: 4px; transition: color 0.2s;
+    }
+    .toast-card .toast-close:hover { color: #333; }
+    @@keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
     @@media (max-width: 768px) {
         .subscribe-container { grid-template-columns: 1fr; }
         .form-row { grid-template-columns: 1fr; }
         .summary-card { position: static; order: -1; }
+        .module-grid { grid-template-columns: 1fr; }
     }
 }
 
@@ -232,13 +277,21 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label>Modules Included <span class="required">*</span></label>
+                    <div class="module-selector">
+                        <div class="module-grid" id="moduleGrid"></div>
+                    </div>
+                    <div class="error-msg" id="modulesError">Please select at least one module</div>
+                </div>
+
                 <div class="form-check">
                     <input type="checkbox" id="agreeTerms" required>
                     <label for="agreeTerms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. I understand that my subscription will begin immediately upon registration.</label>
                 </div>
 
                 <button type="button" class="btn-subscribe" id="btnSubscribe" onclick="submitSubscription()">
-                    <span class="btn-text">Proceed to Payment</span>
+                    <span class="btn-text">Create Account & Subscribe</span>
                     <div class="spinner" id="btnSpinner"></div>
                 </button>
             </form>
@@ -280,19 +333,8 @@
     </div>
 </section>
 
-<!-- Success Overlay -->
-<div class="success-overlay" id="successOverlay">
-    <div class="success-box">
-        <div class="check-circle">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-        <h2>Redirecting to Payment...</h2>
-        <p id="successMessage">You are being redirected to our secure payment gateway (PayMongo) to complete your subscription. Please do not close this window.</p>
-        <div style="margin-top: 16px;">
-            <div class="spinner" style="display: block; width: 32px; height: 32px; border: 3px solid rgba(0,128,128,0.2); border-top-color: #008080; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto;"></div>
-        </div>
-    </div>
-</div>
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
 
 @section Scripts {
     <script>
@@ -308,8 +350,18 @@
                 monthly: 4999, annual: 59988,
                 maxUsers: 200, maxAdmins: 10,
                 features: ['Up to 200 Users', 'Up to 10 Admin Users', 'All ERP Modules', 'Billing & Invoicing', 'Advanced Analytics', 'Priority Email Support'],
-                modules: ['SALES', 'INVENTORY', 'BILLING', 'SUPPORT', 'MARKETING', 'ADMIN']
+                modules: ['SALES', 'CUSTOMERS', 'INVENTORY', 'BILLING', 'SUPPORT', 'MARKETING']
             }
+        };
+
+        const moduleLabels = {
+            SALES: 'Sales',
+            CUSTOMERS: 'Customers',
+            INVENTORY: 'Inventory',
+            BILLING: 'Billing',
+            SUPPORT: 'Support',
+            MARKETING: 'Marketing',
+            ADMIN: 'Admin Dashboard'
         };
 
         // Set initial plan from URL
@@ -326,6 +378,8 @@
             const plan = document.getElementById('planName').value;
             const billing = document.getElementById('billingCycle').value;
             const data = plans[plan];
+
+            renderModuleOptions();
 
             const price = billing === 'Annual' ? Math.round(data.annual / 12) : data.monthly;
             const total = billing === 'Annual' ? data.annual : data.monthly;
@@ -346,6 +400,25 @@
             ).join('');
         }
 
+        function renderModuleOptions() {
+            const plan = document.getElementById('planName').value;
+            const allowed = plans[plan].modules;
+            const existingChecked = new Set(
+                Array.from(document.querySelectorAll('#moduleGrid input[type="checkbox"]:checked')).map(x => x.value)
+            );
+
+            const grid = document.getElementById('moduleGrid');
+            grid.innerHTML = allowed.map(code => {
+                const shouldCheck = existingChecked.size ? existingChecked.has(code) : true;
+                return `
+                    <label class="module-item">
+                        <input type="checkbox" value="${code}" ${shouldCheck ? 'checked' : ''}>
+                        <span>${moduleLabels[code] || code}</span>
+                    </label>
+                `;
+            }).join('');
+        }
+
         function showError(id, msg) {
             const el = document.getElementById(id);
             const input = el.previousElementSibling;
@@ -359,6 +432,43 @@
                 el.style.display = 'none';
                 if (el.previousElementSibling) el.previousElementSibling.classList.remove('input-error');
             });
+        }
+
+        function showToast(type, title, message, showLogin) {
+            const container = document.getElementById('toastContainer');
+            const id = 'toast_' + Date.now();
+            const iconSvg = type === 'success'
+                ? '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>'
+                : '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+
+            const actions = showLogin
+                ? `<div class="toast-actions">
+                       <button class="toast-btn toast-btn-primary" onclick="window.location.href='/Auth/Login'">Go to Login</button>
+                       <button class="toast-btn toast-btn-secondary" onclick="this.closest('.toast-card').remove()">Dismiss</button>
+                   </div>`
+                : `<div class="toast-actions">
+                       <button class="toast-btn toast-btn-secondary" onclick="this.closest('.toast-card').remove()">Dismiss</button>
+                   </div>`;
+
+            const html = `
+                <div class="toast-card ${type === 'error' ? 'error' : ''}" id="${id}">
+                    <div class="toast-icon ${type}">${iconSvg}</div>
+                    <div class="toast-body">
+                        <div class="toast-title">${title}</div>
+                        <div class="toast-msg">${message}</div>
+                        ${actions}
+                    </div>
+                    <button class="toast-close" onclick="this.parentElement.remove()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>`;
+
+            container.insertAdjacentHTML('beforeend', html);
+
+            // Auto-remove after 15s for non-success toasts
+            if (type !== 'success') {
+                setTimeout(() => { document.getElementById(id)?.remove(); }, 15000);
+            }
         }
 
         async function submitSubscription() {
@@ -375,6 +485,7 @@
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const agreeTerms = document.getElementById('agreeTerms').checked;
+            const selectedModuleCodes = Array.from(document.querySelectorAll('#moduleGrid input[type="checkbox"]:checked')).map(cb => cb.value);
 
             if (!companyName) { showError('companyNameError', 'Company name is required'); valid = false; }
             if (!companyEmail || !companyEmail.includes('@@')) { showError('companyEmailError', 'Valid email is required'); valid = false; }
@@ -384,7 +495,8 @@
             if (!adminEmail || !adminEmail.includes('@@')) { showError('adminEmailError', 'Valid email is required'); valid = false; }
             if (password.length < 8) { showError('passwordError', 'Password must be at least 8 characters'); valid = false; }
             if (password !== confirmPassword) { showError('confirmPasswordError', 'Passwords do not match'); valid = false; }
-            if (!agreeTerms) { alert('Please agree to the Terms of Service'); return; }
+            if (!selectedModuleCodes.length) { showError('modulesError', 'Please select at least one module'); valid = false; }
+            if (!agreeTerms) { showToast('error', 'Terms Required', 'Please agree to the Terms of Service before continuing.'); return; }
 
             if (!valid) return;
 
@@ -397,9 +509,7 @@
             spinner.style.display = 'block';
 
             try {
-                // Step 1: Send data to create-checkout endpoint which validates,
-                // stores registration data in session, and creates a PayMongo checkout
-                const response = await fetch('/api/erpwebsite/create-checkout', {
+                const response = await fetch('/api/erpwebsite/subscribe', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -415,27 +525,28 @@
                         adminPhone: document.getElementById('adminPhone').value.trim(),
                         password,
                         planName: document.getElementById('planName').value,
-                        billingCycle: document.getElementById('billingCycle').value
+                        billingCycle: document.getElementById('billingCycle').value,
+                        selectedModuleCodes
                     })
                 });
 
                 const result = await response.json();
 
-                if (result.success && result.checkoutUrl) {
-                    // Show redirect overlay then navigate to PayMongo checkout
-                    document.getElementById('successOverlay').classList.add('show');
-                    setTimeout(() => {
-                        window.location.href = result.checkoutUrl;
-                    }, 1500);
+                if (result.success) {
+                    showToast('success',
+                        'Account Created Successfully!',
+                        `Welcome, ${result.companyName}! Your ${result.planName} subscription is active. Login with <strong>${result.adminEmail}</strong> to access your admin dashboard.`,
+                        true);
+                    // Reset form
+                    document.getElementById('subscribeForm').reset();
+                    updateSummary();
                 } else {
-                    alert(result.message || 'An error occurred. Please try again.');
-                    btn.disabled = false;
-                    btnText.style.display = 'inline';
-                    spinner.style.display = 'none';
+                    showToast('error', 'Subscription Failed', result.message || 'An error occurred. Please try again.');
                 }
             } catch (err) {
-                alert('An error occurred. Please try again.');
                 console.error(err);
+                showToast('error', 'Network Error', 'Could not reach the server. Please check your connection and try again.');
+            } finally {
                 btn.disabled = false;
                 btnText.style.display = 'inline';
                 spinner.style.display = 'none';

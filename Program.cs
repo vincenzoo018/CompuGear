@@ -35,6 +35,7 @@ builder.Services.AddDbContext<CompuGearDbContext>(options =>
 
 // Add HttpContextAccessor for services that need HTTP context
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddMemoryCache();
 
 // Register Audit Service
 builder.Services.AddScoped<IAuditService, AuditService>();

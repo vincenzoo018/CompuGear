@@ -43,8 +43,8 @@ namespace CompuGear.Controllers
                     4 => "/SupportStaff (Support Dashboard)",
                     5 => "/MarketingStaff (Marketing Dashboard)",
                     6 => "/BillingStaff (Billing Dashboard)",
-                    7 => "/InventoryStaff (Inventory Dashboard)",
-                    8 => "/CustomerPortal (Customer Dashboard)",
+                    7 => "/CustomerPortal (Customer Dashboard)",
+                    8 => "/InventoryStaff (Inventory Dashboard)",
                     _ => "Not logged in"
                 }
             });
@@ -80,8 +80,8 @@ namespace CompuGear.Controllers
                     4 => "/SupportStaff/Index",
                     5 => "/MarketingStaff/Index",
                     6 => "/BillingStaff/Index",
-                    7 => "/InventoryStaff/Index",
-                    8 => "/CustomerPortal/Index",
+                    7 => "/CustomerPortal/Index",
+                    8 => "/InventoryStaff/Index",
                     _ => "/Home/Index"
                 }
             });
@@ -202,8 +202,8 @@ namespace CompuGear.Controllers
                             4 => "/SupportStaff/Index", // Customer Support -> Support Portal
                             5 => "/MarketingStaff/Index", // Marketing Staff -> Marketing Portal
                             6 => "/BillingStaff/Index", // Accounting & Billing -> Billing Portal
-                            7 => "/InventoryStaff/Index", // Inventory Staff -> Inventory Portal
-                            8 => "/CustomerPortal/Index", // Customer -> Customer Portal
+                            7 => "/CustomerPortal/Index", // Customer -> Customer Portal
+                            8 => "/InventoryStaff/Index", // Inventory Staff -> Inventory Portal
                             _ => "/Home/Index"
                         };
 

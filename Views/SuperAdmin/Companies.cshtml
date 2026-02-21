@@ -371,7 +371,7 @@
                                 <tr><td class="text-muted" style="width:140px;">Plan</td><td><span class="badge badge-info">${data.subscription.planName}</span></td></tr>
                                 <tr><td class="text-muted">Status</td><td><span class="badge badge-success">${data.subscription.status}</span></td></tr>
                                 <tr><td class="text-muted">Billing</td><td>${data.subscription.billingCycle}</td></tr>
-                                <tr><td class="text-muted">Fee</td><td>$${(data.subscription.monthlyFee||0).toFixed(2)}/mo</td></tr>
+                                <tr><td class="text-muted">Fee</td><td>₱${(data.subscription.monthlyFee||0).toFixed(2)}/mo</td></tr>
                                 <tr><td class="text-muted">Max Users</td><td>${data.subscription.maxUsers}</td></tr>
                             </tbody></table>` : '<p class="text-muted">No active subscription</p>'}
 
@@ -425,7 +425,7 @@
                             <div>
                                 <h6 class="mb-1">${m.moduleName}</h6>
                                 <small class="text-muted">${m.description || ''}</small><br>
-                                <small class="text-muted">$${(m.monthlyPrice||0).toFixed(2)}/mo | $${(m.annualPrice||0).toFixed(2)}/yr</small>
+                                <small class="text-muted">₱${(m.monthlyPrice||0).toFixed(2)}/mo | ₱${(m.annualPrice||0).toFixed(2)}/yr</small>
                                 ${m.features ? `<br><small>${m.features.split(',').map(f=>'<span class="badge badge-neutral me-1">'+f.trim()+'</span>').join('')}</small>` : ''}
                             </div>
                             <div class="form-check form-switch">

@@ -54,7 +54,7 @@
     <div class="stat-card fade-in stagger-4">
         <div class="stat-info">
             <span class="stat-label">Monthly Revenue</span>
-            <span class="stat-value" id="monthlyRevenue">$0</span>
+            <span class="stat-value" id="monthlyRevenue">₱0</span>
             <div class="stat-trend up" id="revTrend"><span>Loading...</span></div>
         </div>
         <div class="stat-icon orange">
@@ -226,7 +226,7 @@
                 document.getElementById('totalCompanies').textContent = (stats.totalCompanies || 0).toLocaleString();
                 document.getElementById('activeUsers').textContent = (stats.activeUsers || 0).toLocaleString();
                 document.getElementById('activeSubscriptions').textContent = (stats.activeSubscriptions || 0).toLocaleString();
-                document.getElementById('monthlyRevenue').textContent = '$' + (stats.monthlyRevenue || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
+                document.getElementById('monthlyRevenue').textContent = '₱' + (stats.monthlyRevenue || 0).toLocaleString('en-PH', {minimumFractionDigits: 2});
 
                 document.getElementById('companiesTrend').querySelector('span').textContent = `${stats.activeCompanies || 0} active`;
                 document.getElementById('usersTrend').querySelector('span').textContent = `${stats.totalUsers || 0} total`;
@@ -262,7 +262,7 @@
                 <tr>
                     <td><strong>${m.moduleName}</strong></td>
                     <td class="text-center"><span class="badge badge-info">${m.subscribedCompanies || 0}</span></td>
-                    <td class="text-end">$${(m.monthlyPrice || 0).toFixed(2)}</td>
+                    <td class="text-end">₱${(m.monthlyPrice || 0).toFixed(2)}</td>
                 </tr>
             `).join('');
         }
@@ -277,7 +277,7 @@
                 type: 'bar',
                 data: { labels: months, datasets: [{ label: 'Revenue', data: data, backgroundColor: 'rgba(0,128,128,0.8)', borderRadius: 6 }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v.toFixed(0) } }, x: { grid: { display: false } } } }
+                    scales: { y: { beginAtZero: true, ticks: { callback: v => '₱' + v.toFixed(0) } }, x: { grid: { display: false } } } }
             });
         }
 

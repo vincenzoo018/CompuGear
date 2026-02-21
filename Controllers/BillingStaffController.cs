@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.EntityFrameworkCore;
+using CompuGear.Data;
 
 namespace CompuGear.Controllers
 {
@@ -10,6 +12,13 @@ namespace CompuGear.Controllers
     /// </summary>
     public class BillingStaffController : Controller
     {
+        private readonly CompuGearDbContext _context;
+
+        public BillingStaffController(CompuGearDbContext context)
+        {
+            _context = context;
+        }
+
         // Role-based authorization check
         public override void OnActionExecuting(ActionExecutingContext context)
         {
@@ -21,7 +30,40 @@ namespace CompuGear.Controllers
             if (roleId == null || (roleId != 1 && roleId != 2 && roleId != 6))
             {
                 context.Result = RedirectToAction("Login", "Auth");
+                return;
             }
+
+            if (roleId == 6)
+            {
+                var companyId = HttpContext.Session.GetInt32("CompanyId");
+                if (!companyId.HasValue || !HasModuleAccess(companyId.Value, roleId.Value, "BILLING"))
+                {
+                    context.Result = RedirectToAction("Index", "Home");
+                }
+            }
+        }
+
+        private bool HasModuleAccess(int companyId, int roleId, string moduleCode)
+        {
+            var companyHasModule = _context.CompanyModuleAccess
+                .Include(a => a.Module)
+                .Any(a => a.CompanyId == companyId && a.IsEnabled && a.Module.ModuleCode == moduleCode);
+
+            if (!companyHasModule)
+            {
+                return false;
+            }
+
+            var roleAccessRows = _context.RoleModuleAccess
+                .Where(r => r.CompanyId == companyId && r.RoleId == roleId)
+                .ToList();
+
+            if (!roleAccessRows.Any())
+            {
+                return true;
+            }
+
+            return roleAccessRows.Any(r => r.ModuleCode == moduleCode && r.HasAccess);
         }
 
         // Dashboard

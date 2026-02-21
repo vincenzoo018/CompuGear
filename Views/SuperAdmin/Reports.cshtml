@@ -25,11 +25,11 @@
 <!-- KPI Cards -->
 <div class="stat-cards">
     <div class="stat-card fade-in stagger-1">
-        <div class="stat-info"><span class="stat-label">Total Revenue</span><span class="stat-value" id="totalRevenue">$0</span><span class="text-success small" id="revenueGrowth"></span></div>
+        <div class="stat-info"><span class="stat-label">Total Revenue</span><span class="stat-value" id="totalRevenue">₱0</span><span class="text-success small" id="revenueGrowth"></span></div>
         <div class="stat-icon teal"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
     </div>
     <div class="stat-card fade-in stagger-2">
-        <div class="stat-info"><span class="stat-label">Avg Revenue/Company</span><span class="stat-value" id="avgRevenue">$0</span></div>
+        <div class="stat-info"><span class="stat-label">Avg Revenue/Company</span><span class="stat-value" id="avgRevenue">₱0</span></div>
         <div class="stat-icon green"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
     </div>
     <div class="stat-card fade-in stagger-3">
@@ -146,8 +146,8 @@
         function updateKPIs(reports, subs, companies) {
             const totalRev = subs.filter(s=>s.status==='Active').reduce((sum,s)=>sum+(s.monthlyFee||0),0);
             const activeCompanies = companies.filter(c=>c.isActive).length;
-            document.getElementById('totalRevenue').textContent = '$' + totalRev.toLocaleString('en-US',{minimumFractionDigits:2});
-            document.getElementById('avgRevenue').textContent = activeCompanies > 0 ? '$' + (totalRev / activeCompanies).toFixed(2) : '$0';
+            document.getElementById('totalRevenue').textContent = '₱' + totalRev.toLocaleString('en-PH',{minimumFractionDigits:2});
+            document.getElementById('avgRevenue').textContent = activeCompanies > 0 ? '₱' + (totalRev / activeCompanies).toFixed(2) : '₱0';
             document.getElementById('newCompanies').textContent = reports.newCompaniesThisMonth ?? companies.length;
             const cancelled = subs.filter(s=>s.status==='Cancelled').length;
             document.getElementById('churnRate').textContent = subs.length > 0 ? ((cancelled/subs.length)*100).toFixed(1) + '%' : '0%';
@@ -166,7 +166,7 @@
             const data = months.map((_,i) => Math.round(totalActive * (0.7 + i * 0.06) * 100) / 100);
             revenueChart = new Chart(ctx, {
                 type: 'bar', data: { labels: months, datasets: [{ label: 'MRR', data, backgroundColor: 'rgba(0,128,128,0.7)', borderRadius: 6 }] },
-                options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { callback: v => '$' + v } } }, plugins: { legend: { display: false } } }
+                options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { callback: v => '₱' + v } } }, plugins: { legend: { display: false } } }
             });
         }
 
@@ -217,7 +217,7 @@
                     <td><strong>${s.companyName || company?.companyName || '-'}</strong></td>
                     <td><span class="badge badge-info">${s.planName}</span></td>
                     <td>${company?.enabledModules || '-'}</td>
-                    <td class="text-end"><strong>$${(s.monthlyFee||0).toFixed(2)}</strong></td>
+                    <td class="text-end"><strong>₱${(s.monthlyFee||0).toFixed(2)}</strong></td>
                     <td><span class="badge badge-success">${s.status}</span></td>
                     <td>${new Date(s.startDate).toLocaleDateString()}</td>
                 </tr>`;

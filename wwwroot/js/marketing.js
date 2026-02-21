@@ -610,13 +610,22 @@ const Promotions = {
 // ===========================================
 const Segments = {
     data: [],
+    initialized: false,
+    loading: false,
 
     async load() {
+        if (this.loading) return;
+        this.loading = true;
+
         try {
-            this.data = await API.get('/marketing/segments');
+            const result = await API.get('/marketing/segments');
+            this.data = result || {};
             this.render();
         } catch (error) {
             Toast.error('Failed to load segments');
+        } finally {
+            this.initialized = true;
+            this.loading = false;
         }
     },
 
@@ -624,22 +633,22 @@ const Segments = {
         const container = document.getElementById('segmentsGrid') || document.getElementById('segmentsContainer');
         if (!container) return;
 
-        if (!this.data || Object.keys(this.data).length === 0) {
+        if (!this.data || (Array.isArray(this.data) ? this.data.length === 0 : Object.keys(this.data).length === 0)) {
             container.innerHTML = '<div class="text-center py-4">No segments available</div>';
             return;
         }
 
-        const segments = Object.values(this.data);
+        const segments = Array.isArray(this.data) ? this.data : Object.values(this.data);
         container.innerHTML = segments.map(s => `
             <div class="col-md-4 mb-3">
                 <div class="card h-100">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title mb-0">${s.name}</h5>
-                            <span class="badge" style="background-color: ${s.color}">${s.count} customers</span>
+                            <h5 class="card-title mb-0">${s.name || s.segmentName || 'Segment'}</h5>
+                            <span class="badge" style="background-color: ${s.color || '#008080'}">${s.count || s.customerCount || 0} customers</span>
                         </div>
-                        <p class="card-text text-muted small">${s.description}</p>
-                        <button class="btn btn-sm btn-outline-primary" onclick="Segments.viewCustomers('${s.name}')">View Customers</button>
+                        <p class="card-text text-muted small">${s.description || 'Customer segment'}</p>
+                        <button class="btn btn-sm btn-outline-primary" onclick="Segments.viewCustomers('${(s.name || s.segmentName || '').replace(/'/g, "\\'")}')">View Customers</button>
                     </div>
                 </div>
             </div>
@@ -655,20 +664,34 @@ const Segments = {
 // ANALYTICS MODULE
 // ===========================================
 const Analytics = {
+    initialized: false,
+    loading: false,
+    performanceChart: null,
+    campaignTypeChart: null,
+
     async load() {
+        if (this.loading) return;
+        this.loading = true;
+
         try {
             const [campaigns, promotions] = await Promise.all([
                 API.get('/campaigns').catch(() => []),
                 API.get('/promotions').catch(() => [])
             ]);
 
-            this.renderSummaryCards(campaigns, promotions);
-            this.renderCampaignPerformance(campaigns);
-            this.renderPromotionUsage(promotions);
-            this.renderTopCampaigns(campaigns);
-            this.renderTopPromotions(promotions);
+            const campaignList = Array.isArray(campaigns) ? campaigns : [];
+            const promotionList = Array.isArray(promotions) ? promotions : [];
+
+            this.renderSummaryCards(campaignList, promotionList);
+            this.renderCampaignPerformance(campaignList);
+            this.renderPromotionUsage(promotionList);
+            this.renderTopCampaigns(campaignList);
+            this.renderTopPromotions(promotionList);
         } catch (error) {
             Toast.error('Failed to load analytics');
+        } finally {
+            this.initialized = true;
+            this.loading = false;
         }
     },
 
@@ -691,12 +714,17 @@ const Analytics = {
         const ctx = (document.getElementById('performanceChart') || document.getElementById('campaignChart'))?.getContext('2d');
         if (!ctx) return;
 
+        if (this.performanceChart) {
+            this.performanceChart.destroy();
+            this.performanceChart = null;
+        }
+
         const active = campaigns.filter(c => c.status === 'Active').length;
         const completed = campaigns.filter(c => c.status === 'Completed').length;
         const scheduled = campaigns.filter(c => c.status === 'Scheduled').length;
         const paused = campaigns.filter(c => c.status === 'Paused').length;
 
-        new Chart(ctx, {
+        this.performanceChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: ['Active', 'Completed', 'Scheduled', 'Paused'],
@@ -713,10 +741,15 @@ const Analytics = {
         const ctx = (document.getElementById('campaignTypeChart') || document.getElementById('promotionChart'))?.getContext('2d');
         if (!ctx) return;
 
-        const labels = promotions.slice(0, 5).map(p => p.promoCode || p.promotionName || 'N/A');
-        const data = promotions.slice(0, 5).map(p => p.usageCount || 0);
+        if (this.campaignTypeChart) {
+            this.campaignTypeChart.destroy();
+            this.campaignTypeChart = null;
+        }
 
-        new Chart(ctx, {
+        const labels = promotions.slice(0, 5).map(p => p.promoCode || p.promotionCode || p.promotionName || 'N/A');
+        const data = promotions.slice(0, 5).map(p => p.usageCount || p.timesUsed || 0);
+
+        this.campaignTypeChart = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
@@ -752,14 +785,14 @@ const Analytics = {
     renderTopPromotions(promotions) {
         const tbody = document.getElementById('topPromotionsTable');
         if (!tbody) return;
-        const sorted = [...promotions].sort((a, b) => (b.usageCount || 0) - (a.usageCount || 0)).slice(0, 5);
+        const sorted = [...promotions].sort((a, b) => (b.usageCount || b.timesUsed || 0) - (a.usageCount || a.timesUsed || 0)).slice(0, 5);
         if (sorted.length === 0) {
             tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted">No promotions yet</td></tr>';
             return;
         }
         tbody.innerHTML = sorted.map(p => `<tr>
-            <td>${p.promoCode || p.promotionName || 'N/A'}</td>
-            <td class="text-center">${p.usageCount || 0}</td>
+            <td>${p.promoCode || p.promotionCode || p.promotionName || 'N/A'}</td>
+            <td class="text-center">${p.usageCount || p.timesUsed || 0}</td>
             <td class="text-end">₱${(p.revenue || 0).toLocaleString()}</td>
         </tr>`).join('');
     }
@@ -774,9 +807,9 @@ document.addEventListener('DOMContentLoaded', function() {
     } else if (path.includes('/marketingstaff/promotions') || path.endsWith('/promotions')) {
         Promotions.load();
     } else if (path.includes('/marketingstaff/segments') || path.endsWith('/segments')) {
-        Segments.load();
+        if (!Segments.initialized) Segments.load();
     } else if (path.includes('/marketingstaff/analytics') || path.endsWith('/analytics')) {
-        Analytics.load();
+        if (!Analytics.initialized) Analytics.load();
     } else if (path === '/marketingstaff' || path === '/marketingstaff/') {
         // Dashboard
         Promise.all([

@@ -399,26 +399,7 @@ const SalesOrders = {
         }
 
         tbody.innerHTML = this.data.map(o => {
-            let actions = `<button class="btn btn-sm btn-outline-primary" onclick="SalesOrders.view(${o.orderId})" title="View">${Icons.view}</button>`;
-
-            if (o.orderStatus === 'Pending') {
-                 // Pending orders: Approve + Reject (Cancel)
-                 actions += `
-                    <button class="btn btn-sm btn-success" onclick="SalesOrders.updateStatusDirect(${o.orderId}, 'Confirmed')" title="Approve/Confirm">
-                        ${Icons.approve || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>'}
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="SalesOrders.updateStatusDirect(${o.orderId}, 'Cancelled')" title="Reject/Cancel">
-                        ${Icons.reject || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'}
-                    </button>`;
-            } else if (o.orderStatus !== 'Cancelled' && o.orderStatus !== 'Completed' && o.orderStatus !== 'Delivered') {
-                actions += `
-                    <button class="btn btn-sm btn-outline-info" onclick="SalesOrders.openUpdateStatus(${o.orderId})" title="Update Status">
-                        ${Icons.update}
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="SalesOrders.updateStatusDirect(${o.orderId}, 'Cancelled')" title="Cancel Order">
-                        ${Icons.toggleOff}
-                    </button>`;
-            }
+            const actions = `<button class="btn btn-sm btn-outline-primary" onclick="SalesOrders.view(${o.orderId})" title="View">${Icons.view}</button>`;
 
             return `<tr>
                 <td>
@@ -513,29 +494,11 @@ const SalesOrders = {
     },
 
     openUpdateStatus(id) {
-        const o = this.data.find(order => order.orderId === id);
-        if (!o) return;
-        this.currentId = id;
-        document.getElementById('statusOrderNumber').textContent = o.orderNumber;
-        document.getElementById('currentStatus').innerHTML = Format.statusBadge(o.orderStatus);
-        document.getElementById('newStatus').value = o.orderStatus;
-        document.getElementById('statusNotes').value = '';
-        Modal.show('updateStatusModal');
+        Toast.warning('Sales Staff has view-only access for orders.');
     },
 
     async confirmStatusUpdate() {
-        if (!this.currentId) return;
-        try {
-            await API.put(`/orders/${this.currentId}/status`, {
-                status: document.getElementById('newStatus').value,
-                notes: document.getElementById('statusNotes').value
-            });
-            Toast.success('Order status updated!');
-            Modal.hide('updateStatusModal');
-            this.load();
-        } catch (error) {
-            Toast.error('Failed to update status');
-        }
+        Toast.warning('Sales Staff has view-only access for orders.');
     },
 
     filter(search = '', status = '') {
@@ -559,10 +522,7 @@ const SalesOrders = {
             return;
         }
         tbody.innerHTML = data.map(o => {
-            let actions = `<button class="btn btn-sm btn-outline-primary" onclick="SalesOrders.view(${o.orderId})" title="View">${Icons.view}</button>`;
-            if (o.orderStatus !== 'Cancelled' && o.orderStatus !== 'Completed') {
-                actions += `<button class="btn btn-sm btn-outline-info" onclick="SalesOrders.openUpdateStatus(${o.orderId})" title="Update Status">${Icons.update}</button>`;
-            }
+            const actions = `<button class="btn btn-sm btn-outline-primary" onclick="SalesOrders.view(${o.orderId})" title="View">${Icons.view}</button>`;
             return `<tr>
                 <td><div class="fw-semibold">${o.orderNumber}</div><small class="text-muted">${Format.date(o.orderDate, true)}</small></td>
                 <td>${o.customerName || 'Guest'}</td>
@@ -577,16 +537,7 @@ const SalesOrders = {
     },
 
     async updateStatusDirect(id, status) {
-        if (!status) return;
-        if (!confirm(`Are you sure you want to change status to ${status}?`)) return;
-        
-        try {
-            await API.put(`/orders/${id}/status`, { status: status, notes: `Status updated to ${status} by Sales Staff` });
-            Toast.success(`Order status updated to ${status}`);
-            this.load();
-        } catch (error) {
-            Toast.error('Failed to update status: ' + (error.message || 'Unknown error'));
-        }
+        Toast.warning('Sales Staff has view-only access for orders.');
     },
 
     printOrder() {

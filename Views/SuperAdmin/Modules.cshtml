@@ -56,8 +56,8 @@
                     <div class="col-md-6"><div class="form-group mb-0"><label class="form-label">Module Name *</label><input type="text" class="form-control" id="moduleName" required></div></div>
                     <div class="col-md-6"><div class="form-group mb-0"><label class="form-label">Module Code *</label><input type="text" class="form-control" id="moduleCode" required placeholder="e.g., SALES"></div></div>
                     <div class="col-12"><div class="form-group mb-0"><label class="form-label">Description</label><textarea class="form-control" id="moduleDesc" rows="2"></textarea></div></div>
-                    <div class="col-md-4"><div class="form-group mb-0"><label class="form-label">Monthly Price ($)</label><input type="number" class="form-control" id="moduleMonthly" step="0.01" value="0"></div></div>
-                    <div class="col-md-4"><div class="form-group mb-0"><label class="form-label">Annual Price ($)</label><input type="number" class="form-control" id="moduleAnnual" step="0.01" value="0"></div></div>
+                    <div class="col-md-4"><div class="form-group mb-0"><label class="form-label">Monthly Price (₱)</label><input type="number" class="form-control" id="moduleMonthly" step="0.01" value="0"></div></div>
+                    <div class="col-md-4"><div class="form-group mb-0"><label class="form-label">Annual Price (₱)</label><input type="number" class="form-control" id="moduleAnnual" step="0.01" value="0"></div></div>
                     <div class="col-md-4"><div class="form-group mb-0"><label class="form-label">Sort Order</label><input type="number" class="form-control" id="moduleSortOrder" value="0"></div></div>
                     <div class="col-12"><div class="form-group mb-0"><label class="form-label">Features (comma-separated)</label><input type="text" class="form-control" id="moduleFeatures" placeholder="Feature 1, Feature 2, Feature 3"></div></div>
                     <div class="col-md-6"><div class="form-group mb-0"><label class="form-label">Status</label>
@@ -132,10 +132,10 @@
                             <h5 class="mb-1">${m.moduleName}</h5>
                             <p class="text-muted small mb-3">${m.description || 'No description'}</p>
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted small">Monthly</span><strong>$${(m.monthlyPrice||0).toFixed(2)}</strong>
+                                <span class="text-muted small">Monthly</span><strong>₱${(m.monthlyPrice||0).toFixed(2)}</strong>
                             </div>
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="text-muted small">Annual</span><strong>$${(m.annualPrice||0).toFixed(2)}</strong>
+                                <span class="text-muted small">Annual</span><strong>₱${(m.annualPrice||0).toFixed(2)}</strong>
                             </div>
                             ${m.features ? `<div class="mb-3">${m.features.split(',').map(f=>'<span class="badge badge-neutral me-1 mb-1">'+f.trim()+'</span>').join('')}</div>` : ''}
                             <div class="d-flex justify-content-between align-items-center">
@@ -162,8 +162,8 @@
                 <tr>
                     <td><strong>${m.moduleName}</strong></td>
                     <td><code>${m.moduleCode}</code></td>
-                    <td class="text-end">$${(m.monthlyPrice||0).toFixed(2)}</td>
-                    <td class="text-end">$${(m.annualPrice||0).toFixed(2)}</td>
+                    <td class="text-end">₱${(m.monthlyPrice||0).toFixed(2)}</td>
+                    <td class="text-end">₱${(m.annualPrice||0).toFixed(2)}</td>
                     <td class="text-center"><span class="badge badge-info">${m.subscribedCompanies||0}</span></td>
                     <td><span class="badge ${m.isActive?'badge-success':'badge-error'}">${m.isActive?'Active':'Inactive'}</span></td>
                     <td class="text-center">

@@ -166,10 +166,10 @@
 
         // Auto-verify on page load
         document.addEventListener('DOMContentLoaded', () => {
-            if (registrationId && sessionId) {
+            if (registrationId) {
                 verifyPayment();
             } else {
-                showState('error', 'Missing payment information. Please start a new subscription.');
+                showState('error', 'Missing registration information. Please start a new subscription.');
             }
         });
 
