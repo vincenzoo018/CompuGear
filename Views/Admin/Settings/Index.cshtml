@@ -61,19 +61,19 @@
         <div class="card-body">
             <div class="form-group">
                 <label class="form-label">Company Name</label>
-                <input type="text" class="form-control" value="CompuGear">
+                <input type="text" class="form-control" id="settingsCompanyName" value="CompuGear">
             </div>
             <div class="form-group">
                 <label class="form-label">Email Address</label>
-                <input type="email" class="form-control" value="admin@compugear.com">
+                <input type="email" class="form-control" id="settingsEmail" value="admin@compugear.com">
             </div>
             <div class="form-group">
                 <label class="form-label">Phone Number</label>
-                <input type="tel" class="form-control" value="+1 555-0100">
+                <input type="tel" class="form-control" id="settingsPhone" value="+63 XXX-XXX-XXXX">
             </div>
             <div class="form-group mb-0">
                 <label class="form-label">Address</label>
-                <input type="text" class="form-control" value="123 Tech Street, NY 10001">
+                <input type="text" class="form-control" id="settingsAddress" value="123 Tech Street, Manila">
             </div>
         </div>
     </div>
@@ -85,34 +85,34 @@
         <div class="card-body">
             <div class="form-group">
                 <label class="form-label">Currency</label>
-                <select class="form-control">
-                    <option selected>PHP (₱)</option>
-                    <option>USD ($)</option>
-                    <option>EUR (€)</option>
-                    <option>GBP (£)</option>
+                <select class="form-control" id="settingsCurrency">
+                    <option value="PHP" selected>PHP (₱)</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                    <option value="GBP">GBP (£)</option>
                 </select>
             </div>
             <div class="form-group">
                 <label class="form-label">Date Format</label>
-                <select class="form-control">
-                    <option selected>MM/DD/YYYY</option>
-                    <option>DD/MM/YYYY</option>
-                    <option>YYYY-MM-DD</option>
+                <select class="form-control" id="settingsDateFormat">
+                    <option value="MM/DD/YYYY" selected>MM/DD/YYYY</option>
+                    <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                    <option value="YYYY-MM-DD">YYYY-MM-DD</option>
                 </select>
             </div>
             <div class="form-group">
                 <label class="form-label">Timezone</label>
-                <select class="form-control">
-                    <option selected>Asia/Manila (PHT)</option>
-                    <option>Eastern Time (ET)</option>
-                    <option>Pacific Time (PT)</option>
+                <select class="form-control" id="settingsTimezone">
+                    <option value="Asia/Manila" selected>Asia/Manila (PHT)</option>
+                    <option value="US/Eastern">Eastern Time (ET)</option>
+                    <option value="US/Pacific">Pacific Time (PT)</option>
                 </select>
             </div>
             <div class="form-group mb-0">
                 <label class="form-label">Language</label>
-                <select class="form-control">
-                    <option selected>English</option>
-                    <option>Filipino</option>
+                <select class="form-control" id="settingsLanguage">
+                    <option value="en" selected>English</option>
+                    <option value="fil">Filipino</option>
                 </select>
             </div>
         </div>
@@ -126,28 +126,28 @@
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span>Email Notifications</span>
                 <label class="toggle-switch">
-                    <input type="checkbox" checked>
+                    <input type="checkbox" id="notifEmail" checked>
                     <span class="toggle-slider"></span>
                 </label>
             </div>
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span>Low Stock Alerts</span>
                 <label class="toggle-switch">
-                    <input type="checkbox" checked>
+                    <input type="checkbox" id="notifLowStock" checked>
                     <span class="toggle-slider"></span>
                 </label>
             </div>
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span>New Order Notifications</span>
                 <label class="toggle-switch">
-                    <input type="checkbox" checked>
+                    <input type="checkbox" id="notifNewOrder" checked>
                     <span class="toggle-slider"></span>
                 </label>
             </div>
             <div class="d-flex justify-content-between align-items-center">
                 <span>Support Ticket Updates</span>
                 <label class="toggle-switch">
-                    <input type="checkbox" checked>
+                    <input type="checkbox" id="notifTicket" checked>
                     <span class="toggle-slider"></span>
                 </label>
             </div>
@@ -162,21 +162,21 @@
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span>Two-Factor Authentication</span>
                 <label class="toggle-switch">
-                    <input type="checkbox">
+                    <input type="checkbox" id="sec2fa">
                     <span class="toggle-slider"></span>
                 </label>
             </div>
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span>Session Timeout (30 min)</span>
                 <label class="toggle-switch">
-                    <input type="checkbox" checked>
+                    <input type="checkbox" id="secTimeout" checked>
                     <span class="toggle-slider"></span>
                 </label>
             </div>
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <span>Login Activity Logging</span>
                 <label class="toggle-switch">
-                    <input type="checkbox" checked>
+                    <input type="checkbox" id="secLogging" checked>
                     <span class="toggle-slider"></span>
                 </label>
             </div>
@@ -262,7 +262,7 @@
     let rolesData = [];
     let modulesData = [];
 
-    document.addEventListener('DOMContentLoaded', loadRoleAccess);
+    // Role access loaded from the combined DOMContentLoaded handler below
 
     async function loadRoleAccess() {
         try {
@@ -357,7 +357,58 @@
     }
 
     function saveGeneralSettings() {
-        if (typeof showSuccess === 'function') showSuccess('Settings saved successfully');
-        else alert('Settings saved successfully');
+        const settings = {
+            companyName: document.getElementById('settingsCompanyName')?.value || '',
+            email: document.getElementById('settingsEmail')?.value || '',
+            phone: document.getElementById('settingsPhone')?.value || '',
+            address: document.getElementById('settingsAddress')?.value || '',
+            currency: document.getElementById('settingsCurrency')?.value || 'PHP',
+            dateFormat: document.getElementById('settingsDateFormat')?.value || 'MM/DD/YYYY',
+            timezone: document.getElementById('settingsTimezone')?.value || 'Asia/Manila',
+            language: document.getElementById('settingsLanguage')?.value || 'en',
+            notifEmail: document.getElementById('notifEmail')?.checked ?? true,
+            notifLowStock: document.getElementById('notifLowStock')?.checked ?? true,
+            notifNewOrder: document.getElementById('notifNewOrder')?.checked ?? true,
+            notifTicket: document.getElementById('notifTicket')?.checked ?? true,
+            sec2fa: document.getElementById('sec2fa')?.checked ?? false,
+            secTimeout: document.getElementById('secTimeout')?.checked ?? true,
+            secLogging: document.getElementById('secLogging')?.checked ?? true,
+            savedAt: new Date().toISOString()
+        };
+        localStorage.setItem('compugear_admin_settings', JSON.stringify(settings));
+        if (typeof showSuccess === 'function') showSuccess('All settings saved successfully');
+        else alert('All settings saved successfully');
     }
+
+    // Load saved settings on page init
+    function loadSavedSettings() {
+        try {
+            const saved = JSON.parse(localStorage.getItem('compugear_admin_settings'));
+            if (!saved) return;
+
+            const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+            const setChk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = val; };
+
+            setVal('settingsCompanyName', saved.companyName);
+            setVal('settingsEmail', saved.email);
+            setVal('settingsPhone', saved.phone);
+            setVal('settingsAddress', saved.address);
+            setVal('settingsCurrency', saved.currency);
+            setVal('settingsDateFormat', saved.dateFormat);
+            setVal('settingsTimezone', saved.timezone);
+            setVal('settingsLanguage', saved.language);
+            setChk('notifEmail', saved.notifEmail);
+            setChk('notifLowStock', saved.notifLowStock);
+            setChk('notifNewOrder', saved.notifNewOrder);
+            setChk('notifTicket', saved.notifTicket);
+            setChk('sec2fa', saved.sec2fa);
+            setChk('secTimeout', saved.secTimeout);
+            setChk('secLogging', saved.secLogging);
+        } catch (e) { /* ignore parse errors */ }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSavedSettings();
+        loadRoleAccess();
+    });
 </script>

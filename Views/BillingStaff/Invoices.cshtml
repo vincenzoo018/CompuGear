@@ -6,7 +6,7 @@
 <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
         <h1 class="page-title">Invoices</h1>
-        <p class="page-subtitle">View and manage customer invoices</p>
+        <p class="page-subtitle">View customer order invoice details (read-only)</p>
     </div>
     <div class="d-flex gap-2">
         <button class="btn btn-outline-primary" onclick="exportInvoices()">
@@ -131,60 +131,6 @@
                 <button type="button" class="btn btn-info" onclick="Invoices.print(Invoices.currentId)">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                     Print
-                </button>
-                <button type="button" class="btn btn-success" onclick="Invoices.recordPayment(Invoices.currentId)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                    Record Payment
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Payment Modal -->
-<div class="modal fade" id="paymentModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header" style="background: #10B981; color: white;">
-                <h5 class="modal-title">Record Payment</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Recording payment for invoice <strong id="paymentInvoiceNumber"></strong></p>
-                <input type="hidden" id="paymentInvoiceId">
-                <div class="mb-3">
-                    <label class="form-label">Amount Received</label>
-                    <div class="input-group">
-                        <span class="input-group-text">₱</span>
-                        <input type="number" class="form-control" id="paymentAmount" step="0.01" required>
-                    </div>
-                    <div class="form-text">Outstanding: <span id="outstandingBalance">₱0.00</span></div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Payment Method</label>
-                    <select class="form-select" id="paymentMethod" required>
-                        <option value="Cash">Cash</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                        <option value="Credit Card">Credit Card</option>
-                        <option value="GCash">GCash</option>
-                        <option value="Maya">Maya</option>
-                        <option value="Check">Check</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Reference #</label>
-                    <input type="text" class="form-control" id="paymentReference" placeholder="Transaction/Check number">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Notes</label>
-                    <textarea class="form-control" id="paymentNotes" rows="2"></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" onclick="Invoices.savePayment()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1"><polyline points="20 6 9 17 4 12"/></svg>
-                    Record Payment
                 </button>
             </div>
         </div>

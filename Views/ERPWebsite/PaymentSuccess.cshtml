@@ -1,0 +1,230 @@
+@{
+    Layout = "~/Views/ERPWebsite/_ERPWebsiteLayout.cshtml";
+    ViewData["Title"] = "Payment Successful";
+    ViewData["ActivePage"] = "Pricing";
+}
+
+@section Styles {
+    .payment-page {
+        padding: 80px 24px 120px;
+        background: #f8f9fc;
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .payment-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 56px 48px;
+        max-width: 520px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+        border: 1px solid #eee;
+    }
+
+    .payment-icon {
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+    }
+    .payment-icon.success { background: rgba(16,185,129,0.1); color: #10B981; }
+    .payment-icon.loading { background: rgba(0,128,128,0.1); color: #008080; }
+    .payment-icon.error { background: rgba(239,68,68,0.1); color: #ef4444; }
+
+    .payment-card h2 {
+        font-size: 1.6rem; font-weight: 700; color: #1a1a2e; margin-bottom: 12px;
+    }
+    .payment-card p {
+        font-size: 0.95rem; color: #777; line-height: 1.7; margin-bottom: 8px;
+    }
+
+    .payment-details {
+        background: #f8f9fc; border-radius: 12px; padding: 20px;
+        margin: 24px 0; text-align: left;
+    }
+    .payment-details .detail-row {
+        display: flex; justify-content: space-between;
+        padding: 8px 0; font-size: 0.9rem;
+        border-bottom: 1px solid #eee;
+    }
+    .payment-details .detail-row:last-child { border-bottom: none; }
+    .payment-details .detail-label { color: #888; }
+    .payment-details .detail-value { font-weight: 600; color: #1a1a2e; }
+
+    .btn-login {
+        display: inline-block; padding: 14px 48px;
+        background: #008080; color: #fff;
+        border-radius: 10px; font-weight: 600; font-size: 1rem;
+        transition: all 0.3s; margin-top: 24px;
+        cursor: pointer; border: none;
+        font-family: 'Poppins', sans-serif;
+    }
+    .btn-login:hover { background: #006666; transform: translateY(-1px); }
+
+    .btn-retry {
+        display: inline-block; padding: 12px 36px;
+        background: #fff; color: #008080;
+        border: 2px solid #008080;
+        border-radius: 10px; font-weight: 600; font-size: 0.95rem;
+        transition: all 0.3s; margin-top: 16px;
+        cursor: pointer;
+        font-family: 'Poppins', sans-serif;
+    }
+    .btn-retry:hover { background: rgba(0,128,128,0.05); }
+
+    .spinner-verify {
+        width: 36px; height: 36px;
+        border: 3px solid rgba(0,128,128,0.2);
+        border-top-color: #008080;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto;
+    }
+    @@keyframes spin { to { transform: rotate(360deg); } }
+
+    #verifyingState, #successState, #errorState { display: none; }
+    #verifyingState.active, #successState.active, #errorState.active { display: block; }
+
+    @@media (max-width: 768px) {
+        .payment-card { padding: 40px 24px; }
+    }
+}
+
+<section class="payment-page">
+    <div class="payment-card">
+
+        <!-- Verifying State -->
+        <div id="verifyingState" class="active">
+            <div class="payment-icon loading">
+                <div class="spinner-verify"></div>
+            </div>
+            <h2>Verifying Payment...</h2>
+            <p>Please wait while we confirm your payment with PayMongo and set up your account.</p>
+        </div>
+
+        <!-- Success State -->
+        <div id="successState">
+            <div class="payment-icon success">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+            <h2>Payment Successful!</h2>
+            <p>Your CompuGear ERP subscription is now active. Your account has been created and is ready to use.</p>
+
+            <div class="payment-details">
+                <div class="detail-row">
+                    <span class="detail-label">Company</span>
+                    <span class="detail-value" id="detailCompany">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Plan</span>
+                    <span class="detail-value" id="detailPlan">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Login Email</span>
+                    <span class="detail-value" id="detailEmail">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Ref</span>
+                    <span class="detail-value" id="detailPayment">-</span>
+                </div>
+            </div>
+
+            <a href="/Auth/Login" class="btn-login">Go to Login</a>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState">
+            <div class="payment-icon error">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="15" y1="9" x2="9" y2="15"/>
+                    <line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+            </div>
+            <h2>Verification Failed</h2>
+            <p id="errorMessage">We could not verify your payment. If you were charged, please contact our support team.</p>
+            <button class="btn-retry" onclick="retryVerification()">Try Again</button>
+            <br>
+            <a href="/ERPWebsite/Subscribe" class="btn-retry" style="margin-top: 8px; display: inline-block;">Back to Subscribe</a>
+        </div>
+
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        const registrationId = '@ViewData["RegistrationId"]';
+        const sessionId = '@ViewData["SessionId"]';
+
+        // Auto-verify on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            if (registrationId && sessionId) {
+                verifyPayment();
+            } else {
+                showState('error', 'Missing payment information. Please start a new subscription.');
+            }
+        });
+
+        async function verifyPayment() {
+            showState('verifying');
+
+            try {
+                const response = await fetch('/api/erpwebsite/verify-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        registrationId: registrationId,
+                        sessionId: sessionId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Show success with details
+                    document.getElementById('detailCompany').textContent = result.companyName || '-';
+                    document.getElementById('detailPlan').textContent = (result.planName || '-') + ' Plan';
+                    document.getElementById('detailEmail').textContent = result.adminEmail || '-';
+                    document.getElementById('detailPayment').textContent = result.paymentId
+                        ? result.paymentId.substring(0, 16) + '...'
+                        : '-';
+                    showState('success');
+                } else {
+                    showState('error', result.message || 'Payment verification failed.');
+                }
+            } catch (err) {
+                console.error('Verification error:', err);
+                showState('error', 'Network error. Please check your connection and try again.');
+            }
+        }
+
+        function retryVerification() {
+            verifyPayment();
+        }
+
+        function showState(state, errorMsg) {
+            document.getElementById('verifyingState').classList.remove('active');
+            document.getElementById('successState').classList.remove('active');
+            document.getElementById('errorState').classList.remove('active');
+
+            if (state === 'verifying') {
+                document.getElementById('verifyingState').classList.add('active');
+            } else if (state === 'success') {
+                document.getElementById('successState').classList.add('active');
+            } else if (state === 'error') {
+                if (errorMsg) {
+                    document.getElementById('errorMessage').textContent = errorMsg;
+                }
+                document.getElementById('errorState').classList.add('active');
+            }
+        }
+    </script>
+}

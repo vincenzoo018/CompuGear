@@ -531,8 +531,8 @@ const KnowledgeBase = {
 
     async load() {
         try {
-            this.articles = await API.get('/knowledge/articles');
-            this.categories = await API.get('/knowledge/categories');
+            this.articles = await API.get('/knowledge-articles');
+            this.categories = await API.get('/knowledge-categories');
             this.render();
         } catch (error) {
             Toast.error('Failed to load knowledge base');

@@ -30,6 +30,54 @@ namespace CompuGear.Controllers
             return HttpContext.Session.GetInt32("CompanyId");
         }
 
+        private int? GetRoleId()
+        {
+            return HttpContext.Session.GetInt32("RoleId");
+        }
+
+        private bool HasFullBillingAccess()
+        {
+            return false;
+        }
+
+        private static void SyncInvoiceFromOrderState(Invoice invoice, Order order)
+        {
+            var isOrderConfirmed = order.OrderStatus == "Confirmed";
+            var isOrderPaid = order.PaymentStatus == "Paid" || order.PaidAmount >= order.TotalAmount;
+
+            if (isOrderConfirmed && isOrderPaid)
+            {
+                invoice.Status = "Paid";
+                invoice.PaidAmount = invoice.TotalAmount;
+                invoice.BalanceDue = 0;
+                if (!invoice.PaidAt.HasValue)
+                    invoice.PaidAt = DateTime.UtcNow;
+            }
+            else
+            {
+                invoice.PaidAmount = Math.Min(invoice.PaidAmount, invoice.TotalAmount);
+                invoice.BalanceDue = Math.Max(0, invoice.TotalAmount - invoice.PaidAmount);
+
+                if (invoice.PaidAmount >= invoice.TotalAmount)
+                {
+                    invoice.Status = "Paid";
+                    if (!invoice.PaidAt.HasValue)
+                        invoice.PaidAt = DateTime.UtcNow;
+                }
+                else if (invoice.PaidAmount > 0 && invoice.Status != "Cancelled" && invoice.Status != "Void")
+                {
+                    invoice.Status = "Partial";
+                }
+                else if (invoice.PaidAmount <= 0 && invoice.Status == "Paid")
+                {
+                    invoice.Status = "Pending";
+                    invoice.PaidAt = null;
+                }
+            }
+
+            invoice.UpdatedAt = DateTime.UtcNow;
+        }
+
         #region Marketing - Campaigns
 
         [HttpGet("campaigns")]
@@ -481,11 +529,9 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var products = await _context.Products
-                    .Include(p => p.Category)
-                    .Include(p => p.Brand)
-                    .Include(p => p.Supplier)
+                    .AsNoTracking()
                     .Where(p => companyId == null || p.CompanyId == companyId)
-                    .OrderByDescending(p => p.CreatedAt)
+                    .OrderByDescending(p => p.ProductId)
                     .Select(p => new
                     {
                         p.ProductId,
@@ -602,8 +648,10 @@ namespace CompuGear.Controllers
             try
             {
                 var companyId = GetCompanyId();
-                var product = await _context.Products.FindAsync(id);
-                if (product == null || (companyId != null && product.CompanyId != companyId)) return NotFound();
+                var product = await _context.Products
+                    .AsTracking()
+                    .FirstOrDefaultAsync(p => p.ProductId == id && (companyId == null || p.CompanyId == companyId));
+                if (product == null) return NotFound();
 
                 var previousStock = product.StockQuantity;
                 product.StockQuantity = request.NewQuantity;
@@ -1252,6 +1300,20 @@ namespace CompuGear.Controllers
                 if (order.OrderStatus == "Cancelled" && !existing.CancelledAt.HasValue)
                     existing.CancelledAt = DateTime.UtcNow;
 
+                if (order.OrderStatus == "Confirmed")
+                {
+                    existing.PaymentStatus = "Paid";
+                    existing.PaidAmount = existing.TotalAmount;
+                }
+
+                var linkedInvoice = await _context.Invoices
+                    .FirstOrDefaultAsync(i => i.OrderId == existing.OrderId && (companyId == null || i.CompanyId == companyId));
+
+                if (linkedInvoice != null)
+                {
+                    SyncInvoiceFromOrderState(linkedInvoice, existing);
+                }
+
                 await _context.SaveChangesAsync();
                 return Ok(new { success = true, message = "Order updated successfully" });
             }
@@ -1267,8 +1329,10 @@ namespace CompuGear.Controllers
             try
             {
                 var companyId = GetCompanyId();
-                var order = await _context.Orders.FindAsync(id);
-                if (order == null || (companyId != null && order.CompanyId != companyId)) return NotFound();
+                var order = await _context.Orders
+                    .AsTracking()
+                    .FirstOrDefaultAsync(o => o.OrderId == id && (companyId == null || o.CompanyId == companyId));
+                if (order == null) return NotFound();
 
                 var previousStatus = order.OrderStatus;
                 order.OrderStatus = request.Status;
@@ -1283,6 +1347,21 @@ namespace CompuGear.Controllers
                     order.DeliveredAt = DateTime.UtcNow;
                 if (request.Status == "Cancelled" && !order.CancelledAt.HasValue)
                     order.CancelledAt = DateTime.UtcNow;
+
+                // Business rule: once order is confirmed, payment is marked as paid
+                if (request.Status == "Confirmed")
+                {
+                    order.PaymentStatus = "Paid";
+                    order.PaidAmount = order.TotalAmount;
+                }
+
+                var linkedInvoice = await _context.Invoices
+                    .FirstOrDefaultAsync(i => i.OrderId == order.OrderId && (companyId == null || i.CompanyId == companyId));
+
+                if (linkedInvoice != null)
+                {
+                    SyncInvoiceFromOrderState(linkedInvoice, order);
+                }
 
                 // Create status history
                 var history = new OrderStatusHistory
@@ -1312,6 +1391,7 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var order = await _context.Orders
+                    .AsTracking()
                     .Include(o => o.OrderItems)
                     .Include(o => o.Customer)
                     .FirstOrDefaultAsync(o => o.OrderId == id && (companyId == null || o.CompanyId == companyId));
@@ -1325,6 +1405,8 @@ namespace CompuGear.Controllers
                 order.OrderStatus = "Confirmed";
                 order.ConfirmedAt = DateTime.UtcNow;
                 order.UpdatedAt = DateTime.UtcNow;
+                order.PaymentStatus = "Paid";
+                order.PaidAmount = order.TotalAmount;
 
                 // Create status history
                 _context.OrderStatusHistory.Add(new OrderStatusHistory
@@ -1386,6 +1468,10 @@ namespace CompuGear.Controllers
                     }
 
                     _context.Invoices.Add(invoice);
+                }
+                else
+                {
+                    SyncInvoiceFromOrderState(existingInvoice, order);
                 }
 
                 await _context.SaveChangesAsync();
@@ -1487,8 +1573,10 @@ namespace CompuGear.Controllers
             try
             {
                 var companyId = GetCompanyId();
-                var order = await _context.Orders.FindAsync(id);
-                if (order == null || (companyId != null && order.CompanyId != companyId)) return NotFound(new { success = false, message = "Order not found" });
+                var order = await _context.Orders
+                    .AsTracking()
+                    .FirstOrDefaultAsync(o => o.OrderId == id && (companyId == null || o.CompanyId == companyId));
+                if (order == null) return NotFound(new { success = false, message = "Order not found" });
 
                 if (order.OrderStatus != "Pending")
                     return BadRequest(new { success = false, message = "Only pending orders can be rejected" });
@@ -2188,6 +2276,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                if (!HasFullBillingAccess())
+                    return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "Invoices are read-only. Update order status instead." });
+
                 var companyId = GetCompanyId();
                 invoice.CompanyId = companyId;
                 invoice.InvoiceNumber = $"INV-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
@@ -2211,6 +2302,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                if (!HasFullBillingAccess())
+                    return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "Invoices are read-only. Update order status instead." });
+
                 var companyId = GetCompanyId();
                 var existing = await _context.Invoices.FindAsync(id);
                 if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
@@ -2234,6 +2328,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                if (!HasFullBillingAccess())
+                    return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "Invoices are read-only. Update order status instead." });
+
                 var companyId = GetCompanyId();
                 var invoice = await _context.Invoices.FindAsync(id);
                 if (invoice == null || (companyId != null && invoice.CompanyId != companyId)) return NotFound();
@@ -2256,6 +2353,88 @@ namespace CompuGear.Controllers
             try
             {
                 var companyId = GetCompanyId();
+
+                if (id < 0)
+                {
+                    var orderId = -id;
+                    var order = await _context.Orders
+                        .Include(o => o.Customer)
+                        .Include(o => o.OrderItems)
+                        .FirstOrDefaultAsync(o => o.OrderId == orderId && (companyId == null || o.CompanyId == companyId));
+
+                    if (order == null)
+                        return NotFound(new { success = false, message = "Invoice not found" });
+
+                    var orderPayments = await _context.Payments
+                        .Where(p => p.OrderId == order.OrderId && (companyId == null || p.CompanyId == companyId))
+                        .OrderBy(p => p.PaymentDate)
+                        .Select(p => new
+                        {
+                            p.PaymentNumber,
+                            p.PaymentDate,
+                            p.Amount,
+                            p.PaymentMethodType,
+                            p.ReferenceNumber,
+                            p.Status
+                        })
+                        .ToListAsync();
+
+                    var derivedStatus = order.OrderStatus == "Confirmed" && order.PaymentStatus == "Paid"
+                        ? "Paid/Confirmed"
+                        : (order.PaidAmount >= order.TotalAmount ? "Paid" : (order.PaidAmount > 0 ? "Partial" : "Pending"));
+
+                    return Ok(new
+                    {
+                        success = true,
+                        data = new
+                        {
+                            InvoiceId = -order.OrderId,
+                            InvoiceNumber = "ORD-" + order.OrderNumber,
+                            InvoiceDate = order.OrderDate,
+                            DueDate = order.OrderDate,
+                            Status = derivedStatus,
+                            Subtotal = order.Subtotal,
+                            DiscountAmount = order.DiscountAmount,
+                            TaxAmount = order.TaxAmount,
+                            ShippingAmount = order.ShippingAmount,
+                            TotalAmount = order.TotalAmount,
+                            PaidAmount = order.PaidAmount,
+                            BalanceDue = Math.Max(0, order.TotalAmount - order.PaidAmount),
+                            BillingName = order.Customer != null ? order.Customer.FirstName + " " + order.Customer.LastName : "Customer",
+                            order.BillingAddress,
+                            order.BillingCity,
+                            order.BillingState,
+                            order.BillingZipCode,
+                            BillingCountry = order.BillingCountry ?? "Philippines",
+                            BillingEmail = order.Customer?.Email,
+                            PaymentTerms = "Order Based",
+                            order.Notes,
+                            OrderNumber = order.OrderNumber,
+                            OrderDate = order.OrderDate,
+                            OrderStatus = order.OrderStatus,
+                            OrderPaymentStatus = order.PaymentStatus,
+                            OrderPaymentMethod = order.PaymentMethod,
+                            OrderTrackingNumber = order.TrackingNumber,
+                            OrderShippingMethod = order.ShippingMethod,
+                            OrderConfirmedAt = order.ConfirmedAt,
+                            CustomerName = order.Customer != null ? order.Customer.FirstName + " " + order.Customer.LastName : "Customer",
+                            CustomerEmail = order.Customer?.Email,
+                            CustomerPhone = order.Customer?.Phone,
+                            Items = order.OrderItems.Select(item => new
+                            {
+                                Description = item.ProductName,
+                                item.Quantity,
+                                item.UnitPrice,
+                                DiscountAmount = item.DiscountAmount,
+                                TaxAmount = item.TaxAmount,
+                                TotalPrice = item.TotalPrice,
+                                ProductCode = item.ProductCode
+                            }),
+                            Payments = orderPayments
+                        }
+                    });
+                }
+
                 var invoice = await _context.Invoices
                     .Include(i => i.Customer)
                     .Include(i => i.Items)
@@ -2267,7 +2446,7 @@ namespace CompuGear.Controllers
 
                 // Get payments for this invoice
                 var payments = await _context.Payments
-                    .Where(p => p.InvoiceId == id)
+                    .Where(p => p.InvoiceId == id && (companyId == null || p.CompanyId == companyId))
                     .OrderBy(p => p.PaymentDate)
                     .Select(p => new
                     {
@@ -2289,14 +2468,20 @@ namespace CompuGear.Controllers
                         invoice.InvoiceNumber,
                         invoice.InvoiceDate,
                         invoice.DueDate,
-                        invoice.Status,
+                        Status = invoice.Order != null && invoice.Order.OrderStatus == "Confirmed" && invoice.Order.PaymentStatus == "Paid"
+                            ? "Paid/Confirmed"
+                            : invoice.Status,
                         invoice.Subtotal,
                         invoice.DiscountAmount,
                         invoice.TaxAmount,
                         invoice.ShippingAmount,
                         invoice.TotalAmount,
-                        invoice.PaidAmount,
-                        invoice.BalanceDue,
+                        PaidAmount = invoice.Order != null && invoice.Order.OrderStatus == "Confirmed" && invoice.Order.PaymentStatus == "Paid"
+                            ? invoice.TotalAmount
+                            : invoice.PaidAmount,
+                        BalanceDue = invoice.Order != null && invoice.Order.OrderStatus == "Confirmed" && invoice.Order.PaymentStatus == "Paid"
+                            ? 0
+                            : Math.Max(0, invoice.TotalAmount - invoice.PaidAmount),
                         invoice.BillingName,
                         invoice.BillingAddress,
                         invoice.BillingCity,
@@ -2307,6 +2492,13 @@ namespace CompuGear.Controllers
                         invoice.PaymentTerms,
                         invoice.Notes,
                         OrderNumber = invoice.Order?.OrderNumber,
+                        OrderDate = invoice.Order != null ? invoice.Order.OrderDate : (DateTime?)null,
+                        OrderStatus = invoice.Order?.OrderStatus,
+                        OrderPaymentStatus = invoice.Order?.PaymentStatus,
+                        OrderPaymentMethod = invoice.Order?.PaymentMethod,
+                        OrderTrackingNumber = invoice.Order?.TrackingNumber,
+                        OrderShippingMethod = invoice.Order?.ShippingMethod,
+                        OrderConfirmedAt = invoice.Order?.ConfirmedAt,
                         CustomerName = invoice.Customer != null
                             ? invoice.Customer.FirstName + " " + invoice.Customer.LastName
                             : invoice.BillingName,
@@ -2381,9 +2573,26 @@ namespace CompuGear.Controllers
                     .ToList();
 
                 // Invoice status breakdown
-                var allInvoices = await _context.Invoices.Where(i => companyId == null || i.CompanyId == companyId).ToListAsync();
-                var invoiceStatusBreakdown = allInvoices
-                    .GroupBy(i => i.Status)
+                var allInvoices = await _context.Invoices
+                    .Include(i => i.Order)
+                    .Where(i => companyId == null || i.CompanyId == companyId)
+                    .ToListAsync();
+
+                var normalizedInvoices = allInvoices.Select(i => new
+                {
+                    EffectiveStatus = i.Order != null && i.Order.OrderStatus == "Confirmed" && i.Order.PaymentStatus == "Paid"
+                        ? "Paid/Confirmed"
+                        : (i.PaidAmount >= i.TotalAmount
+                            ? "Paid"
+                            : (i.PaidAmount > 0 && i.Status != "Cancelled" && i.Status != "Void" ? "Partial" : i.Status)),
+                    i.TotalAmount,
+                    EffectiveBalance = i.Order != null && i.Order.OrderStatus == "Confirmed" && i.Order.PaymentStatus == "Paid"
+                        ? 0
+                        : Math.Max(0, i.TotalAmount - i.PaidAmount)
+                }).ToList();
+
+                var invoiceStatusBreakdown = normalizedInvoices
+                    .GroupBy(i => i.EffectiveStatus)
                     .Select(g => new { Status = g.Key, Count = g.Count(), Amount = g.Sum(i => i.TotalAmount) })
                     .ToList();
 
@@ -2395,8 +2604,8 @@ namespace CompuGear.Controllers
                         totalRevenue = orders.Sum(o => o.TotalAmount),
                         totalInvoiced = invoices.Sum(i => i.TotalAmount),
                         totalCollected = payments.Sum(p => p.Amount),
-                        outstanding = allInvoices.Where(i => i.Status != "Paid" && i.Status != "Cancelled").Sum(i => i.BalanceDue),
-                        invoiceCount = allInvoices.Count,
+                        outstanding = normalizedInvoices.Where(i => i.EffectiveStatus != "Paid" && i.EffectiveStatus != "Paid/Confirmed" && i.EffectiveStatus != "Cancelled").Sum(i => i.EffectiveBalance),
+                        invoiceCount = normalizedInvoices.Count,
                         paymentCount = payments.Count,
                         monthlyRevenue,
                         monthlyInvoiced,
@@ -2428,24 +2637,92 @@ namespace CompuGear.Controllers
             try
             {
                 var companyId = GetCompanyId();
-                payment.CompanyId = companyId;
+
+                Invoice? invoice = null;
+                Order? order = null;
+
+                if (payment.InvoiceId.HasValue)
+                {
+                    invoice = await _context.Invoices
+                        .FirstOrDefaultAsync(i => i.InvoiceId == payment.InvoiceId.Value &&
+                                                  (companyId == null || i.CompanyId == companyId));
+
+                    if (invoice == null)
+                        return BadRequest(new { success = false, message = "Linked invoice not found" });
+
+                    payment.CustomerId = payment.CustomerId > 0 ? payment.CustomerId : invoice.CustomerId;
+                    payment.OrderId ??= invoice.OrderId;
+                    payment.CompanyId = companyId ?? invoice.CompanyId;
+                }
+
+                if (payment.OrderId.HasValue)
+                {
+                    order = await _context.Orders
+                        .FirstOrDefaultAsync(o => o.OrderId == payment.OrderId.Value &&
+                                                  (companyId == null || o.CompanyId == companyId));
+
+                    if (order != null)
+                    {
+                        payment.CustomerId = payment.CustomerId > 0 ? payment.CustomerId : order.CustomerId;
+                        payment.CompanyId ??= companyId ?? order.CompanyId;
+                    }
+                }
+
+                if (payment.CustomerId <= 0)
+                    return BadRequest(new { success = false, message = "Customer is required for payment" });
+
+                payment.CompanyId ??= companyId;
                 payment.PaymentNumber = $"PAY-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
-                payment.PaymentDate = DateTime.UtcNow;
+                if (payment.PaymentDate == default)
+                    payment.PaymentDate = DateTime.UtcNow;
+                if (string.IsNullOrWhiteSpace(payment.Status))
+                    payment.Status = "Completed";
                 payment.CreatedAt = DateTime.UtcNow;
 
                 _context.Payments.Add(payment);
 
                 // Update invoice paid amount
-                if (payment.InvoiceId.HasValue)
+                if (invoice != null)
                 {
-                    var invoice = await _context.Invoices.FindAsync(payment.InvoiceId.Value);
-                    if (invoice != null)
+                    invoice.PaidAmount += payment.Amount;
+                    invoice.PaidAmount = Math.Min(invoice.PaidAmount, invoice.TotalAmount);
+                    invoice.BalanceDue = Math.Max(0, invoice.TotalAmount - invoice.PaidAmount);
+
+                    if (invoice.PaidAmount >= invoice.TotalAmount)
                     {
-                        invoice.PaidAmount += payment.Amount;
-                        if (invoice.PaidAmount >= invoice.TotalAmount)
-                            invoice.Status = "Paid";
-                        else if (invoice.PaidAmount > 0)
-                            invoice.Status = "Partial";
+                        invoice.Status = "Paid";
+                        invoice.PaidAt = DateTime.UtcNow;
+                    }
+                    else if (invoice.PaidAmount > 0)
+                        invoice.Status = "Partial";
+                }
+
+                if (order == null && payment.OrderId.HasValue)
+                {
+                    order = await _context.Orders
+                        .FirstOrDefaultAsync(o => o.OrderId == payment.OrderId.Value &&
+                                                  (companyId == null || o.CompanyId == companyId));
+                }
+
+                if (order != null)
+                {
+                    order.PaidAmount += payment.Amount;
+                    order.PaidAmount = Math.Min(order.PaidAmount, order.TotalAmount);
+                    order.PaymentStatus = order.PaidAmount >= order.TotalAmount ? "Paid" : "Partial";
+
+                    if (order.OrderStatus == "Pending" && order.PaymentStatus == "Paid")
+                    {
+                        order.OrderStatus = "Confirmed";
+                        order.ConfirmedAt = DateTime.UtcNow;
+                    }
+
+                    order.UpdatedAt = DateTime.UtcNow;
+
+                    var linkedInvoice = invoice ?? await _context.Invoices
+                        .FirstOrDefaultAsync(i => i.OrderId == order.OrderId && (companyId == null || i.CompanyId == companyId));
+                    if (linkedInvoice != null)
+                    {
+                        SyncInvoiceFromOrderState(linkedInvoice, order);
                     }
                 }
 
@@ -2510,8 +2787,10 @@ namespace CompuGear.Controllers
             try
             {
                 var companyId = GetCompanyId();
-                var product = await _context.Products.FindAsync(request.ProductId);
-                if (product == null || (companyId != null && product.CompanyId != companyId))
+                var product = await _context.Products
+                    .AsTracking()
+                    .FirstOrDefaultAsync(p => p.ProductId == request.ProductId && (companyId == null || p.CompanyId == companyId));
+                if (product == null)
                     return NotFound(new { success = false, message = "Product not found" });
 
                 var previousStock = product.StockQuantity;
@@ -2837,7 +3116,9 @@ namespace CompuGear.Controllers
                 var agentId = HttpContext.Session.GetInt32("UserId");
                 var agentName = HttpContext.Session.GetString("FullName") ?? "Support Agent";
 
-                var session = await _context.ChatSessions.FindAsync(request.SessionId);
+                var session = await _context.ChatSessions
+                    .AsTracking()
+                    .FirstOrDefaultAsync(s => s.SessionId == request.SessionId);
                 if (session == null)
                     return Ok(new { success = false, message = "Chat session not found" });
 
@@ -2857,7 +3138,7 @@ namespace CompuGear.Controllers
 
                 await _context.SaveChangesAsync();
 
-                return Ok(new { success = true, message = "Chat accepted" });
+                return Ok(new { success = true, message = "Chat accepted", agentName });
             }
             catch (Exception ex)
             {
@@ -2871,7 +3152,9 @@ namespace CompuGear.Controllers
         {
             try
             {
-                var session = await _context.ChatSessions.FindAsync(request.SessionId);
+                var session = await _context.ChatSessions
+                    .AsTracking()
+                    .FirstOrDefaultAsync(s => s.SessionId == request.SessionId);
                 if (session == null)
                     return Ok(new { success = false, message = "Chat session not found" });
 
@@ -2907,7 +3190,9 @@ namespace CompuGear.Controllers
             {
                 var agentId = HttpContext.Session.GetInt32("UserId") ?? 0;
 
-                var session = await _context.ChatSessions.FindAsync(request.SessionId);
+                var session = await _context.ChatSessions
+                    .AsTracking()
+                    .FirstOrDefaultAsync(s => s.SessionId == request.SessionId);
                 if (session == null)
                     return Ok(new { success = false, message = "Chat session not found" });
 
@@ -2942,7 +3227,9 @@ namespace CompuGear.Controllers
             {
                 var agentName = HttpContext.Session.GetString("FullName") ?? "Support Agent";
 
-                var session = await _context.ChatSessions.FindAsync(request.SessionId);
+                var session = await _context.ChatSessions
+                    .AsTracking()
+                    .FirstOrDefaultAsync(s => s.SessionId == request.SessionId);
                 if (session == null)
                     return Ok(new { success = false, message = "Chat session not found" });
 
@@ -2970,6 +3257,63 @@ namespace CompuGear.Controllers
             }
         }
 
+        // Transfer chat to another agent
+        [HttpPost("TransferChat")]
+        public async Task<IActionResult> TransferChat([FromBody] TransferChatRequest request)
+        {
+            try
+            {
+                var fromAgentId = HttpContext.Session.GetInt32("UserId") ?? 0;
+                var fromAgentName = HttpContext.Session.GetString("FullName") ?? "Support Agent";
+
+                var session = await _context.ChatSessions
+                    .AsTracking()
+                    .FirstOrDefaultAsync(s => s.SessionId == request.SessionId);
+                if (session == null)
+                    return Ok(new { success = false, message = "Chat session not found" });
+
+                var toAgent = await _context.Users.FindAsync(request.ToAgentId);
+                if (toAgent == null)
+                    return Ok(new { success = false, message = "Target agent not found" });
+
+                // Create transfer record
+                var transfer = new ChatTransfer
+                {
+                    ChatSessionId = session.SessionId,
+                    FromUserId = fromAgentId,
+                    ToUserId = request.ToAgentId,
+                    Reason = request.Reason,
+                    TransferredAt = DateTime.UtcNow
+                };
+                _context.ChatTransfers.Add(transfer);
+
+                // Update session
+                session.AgentId = request.ToAgentId;
+                session.Status = "Transferred";
+
+                // Add system message
+                var toAgentName = $"{toAgent.FirstName} {toAgent.LastName}".Trim();
+                var systemMessage = new ChatMessage
+                {
+                    SessionId = session.SessionId,
+                    SenderType = "System",
+                    Message = $"Chat transferred from {fromAgentName} to {toAgentName}." + 
+                              (!string.IsNullOrEmpty(request.Reason) ? $" Reason: {request.Reason}" : ""),
+                    MessageType = "Text",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.ChatMessages.Add(systemMessage);
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = $"Chat transferred to {toAgentName}" });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
         // Customer requests live agent
         [HttpPost("RequestLiveAgent")]
         public async Task<IActionResult> RequestLiveAgent([FromBody] RequestLiveAgentRequest request)
@@ -2980,6 +3324,7 @@ namespace CompuGear.Controllers
 
                 // Find existing pending session or create new one
                 var session = await _context.ChatSessions
+                    .AsTracking()
                     .FirstOrDefaultAsync(s => s.CustomerId == customerId && 
                         (s.Status == "Active" || s.Status == "Pending"));
 
@@ -3034,7 +3379,9 @@ namespace CompuGear.Controllers
             {
                 var customerId = HttpContext.Session.GetInt32("CustomerId");
 
-                var session = await _context.ChatSessions.FindAsync(request.SessionId);
+                var session = await _context.ChatSessions
+                    .AsTracking()
+                    .FirstOrDefaultAsync(s => s.SessionId == request.SessionId);
                 if (session == null)
                     return Ok(new { success = false, message = "Chat session not found" });
 
@@ -3130,7 +3477,9 @@ namespace CompuGear.Controllers
         {
             try
             {
-                var session = await _context.ChatSessions.FindAsync(request.SessionId);
+                var session = await _context.ChatSessions
+                    .AsTracking()
+                    .FirstOrDefaultAsync(s => s.SessionId == request.SessionId);
                 if (session == null)
                     return Ok(new { success = false, message = "Chat session not found" });
 
@@ -3155,6 +3504,161 @@ namespace CompuGear.Controllers
             catch (Exception ex)
             {
                 return Ok(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("knowledge-categories")]
+        public async Task<IActionResult> GetKnowledgeCategoriesApi()
+        {
+            try
+            {
+                var categories = await _context.KnowledgeCategories
+                    .AsNoTracking()
+                    .Where(c => c.IsActive)
+                    .OrderBy(c => c.DisplayOrder)
+                    .ThenBy(c => c.CategoryName)
+                    .Select(c => new
+                    {
+                        c.CategoryId,
+                        c.CategoryName,
+                        c.Description,
+                        c.DisplayOrder,
+                        c.IsActive
+                    })
+                    .ToListAsync();
+
+                return Ok(categories);
+            }
+            catch
+            {
+                return Ok(new List<object>());
+            }
+        }
+
+        [HttpGet("knowledge-articles")]
+        public async Task<IActionResult> GetKnowledgeArticlesApi([FromQuery] int? categoryId = null, [FromQuery] string? search = null, [FromQuery] string? status = null)
+        {
+            try
+            {
+                var query = _context.KnowledgeArticles
+                    .AsNoTracking()
+                    .Include(a => a.Category)
+                    .AsQueryable();
+
+                if (categoryId.HasValue)
+                    query = query.Where(a => a.CategoryId == categoryId.Value);
+
+                if (!string.IsNullOrWhiteSpace(status))
+                    query = query.Where(a => a.Status == status);
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    query = query.Where(a =>
+                        a.Title.Contains(search) ||
+                        (a.Content != null && a.Content.Contains(search)) ||
+                        (a.Tags != null && a.Tags.Contains(search))
+                    );
+                }
+
+                var articles = await query
+                    .OrderByDescending(a => a.UpdatedAt)
+                    .Select(a => new
+                    {
+                        a.ArticleId,
+                        a.CategoryId,
+                        CategoryName = a.Category != null ? a.Category.CategoryName : null,
+                        a.Title,
+                        a.Content,
+                        a.Summary,
+                        a.Tags,
+                        a.ViewCount,
+                        a.HelpfulCount,
+                        a.NotHelpfulCount,
+                        a.Status,
+                        a.CreatedAt,
+                        a.UpdatedAt,
+                        a.CreatedBy,
+                        a.UpdatedBy
+                    })
+                    .ToListAsync();
+
+                return Ok(articles);
+            }
+            catch
+            {
+                return Ok(new List<object>());
+            }
+        }
+
+        [HttpGet("knowledge-articles/{id}")]
+        public async Task<IActionResult> GetKnowledgeArticleApi(int id)
+        {
+            try
+            {
+                var article = await _context.KnowledgeArticles
+                    .AsTracking()
+                    .FirstOrDefaultAsync(a => a.ArticleId == id);
+
+                if (article == null)
+                    return NotFound(new { success = false, message = "Article not found" });
+
+                article.ViewCount += 1;
+                article.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    article.ArticleId,
+                    article.CategoryId,
+                    article.Title,
+                    article.Content,
+                    article.Summary,
+                    article.Tags,
+                    article.ViewCount,
+                    article.HelpfulCount,
+                    article.NotHelpfulCount,
+                    article.Status,
+                    article.CreatedAt,
+                    article.UpdatedAt,
+                    article.CreatedBy,
+                    article.UpdatedBy
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost("knowledge-articles")]
+        public async Task<IActionResult> CreateKnowledgeArticleApi([FromBody] KnowledgeArticleCreateRequest request)
+        {
+            try
+            {
+                var userId = HttpContext.Session.GetInt32("UserId");
+
+                var article = new KnowledgeArticle
+                {
+                    CategoryId = request.CategoryId,
+                    Title = request.Title,
+                    Content = request.Content,
+                    Summary = request.Summary,
+                    Tags = request.Tags,
+                    Status = string.IsNullOrWhiteSpace(request.Status) ? "Pending Approval" : request.Status,
+                    CreatedBy = userId,
+                    UpdatedBy = userId,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _context.KnowledgeArticles.Add(article);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Knowledge article submitted", articleId = article.ArticleId });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
 
@@ -3315,7 +3819,7 @@ namespace CompuGear.Controllers
             try
             {
                 var companyId = GetCompanyId();
-                var invoices = await _context.Invoices
+                var dbInvoices = await _context.Invoices
                     .Include(i => i.Customer)
                     .Include(i => i.Order)
                     .Include(i => i.Items)
@@ -3336,9 +3840,17 @@ namespace CompuGear.Controllers
                         i.TaxAmount,
                         i.ShippingAmount,
                         i.TotalAmount,
-                        i.PaidAmount,
-                        i.BalanceDue,
-                        i.Status,
+                        PaidAmount = i.Order != null && i.Order.OrderStatus == "Confirmed" && i.Order.PaymentStatus == "Paid"
+                            ? i.TotalAmount
+                            : i.PaidAmount,
+                        BalanceDue = i.Order != null && i.Order.OrderStatus == "Confirmed" && i.Order.PaymentStatus == "Paid"
+                            ? 0
+                            : Math.Max(0, i.TotalAmount - i.PaidAmount),
+                        Status = i.Order != null && i.Order.OrderStatus == "Confirmed" && i.Order.PaymentStatus == "Paid"
+                            ? "Paid/Confirmed"
+                            : (i.PaidAmount >= i.TotalAmount
+                                ? "Paid"
+                                : (i.PaidAmount > 0 && i.Status != "Cancelled" && i.Status != "Void" ? "Partial" : i.Status)),
                         i.BillingName,
                         i.BillingAddress,
                         i.BillingCity,
@@ -3362,6 +3874,66 @@ namespace CompuGear.Controllers
                     })
                     .ToListAsync();
 
+                var mappedOrderIds = dbInvoices
+                    .Where(i => i.OrderId.HasValue)
+                    .Select(i => i.OrderId!.Value)
+                    .Distinct()
+                    .ToHashSet();
+
+                var derivedOrders = await _context.Orders
+                    .Include(o => o.Customer)
+                    .Include(o => o.OrderItems)
+                    .Where(o => (companyId == null || o.CompanyId == companyId) &&
+                                (o.OrderStatus == "Pending" || o.OrderStatus == "Confirmed") &&
+                                !mappedOrderIds.Contains(o.OrderId))
+                    .Select(o => new
+                    {
+                        InvoiceId = -o.OrderId,
+                        InvoiceNumber = "ORD-" + o.OrderNumber,
+                        OrderId = (int?)o.OrderId,
+                        OrderNumber = o.OrderNumber,
+                        CustomerId = o.CustomerId,
+                        CustomerName = o.Customer != null ? o.Customer.FirstName + " " + o.Customer.LastName : "N/A",
+                        InvoiceDate = o.OrderDate,
+                        DueDate = o.OrderDate,
+                        Subtotal = o.Subtotal,
+                        DiscountAmount = o.DiscountAmount,
+                        TaxAmount = o.TaxAmount,
+                        ShippingAmount = o.ShippingAmount,
+                        TotalAmount = o.TotalAmount,
+                        PaidAmount = o.PaidAmount,
+                        BalanceDue = Math.Max(0, o.TotalAmount - o.PaidAmount),
+                        Status = o.OrderStatus == "Confirmed" && o.PaymentStatus == "Paid"
+                            ? "Paid/Confirmed"
+                            : (o.PaidAmount >= o.TotalAmount ? "Paid" : (o.PaidAmount > 0 ? "Partial" : "Pending")),
+                        BillingName = o.Customer != null ? o.Customer.FirstName + " " + o.Customer.LastName : "N/A",
+                        BillingAddress = o.BillingAddress,
+                        BillingCity = o.BillingCity,
+                        BillingCountry = o.BillingCountry,
+                        PaymentTerms = (string?)"Order Based",
+                        Notes = o.Notes,
+                        SentAt = (DateTime?)null,
+                        PaidAt = (DateTime?)null,
+                        CreatedAt = o.CreatedAt,
+                        Items = o.OrderItems.Select(item => new
+                        {
+                            ItemId = -item.OrderItemId,
+                            item.ProductId,
+                            Description = item.ProductName,
+                            item.Quantity,
+                            item.UnitPrice,
+                            item.DiscountAmount,
+                            item.TaxAmount,
+                            TotalPrice = item.TotalPrice
+                        })
+                    })
+                    .ToListAsync();
+
+                var invoices = dbInvoices
+                    .Cast<object>()
+                    .Concat(derivedOrders.Cast<object>())
+                    .ToList();
+
                 return Ok(new { success = true, data = invoices });
             }
             catch (Exception)
@@ -3373,6 +3945,69 @@ namespace CompuGear.Controllers
         [HttpGet("invoices/{id}")]
         public async Task<IActionResult> GetInvoice(int id)
         {
+            if (id < 0)
+            {
+                var companyIdFromSession = GetCompanyId();
+                var orderId = -id;
+                var order = await _context.Orders
+                    .Include(o => o.Customer)
+                    .Include(o => o.OrderItems)
+                    .Where(o => companyIdFromSession == null || o.CompanyId == companyIdFromSession)
+                    .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+                if (order == null)
+                    return NotFound(new { success = false, message = "Invoice not found" });
+
+                var derivedInvoice = new
+                {
+                    InvoiceId = -order.OrderId,
+                    InvoiceNumber = "ORD-" + order.OrderNumber,
+                    OrderId = (int?)order.OrderId,
+                    OrderNumber = order.OrderNumber,
+                    CustomerId = order.CustomerId,
+                    CustomerName = order.Customer != null ? order.Customer.FirstName + " " + order.Customer.LastName : "N/A",
+                    CustomerEmail = order.Customer != null ? order.Customer.Email : "",
+                    InvoiceDate = order.OrderDate,
+                    DueDate = order.OrderDate,
+                    Subtotal = order.Subtotal,
+                    DiscountAmount = order.DiscountAmount,
+                    TaxAmount = order.TaxAmount,
+                    ShippingAmount = order.ShippingAmount,
+                    TotalAmount = order.TotalAmount,
+                    PaidAmount = order.PaidAmount,
+                    BalanceDue = Math.Max(0, order.TotalAmount - order.PaidAmount),
+                    Status = order.OrderStatus == "Confirmed" && order.PaymentStatus == "Paid"
+                        ? "Paid/Confirmed"
+                        : (order.PaidAmount >= order.TotalAmount ? "Paid" : (order.PaidAmount > 0 ? "Partial" : "Pending")),
+                    BillingName = order.Customer != null ? order.Customer.FirstName + " " + order.Customer.LastName : "N/A",
+                    BillingAddress = order.BillingAddress,
+                    BillingCity = order.BillingCity,
+                    BillingState = order.BillingState,
+                    BillingZipCode = order.BillingZipCode,
+                    BillingCountry = order.BillingCountry,
+                    BillingEmail = order.Customer?.Email,
+                    PaymentTerms = "Order Based",
+                    order.Notes,
+                    InternalNotes = (string?)null,
+                    SentAt = (DateTime?)null,
+                    PaidAt = (DateTime?)null,
+                    CreatedAt = order.CreatedAt,
+                    Items = order.OrderItems.Select(item => new
+                    {
+                        ItemId = -item.OrderItemId,
+                        item.ProductId,
+                        Description = item.ProductName,
+                        item.Quantity,
+                        item.UnitPrice,
+                        item.DiscountAmount,
+                        item.TaxAmount,
+                        TotalPrice = item.TotalPrice
+                    })
+                };
+
+                return Ok(new { success = true, data = derivedInvoice });
+            }
+
             var companyId = GetCompanyId();
             var invoice = await _context.Invoices
                 .Include(i => i.Customer)
@@ -3396,9 +4031,17 @@ namespace CompuGear.Controllers
                     i.TaxAmount,
                     i.ShippingAmount,
                     i.TotalAmount,
-                    i.PaidAmount,
-                    i.BalanceDue,
-                    i.Status,
+                    PaidAmount = i.Order != null && i.Order.OrderStatus == "Confirmed" && i.Order.PaymentStatus == "Paid"
+                        ? i.TotalAmount
+                        : i.PaidAmount,
+                    BalanceDue = i.Order != null && i.Order.OrderStatus == "Confirmed" && i.Order.PaymentStatus == "Paid"
+                        ? 0
+                        : Math.Max(0, i.TotalAmount - i.PaidAmount),
+                    Status = i.Order != null && i.Order.OrderStatus == "Confirmed" && i.Order.PaymentStatus == "Paid"
+                        ? "Paid/Confirmed"
+                        : (i.PaidAmount >= i.TotalAmount
+                            ? "Paid"
+                            : (i.PaidAmount > 0 && i.Status != "Cancelled" && i.Status != "Void" ? "Partial" : i.Status)),
                     i.BillingName,
                     i.BillingAddress,
                     i.BillingCity,
@@ -3435,6 +4078,9 @@ namespace CompuGear.Controllers
         [HttpPut("invoices/{id}/status")]
         public async Task<IActionResult> UpdateInvoiceStatus(int id, [FromBody] InvoiceStatusModel model)
         {
+            if (!HasFullBillingAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "Invoices are read-only. Update order status instead." });
+
             var companyId = GetCompanyId();
             var invoice = await _context.Invoices
                 .Where(i => companyId == null || i.CompanyId == companyId)
@@ -3446,7 +4092,18 @@ namespace CompuGear.Controllers
             invoice.Status = model.Status;
             invoice.UpdatedAt = DateTime.UtcNow;
             if (model.Status == "Sent") invoice.SentAt = DateTime.UtcNow;
-            if (model.Status == "Paid") invoice.PaidAt = DateTime.UtcNow;
+            if (model.Status == "Paid")
+            {
+                invoice.PaidAt = DateTime.UtcNow;
+                invoice.PaidAmount = invoice.TotalAmount;
+                invoice.BalanceDue = 0;
+            }
+            else if (model.Status == "Pending" || model.Status == "Draft")
+            {
+                invoice.PaidAmount = 0;
+                invoice.BalanceDue = invoice.TotalAmount;
+                invoice.PaidAt = null;
+            }
             await _context.SaveChangesAsync();
 
             return Ok(new { success = true, message = "Invoice status updated" });
@@ -3462,12 +4119,11 @@ namespace CompuGear.Controllers
             try
             {
                 var companyId = GetCompanyId();
-                var payments = await _context.Payments
+                var recordedPayments = await _context.Payments
                     .Include(p => p.Customer)
                     .Include(p => p.Invoice)
                     .Include(p => p.Order)
                     .Where(p => companyId == null || p.CompanyId == companyId)
-                    .OrderByDescending(p => p.CreatedAt)
                     .Select(p => new
                     {
                         p.PaymentId,
@@ -3493,9 +4149,58 @@ namespace CompuGear.Controllers
                         p.Notes,
                         p.FailureReason,
                         p.ProcessedAt,
-                        p.CreatedAt
+                        p.CreatedAt,
+                        IsDerived = false
                     })
                     .ToListAsync();
+
+                var recordedOrderIds = recordedPayments
+                    .Where(p => p.OrderId.HasValue)
+                    .Select(p => p.OrderId!.Value)
+                    .Distinct()
+                    .ToHashSet();
+
+                var derivedFromOrders = await _context.Orders
+                    .Include(o => o.Customer)
+                    .Where(o => (companyId == null || o.CompanyId == companyId) &&
+                                (o.OrderStatus == "Pending" || o.OrderStatus == "Confirmed") &&
+                                !string.IsNullOrEmpty(o.PaymentMethod) &&
+                                !recordedOrderIds.Contains(o.OrderId))
+                    .Select(o => new
+                    {
+                        PaymentId = -o.OrderId,
+                        PaymentNumber = "AUTO-" + o.OrderNumber,
+                        InvoiceId = _context.Invoices.Where(i => i.OrderId == o.OrderId).Select(i => (int?)i.InvoiceId).FirstOrDefault(),
+                        InvoiceNumber = _context.Invoices.Where(i => i.OrderId == o.OrderId).Select(i => i.InvoiceNumber).FirstOrDefault(),
+                        InvoiceSubtotal = _context.Invoices.Where(i => i.OrderId == o.OrderId).Select(i => (decimal?)i.Subtotal).FirstOrDefault() ?? 0,
+                        InvoiceTaxAmount = _context.Invoices.Where(i => i.OrderId == o.OrderId).Select(i => (decimal?)i.TaxAmount).FirstOrDefault() ?? 0,
+                        InvoiceDiscountAmount = _context.Invoices.Where(i => i.OrderId == o.OrderId).Select(i => (decimal?)i.DiscountAmount).FirstOrDefault() ?? 0,
+                        InvoiceShippingAmount = _context.Invoices.Where(i => i.OrderId == o.OrderId).Select(i => (decimal?)i.ShippingAmount).FirstOrDefault() ?? 0,
+                        InvoiceTotalAmount = _context.Invoices.Where(i => i.OrderId == o.OrderId).Select(i => (decimal?)i.TotalAmount).FirstOrDefault() ?? o.TotalAmount,
+                        OrderId = (int?)o.OrderId,
+                        OrderNumber = (string?)o.OrderNumber,
+                        CustomerId = o.CustomerId,
+                        CustomerName = o.Customer != null ? o.Customer.FirstName + " " + o.Customer.LastName : "N/A",
+                        PaymentDate = o.ConfirmedAt ?? o.UpdatedAt,
+                        Amount = o.PaidAmount,
+                        PaymentMethodType = o.PaymentMethod ?? "Order Confirmation",
+                        Status = o.PaymentStatus == "Paid" ? "Completed" : "Pending",
+                        TransactionId = o.PaymentReference,
+                        ReferenceNumber = o.PaymentReference,
+                        Currency = "PHP",
+                        Notes = (string?)"Auto-derived from customer order",
+                        FailureReason = (string?)null,
+                        ProcessedAt = o.ConfirmedAt,
+                        CreatedAt = o.CreatedAt,
+                        IsDerived = true
+                    })
+                    .ToListAsync();
+
+                var payments = recordedPayments
+                    .Concat(derivedFromOrders)
+                    .OrderByDescending(p => p.PaymentDate)
+                    .ThenByDescending(p => p.CreatedAt)
+                    .ToList();
 
                 return Ok(new { success = true, data = payments });
             }
@@ -3508,6 +4213,57 @@ namespace CompuGear.Controllers
         [HttpGet("payments/{id}")]
         public async Task<IActionResult> GetPayment(int id)
         {
+            if (id < 0)
+            {
+                var companyIdFromSession = GetCompanyId();
+                var derivedOrderId = -id;
+
+                var order = await _context.Orders
+                    .Include(o => o.Customer)
+                    .FirstOrDefaultAsync(o => o.OrderId == derivedOrderId &&
+                                              (companyIdFromSession == null || o.CompanyId == companyIdFromSession));
+
+                if (order == null)
+                    return NotFound(new { success = false, message = "Payment not found" });
+
+                var linkedInvoice = await _context.Invoices
+                    .FirstOrDefaultAsync(i => i.OrderId == order.OrderId &&
+                                              (companyIdFromSession == null || i.CompanyId == companyIdFromSession));
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        PaymentId = -order.OrderId,
+                        PaymentNumber = "AUTO-" + order.OrderNumber,
+                        InvoiceId = linkedInvoice?.InvoiceId,
+                        InvoiceNumber = linkedInvoice?.InvoiceNumber,
+                        InvoiceSubtotal = linkedInvoice?.Subtotal ?? 0,
+                        InvoiceTaxAmount = linkedInvoice?.TaxAmount ?? 0,
+                        InvoiceDiscountAmount = linkedInvoice?.DiscountAmount ?? 0,
+                        InvoiceShippingAmount = linkedInvoice?.ShippingAmount ?? 0,
+                        InvoiceTotalAmount = linkedInvoice?.TotalAmount ?? order.TotalAmount,
+                        OrderId = order.OrderId,
+                        OrderNumber = order.OrderNumber,
+                        CustomerId = order.CustomerId,
+                        CustomerName = order.Customer != null ? order.Customer.FirstName + " " + order.Customer.LastName : "N/A",
+                        PaymentDate = order.ConfirmedAt ?? order.UpdatedAt,
+                        Amount = order.PaidAmount,
+                        PaymentMethodType = order.PaymentMethod ?? "Order Confirmation",
+                        Status = order.PaymentStatus == "Paid" ? "Completed" : "Pending",
+                        TransactionId = order.PaymentReference,
+                        ReferenceNumber = order.PaymentReference,
+                        Currency = "PHP",
+                        Notes = "Auto-derived from customer order",
+                        FailureReason = (string?)null,
+                        ProcessedAt = order.ConfirmedAt,
+                        CreatedAt = order.CreatedAt,
+                        Refunds = new List<object>()
+                    }
+                });
+            }
+
             var companyId = GetCompanyId();
             var payment = await _context.Payments
                 .Include(p => p.Customer)
@@ -4259,6 +5015,9 @@ namespace CompuGear.Controllers
         {
             try
             {
+                if (!HasFullBillingAccess())
+                    return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "Invoices are read-only. Update order status instead." });
+
                 var companyId = GetCompanyId();
                 var invoices = await _context.Invoices
                     .Where(i => request.Ids.Contains(i.InvoiceId) && (companyId == null || i.CompanyId == companyId))
@@ -4590,6 +5349,13 @@ namespace CompuGear.Controllers
         public int SessionId { get; set; }
     }
 
+    public class TransferChatRequest
+    {
+        public int SessionId { get; set; }
+        public int ToAgentId { get; set; }
+        public string? Reason { get; set; }
+    }
+
     public class AgentChatMessageRequest
     {
         public int SessionId { get; set; }
@@ -4605,6 +5371,16 @@ namespace CompuGear.Controllers
     public class RequestLiveAgentRequest
     {
         public string? VisitorId { get; set; }
+    }
+
+    public class KnowledgeArticleCreateRequest
+    {
+        public int CategoryId { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
+        public string? Summary { get; set; }
+        public string? Tags { get; set; }
+        public string? Status { get; set; }
     }
 
     public class TicketResponseRequest

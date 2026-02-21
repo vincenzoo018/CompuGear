@@ -1,0 +1,83 @@
+@{
+    Layout = "~/Views/ERPWebsite/_ERPWebsiteLayout.cshtml";
+    ViewData["Title"] = "Payment Cancelled";
+    ViewData["ActivePage"] = "Pricing";
+}
+
+@section Styles {
+    .cancelled-page {
+        padding: 80px 24px 120px;
+        background: #f8f9fc;
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .cancelled-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 56px 48px;
+        max-width: 500px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+        border: 1px solid #eee;
+    }
+
+    .cancelled-icon {
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        background: rgba(245,158,11,0.1);
+        color: #f59e0b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+    }
+
+    .cancelled-card h2 {
+        font-size: 1.6rem; font-weight: 700; color: #1a1a2e; margin-bottom: 12px;
+    }
+    .cancelled-card p {
+        font-size: 0.95rem; color: #777; line-height: 1.7; margin-bottom: 28px;
+    }
+
+    .btn-back {
+        display: inline-block; padding: 14px 48px;
+        background: #008080; color: #fff;
+        border-radius: 10px; font-weight: 600; font-size: 1rem;
+        transition: all 0.3s;
+    }
+    .btn-back:hover { background: #006666; transform: translateY(-1px); }
+
+    .btn-pricing {
+        display: inline-block; padding: 12px 36px;
+        background: #fff; color: #008080;
+        border: 2px solid #008080;
+        border-radius: 10px; font-weight: 600; font-size: 0.95rem;
+        transition: all 0.3s; margin-top: 12px;
+    }
+    .btn-pricing:hover { background: rgba(0,128,128,0.05); }
+
+    @@media (max-width: 768px) {
+        .cancelled-card { padding: 40px 24px; }
+    }
+}
+
+<section class="cancelled-page">
+    <div class="cancelled-card">
+        <div class="cancelled-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+        </div>
+        <h2>Payment Cancelled</h2>
+        <p>Your payment was not completed. No charges have been made to your account. You can try again whenever you're ready.</p>
+        <a href="/ERPWebsite/Subscribe?plan=@ViewData["SelectedPlan"]" class="btn-back">Try Again</a>
+        <br>
+        <a href="/ERPWebsite/Pricing" class="btn-pricing">View Plans</a>
+    </div>
+</section>

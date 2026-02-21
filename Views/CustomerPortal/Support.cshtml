@@ -4,36 +4,66 @@
 }
 
 <style>
-    .support-page { min-height: 100vh; }
+    .support-page {
+        min-height: 100vh;
+    }
 
     /* Page Header */
     .page-header {
-        text-align: center;
-        margin-bottom: 40px;
+        margin-bottom: 32px;
+    }
+
+    .page-header-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 6px;
+    }
+
+    .page-header-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--primary);
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .page-header-icon svg {
+        width: 24px;
+        height: 24px;
+        color: white;
+        stroke: white;
+        fill: none;
     }
 
     .page-title {
-        font-size: 2rem;
-        font-weight: 800;
+        font-size: 1.75rem;
+        font-weight: 700;
         color: var(--foreground);
-        margin-bottom: 8px;
+        letter-spacing: -0.025em;
     }
 
-    .page-subtitle { color: var(--muted-foreground); }
+    .page-subtitle {
+        color: var(--muted-foreground);
+        font-size: 0.95rem;
+        margin-left: 64px;
+    }
 
     /* Two Column Layout */
     .support-layout {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 32px;
+        gap: 28px;
+        align-items: start;
     }
 
-    /* Chatbot Section */
+    /* Chat Section */
     .chat-section {
         background: var(--card);
         border-radius: var(--radius);
         border: 1px solid var(--border);
-        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
         display: flex;
         flex-direction: column;
         height: 650px;
@@ -42,13 +72,12 @@
     }
 
     .chat-header {
-        padding: 20px 24px;
+        padding: 16px 20px;
         border-bottom: 1px solid var(--border);
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: var(--primary);
-        color: white;
+        background: var(--card);
     }
 
     .chat-header-left {
@@ -58,19 +87,38 @@
     }
 
     .chat-avatar {
-        width: 44px;
-        height: 44px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
-        background: white;
+        background: var(--muted);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: 1.25rem;
     }
 
-    .chat-info h3 { font-size: 1.1rem; font-weight: 600; margin: 0; }
-    .chat-info span { font-size: 0.8rem; opacity: 0.9; display: flex; align-items: center; gap: 6px; }
-    .online-dot { width: 8px; height: 8px; background: #10B981; border-radius: 50%; animation: pulse 2s infinite; }
+    .chat-info h3 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--foreground);
+        margin: 0;
+    }
+
+    .chat-info span {
+        font-size: 0.8rem;
+        color: var(--muted-foreground);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .online-dot {
+        width: 7px;
+        height: 7px;
+        background: var(--success);
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
 
     @@keyframes pulse {
         0%, 100% { opacity: 1; }
@@ -78,37 +126,60 @@
     }
 
     .btn-request-agent {
-        padding: 8px 16px;
-        background: rgba(255,255,255,0.2);
-        border: 1px solid rgba(255,255,255,0.3);
+        padding: 7px 14px;
+        background: var(--card);
+        border: 1px solid var(--border);
         border-radius: var(--radius-sm);
-        color: white;
-        font-family: 'Poppins', sans-serif;
-        font-size: 0.85rem;
+        color: var(--foreground);
+        font-family: 'Inter', sans-serif;
+        font-size: 0.8rem;
         font-weight: 500;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all 0.2s;
         display: flex;
         align-items: center;
         gap: 6px;
     }
 
-    .btn-request-agent:hover { background: rgba(255,255,255,0.3); }
-    .btn-request-agent:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-request-agent:hover {
+        background: var(--muted);
+        border-color: var(--primary);
+        color: var(--primary);
+    }
 
+    .btn-request-agent:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Chat Messages */
     .chat-messages {
         flex: 1;
         overflow-y: auto;
         padding: 20px;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 14px;
+        background: var(--muted);
+    }
+
+    .chat-messages::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 10px;
     }
 
     .message {
         display: flex;
         gap: 10px;
-        max-width: 85%;
+        max-width: 80%;
     }
 
     .message.bot { align-self: flex-start; }
@@ -120,29 +191,41 @@
     }
 
     .message-avatar {
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         flex-shrink: 0;
     }
 
-    .message.bot .message-avatar { background: var(--primary); color: white; }
-    .message.user .message-avatar { background: var(--muted); }
-    .message.agent .message-avatar { background: #10B981; color: white; }
+    .message.bot .message-avatar {
+        background: var(--primary);
+        color: white;
+    }
+
+    .message.user .message-avatar {
+        background: var(--border);
+    }
+
+    .message.agent .message-avatar {
+        background: var(--success);
+        color: white;
+    }
 
     .message-bubble {
-        padding: 12px 16px;
-        border-radius: 16px;
-        line-height: 1.5;
+        padding: 10px 14px;
+        border-radius: var(--radius);
+        line-height: 1.55;
+        font-size: 0.9rem;
     }
 
     .message.bot .message-bubble {
-        background: var(--muted);
+        background: var(--card);
         color: var(--foreground);
+        border: 1px solid var(--border);
         border-bottom-left-radius: 4px;
     }
 
@@ -153,17 +236,19 @@
     }
 
     .message.agent .message-bubble {
-        background: #D1FAE5;
-        color: #065F46;
+        background: var(--success-light);
+        color: var(--success-fg);
+        border: 1px solid #A7F3D0;
         border-bottom-left-radius: 4px;
     }
 
     .message.system .message-bubble {
-        background: #FEF3C7;
-        color: #92400E;
-        font-size: 0.85rem;
+        background: var(--warning-light);
+        color: var(--warning-fg);
+        font-size: 0.8rem;
         text-align: center;
-        border-radius: 8px;
+        border-radius: var(--radius-sm);
+        border: 1px solid #FDE68A;
     }
 
     /* Typing Indicator */
@@ -174,8 +259,8 @@
     }
 
     .typing-indicator span {
-        width: 8px;
-        height: 8px;
+        width: 7px;
+        height: 7px;
         background: var(--muted-foreground);
         border-radius: 50%;
         animation: typingBounce 1.4s infinite;
@@ -189,19 +274,19 @@
         30% { transform: translateY(-5px); }
     }
 
-    /* Live Agent Status Banner */
+    /* Agent Status Banner */
     .agent-status-banner {
-        background: linear-gradient(135deg, #10B981, #059669);
+        background: var(--success);
         color: white;
-        padding: 12px 20px;
+        padding: 10px 20px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
 
     .agent-status-banner.waiting {
-        background: linear-gradient(135deg, #F59E0B, #D97706);
+        background: var(--warning);
     }
 
     .agent-status-banner .status-text {
@@ -211,38 +296,42 @@
     }
 
     .btn-end-chat {
-        padding: 6px 14px;
+        padding: 5px 12px;
         background: rgba(255,255,255,0.2);
         border: 1px solid rgba(255,255,255,0.3);
-        border-radius: 6px;
+        border-radius: var(--radius-sm);
         color: white;
-        font-family: 'Poppins', sans-serif;
+        font-family: 'Inter', sans-serif;
         font-size: 0.8rem;
         cursor: pointer;
+        transition: background 0.2s;
     }
 
-    .btn-end-chat:hover { background: rgba(255,255,255,0.3); }
+    .btn-end-chat:hover {
+        background: rgba(255,255,255,0.3);
+    }
 
-    /* Quick Reply Buttons */
+    /* Quick Replies */
     .quick-replies {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        padding: 16px 20px;
+        padding: 14px 20px;
         border-top: 1px solid var(--border);
-        background: var(--background);
+        background: var(--card);
     }
 
     .quick-reply-btn {
-        padding: 8px 16px;
+        padding: 7px 16px;
         background: var(--card);
         border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        font-family: 'Poppins', sans-serif;
-        font-size: 0.85rem;
+        border-radius: 20px;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 500;
         color: var(--foreground);
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all 0.2s;
     }
 
     .quick-reply-btn:hover {
@@ -251,96 +340,162 @@
         border-color: var(--primary);
     }
 
+    /* Chat Input */
     .chat-input-container {
-        padding: 16px 20px;
+        padding: 14px 20px;
         border-top: 1px solid var(--border);
         display: flex;
-        gap: 12px;
+        gap: 10px;
+        background: var(--card);
     }
 
     .chat-input {
         flex: 1;
-        padding: 12px 16px;
-        border: 1.5px solid var(--border);
+        padding: 10px 14px;
+        border: 1px solid var(--border);
         border-radius: var(--radius-sm);
-        font-family: 'Poppins', sans-serif;
-        font-size: 0.95rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
         outline: none;
-        transition: border-color 0.3s, box-shadow 0.3s;
+        background: var(--muted);
+        color: var(--foreground);
+        transition: border-color 0.2s;
     }
 
-    .chat-input::placeholder { color: #999; }
-    .chat-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,128,128,0.08); }
+    .chat-input::placeholder {
+        color: var(--muted-foreground);
+    }
+
+    .chat-input:focus {
+        border-color: var(--primary);
+        background: var(--card);
+    }
 
     .chat-send-btn {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
+        width: 42px;
+        height: 42px;
+        border-radius: var(--radius-sm);
         background: var(--primary);
         border: none;
         color: white;
         cursor: pointer;
-        font-family: 'Poppins', sans-serif;
+        font-family: 'Inter', sans-serif;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.3s;
+        transition: background 0.2s;
+        flex-shrink: 0;
     }
 
-    .chat-send-btn:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,128,128,0.25); }
+    .chat-send-btn:hover {
+        background: var(--primary-hover);
+    }
 
-    /* FAQ & Channels Section */
-    .faq-section {
+    /* Right Column: FAQ & Channels */
+    .right-column {
         display: flex;
         flex-direction: column;
         gap: 24px;
     }
 
-    .faq-header {
+    .faq-section {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        flex-direction: column;
+        gap: 16px;
     }
 
-    .faq-title {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: var(--foreground);
+    .section-header {
         display: flex;
         align-items: center;
         gap: 10px;
     }
 
-    .faq-list { display: flex; flex-direction: column; gap: 12px; }
+    .section-header-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .section-header-icon.faq-icon-header {
+        background: var(--info-light);
+    }
+
+    .section-header-icon.faq-icon-header svg {
+        width: 18px;
+        height: 18px;
+        stroke: var(--info);
+        fill: none;
+    }
+
+    .section-header-icon.channels-icon-header {
+        background: var(--success-light);
+    }
+
+    .section-header-icon.channels-icon-header svg {
+        width: 18px;
+        height: 18px;
+        stroke: var(--success);
+        fill: none;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--foreground);
+    }
+
+    .faq-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
 
     .faq-item {
         background: var(--card);
-        border-radius: var(--radius);
         border: 1px solid var(--border);
-        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
         overflow: hidden;
     }
 
+    .faq-item:first-child {
+        border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .faq-item:last-child {
+        border-radius: 0 0 var(--radius) var(--radius);
+    }
+
+    .faq-item:not(:last-child) {
+        border-bottom: none;
+    }
+
     .faq-question {
-        padding: 18px 20px;
+        padding: 14px 18px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         cursor: pointer;
-        font-weight: 600;
+        font-weight: 500;
+        font-size: 0.9rem;
         color: var(--foreground);
-        transition: background 0.3s;
+        transition: background 0.2s;
     }
 
-    .faq-question:hover { background: var(--muted); }
+    .faq-question:hover {
+        background: var(--muted);
+    }
 
     .faq-icon {
-        font-size: 1.2rem;
-        transition: transform 0.3s;
+        font-size: 0.75rem;
+        transition: transform 0.2s;
         color: var(--muted-foreground);
     }
 
-    .faq-item.open .faq-icon { transform: rotate(180deg); }
+    .faq-item.open .faq-icon {
+        transform: rotate(180deg);
+    }
 
     .faq-answer {
         max-height: 0;
@@ -349,58 +504,55 @@
     }
 
     .faq-answer-content {
-        padding: 0 20px 20px;
+        padding: 0 18px 16px;
         color: var(--muted-foreground);
         line-height: 1.6;
+        font-size: 0.875rem;
     }
 
-    .faq-item.open .faq-answer { max-height: 200px; }
+    .faq-item.open .faq-answer {
+        max-height: 200px;
+    }
 
     /* Support Channels */
-    .channels-title {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: var(--foreground);
-        margin-bottom: 16px;
+    .channels-section {
         display: flex;
-        align-items: center;
-        gap: 10px;
+        flex-direction: column;
+        gap: 16px;
     }
 
     .support-channels {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 12px;
+        gap: 10px;
     }
 
     .channel-card {
         background: var(--card);
         border-radius: var(--radius);
         border: 1px solid var(--border);
-        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-        padding: 20px;
+        padding: 16px;
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 12px;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: border-color 0.2s;
         text-decoration: none;
     }
 
     .channel-card:hover {
-        border-color: rgba(0,128,128,0.2);
-        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
-        transform: translateY(-4px);
+        border-color: var(--primary);
     }
 
     .channel-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-sm);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: 1.1rem;
+        flex-shrink: 0;
     }
 
     .channel-icon.email { background: var(--info-light); }
@@ -408,33 +560,73 @@
     .channel-icon.ticket { background: var(--warning-light); }
     .channel-icon.live { background: var(--error-light); }
 
-    .channel-info h4 { font-weight: 600; color: var(--foreground); margin-bottom: 4px; }
-    .channel-info p { font-size: 0.8rem; color: var(--muted-foreground); margin: 0; }
+    .channel-info h4 {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--foreground);
+        margin-bottom: 2px;
+    }
+
+    .channel-info p {
+        font-size: 0.75rem;
+        color: var(--muted-foreground);
+        margin: 0;
+    }
 
     /* Responsive */
     @@media (max-width: 992px) {
-        .support-layout { grid-template-columns: 1fr; }
-        .chat-section { height: 550px; }
+        .support-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .chat-section {
+            height: 550px;
+        }
     }
 
     @@media (max-width: 576px) {
-        .support-channels { grid-template-columns: 1fr; }
-        .chat-header { padding: 16px; flex-direction: column; gap: 12px; }
-        .quick-replies { overflow-x: auto; flex-wrap: nowrap; }
-        .quick-reply-btn { white-space: nowrap; }
+        .support-channels {
+            grid-template-columns: 1fr;
+        }
+
+        .chat-header {
+            padding: 14px 16px;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .page-subtitle {
+            margin-left: 0;
+        }
+
+        .quick-replies {
+            overflow-x: auto;
+            flex-wrap: nowrap;
+        }
+
+        .quick-reply-btn {
+            white-space: nowrap;
+        }
     }
 </style>
 
 <div class="support-page">
     <!-- Page Header -->
-    <div class="page-header animate-fade-in">
-        <h1 class="page-title">💬 Customer Support</h1>
+    <div class="page-header">
+        <div class="page-header-content">
+            <div class="page-header-icon">
+                <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+            </div>
+            <h1 class="page-title">Customer Support</h1>
+        </div>
         <p class="page-subtitle">Chat with our AI assistant or connect with a live agent</p>
     </div>
 
     <div class="support-layout">
-        <!-- Chatbot -->
-        <section class="chat-section animate-fade-in" style="animation-delay: 0.1s">
+        <!-- Chat Section -->
+        <section class="chat-section">
             <div class="chat-header">
                 <div class="chat-header-left">
                     <div class="chat-avatar" id="chatAvatar">🤖</div>
@@ -444,7 +636,8 @@
                     </div>
                 </div>
                 <button class="btn-request-agent" id="btnRequestAgent" onclick="requestLiveAgent()">
-                    👤 Request Live Agent
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    Live Agent
                 </button>
             </div>
 
@@ -476,83 +669,99 @@
             <div class="chat-input-container">
                 <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
                 <button class="chat-send-btn" onclick="sendMessage()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
                 </button>
             </div>
         </section>
 
         <!-- FAQ & Channels -->
-        <section class="faq-section animate-fade-in" style="animation-delay: 0.2s">
-            <div class="faq-header">
-                <h2 class="faq-title">❓ Frequently Asked Questions</h2>
-            </div>
-            <div class="faq-list" id="faqList">
-                <div class="faq-item">
-                    <div class="faq-question" onclick="toggleFaq(this)">
-                        How do I track my order?
-                        <span class="faq-icon">▼</span>
+        <div class="right-column">
+            <section class="faq-section">
+                <div class="section-header">
+                    <div class="section-header-icon faq-icon-header">
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
                     </div>
-                    <div class="faq-answer">
-                        <div class="faq-answer-content">
-                            You can track your order by going to "My Orders" in your account dashboard. Click on any order to see its current status and tracking information.
+                    <h2 class="section-title">Frequently Asked Questions</h2>
+                </div>
+                <div class="faq-list" id="faqList">
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            How do I track my order?
+                            <span class="faq-icon">▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            <div class="faq-answer-content">
+                                You can track your order by going to "My Orders" in your account dashboard. Click on any order to see its current status and tracking information.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            What is your return policy?
+                            <span class="faq-icon">▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            <div class="faq-answer-content">
+                                We offer a 30-day return policy for most products. Items must be unused and in their original packaging. To initiate a return, visit "My Orders" and select "Request Return".
+                            </div>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            What payment methods do you accept?
+                            <span class="faq-icon">▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            <div class="faq-answer-content">
+                                We accept major credit cards (Visa, Mastercard), GCash, Maya, bank transfers, and Cash on Delivery (COD) for orders within Metro Manila.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            How long does shipping take?
+                            <span class="faq-icon">▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            <div class="faq-answer-content">
+                                Metro Manila: 1-3 business days. Luzon: 3-5 business days. Visayas & Mindanao: 5-7 business days. Express shipping available at checkout.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            Do products come with warranty?
+                            <span class="faq-icon">▼</span>
+                        </div>
+                        <div class="faq-answer">
+                            <div class="faq-answer-content">
+                                Yes! All products come with manufacturer warranty (1-3 years depending on product). Keep your receipt for claims.
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="faq-item">
-                    <div class="faq-question" onclick="toggleFaq(this)">
-                        What is your return policy?
-                        <span class="faq-icon">▼</span>
-                    </div>
-                    <div class="faq-answer">
-                        <div class="faq-answer-content">
-                            We offer a 30-day return policy for most products. Items must be unused and in their original packaging. To initiate a return, visit "My Orders" and select "Request Return".
-                        </div>
-                    </div>
-                </div>
-                <div class="faq-item">
-                    <div class="faq-question" onclick="toggleFaq(this)">
-                        What payment methods do you accept?
-                        <span class="faq-icon">▼</span>
-                    </div>
-                    <div class="faq-answer">
-                        <div class="faq-answer-content">
-                            We accept major credit cards (Visa, Mastercard), GCash, Maya, bank transfers, and Cash on Delivery (COD) for orders within Metro Manila.
-                        </div>
-                    </div>
-                </div>
-                <div class="faq-item">
-                    <div class="faq-question" onclick="toggleFaq(this)">
-                        How long does shipping take?
-                        <span class="faq-icon">▼</span>
-                    </div>
-                    <div class="faq-answer">
-                        <div class="faq-answer-content">
-                            Metro Manila: 1-3 business days. Luzon: 3-5 business days. Visayas & Mindanao: 5-7 business days. Express shipping available at checkout.
-                        </div>
-                    </div>
-                </div>
-                <div class="faq-item">
-                    <div class="faq-question" onclick="toggleFaq(this)">
-                        Do products come with warranty?
-                        <span class="faq-icon">▼</span>
-                    </div>
-                    <div class="faq-answer">
-                        <div class="faq-answer-content">
-                            Yes! All products come with manufacturer warranty (1-3 years depending on product). Keep your receipt for claims.
-                        </div>
-                    </div>
-                </div>
-            </div>
+            </section>
 
             <!-- Support Channels -->
-            <div>
-                <h2 class="channels-title">📞 Contact Us</h2>
+            <section class="channels-section">
+                <div class="section-header">
+                    <div class="section-header-icon channels-icon-header">
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                        </svg>
+                    </div>
+                    <h2 class="section-title">Contact Us</h2>
+                </div>
                 <div class="support-channels">
                     <a href="mailto:support@compugear.ph" class="channel-card">
                         <div class="channel-icon email">📧</div>
                         <div class="channel-info">
                             <h4>Email Support</h4>
-                            <p>support@compugear.ph</p>
+                            <p>support&#64;compugear.ph</p>
                         </div>
                     </a>
                     <a href="tel:+6328001234" class="channel-card">
@@ -577,8 +786,8 @@
                         </div>
                     </a>
                 </div>
-            </div>
-        </section>
+            </section>
+        </div>
     </div>
 </div>
 
@@ -782,10 +991,16 @@
 
                         const banner = document.getElementById('agentStatusBanner');
                         banner.classList.remove('waiting');
-                        document.getElementById('agentStatusText').textContent = `✅ Connected with ${result.data.agentName}`;
+                        banner.style.display = 'none';
 
                         // Add connected message
                         addMessage(`🎉 ${result.data.agentName} has accepted your chat request. You can now start chatting!`, 'system');
+                    }
+
+                    if (result.data.status === 'Active' && result.data.agentName) {
+                        document.getElementById('chatAvatar').textContent = '👨‍💼';
+                        document.getElementById('chatAgentName').textContent = result.data.agentName;
+                        document.getElementById('chatStatus').textContent = 'Live Chat';
                     }
 
                     // Add new messages

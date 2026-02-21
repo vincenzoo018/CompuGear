@@ -217,11 +217,11 @@
     gap: 15px;
     padding: 15px;
     border-radius: 12px;
-    background: #f9fafb;
+    background: var(--gray-100, #f8f9fc);
     margin-bottom: 12px;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
 }
-.metric-item:hover { background: #f3f4f6; }
+.metric-item:hover { background: #f0f1f5; transform: translateY(-2px); }
 .metric-item:last-child { margin-bottom: 0; }
 .metric-icon {
     width: 44px;
@@ -279,6 +279,20 @@
             
             campaigns = await campaignsRes.json();
             promotions = await promotionsRes.json();
+            
+            // Apply date range filter
+            const range = document.getElementById('dateRange').value;
+            const now = new Date();
+            if (range !== 'all') {
+                let filterDate;
+                if (range === 'month') filterDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                else if (range === 'quarter') filterDate = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+                else if (range === 'year') filterDate = new Date(now.getFullYear(), 0, 1);
+                if (filterDate) {
+                    campaigns = campaigns.filter(c => new Date(c.createdAt || c.startDate) >= filterDate);
+                    promotions = promotions.filter(p => new Date(p.createdAt || p.startDate) >= filterDate);
+                }
+            }
             
             updateStats();
             renderCharts();
@@ -490,7 +504,23 @@
     }
 
     function exportReport() {
-        Toast.success('Generating report... This feature will be available soon.');
+        if (campaigns.length === 0 && promotions.length === 0) {
+            Toast.warning('No data to export');
+            return;
+        }
+        let csv = 'Campaign Name,Type,Status,Budget,Spent,Revenue,ROI %,Reach,Clicks,Conversions\n';
+        campaigns.forEach(c => {
+            const roi = c.actualSpend > 0 ? ((c.revenue - c.actualSpend) / c.actualSpend * 100).toFixed(1) : '0';
+            csv += `"${c.campaignName || ''}","${c.type || ''}","${c.status || ''}",${c.budget || 0},${c.actualSpend || 0},${c.revenue || 0},${roi},${c.totalReach || 0},${c.clicks || 0},${c.conversions || 0}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'marketing_analytics_' + new Date().toISOString().split('T')[0] + '.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+        Toast.success('Report exported successfully!');
     }
 </script>
 }

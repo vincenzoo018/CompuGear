@@ -4,218 +4,249 @@
 }
 
 <style>
-    .ticket-page { padding: 30px 0; background: #f8f9fa; min-height: 100vh; }
-    
+    :root {
+        --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --background: #FFFFFF;
+        --foreground: #111827;
+        --muted: #F9FAFB;
+        --muted-foreground: #6B7280;
+        --border: #E5E7EB;
+        --primary: #008080;
+        --primary-hover: #006666;
+        --radius: 12px;
+        --radius-sm: 8px;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    .ticket-page {
+        padding: 30px 0;
+        background: var(--background);
+        min-height: 100vh;
+        font-family: var(--font-family);
+    }
+
     .back-link {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        color: #008080;
+        color: var(--primary);
         text-decoration: none;
         margin-bottom: 20px;
         font-weight: 500;
+        font-family: var(--font-family);
+        font-size: 0.9rem;
     }
-    
-    .back-link:hover { color: #006666; }
-    
+
+    .back-link:hover { color: var(--primary-hover); }
+
     .ticket-header {
-        background: linear-gradient(135deg, #008080, #006666);
-        color: white;
-        border-radius: 20px;
-        padding: 30px;
+        background: var(--background);
+        color: var(--foreground);
+        border-radius: var(--radius);
+        padding: 24px 28px;
         margin-bottom: 25px;
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--primary);
+        box-shadow: var(--shadow-sm);
     }
-    
+
     .ticket-header h1 {
         font-size: 1.5rem;
         font-weight: 700;
         margin: 0 0 10px 0;
+        color: var(--foreground);
+        font-family: var(--font-family);
     }
-    
+
     .ticket-number {
-        opacity: 0.9;
+        color: var(--muted-foreground);
         font-size: 0.9rem;
     }
-    
+
     .status-badge {
-        padding: 8px 18px;
-        border-radius: 25px;
+        padding: 6px 14px;
+        border-radius: var(--radius-sm);
         font-size: 0.85rem;
         font-weight: 600;
         display: inline-block;
+        font-family: var(--font-family);
     }
-    
+
     .status-badge.Open { background: #dbeafe; color: #1d4ed8; }
     .status-badge.InProgress { background: #fef3cd; color: #856404; }
     .status-badge.Resolved { background: #d4edda; color: #155724; }
     .status-badge.Closed { background: #e5e7eb; color: #6b7280; }
-    
+
     .ticket-content {
         display: grid;
         grid-template-columns: 1fr 350px;
         gap: 25px;
     }
-    
+
     @@media (max-width: 992px) {
         .ticket-content { grid-template-columns: 1fr; }
     }
-    
+
     .portal-card {
-        background: white;
-        border-radius: 20px;
-        padding: 25px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        background: var(--background);
+        border-radius: var(--radius);
+        padding: 24px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
         margin-bottom: 20px;
-        transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+        transition: border-color 0.2s;
     }
 
     .portal-card:hover {
         border-color: rgba(0,128,128,0.2);
-        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
-        transform: translateY(-4px);
     }
-    
+
     .card-title {
         font-weight: 700;
-        color: #1f2937;
+        color: var(--foreground);
         margin-bottom: 20px;
         display: flex;
         align-items: center;
         gap: 10px;
+        font-family: var(--font-family);
     }
-    
+
     .conversation-container {
         max-height: 500px;
         overflow-y: auto;
         padding-right: 10px;
     }
-    
+
     .message {
         margin-bottom: 20px;
         display: flex;
-        gap: 15px;
+        gap: 12px;
     }
-    
+
     .message.customer { flex-direction: row-reverse; }
-    
+
     .message-avatar {
-        width: 45px;
-        height: 45px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
-    
-    .message.customer .message-avatar { background: linear-gradient(135deg, #008080, #20b2aa); }
-    .message.support .message-avatar { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
-    
+
+    .message.customer .message-avatar { background: rgba(0,128,128,0.1); }
+    .message.support .message-avatar { background: var(--muted); }
+
     .message-content {
         max-width: 75%;
-        padding: 18px;
-        border-radius: 18px;
+        padding: 16px;
+        border-radius: var(--radius);
         line-height: 1.6;
     }
-    
+
     .message.customer .message-content {
-        background: linear-gradient(135deg, #f0fdfa, #e0f2f1);
-        border-bottom-right-radius: 5px;
+        background: rgba(0,128,128,0.04);
+        border-bottom-right-radius: 4px;
     }
-    
+
     .message.support .message-content {
-        background: #f9fafb;
-        border-bottom-left-radius: 5px;
+        background: var(--muted);
+        border-bottom-left-radius: 4px;
     }
-    
+
     .message-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
         font-size: 0.85rem;
     }
-    
-    .message-sender { font-weight: 600; color: #1f2937; }
-    .message-time { color: #9ca3af; }
+
+    .message-sender { font-weight: 600; color: var(--foreground); }
+    .message-time { color: var(--muted-foreground); }
     .message-text { color: #4b5563; }
-    
+
     .reply-form {
         padding-top: 20px;
-        border-top: 1px solid #e5e7eb;
+        border-top: 1px solid var(--border);
         margin-top: 20px;
     }
-    
+
     .reply-input {
         width: 100%;
         min-height: 100px;
-        padding: 15px;
-        border: 1.5px solid var(--border);
+        padding: 14px;
+        border: 1px solid var(--border);
         border-radius: var(--radius-sm);
         resize: vertical;
         font-size: 0.95rem;
-        font-family: 'Poppins', sans-serif;
+        font-family: var(--font-family);
         margin-bottom: 15px;
-        transition: border-color 0.3s, box-shadow 0.3s;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        color: var(--foreground);
+        background: var(--background);
     }
 
     .reply-input::placeholder {
-        color: #999;
+        color: var(--muted-foreground);
     }
-    
+
     .reply-input:focus {
         outline: none;
         border-color: var(--primary);
         box-shadow: 0 0 0 3px rgba(0,128,128,0.08);
     }
-    
+
     .reply-btn {
-        padding: 12px 30px;
+        padding: 10px 24px;
         background: var(--primary);
         color: white;
         border: none;
         border-radius: var(--radius-sm);
         font-weight: 600;
-        font-family: 'Poppins', sans-serif;
+        font-family: var(--font-family);
         cursor: pointer;
-        transition: all 0.3s;
+        transition: background 0.2s;
+        font-size: 0.9rem;
     }
-    
-    .reply-btn:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,128,128,0.25); }
+
+    .reply-btn:hover { background: var(--primary-hover); }
     .reply-btn:disabled { background: #9ca3af; cursor: not-allowed; }
-    
+
     .info-row {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         padding: 12px 0;
-        border-bottom: 1px solid #f3f4f6;
+        border-bottom: 1px solid #F3F4F6;
     }
-    
+
     .info-row:last-child { border-bottom: none; }
-    .info-label { color: #6b7280; font-size: 0.9rem; }
-    .info-value { font-weight: 600; color: #1f2937; }
-    
+    .info-label { color: var(--muted-foreground); font-size: 0.9rem; }
+    .info-value { font-weight: 600; color: var(--foreground); }
+
     .original-description {
-        background: #f9fafb;
+        background: var(--muted);
         padding: 20px;
-        border-radius: 12px;
-        border-left: 4px solid #008080;
+        border-radius: var(--radius-sm);
+        border-left: 4px solid var(--primary);
         color: #4b5563;
         line-height: 1.7;
     }
-    
+
     .loading-state {
         text-align: center;
         padding: 40px;
-        color: #6b7280;
+        color: var(--muted-foreground);
     }
 </style>
 
 <div class="ticket-page">
     <div class="container">
         <a href="/CustomerPortal/MyTickets" class="back-link">← Back to My Tickets</a>
-        
+
         <div id="ticketContent">
             <div class="loading-state">
                 <div style="font-size: 3rem; margin-bottom: 15px;">⏳</div>
@@ -234,13 +265,13 @@
         // Get ticket ID from URL
         const pathParts = window.location.pathname.split('/');
         ticketId = pathParts[pathParts.length - 1];
-        
+
         // Also check query string
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('id')) {
             ticketId = urlParams.get('id');
         }
-        
+
         if (ticketId) {
             loadTicketDetails();
         } else {
@@ -252,7 +283,7 @@
         try {
             const response = await fetch(`/CustomerPortal/GetTicketDetails?id=${ticketId}`);
             const result = await response.json();
-            
+
             if (result.success) {
                 ticketData = result.data;
                 renderTicket(result.data, result.messages || []);
@@ -274,7 +305,7 @@
     function renderTicket(ticket, messages) {
         const priorityIcons = { 'High': '🔴', 'Medium': '🟡', 'Low': '🟢' };
         const statusClass = (ticket.status || 'Open').replace(' ', '');
-        
+
         document.getElementById('ticketContent').innerHTML = `
             <div class="ticket-header">
                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
@@ -285,7 +316,7 @@
                     <span class="status-badge ${statusClass}">${ticket.status}</span>
                 </div>
             </div>
-            
+
             <div class="ticket-content">
                 <div>
                     <!-- Original Description -->
@@ -293,7 +324,7 @@
                         <h3 class="card-title">📝 Original Request</h3>
                         <div class="original-description">${ticket.description || 'No description provided'}</div>
                     </div>
-                    
+
                     <!-- Conversation -->
                     <div class="portal-card">
                         <h3 class="card-title">💬 Conversation</h3>
@@ -311,7 +342,7 @@
                                 </div>
                             `).join('') : '<div class="text-center py-4 text-muted">No messages yet. Start the conversation below.</div>'}
                         </div>
-                        
+
                         ${ticket.status !== 'Closed' && ticket.status !== 'Resolved' ? `
                             <div class="reply-form">
                                 <textarea class="reply-input" id="replyMessage" placeholder="Type your reply..."></textarea>
@@ -320,7 +351,7 @@
                         ` : '<div class="text-center py-3 text-muted">This ticket is closed.</div>'}
                     </div>
                 </div>
-                
+
                 <div>
                     <!-- Ticket Info -->
                     <div class="portal-card">
@@ -356,7 +387,7 @@
                             </div>
                         ` : ''}
                     </div>
-                    
+
                     <!-- Contact Info -->
                     <div class="portal-card">
                         <h3 class="card-title">📞 Contact Details</h3>
@@ -379,7 +410,7 @@
                             </div>
                         ` : ''}
                     </div>
-                    
+
                     ${ticket.resolution ? `
                         <div class="portal-card" style="background: #f0fdf4; border: 2px solid #10b981;">
                             <h3 class="card-title" style="color: #059669;">✅ Resolution</h3>
@@ -393,16 +424,16 @@
 
     async function sendReply() {
         const message = document.getElementById('replyMessage').value.trim();
-        
+
         if (!message) {
             alert('Please enter a message');
             return;
         }
-        
+
         const btn = document.querySelector('.reply-btn');
         btn.disabled = true;
         btn.textContent = 'Sending...';
-        
+
         try {
             const response = await fetch('/CustomerPortal/ReplyToTicket', {
                 method: 'POST',
@@ -412,9 +443,9 @@
                     message: message
                 })
             });
-            
+
             const result = await response.json();
-            
+
             if (result.success) {
                 // Reload ticket to show new message
                 loadTicketDetails();

@@ -38,7 +38,7 @@
     
     .chat-layout {
         display: grid;
-        grid-template-columns: 350px 1fr;
+        grid-template-columns: 300px 1fr;
         gap: 20px;
         height: calc(100vh - 200px);
         min-height: 600px;
@@ -61,7 +61,7 @@
     }
     
     .chat-list-header {
-        padding: 15px 20px;
+        padding: 12px 14px;
         border-bottom: 1px solid var(--border);
         display: flex;
         justify-content: space-between;
@@ -83,7 +83,7 @@
     }
     
     .chat-item {
-        padding: 15px 20px;
+        padding: 11px 14px;
         border-bottom: 1px solid var(--border);
         cursor: pointer;
         transition: all 0.2s;
@@ -141,14 +141,14 @@
     }
     
     .pending-requests-card {
-        background: linear-gradient(135deg, #fef3cd, #fff8e1);
-        border: 2px solid #f59e0b;
+        background: var(--card);
+        border: 1px solid var(--border);
         border-radius: 12px;
-        padding: 15px;
+        padding: 12px;
     }
     
     .pending-requests-card h4 {
-        color: #92400e;
+        color: var(--foreground);
         font-size: 0.9rem;
         margin: 0 0 10px 0;
         display: flex;
@@ -157,13 +157,14 @@
     }
     
     .pending-request {
-        background: white;
+        background: var(--muted);
         border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 10px;
+        padding: 10px;
+        margin-bottom: 8px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        border: 1px solid var(--border);
     }
     
     .pending-request:last-child {
@@ -173,12 +174,12 @@
     .pending-request-info h5 {
         margin: 0;
         font-size: 0.9rem;
-        color: #1f2937;
+        color: var(--foreground);
     }
     
     .pending-request-info span {
         font-size: 0.75rem;
-        color: #6b7280;
+        color: var(--muted-foreground);
     }
     
     .accept-btn {
@@ -769,7 +770,7 @@
             const response = await fetch('/api/GetCurrentUser');
             const result = await response.json();
             if (result.success) {
-                currentAgentId = result.userId;
+                currentAgentId = result.data?.userId ?? result.userId ?? null;
             }
         } catch (error) {
             console.error('Error getting current user:', error);
@@ -977,9 +978,8 @@
             
             if (result.success) {
                 showSuccess('Chat accepted! You can now start chatting.');
-                loadChatSessions();
-                loadPendingRequests();
-                selectChat(sessionId);
+                await Promise.all([loadChatSessions(), loadPendingRequests()]);
+                setTimeout(() => selectChat(sessionId), 250);
             } else {
                 showError(result.message || 'Failed to accept chat');
             }

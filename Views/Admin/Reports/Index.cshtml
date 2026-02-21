@@ -169,76 +169,241 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/admin.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', loadReportData);
+        let revenueTrendChart = null;
+        let orderStatusChart = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default dates
+            const now = new Date();
+            const thirtyAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            document.getElementById('toDate').value = now.toISOString().split('T')[0];
+            document.getElementById('fromDate').value = thirtyAgo.toISOString().split('T')[0];
+            loadReportData();
+        });
+
+        function getDateRange() {
+            const fromEl = document.getElementById('fromDate');
+            const toEl = document.getElementById('toDate');
+            const periodEl = document.getElementById('reportPeriod');
+
+            // If custom dates are set and differ from period default, use them
+            let fromDate, toDate;
+            const now = new Date();
+            toDate = toEl.value ? new Date(toEl.value + 'T23:59:59') : now;
+
+            if (fromEl.value) {
+                fromDate = new Date(fromEl.value + 'T00:00:00');
+            } else {
+                const days = parseInt(periodEl.value) || 30;
+                fromDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+            }
+
+            return { fromDate, toDate };
+        }
+
+        // Update date inputs when period dropdown changes
+        document.getElementById('reportPeriod')?.addEventListener('change', function() {
+            const days = parseInt(this.value) || 30;
+            const now = new Date();
+            const from = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+            document.getElementById('fromDate').value = from.toISOString().split('T')[0];
+            document.getElementById('toDate').value = now.toISOString().split('T')[0];
+        });
 
         async function loadReportData() {
             try {
-                const [orders, customers, products, tickets] = await Promise.all([
+                const [orders, customers, products, tickets, users] = await Promise.all([
                     fetch('/api/orders').then(r=>r.json()).catch(()=>[]),
                     fetch('/api/customers').then(r=>r.json()).catch(()=>[]),
                     fetch('/api/products').then(r=>r.json()).catch(()=>[]),
-                    fetch('/api/tickets').then(r=>r.json()).catch(()=>[])
+                    fetch('/api/tickets').then(r=>r.json()).catch(()=>[]),
+                    fetch('/api/users').then(r=>r.json()).catch(()=>[])
                 ]);
-                const revenue = orders.reduce((s,o)=>s+(o.totalAmount||0),0);
+
+                const { fromDate, toDate } = getDateRange();
+
+                // Filter by date range
+                const filteredOrders = orders.filter(o => {
+                    const d = new Date(o.orderDate);
+                    return d >= fromDate && d <= toDate;
+                });
+                const filteredCustomers = customers.filter(c => {
+                    const d = new Date(c.createdAt);
+                    return d >= fromDate && d <= toDate;
+                });
+                const filteredTickets = tickets.filter(t => {
+                    const d = new Date(t.createdAt);
+                    return d >= fromDate && d <= toDate;
+                });
+
+                // KPI summary
+                const revenue = filteredOrders.reduce((s,o)=>s+(o.totalAmount||0),0);
                 document.getElementById('rptRevenue').textContent = '₱' + revenue.toLocaleString('en-PH',{minimumFractionDigits:2});
-                document.getElementById('rptOrders').textContent = orders.length;
-                document.getElementById('rptNewCustomers').textContent = customers.length;
-                document.getElementById('rptTickets').textContent = tickets.length;
-                renderRevenueTrend(orders);
-                renderOrderStatus(orders);
-                renderTopProducts(products, orders);
-                renderDeptPerf();
+                document.getElementById('rptOrders').textContent = filteredOrders.length;
+                document.getElementById('rptNewCustomers').textContent = filteredCustomers.length;
+                document.getElementById('rptTickets').textContent = filteredTickets.length;
+
+                renderRevenueTrend(filteredOrders, fromDate, toDate);
+                renderOrderStatus(filteredOrders);
+                renderTopProducts(filteredOrders);
+                renderDeptPerf(filteredOrders, filteredTickets, users);
             } catch(e) { console.error(e); }
         }
 
-        function renderRevenueTrend(orders) {
+        function renderRevenueTrend(orders, fromDate, toDate) {
             const ctx = document.getElementById('revenueTrendChart')?.getContext('2d');
             if(!ctx) return;
-            const monthly = Array(12).fill(0);
-            orders.forEach(o=>{const d=new Date(o.orderDate); monthly[d.getMonth()]+=o.totalAmount||0;});
-            new Chart(ctx,{type:'line',data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
-                datasets:[{label:'Revenue',data:monthly,borderColor:'#008080',backgroundColor:'rgba(0,128,128,0.1)',fill:true,tension:0.4}]},
+            if (revenueTrendChart) revenueTrendChart.destroy();
+
+            // Group by day or month depending on range
+            const rangeDays = Math.ceil((toDate - fromDate) / (1000 * 60 * 60 * 24));
+            let labels = [], data = [];
+
+            if (rangeDays <= 31) {
+                // Daily grouping
+                const daily = {};
+                for (let d = new Date(fromDate); d <= toDate; d.setDate(d.getDate() + 1)) {
+                    const key = d.toISOString().split('T')[0];
+                    daily[key] = 0;
+                }
+                orders.forEach(o => {
+                    const key = new Date(o.orderDate).toISOString().split('T')[0];
+                    if (daily[key] !== undefined) daily[key] += o.totalAmount || 0;
+                });
+                labels = Object.keys(daily).map(d => new Date(d).toLocaleDateString('en-PH', {month:'short',day:'numeric'}));
+                data = Object.values(daily);
+            } else {
+                // Monthly grouping
+                const monthly = {};
+                orders.forEach(o => {
+                    const d = new Date(o.orderDate);
+                    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+                    monthly[key] = (monthly[key] || 0) + (o.totalAmount || 0);
+                });
+                const sortedKeys = Object.keys(monthly).sort();
+                labels = sortedKeys.map(k => {
+                    const [y,m] = k.split('-');
+                    return new Date(y, m-1).toLocaleDateString('en-PH', {month:'short',year:'2-digit'});
+                });
+                data = sortedKeys.map(k => monthly[k]);
+            }
+
+            revenueTrendChart = new Chart(ctx,{type:'line',data:{labels,
+                datasets:[{label:'Revenue',data,borderColor:'#008080',backgroundColor:'rgba(0,128,128,0.1)',fill:true,tension:0.4}]},
                 options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-                scales:{y:{beginAtZero:true,ticks:{callback:v=>'₱'+(v/1000).toFixed(0)+'k'}},x:{grid:{display:false}}}}});
+                scales:{y:{beginAtZero:true,ticks:{callback:v=>'₱'+(v>=1000?(v/1000).toFixed(0)+'k':v.toFixed(0))}},x:{grid:{display:false}}}}});
         }
 
         function renderOrderStatus(orders) {
             const ctx = document.getElementById('orderStatusChart')?.getContext('2d');
             if(!ctx) return;
+            if (orderStatusChart) orderStatusChart.destroy();
+
             const statuses = {};
             orders.forEach(o=>{statuses[o.orderStatus||'Unknown']=(statuses[o.orderStatus||'Unknown']||0)+1;});
-            new Chart(ctx,{type:'doughnut',data:{labels:Object.keys(statuses),
+            orderStatusChart = new Chart(ctx,{type:'doughnut',data:{labels:Object.keys(statuses),
                 datasets:[{data:Object.values(statuses),backgroundColor:['#008080','#10B981','#F59E0B','#EF4444','#3B82F6','#8B5CF6'],borderWidth:0,cutout:'65%'}]},
                 options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'}}}});
         }
 
-        function renderTopProducts(products) {
+        function renderTopProducts(orders) {
             const tbody = document.getElementById('topProductsTable');
-            const sorted = [...products].sort((a,b)=>(b.stockQuantity||0)-(a.stockQuantity||0)).slice(0,5);
-            if(!sorted.length){tbody.innerHTML='<tr><td colspan="3" class="text-center py-4">No data</td></tr>';return;}
-            tbody.innerHTML = sorted.map(p=>`<tr><td><strong>${p.productName||''}</strong></td>
-                <td class="text-center">${p.stockQuantity||0}</td>
-                <td class="text-end">₱${(p.sellingPrice||0).toLocaleString('en-PH',{minimumFractionDigits:2})}</td></tr>`).join('');
+            
+            // Aggregate items from orders to get actual sales data
+            const productSales = {};
+            orders.forEach(o => {
+                if (o.items && Array.isArray(o.items)) {
+                    o.items.forEach(item => {
+                        const name = item.productName || 'Unknown Product';
+                        if (!productSales[name]) {
+                            productSales[name] = { qty: 0, revenue: 0 };
+                        }
+                        productSales[name].qty += item.quantity || 0;
+                        productSales[name].revenue += (item.quantity || 0) * (item.unitPrice || 0);
+                    });
+                }
+            });
+
+            const sorted = Object.entries(productSales)
+                .sort((a,b) => b[1].qty - a[1].qty)
+                .slice(0, 5);
+
+            if (!sorted.length) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted">No sales data in this period</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = sorted.map(([name, data]) => `
+                <tr>
+                    <td><strong>${name}</strong></td>
+                    <td class="text-center">${data.qty}</td>
+                    <td class="text-end">₱${data.revenue.toLocaleString('en-PH',{minimumFractionDigits:2})}</td>
+                </tr>
+            `).join('');
         }
 
-        function renderDeptPerf() {
+        function renderDeptPerf(orders, tickets, users) {
             const tbody = document.getElementById('deptPerfTable');
+            
+            const getStaffCount = (roleIds) => users.filter(u => roleIds.includes(u.roleId) && u.isActive).length;
+
             const depts = [
-                {name:'Sales',actions:'-',staff:'-'},
-                {name:'Support',actions:'-',staff:'-'},
-                {name:'Marketing',actions:'-',staff:'-'},
-                {name:'Billing',actions:'-',staff:'-'},
-                {name:'Inventory',actions:'-',staff:'-'}
+                { name: 'Sales', actions: orders.length, staff: getStaffCount([3]) },
+                { name: 'Support', actions: tickets.length, staff: getStaffCount([4]) },
+                { name: 'Marketing', actions: '-', staff: getStaffCount([5]) },
+                { name: 'Billing', actions: orders.filter(o => o.paymentStatus === 'Paid').length, staff: getStaffCount([6]) },
+                { name: 'Inventory', actions: '-', staff: getStaffCount([8]) }
             ];
-            tbody.innerHTML = depts.map(d=>`<tr><td><strong>${d.name}</strong></td>
-                <td class="text-center">${d.actions}</td><td class="text-center">${d.staff}</td></tr>`).join('');
+            
+            tbody.innerHTML = depts.map(d => `
+                <tr>
+                    <td><strong>${d.name}</strong></td>
+                    <td class="text-center">${d.actions}</td>
+                    <td class="text-center">${d.staff}</td>
+                </tr>
+            `).join('');
         }
 
         function exportAllReports() {
-            const toast = new bootstrap.Toast(document.getElementById('successToast'));
-            document.getElementById('successMessage').textContent = 'Report export started. You will be notified when ready.';
-            toast.show();
+            const { fromDate, toDate } = getDateRange();
+            const period = `${fromDate.toLocaleDateString()} - ${toDate.toLocaleDateString()}`;
+
+            const revenue = document.getElementById('rptRevenue')?.textContent || '₱0';
+            const orderCount = document.getElementById('rptOrders')?.textContent || '0';
+            const newCust = document.getElementById('rptNewCustomers')?.textContent || '0';
+            const ticketCount = document.getElementById('rptTickets')?.textContent || '0';
+
+            // Get top products table data
+            const prodRows = Array.from(document.querySelectorAll('#topProductsTable tr')).map(tr => {
+                const cells = tr.querySelectorAll('td');
+                return cells.length >= 3 ? `"${cells[0].textContent.trim()}","${cells[1].textContent.trim()}","${cells[2].textContent.trim()}"` : null;
+            }).filter(Boolean);
+
+            const csv = [
+                'CompuGear Company Report',
+                `Period: ${period}`,
+                '',
+                'KPI Summary',
+                `Total Revenue,${revenue}`,
+                `Total Orders,${orderCount}`,
+                `New Customers,${newCust}`,
+                `Support Tickets,${ticketCount}`,
+                '',
+                'Top Selling Products',
+                'Product,Qty Sold,Revenue',
+                ...prodRows
+            ];
+
+            const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `company-report-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            Toast.success('Report exported to CSV');
         }
     </script>
 }

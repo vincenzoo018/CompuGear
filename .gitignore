@@ -48,6 +48,9 @@ packages/
 ############################
 Thumbs.db
 Desktop.ini
+nul
+NUL
+tmpclaude-*
 
 ############################
 # VS Code / Rider

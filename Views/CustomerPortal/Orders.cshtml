@@ -1,48 +1,56 @@
-    
-    @{
+
+@{
     ViewData["Title"] = "My Orders";
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
 }
 
 <style>
-    .orders-page { min-height: 100vh; }
+    .orders-page {
+        min-height: 100vh;
+        font-family: 'Inter', sans-serif;
+    }
 
     /* Page Header */
     .page-header {
-        margin-bottom: 32px;
+        margin-bottom: 28px;
     }
 
     .page-title {
-        font-size: 2rem;
-        font-weight: 800;
+        font-size: 1.75rem;
+        font-weight: 700;
         color: var(--foreground);
-        margin-bottom: 8px;
+        margin-bottom: 6px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
+        letter-spacing: -0.02em;
     }
 
     .page-subtitle {
         color: var(--muted-foreground);
+        font-size: 0.925rem;
     }
 
     /* Stat Cards */
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
-        margin-bottom: 32px;
+        gap: 16px;
+        margin-bottom: 28px;
     }
 
     .stat-card {
-        background: var(--card);
+        background: #FFFFFF;
         border-radius: var(--radius);
-        border: 1px solid var(--border);
-        padding: 24px;
+        border: 1px solid #E5E7EB;
+        padding: 20px 22px;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-        transition: all 0.3s;
+        transition: border-color 0.2s ease;
+    }
+
+    .stat-card:hover {
+        border-color: #D1D5DB;
     }
 
     .stat-card::before {
@@ -51,7 +59,7 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
+        height: 3px;
     }
 
     .stat-card.total::before { background: var(--primary); }
@@ -60,46 +68,49 @@
     .stat-card.delivered::before { background: var(--success); }
 
     .stat-icon {
-        font-size: 1.5rem;
-        margin-bottom: 12px;
+        font-size: 1.35rem;
+        margin-bottom: 10px;
     }
 
     .stat-value {
-        font-size: 2rem;
-        font-weight: 800;
+        font-size: 1.75rem;
+        font-weight: 700;
         color: var(--foreground);
         line-height: 1;
+        letter-spacing: -0.02em;
     }
 
     .stat-label {
-        font-size: 0.85rem;
+        font-size: 0.825rem;
         color: var(--muted-foreground);
         margin-top: 4px;
+        font-weight: 500;
     }
 
     /* Tabs Section */
     .tabs-section {
-        background: var(--card);
+        background: #FFFFFF;
         border-radius: var(--radius);
-        border: 1px solid var(--border);
+        border: 1px solid #E5E7EB;
         overflow: hidden;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
     }
 
     .tabs-header {
         display: flex;
-        border-bottom: 1px solid var(--border);
-        padding: 0 24px;
-        gap: 8px;
+        border-bottom: 1px solid #E5E7EB;
+        padding: 0 20px;
+        gap: 4px;
         overflow-x: auto;
+        background: #F9FAFB;
     }
 
     .tab-btn {
-        padding: 16px 20px;
+        padding: 14px 16px;
         background: none;
         border: none;
         color: var(--muted-foreground);
-        font-family: 'Poppins', sans-serif;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.875rem;
         font-weight: 500;
         cursor: pointer;
         position: relative;
@@ -107,10 +118,12 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        transition: color 0.3s;
+        transition: color 0.2s ease;
     }
 
-    .tab-btn:hover { color: var(--foreground); }
+    .tab-btn:hover {
+        color: var(--foreground);
+    }
 
     .tab-btn.active {
         color: var(--primary);
@@ -125,14 +138,16 @@
         right: 0;
         height: 2px;
         background: var(--primary);
+        border-radius: 2px 2px 0 0;
     }
 
     .tab-count {
-        background: var(--muted);
+        background: #F3F4F6;
         padding: 2px 8px;
         border-radius: 10px;
-        font-size: 0.75rem;
+        font-size: 0.725rem;
         font-weight: 600;
+        color: var(--muted-foreground);
     }
 
     .tab-btn.active .tab-count {
@@ -141,44 +156,57 @@
     }
 
     /* Orders List */
-    .orders-content { padding: 24px; }
+    .orders-content {
+        padding: 20px;
+    }
 
     .order-row {
         display: flex;
         align-items: center;
-        gap: 20px;
-        padding: 20px;
-        background: var(--background);
-        border-radius: 12px;
-        margin-bottom: 12px;
+        gap: 16px;
+        padding: 16px 18px;
+        background: #FFFFFF;
+        border-radius: var(--radius-sm);
+        margin-bottom: 8px;
         cursor: pointer;
-        transition: all 0.3s;
-        border: 1px solid transparent;
+        transition: background-color 0.15s ease, box-shadow 0.15s ease;
+        border: 1px solid #F3F4F6;
     }
 
     .order-row:hover {
-        border-color: rgba(0,128,128,0.2);
-        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
-        transform: translateY(-4px);
+        background-color: #F9FAFB;
+        border-color: #E5E7EB;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
 
-    .order-icon { font-size: 2rem; }
+    .order-icon {
+        font-size: 1.5rem;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #F9FAFB;
+        border-radius: var(--radius-sm);
+        flex-shrink: 0;
+    }
 
-    .order-info { flex: 1; }
+    .order-info { flex: 1; min-width: 0; }
 
     .order-number {
-        font-weight: 700;
+        font-weight: 600;
+        font-size: 0.9rem;
         color: var(--foreground);
         margin-bottom: 4px;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
     }
 
     .order-meta {
         display: flex;
-        gap: 16px;
-        font-size: 0.85rem;
+        gap: 14px;
+        font-size: 0.8rem;
         color: var(--muted-foreground);
     }
 
@@ -194,13 +222,14 @@
         gap: 8px;
     }
 
-    .status-emoji { font-size: 1.2rem; }
+    .status-emoji { font-size: 1.1rem; }
 
     .status-badge {
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 0.75rem;
+        padding: 5px 12px;
+        border-radius: 6px;
+        font-size: 0.725rem;
         font-weight: 600;
+        letter-spacing: 0.01em;
     }
 
     .badge-pending { background: var(--pending-light); color: var(--pending-fg); }
@@ -210,15 +239,16 @@
     .badge-cancelled { background: var(--error-light); color: var(--error-fg); }
 
     .order-amount {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 700;
-        color: var(--primary);
+        color: var(--foreground);
         text-align: right;
+        white-space: nowrap;
     }
 
     .order-arrow {
-        color: var(--muted-foreground);
-        font-size: 1.2rem;
+        color: #D1D5DB;
+        font-size: 1rem;
     }
 
     /* Modal */
@@ -230,27 +260,28 @@
         bottom: 0;
         width: 100vw;
         height: 100vh;
-        background: rgba(0,0,0,0.6);
+        background: rgba(0,0,0,0.4);
         display: none;
         align-items: center;
         justify-content: center;
         z-index: 9999;
         padding: 20px;
+        backdrop-filter: blur(2px);
     }
 
-    .cg-modal-backdrop.active { 
-        display: flex !important; 
+    .cg-modal-backdrop.active {
+        display: flex !important;
     }
 
     .cg-modal {
         background: #FFFFFF;
-        border-radius: 20px;
+        border-radius: var(--radius);
         width: 100%;
-        max-width: 600px;
+        max-width: 580px;
         max-height: 90vh;
         overflow-y: auto;
-        animation: orderModalScaleIn 0.25s ease forwards;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        animation: orderModalScaleIn 0.2s ease forwards;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0,0,0,0.1);
         opacity: 1;
         transform: scale(1);
         position: relative;
@@ -258,45 +289,51 @@
     }
 
     @@keyframes orderModalScaleIn {
-        from { opacity: 0; transform: scale(0.9); }
-        to { opacity: 1; transform: scale(1); }
+        from { opacity: 0; transform: scale(0.97) translateY(8px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
     }
 
     .cg-modal-header {
-        padding: 24px;
+        padding: 20px 24px;
         border-bottom: 1px solid #E5E7EB;
         display: flex;
         justify-content: space-between;
         align-items: center;
         background: #FFFFFF;
-        border-radius: 20px 20px 0 0;
+        border-radius: var(--radius) var(--radius) 0 0;
     }
 
     .cg-modal-title {
-        font-size: 1.3rem;
+        font-size: 1.1rem;
         font-weight: 700;
-        color: #141516;
+        color: var(--foreground);
+        letter-spacing: -0.01em;
     }
 
     .cg-modal-close {
         background: none;
         border: none;
-        font-size: 1.5rem;
-        color: #64748B;
+        font-size: 1.4rem;
+        color: #9CA3AF;
         cursor: pointer;
-        padding: 8px;
+        padding: 6px;
         line-height: 1;
-        border-radius: 8px;
-        transition: all 0.3s;
+        border-radius: 6px;
+        transition: all 0.15s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
     }
 
-    .cg-modal-close:hover { 
-        color: #141516; 
-        background: #F1F5F9;
+    .cg-modal-close:hover {
+        color: var(--foreground);
+        background: #F3F4F6;
     }
 
-    .cg-modal-body { 
-        padding: 24px; 
+    .cg-modal-body {
+        padding: 24px;
         background: #FFFFFF;
     }
 
@@ -304,15 +341,16 @@
     .order-detail-status {
         text-align: center;
         padding: 20px;
-        background: var(--muted);
-        border-radius: 12px;
-        margin-bottom: 24px;
+        background: #F9FAFB;
+        border-radius: var(--radius-sm);
+        margin-bottom: 20px;
+        border: 1px solid #F3F4F6;
     }
 
-    .detail-status-emoji { font-size: 3rem; margin-bottom: 12px; }
+    .detail-status-emoji { font-size: 2.5rem; margin-bottom: 10px; }
 
     .detail-status-text {
-        font-size: 1.1rem;
+        font-size: 1rem;
         font-weight: 600;
         color: var(--foreground);
     }
@@ -320,9 +358,9 @@
     .order-timeline {
         display: flex;
         justify-content: space-between;
-        padding: 20px 0;
-        margin-bottom: 24px;
-        border-bottom: 1px solid var(--border);
+        padding: 16px 0;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #F3F4F6;
     }
 
     .timeline-step {
@@ -340,7 +378,7 @@
         left: 60%;
         right: -40%;
         height: 2px;
-        background: var(--border);
+        background: #E5E7EB;
     }
 
     .timeline-step:last-child::after { display: none; }
@@ -348,16 +386,16 @@
     .timeline-step.completed::after { background: var(--success); }
 
     .timeline-icon {
-        width: 36px;
-        height: 36px;
+        width: 34px;
+        height: 34px;
         border-radius: 50%;
-        background: var(--muted);
+        background: #F9FAFB;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1rem;
+        font-size: 0.9rem;
         z-index: 1;
-        border: 2px solid var(--border);
+        border: 2px solid #E5E7EB;
     }
 
     .timeline-step.completed .timeline-icon {
@@ -372,88 +410,96 @@
     }
 
     .timeline-label {
-        font-size: 0.7rem;
+        font-size: 0.675rem;
         color: var(--muted-foreground);
         margin-top: 8px;
         text-align: center;
+        font-weight: 500;
     }
 
     .detail-section {
-        margin-bottom: 20px;
+        margin-bottom: 18px;
     }
 
     .detail-section-title {
-        font-weight: 700;
+        font-weight: 600;
+        font-size: 0.875rem;
         color: var(--foreground);
-        margin-bottom: 12px;
+        margin-bottom: 10px;
         padding-bottom: 8px;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid #F3F4F6;
     }
 
     .detail-row {
         display: flex;
         justify-content: space-between;
-        padding: 8px 0;
-        font-size: 0.9rem;
+        padding: 7px 0;
+        font-size: 0.875rem;
     }
 
     .detail-label { color: var(--muted-foreground); }
     .detail-value { color: var(--foreground); font-weight: 500; }
 
-    .order-items-list { margin-top: 12px; }
+    .order-items-list { margin-top: 10px; }
 
     .order-item {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 12px;
-        background: var(--background);
-        border-radius: 8px;
-        margin-bottom: 8px;
+        padding: 10px 12px;
+        background: #F9FAFB;
+        border-radius: var(--radius-sm);
+        margin-bottom: 6px;
+        border: 1px solid #F3F4F6;
     }
 
-    .item-icon { font-size: 1.5rem; }
+    .item-icon { font-size: 1.35rem; }
     .item-info { flex: 1; }
-    .item-name { font-weight: 500; color: var(--foreground); }
-    .item-meta { font-size: 0.8rem; color: var(--muted-foreground); }
-    .item-price { font-weight: 600; color: var(--primary); }
+    .item-name { font-weight: 500; color: var(--foreground); font-size: 0.875rem; }
+    .item-meta { font-size: 0.775rem; color: var(--muted-foreground); }
+    .item-price { font-weight: 600; color: var(--primary); font-size: 0.875rem; }
 
     .order-total-row {
         display: flex;
         justify-content: space-between;
-        padding: 16px;
+        padding: 14px 16px;
         background: var(--primary);
         color: white;
-        border-radius: 8px;
-        margin-top: 16px;
+        border-radius: var(--radius-sm);
+        margin-top: 14px;
         font-weight: 700;
+        font-size: 0.925rem;
     }
 
     /* Empty State */
     .empty-state {
         text-align: center;
-        padding: 60px 20px;
+        padding: 56px 20px;
     }
 
-    .empty-icon { font-size: 4rem; opacity: 0.5; margin-bottom: 16px; }
-    .empty-text { color: var(--muted-foreground); font-size: 1.1rem; margin-bottom: 20px; }
+    .empty-icon { font-size: 3rem; opacity: 0.4; margin-bottom: 14px; }
+    .empty-text { color: var(--muted-foreground); font-size: 0.95rem; margin-bottom: 20px; }
 
     .btn-shop {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 12px 24px;
+        padding: 10px 22px;
         background: var(--primary);
         color: white;
         border: none;
         border-radius: var(--radius-sm);
-        font-family: 'Poppins', sans-serif;
+        font-family: 'Inter', sans-serif;
         font-weight: 600;
+        font-size: 0.875rem;
         text-decoration: none;
-        transition: all 0.3s;
+        transition: background-color 0.15s ease;
     }
 
-    .btn-shop:hover { color: white; background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,128,128,0.25); }
+    .btn-shop:hover {
+        color: white;
+        background: var(--primary-hover);
+    }
 
     /* Responsive */
     @@media (max-width: 1024px) {
@@ -461,21 +507,21 @@
     }
 
     @@media (max-width: 768px) {
-        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .stat-card { padding: 16px; }
         .stat-value { font-size: 1.5rem; }
-        .order-row { flex-wrap: wrap; padding: 16px; }
-        .order-status { order: 3; width: 100%; margin-top: 12px; }
+        .order-row { flex-wrap: wrap; padding: 14px; }
+        .order-status { order: 3; width: 100%; margin-top: 10px; }
         .order-amount { order: 2; }
         .order-arrow { display: none; }
         .tabs-header { padding: 0 12px; }
-        .tab-btn { padding: 12px; font-size: 0.9rem; }
+        .tab-btn { padding: 12px 10px; font-size: 0.825rem; }
         .order-timeline { display: none; }
     }
 
     @@media (max-width: 576px) {
         .stats-grid { grid-template-columns: 1fr 1fr; }
-        .page-title { font-size: 1.5rem; }
+        .page-title { font-size: 1.35rem; }
     }
 
     /* ========== TRACKING MODAL ========== */
@@ -487,13 +533,13 @@
         bottom: 0;
         width: 100vw;
         height: 100vh;
-        background: rgba(0,0,0,0.65);
+        background: rgba(0,0,0,0.45);
         display: none;
         align-items: center;
         justify-content: center;
         z-index: 10000;
         padding: 20px;
-        backdrop-filter: blur(4px);
+        backdrop-filter: blur(3px);
     }
 
     .tracking-backdrop.active {
@@ -502,57 +548,61 @@
 
     .tracking-modal {
         background: #FFFFFF;
-        border-radius: 20px;
+        border-radius: var(--radius);
         width: 100%;
-        max-width: 900px;
+        max-width: 880px;
         max-height: 92vh;
         overflow-y: auto;
-        box-shadow: 0 25px 60px rgba(0,0,0,0.3);
-        animation: trackingModalIn 0.3s ease forwards;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12), 0 0 1px rgba(0,0,0,0.1);
+        animation: trackingModalIn 0.25s ease forwards;
     }
 
     @@keyframes trackingModalIn {
-        from { opacity: 0; transform: translateY(20px) scale(0.95); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     .tracking-modal-header {
-        padding: 24px 28px;
+        padding: 20px 24px;
         border-bottom: 1px solid #E5E7EB;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: linear-gradient(135deg, #008080, #006666);
-        border-radius: 20px 20px 0 0;
-        color: white;
+        background: #FFFFFF;
+        border-radius: var(--radius) var(--radius) 0 0;
     }
 
     .tracking-modal-header .cg-modal-title {
-        color: white;
+        color: var(--foreground);
         display: flex;
         align-items: center;
         gap: 10px;
-        font-size: 1.2rem;
+        font-size: 1.05rem;
+        font-weight: 700;
+    }
+
+    .tracking-modal-header .cg-modal-title svg {
+        color: var(--primary);
     }
 
     .tracking-modal-header .cg-modal-close {
-        color: rgba(255,255,255,0.8);
-        background: rgba(255,255,255,0.15);
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
+        color: #9CA3AF;
+        background: #F3F4F6;
+        border-radius: 6px;
+        width: 32px;
+        height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
         border: none;
-        font-size: 1.4rem;
+        font-size: 1.3rem;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all 0.15s ease;
     }
 
     .tracking-modal-header .cg-modal-close:hover {
-        background: rgba(255,255,255,0.3);
-        color: white;
+        background: #E5E7EB;
+        color: var(--foreground);
     }
 
     .tracking-modal-body {
@@ -562,9 +612,9 @@
     /* Map Container */
     .tracking-map-container {
         width: 100%;
-        height: 320px;
+        height: 300px;
         position: relative;
-        border-bottom: 3px solid #008080;
+        border-bottom: 1px solid #E5E7EB;
     }
 
     #trackingMap {
@@ -576,55 +626,56 @@
         position: absolute;
         top: 12px;
         left: 12px;
-        background: rgba(255,255,255,0.95);
+        background: rgba(255,255,255,0.96);
         backdrop-filter: blur(8px);
-        padding: 12px 16px;
-        border-radius: 12px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        padding: 10px 14px;
+        border-radius: var(--radius-sm);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid #E5E7EB;
         z-index: 5;
-        max-width: 260px;
+        max-width: 240px;
     }
 
     .map-overlay-info .overlay-status {
-        font-weight: 700;
-        color: #008080;
-        font-size: 0.9rem;
-        margin-bottom: 4px;
+        font-weight: 600;
+        color: var(--primary);
+        font-size: 0.85rem;
+        margin-bottom: 2px;
     }
 
     .map-overlay-info .overlay-detail {
-        font-size: 0.78rem;
-        color: #64748B;
+        font-size: 0.75rem;
+        color: #6B7280;
     }
 
     /* Tracking Content */
     .tracking-content {
-        padding: 24px 28px;
+        padding: 24px;
     }
 
     .tracking-summary {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-        margin-bottom: 28px;
+        gap: 12px;
+        margin-bottom: 24px;
     }
 
     .tracking-summary-card {
-        background: #F8FAFC;
-        border: 1px solid #E5E7EB;
-        border-radius: 12px;
-        padding: 16px;
+        background: #F9FAFB;
+        border: 1px solid #F3F4F6;
+        border-radius: var(--radius-sm);
+        padding: 14px;
         text-align: center;
     }
 
     .tracking-summary-card .summary-icon {
-        font-size: 1.6rem;
+        font-size: 1.4rem;
         margin-bottom: 6px;
     }
 
     .tracking-summary-card .summary-label {
-        font-size: 0.75rem;
-        color: #64748B;
+        font-size: 0.7rem;
+        color: #6B7280;
         margin-bottom: 2px;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -632,32 +683,32 @@
     }
 
     .tracking-summary-card .summary-value {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: #141516;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--foreground);
     }
 
     /* Tracking Timeline */
     .tracking-timeline {
         position: relative;
-        padding-left: 40px;
+        padding-left: 36px;
     }
 
     .tracking-timeline::before {
         content: '';
         position: absolute;
-        left: 15px;
+        left: 14px;
         top: 0;
         bottom: 0;
-        width: 3px;
+        width: 2px;
         background: #E5E7EB;
-        border-radius: 2px;
+        border-radius: 1px;
     }
 
     .timeline-item {
         position: relative;
-        padding-bottom: 28px;
-        padding-left: 20px;
+        padding-bottom: 24px;
+        padding-left: 18px;
     }
 
     .timeline-item:last-child {
@@ -666,17 +717,17 @@
 
     .timeline-dot {
         position: absolute;
-        left: -31px;
+        left: -28px;
         top: 2px;
-        width: 28px;
-        height: 28px;
+        width: 24px;
+        height: 24px;
         border-radius: 50%;
-        background: #E5E7EB;
+        background: #F3F4F6;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.75rem;
-        border: 3px solid #FFFFFF;
+        font-size: 0.65rem;
+        border: 2px solid #FFFFFF;
         box-shadow: 0 0 0 2px #E5E7EB;
         z-index: 1;
     }
@@ -688,15 +739,15 @@
     }
 
     .timeline-item.current .timeline-dot {
-        background: #008080;
-        box-shadow: 0 0 0 2px #008080, 0 0 0 6px rgba(0,128,128,0.2);
+        background: var(--primary);
+        box-shadow: 0 0 0 2px var(--primary);
         color: white;
-        animation: pulseTrack 2s ease-in-out infinite;
+        animation: pulseTrack 2.5s ease-in-out infinite;
     }
 
     @@keyframes pulseTrack {
-        0%, 100% { box-shadow: 0 0 0 2px #008080, 0 0 0 6px rgba(0,128,128,0.2); }
-        50% { box-shadow: 0 0 0 2px #008080, 0 0 0 10px rgba(0,128,128,0.1); }
+        0%, 100% { box-shadow: 0 0 0 2px var(--primary), 0 0 0 5px rgba(0,128,128,0.12); }
+        50% { box-shadow: 0 0 0 2px var(--primary), 0 0 0 8px rgba(0,128,128,0.06); }
     }
 
     .timeline-item-content {
@@ -706,35 +757,35 @@
     }
 
     .timeline-info h4 {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: #141516;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--foreground);
         margin: 0 0 2px 0;
     }
 
     .timeline-item:not(.completed):not(.current) .timeline-info h4 {
-        color: #94A3B8;
+        color: #C4C9D4;
     }
 
     .timeline-info p {
-        font-size: 0.82rem;
-        color: #64748B;
+        font-size: 0.8rem;
+        color: #6B7280;
         margin: 0;
     }
 
     .timeline-item:not(.completed):not(.current) .timeline-info p {
-        color: #CBD5E1;
+        color: #D1D5DB;
     }
 
     .timeline-date {
-        font-size: 0.78rem;
-        color: #64748B;
+        font-size: 0.75rem;
+        color: #6B7280;
         white-space: nowrap;
         text-align: right;
     }
 
     .timeline-item:not(.completed):not(.current) .timeline-date {
-        color: #CBD5E1;
+        color: #D1D5DB;
     }
 
     /* Track Order Button */
@@ -742,39 +793,37 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 12px 24px;
+        padding: 11px 20px;
         background: var(--primary);
         color: white;
         border: none;
         border-radius: var(--radius-sm);
-        font-family: 'Poppins', sans-serif;
+        font-family: 'Inter', sans-serif;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.875rem;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: background-color 0.15s ease;
         width: 100%;
         justify-content: center;
-        margin-top: 16px;
+        margin-top: 14px;
     }
 
     .btn-track-order:hover {
         background: var(--primary-hover);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,128,128,0.25);
     }
 
     /* Tracking Items in Modal */
     .tracking-items-section {
-        margin-top: 24px;
-        padding-top: 20px;
-        border-top: 1px solid #E5E7EB;
+        margin-top: 20px;
+        padding-top: 18px;
+        border-top: 1px solid #F3F4F6;
     }
 
     .tracking-items-title {
-        font-size: 0.95rem;
-        font-weight: 700;
-        color: #141516;
-        margin-bottom: 12px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--foreground);
+        margin-bottom: 10px;
     }
 
     .tracking-item-row {
@@ -782,13 +831,14 @@
         align-items: center;
         gap: 12px;
         padding: 10px 12px;
-        background: #F8FAFC;
-        border-radius: 8px;
+        background: #F9FAFB;
+        border-radius: var(--radius-sm);
         margin-bottom: 6px;
+        border: 1px solid #F3F4F6;
     }
 
     .tracking-item-icon {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
     }
 
     .tracking-item-details {
@@ -797,24 +847,24 @@
 
     .tracking-item-name {
         font-weight: 600;
-        font-size: 0.88rem;
-        color: #141516;
+        font-size: 0.85rem;
+        color: var(--foreground);
     }
 
     .tracking-item-qty {
-        font-size: 0.78rem;
-        color: #64748B;
+        font-size: 0.75rem;
+        color: #6B7280;
     }
 
     .tracking-item-price {
         font-weight: 700;
-        color: #008080;
-        font-size: 0.9rem;
+        color: var(--primary);
+        font-size: 0.85rem;
     }
 
     @@media (max-width: 768px) {
-        .tracking-modal { max-width: 100%; border-radius: 16px; }
-        .tracking-map-container { height: 240px; }
+        .tracking-modal { max-width: 100%; border-radius: var(--radius); }
+        .tracking-map-container { height: 220px; }
         .tracking-summary { grid-template-columns: 1fr; }
         .tracking-content { padding: 16px 20px; }
     }
@@ -823,7 +873,7 @@
 <div class="orders-page">
     <!-- Page Header -->
     <div class="page-header animate-fade-in">
-        <h1 class="page-title">📦 My Orders</h1>
+        <h1 class="page-title">My Orders</h1>
         <p class="page-subtitle">Track and manage your orders</p>
     </div>
 
@@ -906,7 +956,7 @@
     <div class="tracking-modal" onclick="event.stopPropagation()">
         <div class="tracking-modal-header">
             <span class="cg-modal-title">
-                <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 <span id="trackingModalTitle">Track Order</span>
             </span>
             <button class="cg-modal-close" onclick="closeTrackingModal()">&times;</button>
@@ -989,7 +1039,7 @@
                             ${isPaid ? '✅ Payment confirmed' : '⏳ Payment pending'}
                         </p>
                         <p style="color: #008080; font-size: 1.3rem; font-weight: 800; margin-bottom: 24px;">₱${order.totalAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</p>
-                        <button onclick="this.closest('div').parentElement.remove()" 
+                        <button onclick="this.closest('div').parentElement.remove()"
                             style="padding: 14px 40px; background: linear-gradient(135deg, #008080, #006666); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(0,128,128,0.3);">
                             👍 Got It!
                         </button>
@@ -1013,7 +1063,7 @@
                 if (result.stats) {
                     document.getElementById('statTotal').textContent = result.stats.total || 0;
                     document.getElementById('statProcessing').textContent = result.stats.pending || 0;
-                    
+
                     const shippedCount = allOrders.filter(o => o.orderStatus === 'Shipped').length;
                     document.getElementById('statShipped').textContent = shippedCount;
                     document.getElementById('statDelivered').textContent = result.stats.delivered || 0;
@@ -1023,7 +1073,7 @@
                     const processingCount = allOrders.filter(o => o.orderStatus === 'Processing' || o.orderStatus === 'Confirmed').length;
                     const deliveredCount = allOrders.filter(o => o.orderStatus === 'Delivered').length;
                     const cancelledCount = allOrders.filter(o => o.orderStatus === 'Cancelled').length;
-                    
+
                     document.getElementById('countPending').textContent = pendingCount;
                     document.getElementById('countProcessing').textContent = processingCount;
                     document.getElementById('countShipped').textContent = shippedCount;
@@ -1074,7 +1124,7 @@
             const config = statusConfig[order.orderStatus] || statusConfig['Pending'];
             const orderDate = new Date(order.orderDate).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
             const itemCount = order.itemCount || (order.items ? order.items.length : 0);
-            const paymentBadge = order.paymentStatus === 'Paid' 
+            const paymentBadge = order.paymentStatus === 'Paid'
                 ? '<span style="background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; margin-left: 8px;">PAID</span>'
                 : order.paymentStatus === 'Pending'
                 ? '<span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; margin-left: 8px;">UNPAID</span>'
@@ -1303,15 +1353,15 @@
         document.getElementById('trackingModalTitle').textContent = `Track Order #${data.orderNumber}`;
 
         // Map overlay
-        const statusText = data.orderStatus === 'Delivered' ? '✅ Delivered' 
+        const statusText = data.orderStatus === 'Delivered' ? '✅ Delivered'
             : data.orderStatus === 'Shipped' ? '🚚 In Transit'
             : data.orderStatus === 'Out for Delivery' ? '📍 Out for Delivery'
             : data.orderStatus === 'Processing' ? '⚙️ Processing'
             : data.orderStatus === 'Confirmed' ? '✓ Confirmed'
             : '⏱️ Pending';
-        
+
         document.getElementById('overlayStatus').textContent = statusText;
-        document.getElementById('overlayDetail').textContent = 
+        document.getElementById('overlayDetail').textContent =
             data.trackingNumber ? `Tracking: ${data.trackingNumber}` : `Est. Delivery: ${data.tracking.estimatedDelivery}`;
 
         // Initialize Google Map
@@ -1359,7 +1409,7 @@
             else if (step.completed) cls = 'completed';
 
             const icon = timelineIcons[step.icon] || '○';
-            const dateStr = step.date 
+            const dateStr = step.date
                 ? new Date(step.date).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
                 : '—';
 
@@ -1447,7 +1497,7 @@
         }
 
         const mapEl = document.getElementById('trackingMap');
-        
+
         const origin = tracking.origin;
         const dest = tracking.destination;
         const current = tracking.currentLocation;
@@ -1535,7 +1585,7 @@
 
         // Draw route line (completed path)
         const routePath = tracking.waypoints.map(wp => ({ lat: wp.lat, lng: wp.lng }));
-        
+
         // Full route (gray)
         new google.maps.Polyline({
             path: routePath,
@@ -1551,7 +1601,7 @@
         if (current) {
             completedPath.push({ lat: current.lat, lng: current.lng });
         }
-        
+
         new google.maps.Polyline({
             path: completedPath,
             geodesic: true,
@@ -1618,6 +1668,12 @@
         bounds.extend({ lat: dest.lat, lng: dest.lng });
         if (current) bounds.extend({ lat: current.lat, lng: current.lng });
         trackingMap.fitBounds(bounds, { padding: 60 });
+
+        // Trigger resize after modal is fully visible
+        setTimeout(() => {
+            google.maps.event.trigger(trackingMap, 'resize');
+            trackingMap.fitBounds(bounds, { padding: 60 });
+        }, 300);
     }
 
     function closeTrackingModal() {

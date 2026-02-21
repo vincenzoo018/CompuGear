@@ -142,6 +142,7 @@ const Format = {
             'In Progress': 'info', 'in progress': 'info',
             'Resolved': 'success', 'resolved': 'success',
             'Paid': 'success', 'paid': 'success',
+            'Paid/Confirmed': 'primary', 'paid/confirmed': 'primary',
             'Unpaid': 'danger', 'unpaid': 'danger',
             'Partial': 'warning', 'partial': 'warning',
             'Draft': 'secondary', 'draft': 'secondary',
@@ -1694,38 +1695,32 @@ const Sales = {
             if (!tbody) return;
 
             if (this.data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No orders found.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">No orders found.</td></tr>';
                 this.updateStats();
                 return;
             }
 
             tbody.innerHTML = this.data.map(o => {
-                // Build action buttons based on order status
                 let actions = `<button class="btn btn-sm btn-outline-primary" onclick="Sales.orders.view(${o.orderId})" title="View">${Icons.view}</button>`;
 
                 if (o.orderStatus === 'Pending') {
-                    // Pending orders: Approve + Reject
                     actions += `
-                        <button class="btn btn-sm btn-success" onclick="approveOrder(${o.orderId})" title="Approve">
+                        <button class="btn btn-sm btn-success" onclick="Sales.orders.approve(${o.orderId})" title="Approve">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="rejectOrder(${o.orderId})" title="Reject">
+                        <button class="btn btn-sm btn-danger" onclick="Sales.orders.reject(${o.orderId})" title="Reject">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </button>`;
                 } else if (o.orderStatus !== 'Cancelled' && o.orderStatus !== 'Completed') {
-                    // Confirmed/Processing: Update Status + Cancel
                     actions += `
-                        <button class="btn btn-sm btn-outline-info" onclick="updateStatus(${o.orderId})" title="Update Status">
+                        <button class="btn btn-sm btn-outline-info" onclick="Sales.orders.updateStatus(${o.orderId})" title="Update Status">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="rejectOrder(${o.orderId})" title="Cancel">
+                        <button class="btn btn-sm btn-outline-danger" onclick="Sales.orders.updateStatusDirect(${o.orderId}, 'Cancelled')" title="Cancel">
                             ${Icons.toggleOff}
                         </button>`;
                 } else if (o.orderStatus === 'Cancelled') {
-                    actions += `
-                        <button class="btn btn-sm btn-outline-secondary" disabled title="Cancelled">
-                            ${Icons.toggleOff}
-                        </button>`;
+                    actions += `<button class="btn btn-sm btn-outline-secondary" disabled title="Cancelled">${Icons.toggleOff}</button>`;
                 }
 
                 return `<tr>
@@ -1739,6 +1734,7 @@ const Sales = {
                     <td class="text-end">${Format.currency(o.totalAmount)}</td>
                     <td class="text-center">${Format.statusBadge(o.orderStatus)}</td>
                     <td class="text-center">${Format.statusBadge(o.paymentStatus)}</td>
+                    <td class="text-center">${(o.paymentMethod || '-').toString().toUpperCase()}</td>
                     <td class="text-center">
                         <div class="btn-group">${actions}</div>
                     </td>
@@ -1768,50 +1764,196 @@ const Sales = {
             if (!o) { Toast.error('Order not found'); return; }
 
             this.currentId = id;
-            const el = (elId, val) => { const e = document.getElementById(elId); if (e) e.textContent = val; };
-            const elHtml = (elId, val) => { const e = document.getElementById(elId); if (e) e.innerHTML = val; };
+            
+            // Set modal title
+            const titleEl = document.getElementById('viewOrderNumber');
+            if (titleEl) titleEl.textContent = o.orderNumber;
 
-            el('viewOrderNumber', o.orderNumber);
-            el('viewCustomerName', o.customerName || 'Guest');
-            el('viewShippingAddress', [o.shippingAddress, o.shippingCity].filter(Boolean).join(', ') || '-');
-            el('viewOrderDate', Format.date(o.orderDate, true));
-            el('viewPaymentMethod', o.paymentMethod || '-');
-            el('viewPaymentRef', o.paymentReference || '-');
-            elHtml('viewOrderStatus', Format.statusBadge(o.orderStatus));
-            elHtml('viewPaymentStatus', Format.statusBadge(o.paymentStatus));
-
-            // Render items
-            const itemsTbody = document.getElementById('viewOrderItems');
-            if (itemsTbody) {
+            const content = document.getElementById('viewOrderContent');
+            if (content) {
                 const items = o.items || [];
-                if (items.length > 0) {
-                    itemsTbody.innerHTML = items.map(i => `<tr>
-                        <td>${i.productName || '-'}</td>
-                        <td class="text-end">${Format.currency(i.unitPrice)}</td>
-                        <td class="text-center">${i.quantity}</td>
-                        <td class="text-end">${Format.currency(i.totalPrice)}</td>
-                    </tr>`).join('');
-                } else {
-                    itemsTbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">${o.itemCount} item(s)</td></tr>`;
-                }
-            }
-
-            el('viewSubtotal', Format.currency(o.subtotal || 0));
-            el('viewDiscount', '-' + Format.currency(o.discountAmount || 0));
-            el('viewTax', Format.currency(o.taxAmount || 0));
-            el('viewShipping', Format.currency(o.shippingAmount || 0));
-            el('viewTotal', Format.currency(o.totalAmount));
-
-            // Notes
-            const notesSection = document.getElementById('viewNotesSection');
-            if (notesSection && o.notes) {
-                notesSection.style.display = 'block';
-                el('viewNotes', o.notes);
-            } else if (notesSection) {
-                notesSection.style.display = 'none';
+                content.innerHTML = `
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded">
+                                <h6 class="text-muted mb-2">Customer</h6>
+                                <div class="fw-bold">${o.customerName || 'Guest'}</div>
+                                <div class="text-muted small">${[o.shippingAddress, o.shippingCity].filter(Boolean).join(', ') || '-'}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded">
+                                <h6 class="text-muted mb-2">Order Info</h6>
+                                <div><span class="text-muted">Date:</span> ${Format.date(o.orderDate, true)}</div>
+                                <div><span class="text-muted">Method:</span> ${o.paymentMethod || '-'}</div>
+                                <div><span class="text-muted">Reference:</span> ${o.paymentReference || '-'}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 bg-light rounded">
+                                <h6 class="text-muted mb-2">Status</h6>
+                                <div class="mb-1"><span class="text-muted">Order:</span> ${Format.statusBadge(o.orderStatus)}</div>
+                                <div><span class="text-muted">Payment:</span> ${Format.statusBadge(o.paymentStatus)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <h6>Order Items</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr><th>Product</th><th class="text-end">Unit Price</th><th class="text-center">Qty</th><th class="text-end">Subtotal</th></tr>
+                            </thead>
+                            <tbody>${items.length > 0 ? items.map(i => `<tr>
+                                <td>${i.productName || '-'}</td>
+                                <td class="text-end">${Format.currency(i.unitPrice)}</td>
+                                <td class="text-center">${i.quantity}</td>
+                                <td class="text-end">${Format.currency(i.totalPrice)}</td>
+                            </tr>`).join('') : `<tr><td colspan="4" class="text-center text-muted">${o.itemCount} item(s)</td></tr>`}</tbody>
+                            <tfoot>
+                                <tr><td colspan="3" class="text-end"><strong>Subtotal:</strong></td><td class="text-end">${Format.currency(o.subtotal || o.totalAmount)}</td></tr>
+                                <tr><td colspan="3" class="text-end">VAT (12%):</td><td class="text-end">${Format.currency(o.taxAmount || 0)}</td></tr>
+                                <tr class="table-primary"><td colspan="3" class="text-end"><strong>Total:</strong></td><td class="text-end"><strong>${Format.currency(o.totalAmount)}</strong></td></tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    ${o.notes ? `<div class="mt-3"><h6>Notes</h6><p class="text-muted mb-0">${o.notes}</p></div>` : ''}
+                `;
             }
 
             Modal.show('viewOrderModal');
+        },
+
+        async approve(id) {
+            if (!confirm('Approve this order? This will confirm the order, generate an invoice, and create a PayMongo payment link.')) return;
+            try {
+                const result = await API.put('/orders/' + id + '/approve');
+                Toast.success(result.message || 'Order approved successfully!');
+                await this.load();
+                if (result.checkoutUrl) {
+                    this.showPaymentLinkModal(result.checkoutUrl, result.orderNumber);
+                }
+            } catch (error) {
+                Toast.error(error.message || 'Failed to approve order');
+            }
+        },
+
+        async reject(id) {
+            const o = this.data.find(order => order.orderId === id);
+            if (!o) return;
+            this.currentId = id;
+            
+            const el = document.getElementById('rejectOrderNumber');
+            if(el) el.textContent = o.orderNumber;
+            
+            const reason = document.getElementById('rejectReason');
+            if(reason) reason.value = '';
+            
+            Modal.show('rejectOrderModal');
+        },
+
+        async confirmReject() {
+            if (!this.currentId) return;
+            const reasons = document.getElementById('rejectReason');
+            const note = reasons ? reasons.value : 'Rejected by admin';
+            
+            try {
+                await API.put('/orders/' + this.currentId + '/reject', { status: 'Cancelled', notes: note });
+                Toast.success('Order rejected');
+                Modal.hide('rejectOrderModal');
+                this.load();
+            } catch (error) {
+                Toast.error(error.message || 'Failed to reject order');
+            }
+        },
+
+        async updateStatusDirect(id, status) {
+            if (!confirm(`Set status to ${status}?`)) return;
+            try {
+                await API.put('/orders/' + id + '/status', { status: status, notes: `Status updated to ${status} by Admin` });
+                Toast.success('Status updated');
+                this.load();
+            } catch (error) {
+                Toast.error('Failed to update status');
+            }
+        },
+        
+        updateStatus(id) {
+            const o = this.data.find(order => order.orderId === id);
+            if (!o) return;
+            this.currentId = id;
+            
+            const el = document.getElementById('statusOrderNumber');
+            if(el) el.textContent = o.orderNumber;
+            
+            const badge = document.getElementById('currentStatus');
+            if(badge) badge.innerHTML = Format.statusBadge(o.orderStatus);
+            
+            const select = document.getElementById('newStatus');
+            if(select) select.value = o.orderStatus;
+            
+            const notes = document.getElementById('statusNotes');
+            if(notes) notes.value = '';
+            
+            Modal.show('updateStatusModal');
+        },
+
+        async confirmStatusUpdate() {
+            if (!this.currentId) return;
+            try {
+                const statusEl = document.getElementById('newStatus');
+                const notesEl = document.getElementById('statusNotes');
+                
+                await API.put('/orders/' + this.currentId + '/status', { 
+                    status: statusEl ? statusEl.value : 'Processing', 
+                    notes: notesEl ? notesEl.value : '' 
+                });
+                Toast.success('Status updated');
+                Modal.hide('updateStatusModal');
+                this.load();
+            } catch (error) {
+                Toast.error('Failed to update status');
+            }
+        },
+
+        showPaymentLinkModal(url, orderNumber) {
+            const el = document.getElementById('paymentLinkOrderNumber');
+            if(el) el.textContent = orderNumber || '';
+            const input = document.getElementById('paymentLinkUrl');
+            if(input) input.value = url;
+            const anchor = document.getElementById('paymentLinkAnchor');
+            if(anchor) anchor.href = url;
+            Modal.show('paymentLinkModal');
+        },
+
+        print() {
+            const id = this.currentId;
+            if (!id) return;
+            const o = this.data.find(ord => ord.orderId === id);
+            if (!o) return;
+            const items = o.items || [];
+            
+            const html = `<html><head><title>Order ${o.orderNumber}</title>
+                <style>body{font-family:'Segoe UI',Arial,sans-serif;margin:40px;color:#333}.header{display:flex;justify-content:space-between;border-bottom:3px solid #008080;padding-bottom:20px;margin-bottom:30px}.company-logo img{height:60px;width:auto;}.badge{background:#008080;color:white;padding:8px 20px;border-radius:5px;font-size:18px}table{width:100%;border-collapse:collapse;margin-bottom:20px}th{background:#008080;color:white;padding:10px;text-align:left}td{padding:10px;border-bottom:1px solid #eee}.total-row td{font-weight:bold;font-size:18px;color:#008080;border-top:2px solid #008080}</style></head><body>
+                <div class="header">
+                    <div class="company-logo">
+                        <img src="${window.location.origin}/images/compugearlogo.png" alt="CompuGear" onerror="this.onerror=null;this.src='${window.location.origin}/images/compugearlogo.png';">
+                        <div style="font-size: 1.2rem; font-weight: bold; color: #008080; margin-top: 5px;">CompuGear</div>
+                    </div>
+                    <div><span class="badge">${o.orderNumber}</span></div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <strong>Customer:</strong> ${o.customerName || 'Guest'}<br>
+                    <strong>Date:</strong> ${Format.date(o.orderDate, true)}<br>
+                    <strong>Payment:</strong> ${o.paymentMethod || '-'} (${o.paymentStatus})
+                </div>
+                <table><thead><tr><th>Product</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+                <tbody>${items.map(i => `<tr><td>${i.productName}</td><td>${i.quantity}</td><td>${Format.currency(i.unitPrice)}</td><td>${Format.currency(i.totalPrice)}</td></tr>`).join('')}</tbody></table>
+                <p style="text-align:right;font-size:1.2em"><strong>Total: ${Format.currency(o.totalAmount)}</strong></p>
+                <script>window.onload=function(){window.print();window.close();}<\/script></body></html>`;
+                
+            var printWindow = window.open('', '_blank');
+            printWindow.document.write(html);
+            printWindow.document.close();
         },
 
         filter(search, status) {
@@ -1836,7 +1978,7 @@ const Sales = {
             if (!tbody) return;
 
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No orders match your criteria.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">No orders match your criteria.</td></tr>';
                 document.getElementById('orderCount').textContent = '0 orders';
                 return;
             }
@@ -1846,18 +1988,18 @@ const Sales = {
 
                 if (o.orderStatus === 'Pending') {
                     actions += `
-                        <button class="btn btn-sm btn-success" onclick="approveOrder(${o.orderId})" title="Approve">
+                        <button class="btn btn-sm btn-success" onclick="Sales.orders.approve(${o.orderId})" title="Approve">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="rejectOrder(${o.orderId})" title="Reject">
+                        <button class="btn btn-sm btn-danger" onclick="Sales.orders.reject(${o.orderId})" title="Reject">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </button>`;
                 } else if (o.orderStatus !== 'Cancelled' && o.orderStatus !== 'Completed') {
                     actions += `
-                        <button class="btn btn-sm btn-outline-info" onclick="updateStatus(${o.orderId})" title="Update Status">
+                        <button class="btn btn-sm btn-outline-info" onclick="Sales.orders.updateStatus(${o.orderId})" title="Update Status">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="rejectOrder(${o.orderId})" title="Cancel">
+                        <button class="btn btn-sm btn-outline-danger" onclick="Sales.orders.updateStatusDirect(${o.orderId}, 'Cancelled')" title="Cancel">
                             ${Icons.toggleOff}
                         </button>`;
                 } else if (o.orderStatus === 'Cancelled') {
@@ -1875,6 +2017,7 @@ const Sales = {
                     <td class="text-end">${Format.currency(o.totalAmount)}</td>
                     <td class="text-center">${Format.statusBadge(o.orderStatus)}</td>
                     <td class="text-center">${Format.statusBadge(o.paymentStatus)}</td>
+                    <td class="text-center">${(o.paymentMethod || '-').toString().toUpperCase()}</td>
                     <td class="text-center">
                         <div class="btn-group">${actions}</div>
                     </td>
@@ -2107,6 +2250,261 @@ const Sales = {
             } catch (error) {
                 Toast.error('Failed to update lead status');
             }
+        }
+    },
+
+    reports: {
+        data: [],
+        period: 'month',
+        chart: null,
+
+        normalizeStatus(status) {
+            return (status || '').toString().trim().toLowerCase();
+        },
+
+        // Revenue reflects only after approval (Confirmed) and beyond.
+        isRevenueStatus(status) {
+            const s = this.normalizeStatus(status);
+            return s === 'confirmed' || s === 'processing' || s === 'completed' || s === 'delivered' || s === 'shipped';
+        },
+
+        async load() {
+            const setText = (id, txt) => { const el = document.getElementById(id); if(el) el.textContent = txt; };
+            setText('revenueInfo', 'Loading data...');
+            
+            console.log('Loading sales report...');
+            try {
+                // Set a timeout for the API call to prevent infinite hanging
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+                
+                // We can't easily add signal to API.get without modifying it, so we'll just race it
+                // or assume API.get works. For now, let's just proceed.
+                // Actually, let's just use the existing API.get but handle the UI state better.
+                
+                const result = await API.get('/orders');
+                console.log('Sales report data loaded:', result);
+                this.data = Array.isArray(result) ? result : (result.data || []);
+                
+                if (!Array.isArray(this.data)) {
+                    console.warn('API returned non-array data, defaulting to empty array.');
+                    this.data = [];
+                }
+                
+                this.update();
+            } catch (error) {
+                console.error('Failed to load sales report:', error);
+                Toast.error('Failed to load sales report');
+                this.data = [];
+                this.update();
+            }
+        },
+
+        setPeriod(period) {
+            this.period = period;
+            
+            // Update UI buttons
+            const btns = document.querySelectorAll('#adminPeriodFilter .btn');
+            btns.forEach(b => b.classList.remove('active'));
+            
+            const activeBtn = document.querySelector(`#adminPeriodFilter [data-period="${period}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+            
+            const labels = { day: 'Today', week: 'This Week', month: 'This Month', year: 'This Year', all: 'All Time' };
+            const labelEl = document.getElementById('adminPeriodLabel');
+            if (labelEl) labelEl.textContent = labels[period] || period;
+            
+            this.update();
+        },
+
+        filterByPeriod(orders, period) {
+            if (!Array.isArray(orders)) return [];
+            
+            const now = new Date();
+            const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            let d;
+
+            switch (period) {
+                case 'day':
+                    return orders.filter(o => o.orderDate && new Date(o.orderDate) >= startOfToday);
+                case 'week':
+                    d = new Date(startOfToday);
+                    d.setDate(d.getDate() - d.getDay()); // Start of week (Sunday)
+                    return orders.filter(o => o.orderDate && new Date(o.orderDate) >= d);
+                case 'month':
+                    d = new Date(now.getFullYear(), now.getMonth(), 1);
+                    return orders.filter(o => o.orderDate && new Date(o.orderDate) >= d);
+                case 'year':
+                    d = new Date(now.getFullYear(), 0, 1);
+                    return orders.filter(o => o.orderDate && new Date(o.orderDate) >= d);
+                default: 
+                    return orders;
+            }
+        },
+
+        update() {
+            const filtered = this.filterByPeriod(this.data, this.period);
+            const revenueOrders = filtered.filter(o => this.isRevenueStatus(o.orderStatus));
+            const revenue = revenueOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+            
+            const completed = filtered.filter(o => o.orderStatus === 'Completed' || o.orderStatus === 'Delivered').length;
+            const avg = revenueOrders.length > 0 ? revenue / revenueOrders.length : 0;
+
+            const setText = (id, txt) => { const el = document.getElementById(id); if(el) el.textContent = txt; };
+            
+            setText('periodRevenue', Format.currency(revenue));
+            setText('periodOrders', filtered.length);
+            setText('periodCompleted', completed);
+            setText('avgOrderValue', Format.currency(avg));
+            setText('revenueInfo', `${revenueOrders.length} confirmed+ orders`);
+            setText('ordersInfo', `${completed} completed`);
+            
+            const completionRate = filtered.length > 0 ? (completed / filtered.length * 100) : 0;
+            setText('completedInfo', `${completionRate.toFixed(0)}% completion rate`);
+
+            // Update chart - always use full dataset for monthly trends
+            this.renderChart(this.data);
+        },
+
+        renderChart(orders) {
+            try {
+                const ctx = document.getElementById('salesChart');
+                if (!ctx) return;
+                
+                // Safety check for Chart.js
+                if (typeof Chart === 'undefined') {
+                    console.error('Chart.js library not loaded');
+                    ctx.parentElement.innerHTML = '<div class="alert alert-warning">Chart library not loaded</div>';
+                    return;
+                }
+                
+                // Monthly data aggregation for current year
+                const monthlyData = new Array(12).fill(0);
+                const currentYear = new Date().getFullYear();
+                
+                if (Array.isArray(orders)) {
+                    orders.forEach(o => {
+                        if (!o.orderDate) return;
+                        if (!this.isRevenueStatus(o.orderStatus)) return;
+                        const d = new Date(o.orderDate);
+                        if (!isNaN(d.getTime()) && d.getFullYear() === currentYear) {
+                            monthlyData[d.getMonth()] += (parseFloat(o.totalAmount) || 0);
+                        }
+                    });
+                }
+    
+                if (this.chart) {
+                    this.chart.destroy();
+                }
+    
+                this.chart = new Chart(ctx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                        datasets: [{
+                            label: 'Sales',
+                            data: monthlyData,
+                            backgroundColor: '#008080',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { 
+                            y: { 
+                                beginAtZero: true, 
+                                ticks: { 
+                                    callback: function(v) { return '₱' + (v / 1000).toFixed(0) + 'k'; } 
+                                } 
+                            } 
+                        }
+                    }
+                });
+            } catch (err) {
+                console.error('Error rendering chart:', err);
+            }
+        },
+
+        generatePdf() {
+            const labels = { day: 'Today', week: 'This Week', month: 'This Month', year: 'This Year', all: 'All Time' };
+            const periodLabel = labels[this.period] || 'All Time';
+            const filtered = this.filterByPeriod(this.data, this.period);
+            const revenueOrders = filtered.filter(o => this.isRevenueStatus(o.orderStatus));
+            const totalRevenue = revenueOrders.reduce((s, o) => s + (o.totalAmount || 0), 0);
+            const avgOrder = revenueOrders.length > 0 ? totalRevenue / revenueOrders.length : 0;
+            const completedOrders = filtered.filter(o => o.orderStatus === 'Completed' || o.orderStatus === 'Delivered').length;
+            const now = new Date();
+
+            let rowsHtml = '';
+            filtered.forEach(o => {
+                let statusClass = 'bg-info';
+                if (o.orderStatus === 'Completed' || o.orderStatus === 'Delivered') statusClass = 'bg-success';
+                else if (o.orderStatus === 'Pending') statusClass = 'bg-warning';
+                else if (o.orderStatus === 'Cancelled') statusClass = 'bg-danger';
+                
+                let payClass = 'bg-danger';
+                if (o.paymentStatus === 'Paid') payClass = 'bg-success';
+                else if (o.paymentStatus === 'Pending') payClass = 'bg-warning';
+
+                rowsHtml += `<tr>
+                    <td><strong>${o.orderNumber || ''}</strong></td>
+                    <td>${o.customerName || 'Guest'}</td>
+                    <td>${new Date(o.orderDate).toLocaleDateString('en-PH')}</td>
+                    <td class="text-center">${o.itemCount || 0}</td>
+                    <td class="text-end">${Format.currency(o.totalAmount)}</td>
+                    <td class="text-center"><span class="badge ${statusClass}">${o.orderStatus || ''}</span></td>
+                    <td class="text-center"><span class="badge ${payClass}">${o.paymentStatus || 'Pending'}</span></td>
+                </tr>`;
+            });
+
+            const html = `<html><head><title>CompuGear Sales Report - ${periodLabel}</title>
+                <style>
+                *{margin:0;padding:0;box-sizing:border-box}
+                body{font-family:"Segoe UI",Arial,sans-serif;margin:0;padding:40px;color:#333;font-size:12px}
+                .header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #008080;padding-bottom:20px;margin-bottom:30px}
+                .company h1{color:#008080;font-size:28px;margin-bottom:5px}
+                .company p{color:#666}
+                .report-title{text-align:right}
+                .report-title h2{color:#008080;font-size:20px}
+                .report-title p{color:#666}
+                .summary-cards{display:flex;gap:20px;margin-bottom:30px}
+                .summary-card{flex:1;background:#f8f9fa;border-radius:8px;padding:15px;text-align:center;border-left:4px solid #008080}
+                .summary-card .value{font-size:24px;font-weight:bold;color:#008080}
+                .summary-card .label{color:#666;font-size:11px;text-transform:uppercase}
+                table{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:11px}
+                th{background:#008080;color:white;padding:10px 8px;text-align:left;font-weight:600}
+                td{padding:8px;border-bottom:1px solid #e0e0e0}
+                tr:nth-child(even){background:#f8f9fa}
+                .text-end{text-align:right}
+                .text-center{text-align:center}
+                .badge{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600;color:white}
+                .bg-success{background:#198754}.bg-warning{background:#ffc107;color:#333}.bg-danger{background:#dc3545}.bg-info{background:#0dcaf0;color:#333}.bg-primary{background:#0d6efd}
+                .footer{margin-top:30px;padding-top:15px;border-top:2px solid #e0e0e0;text-align:center;color:#666;font-size:10px}
+                .total-row{font-weight:bold;background:#e8f5f5!important}
+                </style></head><body>
+                <div class="header">
+                <div class="company"><h1>CompuGear</h1><p>Computer & Gear Solutions</p></div>
+                <div class="report-title"><h2>Sales Report</h2><p>Period: ${periodLabel}</p><p>Generated: ${now.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}</p></div>
+                </div>
+                <div class="summary-cards">
+                <div class="summary-card"><div class="value">${filtered.length}</div><div class="label">Total Orders</div></div>
+                <div class="summary-card"><div class="value">${Format.currency(totalRevenue)}</div><div class="label">Total Revenue</div></div>
+                <div class="summary-card"><div class="value">${Format.currency(avgOrder)}</div><div class="label">Avg Order Value</div></div>
+                <div class="summary-card"><div class="value">${completedOrders}</div><div class="label">Completed Orders</div></div>
+                </div>
+                <h3 style="color:#008080;margin-bottom:15px">Order Details</h3>
+                <table><thead><tr><th>Order #</th><th>Customer</th><th>Date</th><th class="text-center">Items</th><th class="text-end">Amount</th><th class="text-center">Status</th><th class="text-center">Payment</th></tr></thead>
+                <tbody>${rowsHtml}
+                <tr class="total-row"><td colspan="4" class="text-end"><strong>Grand Total:</strong></td><td class="text-end"><strong>${Format.currency(totalRevenue)}</strong></td><td colspan="2"></td></tr>
+                </tbody></table>
+                <div class="footer"><p>CompuGear Sales Report - Generated on ${now.toLocaleString('en-PH')} - Confidential</p></div>
+                <script>window.onload=function(){window.print();}</script></body></html>`;
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(html);
+            printWindow.document.close();
         }
     }
 };
@@ -2498,9 +2896,16 @@ const Users = {
     updateStats() {
         const total = this.data.length;
         const active = this.data.filter(u => u.isActive).length;
+        const inactive = total - active;
+        const admins = this.data.filter(u => u.roleId === 1 || u.roleId === 2).length;
 
-        document.getElementById('totalUsers')?.textContent && (document.getElementById('totalUsers').textContent = total);
-        document.getElementById('activeUsers')?.textContent && (document.getElementById('activeUsers').textContent = active);
+        const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        setEl('totalUsers', total);
+        setEl('activeUsers', active);
+        setEl('inactiveUsers', inactive);
+        setEl('adminUsers', admins);
+        setEl('userCount', total + ' users');
+        setEl('paginationInfo', `Showing 1 to ${total} of ${total} entries`);
     },
 
     showModal(user = null) {
@@ -2773,12 +3178,6 @@ const Billing = {
                             <button class="btn btn-sm btn-outline-primary" onclick="Billing.invoices.view(${i.invoiceId})" title="View">
                                 ${Icons.view}
                             </button>
-                            <button class="btn btn-sm btn-outline-warning" onclick="Billing.invoices.edit(${i.invoiceId})" title="Edit">
-                                ${Icons.edit}
-                            </button>
-                            <button class="btn btn-sm btn-outline-${(i.status === 'Cancelled' || i.status === 'Void') ? 'success' : 'danger'}" onclick="Billing.invoices.toggleStatus(${i.invoiceId})" title="${(i.status === 'Cancelled' || i.status === 'Void') ? 'Activate' : 'Void'}">
-                                ${(i.status === 'Cancelled' || i.status === 'Void') ? Icons.toggleOn : Icons.toggleOff}
-                            </button>
                         </div>
                     </td>
                 </tr>
@@ -2990,6 +3389,20 @@ const Billing = {
 
                 el('viewCustomerAddress', full.billingAddress || '-');
                 el('viewCustomerEmail', full.customerEmail || '-');
+                el('viewCustomerPhone', full.customerPhone || '-');
+                el('viewOrderNumber', full.orderNumber || '-');
+                el('viewOrderDate', Format.date(full.orderDate));
+
+                const orderStatusEl = document.getElementById('viewOrderStatus');
+                if (orderStatusEl) orderStatusEl.innerHTML = full.orderStatus ? Format.statusBadge(full.orderStatus) : '-';
+
+                const paymentStatusEl = document.getElementById('viewOrderPaymentStatus');
+                if (paymentStatusEl) paymentStatusEl.innerHTML = full.orderPaymentStatus ? Format.statusBadge(full.orderPaymentStatus) : '-';
+
+                el('viewOrderPaymentMethod', full.orderPaymentMethod || '-');
+                el('viewOrderShippingMethod', full.orderShippingMethod || '-');
+                el('viewOrderTrackingNumber', full.orderTrackingNumber || '-');
+                el('viewOrderConfirmedAt', Format.date(full.orderConfirmedAt, true));
 
                 // Render payment history
                 const payHistEl = document.getElementById('paymentHistory');
@@ -3245,12 +3658,6 @@ const Billing = {
                             <button class="btn btn-sm btn-outline-primary" onclick="Billing.invoices.view(${i.invoiceId})" title="View">
                                 ${Icons.view}
                             </button>
-                            <button class="btn btn-sm btn-outline-warning" onclick="Billing.invoices.edit(${i.invoiceId})" title="Edit">
-                                ${Icons.edit}
-                            </button>
-                            <button class="btn btn-sm btn-outline-${(i.status === 'Cancelled' || i.status === 'Void') ? 'success' : 'danger'}" onclick="Billing.invoices.toggleStatus(${i.invoiceId})" title="${(i.status === 'Cancelled' || i.status === 'Void') ? 'Activate' : 'Void'}">
-                                ${(i.status === 'Cancelled' || i.status === 'Void') ? Icons.toggleOn : Icons.toggleOff}
-                            </button>
                         </div>
                     </td>
                 </tr>
@@ -3298,7 +3705,7 @@ const Billing = {
                     <td>${p.customerName || '-'}</td>
                     <td>${p.invoiceNumber || p.orderNumber || '-'}</td>
                     <td>${Format.date(p.paymentDate)}</td>
-                    <td><span class="badge bg-info">${p.paymentMethodType || '-'}</span></td>
+                    <td><span class="badge bg-info">${p.paymentMethodType || p.paymentMethod || '-'}</span></td>
                     <td class="text-end">${subtotal > 0 ? Format.currency(subtotal) : '-'}</td>
                     <td class="text-end">${taxAmount > 0 ? `<span class="text-warning">${Format.currency(taxAmount)}</span>` : '-'}</td>
                     <td class="text-end fw-semibold text-success">${Format.currency(p.amount)}</td>
@@ -3348,7 +3755,7 @@ const Billing = {
                             <strong>Transaction ID:</strong> ${p.transactionId || '-'}<br>
                             <strong>Reference:</strong> ${p.referenceNumber || '-'}<br>
                             <strong>Date:</strong> ${Format.date(p.paymentDate)}<br>
-                            <strong>Method:</strong> ${p.paymentMethodType || '-'}<br>
+                            <strong>Method:</strong> ${p.paymentMethodType || p.paymentMethod || '-'}<br>
                             <strong>Currency:</strong> ${p.currency || 'PHP'}
                         </div>
                         <div class="col-md-6">
@@ -3583,3 +3990,91 @@ window.Billing = Billing;
 window.CustomerPortal = CustomerPortal;
 window.Billing = Billing;
 window.CustomerPortal = CustomerPortal;
+
+// Compatibility Functions for Admin Sales Orders
+window.printOrder = function() { Sales.orders.print(); };
+window.approveOrder = function(id) { Sales.orders.approve(id); };
+window.rejectOrder = function(id) { Sales.orders.reject(id); };
+window.updateStatus = function(id) { Sales.orders.updateStatus(id); };
+
+// Compatibility Functions for Admin Sales Orders filters & payment link modal
+window.filterOrders = function() {
+    if (!window.Sales || !Sales.orders) return;
+    const search = (document.getElementById('searchOrders')?.value || '').toLowerCase();
+    const status = document.getElementById('filterStatus')?.value || '';
+    Sales.orders.filter(search, status);
+};
+
+window.applyFilters = function() {
+    if (!window.Sales || !Sales.orders) return;
+
+    const search = (document.getElementById('searchOrders')?.value || '').toLowerCase();
+    const status = document.getElementById('filterStatus')?.value || '';
+    const dateFrom = document.getElementById('filterDateFrom')?.value;
+    const dateTo = document.getElementById('filterDateTo')?.value;
+
+    let data = Sales.orders.data || [];
+
+    if (search) {
+        data = data.filter(o =>
+            (o.orderNumber || '').toLowerCase().includes(search) ||
+            (o.customerName || '').toLowerCase().includes(search)
+        );
+    }
+
+    if (status) {
+        data = data.filter(o => o.orderStatus === status);
+    }
+
+    if (dateFrom) {
+        const from = new Date(dateFrom);
+        from.setHours(0, 0, 0, 0);
+        data = data.filter(o => o.orderDate && new Date(o.orderDate) >= from);
+    }
+
+    if (dateTo) {
+        const to = new Date(dateTo);
+        to.setHours(23, 59, 59, 999);
+        data = data.filter(o => o.orderDate && new Date(o.orderDate) <= to);
+    }
+
+    Sales.orders.renderFiltered(data);
+};
+
+window.resetFilters = function() {
+    document.getElementById('searchOrders') && (document.getElementById('searchOrders').value = '');
+    document.getElementById('filterStatus') && (document.getElementById('filterStatus').value = '');
+    document.getElementById('filterDateFrom') && (document.getElementById('filterDateFrom').value = '');
+    document.getElementById('filterDateTo') && (document.getElementById('filterDateTo').value = '');
+    if (window.Sales && Sales.orders) Sales.orders.render();
+};
+
+window.copyPaymentLink = async function() {
+    const input = document.getElementById('paymentLinkUrl');
+    const url = input ? input.value : '';
+    if (!url) { Toast.warning('No payment link to copy'); return; }
+
+    try {
+        await navigator.clipboard.writeText(url);
+        Toast.success('Payment link copied');
+    } catch (e) {
+        try {
+            if (input) {
+                input.select();
+                document.execCommand('copy');
+                Toast.success('Payment link copied');
+            }
+        } catch (err) {
+            Toast.error('Copy failed');
+        }
+    }
+};
+
+window.openPaymentLink = function() {
+    const anchor = document.getElementById('paymentLinkAnchor');
+    const input = document.getElementById('paymentLinkUrl');
+    const url = (anchor && anchor.href) ? anchor.href : (input ? input.value : '');
+    if (!url) { Toast.warning('No payment link to open'); return; }
+    window.open(url, '_blank');
+};
+

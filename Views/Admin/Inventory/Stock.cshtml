@@ -233,7 +233,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="~/js/admin.js"></script>
 <script>
-    var LOW_STOCK_THRESHOLD = 15;
+    var STOCK_LEVEL_THRESHOLD = 15;
     var allProducts = [];
     var stockChart = null;
 
@@ -250,8 +250,8 @@
 
             var totalProducts = products.length;
             var outOfStock = products.filter(function(p) { return (p.stockQuantity || 0) === 0; }).length;
-            var lowStock = products.filter(function(p) { return (p.stockQuantity || 0) > 0 && (p.stockQuantity || 0) <= LOW_STOCK_THRESHOLD; }).length;
-            var inStock = products.filter(function(p) { return (p.stockQuantity || 0) > LOW_STOCK_THRESHOLD; }).length;
+            var lowStock = products.filter(function(p) { return (p.stockQuantity || 0) > 0 && (p.stockQuantity || 0) <= STOCK_LEVEL_THRESHOLD; }).length;
+            var inStock = products.filter(function(p) { return (p.stockQuantity || 0) > STOCK_LEVEL_THRESHOLD; }).length;
 
             updateEl('totalProducts', totalProducts);
             updateEl('inStockCount', inStock);
@@ -341,14 +341,14 @@
 
         tbody.innerHTML = products.map(function(p) {
             var stock = p.stockQuantity || 0;
-            var reorder = p.reorderLevel || LOW_STOCK_THRESHOLD;
+            var reorder = p.reorderLevel || STOCK_LEVEL_THRESHOLD;
             var maxStock = p.maxStockLevel || (reorder * 3);
             var percentage = Math.min((stock / maxStock) * 100, 100);
             var statusClass, statusText, barColor;
 
             if (stock === 0) {
                 statusClass = 'badge-error'; statusText = 'Out of Stock'; barColor = '#EF4444';
-            } else if (stock <= LOW_STOCK_THRESHOLD) {
+            } else if (stock <= STOCK_LEVEL_THRESHOLD) {
                 statusClass = 'badge-warning'; statusText = 'Low Stock'; barColor = '#F59E0B';
             } else {
                 statusClass = 'badge-success'; statusText = 'In Stock'; barColor = '#10B981';
@@ -391,7 +391,7 @@
             categoryStats[cat].total++;
             var stock = p.stockQuantity || 0;
             if (stock === 0) categoryStats[cat].outOfStock++;
-            else if (stock <= LOW_STOCK_THRESHOLD) categoryStats[cat].lowStock++;
+            else if (stock <= STOCK_LEVEL_THRESHOLD) categoryStats[cat].lowStock++;
             else categoryStats[cat].inStock++;
             categoryStats[cat].value += (stock * (p.costPrice || p.sellingPrice || 0));
         });
@@ -428,9 +428,9 @@
             filtered = filtered.filter(function(p) { return p.categoryName === category; });
         }
         if (status === 'in-stock') {
-            filtered = filtered.filter(function(p) { return (p.stockQuantity || 0) > LOW_STOCK_THRESHOLD; });
+            filtered = filtered.filter(function(p) { return (p.stockQuantity || 0) > STOCK_LEVEL_THRESHOLD; });
         } else if (status === 'low-stock') {
-            filtered = filtered.filter(function(p) { var s = p.stockQuantity || 0; return s > 0 && s <= LOW_STOCK_THRESHOLD; });
+            filtered = filtered.filter(function(p) { var s = p.stockQuantity || 0; return s > 0 && s <= STOCK_LEVEL_THRESHOLD; });
         } else if (status === 'out-stock') {
             filtered = filtered.filter(function(p) { return (p.stockQuantity || 0) === 0; });
         }

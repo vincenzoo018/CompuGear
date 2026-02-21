@@ -7,34 +7,51 @@
         <h1 class="page-title">Roles & Permissions</h1>
         <p class="page-subtitle">Configure user roles and their permissions</p>
     </div>
+    <button class="btn btn-outline-primary" onclick="loadRoles()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+        </svg>
+        Refresh
+    </button>
 </div>
 
 <div class="row" id="rolesContainer">
-    <!-- Dynamic content loaded from roles API -->
+    <div class="col-12 text-center py-5">
+        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+        <p class="mt-2 text-muted">Loading roles...</p>
+    </div>
 </div>
 
 @section Scripts {
 <script src="~/js/admin.js"></script>
 <script>
+    let allUsers = [];
+
     document.addEventListener('DOMContentLoaded', async function() {
         await loadRoles();
     });
 
     async function loadRoles() {
         const container = document.getElementById('rolesContainer');
+        container.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">Loading roles...</p></div>';
         
         try {
-            const roles = await API.get('/roles');
+            const [roles, users] = await Promise.all([
+                API.get('/roles'),
+                API.get('/users')
+            ]);
             
-            // Role badge colors and descriptions
+            allUsers = users || [];
+
             const roleStyles = {
-                'Super Admin': { color: 'danger', icon: 'shield-lock', permissions: 'Full system access, All modules, User management, System settings' },
-                'Company Admin': { color: 'warning', icon: 'building', permissions: 'Company management, Reports, User management' },
-                'Sales Staff': { color: 'info', icon: 'cart', permissions: 'Sales orders, Customers, Leads, Sales reports' },
-                'Customer Support Staff': { color: 'success', icon: 'headset', permissions: 'Support tickets, Customer queries, Knowledge base' },
-                'Marketing Staff': { color: 'primary', icon: 'megaphone', permissions: 'Campaigns, Promotions, Marketing analytics' },
-                'Accounting & Billing Staff': { color: 'secondary', icon: 'calculator', permissions: 'Invoices, Payments, Billing reports' },
-                'Customer': { color: 'dark', icon: 'person', permissions: 'Customer portal access only' }
+                'Super Admin': { color: 'danger', icon: '🛡️', permissions: 'Full system access, All modules, User management, System settings' },
+                'Company Admin': { color: 'warning', icon: '🏢', permissions: 'Company management, Reports, User management, All modules' },
+                'Sales Staff': { color: 'info', icon: '🛒', permissions: 'Sales orders, Customers, Leads, Sales reports' },
+                'Customer Support Staff': { color: 'success', icon: '🎧', permissions: 'Support tickets, Live chat, Knowledge base, Customer queries' },
+                'Marketing Staff': { color: 'primary', icon: '📢', permissions: 'Campaigns, Promotions, Segments, Marketing analytics' },
+                'Accounting & Billing Staff': { color: 'secondary', icon: '📊', permissions: 'Invoices, Payments, Billing reports, Financial records' },
+                'Customer': { color: 'dark', icon: '👤', permissions: 'Customer portal, Order tracking, Support tickets' },
+                'Inventory Staff': { color: 'teal', icon: '📦', permissions: 'Products, Stock management, Purchase orders, Suppliers, Alerts' }
             };
 
             if (!roles || roles.length === 0) {
@@ -43,27 +60,55 @@
             }
 
             container.innerHTML = roles.map(role => {
-                const style = roleStyles[role.roleName] || { color: 'secondary', icon: 'person', permissions: 'Basic access' };
+                const style = roleStyles[role.roleName] || { color: 'secondary', icon: '👥', permissions: 'Basic access' };
+                const userCount = allUsers.filter(u => u.roleId === role.roleId).length;
+                const activeCount = allUsers.filter(u => u.roleId === role.roleId && u.isActive).length;
+                const bgColor = style.color === 'teal' ? 'style="background: #008080; color: white;"' : `class="bg-${style.color} text-white"`;
+                const badgeColor = style.color === 'teal' ? 'style="background: #008080;"' : `class="bg-${style.color}"`;
+                
+                const permList = style.permissions.split(', ').map(p => 
+                    `<span class="badge bg-light text-dark me-1 mb-1" style="font-size: 0.75rem;">${p}</span>`
+                ).join('');
+
                 return `
                     <div class="col-lg-4 col-md-6 mb-4">
-                        <div class="card h-100 shadow-sm fade-in">
-                            <div class="card-header bg-${style.color} text-white d-flex align-items-center">
-                                <i class="bi bi-${style.icon} fs-4 me-2"></i>
-                                <h5 class="mb-0">${role.roleName}</h5>
+                        <div class="card h-100 shadow-sm fade-in" style="border-radius: 16px; overflow: hidden;">
+                            <div class="card-header d-flex align-items-center gap-2" ${bgColor}>
+                                <span style="font-size: 1.5rem;">${style.icon}</span>
+                                <div>
+                                    <h5 class="mb-0">${role.roleName}</h5>
+                                    <small style="opacity: 0.85;">Level ${role.accessLevel || 1}</small>
+                                </div>
                             </div>
                             <div class="card-body">
                                 <p class="text-muted mb-3">${role.description || 'No description'}</p>
-                                <div class="mb-2">
-                                    <strong>Access Level:</strong> 
-                                    <span class="badge bg-${style.color}">${role.accessLevel || 1}</span>
+                                
+                                <div class="d-flex gap-3 mb-3">
+                                    <div class="text-center">
+                                        <div class="h5 mb-0">${userCount}</div>
+                                        <small class="text-muted">Total Users</small>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="h5 mb-0 text-success">${activeCount}</div>
+                                        <small class="text-muted">Active</small>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="h5 mb-0 text-secondary">${userCount - activeCount}</div>
+                                        <small class="text-muted">Inactive</small>
+                                    </div>
                                 </div>
-                                <div class="mb-2">
-                                    <strong>Status:</strong>
-                                    <span class="badge ${role.isActive ? 'bg-success' : 'bg-secondary'}">${role.isActive ? 'Active' : 'Inactive'}</span>
-                                </div>
+                                
                                 <hr>
-                                <p class="small mb-1"><strong>Permissions:</strong></p>
-                                <p class="small text-muted mb-0">${style.permissions}</p>
+                                <p class="small mb-2"><strong>Permissions:</strong></p>
+                                <div>${permList}</div>
+                            </div>
+                            <div class="card-footer bg-white border-top">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge ${role.isActive !== false ? 'bg-success' : 'bg-secondary'}">${role.isActive !== false ? 'Active' : 'Inactive'}</span>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewRoleUsers(${role.roleId}, '${role.roleName.replace(/'/g, "\\'")}')">
+                                        View Users
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -74,6 +119,48 @@
             console.error('Failed to load roles:', error);
             container.innerHTML = '<div class="col-12"><div class="alert alert-danger">Failed to load roles. Please try again.</div></div>';
         }
+    }
+
+    function viewRoleUsers(roleId, roleName) {
+        const roleUsers = allUsers.filter(u => u.roleId === roleId);
+        if (roleUsers.length === 0) {
+            Toast.info(`No users assigned to ${roleName} role.`);
+            return;
+        }
+        
+        const userList = roleUsers.map(u => 
+            `<tr>
+                <td><strong>${u.firstName} ${u.lastName}</strong><br><small class="text-muted">${u.email}</small></td>
+                <td><span class="badge ${u.isActive ? 'bg-success' : 'bg-secondary'}">${u.isActive ? 'Active' : 'Inactive'}</span></td>
+            </tr>`
+        ).join('');
+        
+        const modalHtml = `
+            <div class="modal fade" id="roleUsersModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">${roleName} Users (${roleUsers.length})</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-0">
+                            <table class="table table-hover mb-0">
+                                <thead><tr><th>User</th><th>Status</th></tr></thead>
+                                <tbody>${userList}</tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if any
+        document.getElementById('roleUsersModal')?.remove();
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        new bootstrap.Modal(document.getElementById('roleUsersModal')).show();
     }
 </script>
 }

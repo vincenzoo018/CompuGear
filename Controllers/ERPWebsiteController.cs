@@ -43,5 +43,20 @@ namespace CompuGear.Controllers
             ViewData["SelectedPlan"] = plan ?? "Basic";
             return View("~/Views/ERPWebsite/Subscribe.cshtml");
         }
+
+        // Payment Success - After PayMongo checkout completes
+        public IActionResult PaymentSuccess(string? reg_id, string? session_id)
+        {
+            ViewData["RegistrationId"] = reg_id ?? "";
+            ViewData["SessionId"] = session_id ?? "";
+            return View("~/Views/ERPWebsite/PaymentSuccess.cshtml");
+        }
+
+        // Payment Cancelled - User cancelled the PayMongo checkout
+        public IActionResult PaymentCancelled(string? plan)
+        {
+            ViewData["SelectedPlan"] = plan ?? "Basic";
+            return View("~/Views/ERPWebsite/PaymentCancelled.cshtml");
+        }
     }
 }

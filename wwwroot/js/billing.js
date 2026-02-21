@@ -80,7 +80,7 @@ const Format = {
     },
     statusBadge(status) {
         const colors = {
-            'Paid': 'success', 'Pending': 'warning', 'Overdue': 'danger',
+            'Paid': 'success', 'Paid/Confirmed': 'primary', 'Pending': 'warning', 'Overdue': 'danger',
             'Draft': 'secondary', 'Partial': 'info', 'Cancelled': 'dark',
             'Completed': 'success', 'Processing': 'info', 'Refunded': 'warning',
             'Void': 'dark', 'Active': 'success'
@@ -123,7 +123,55 @@ const Invoices = {
 
     async load() {
         try {
-            this.data = await API.get('/invoices');
+            const [invoices, orders] = await Promise.all([
+                API.get('/invoices'),
+                API.get('/orders')
+            ]);
+
+            const invoiceList = Array.isArray(invoices) ? invoices : [];
+            const orderList = Array.isArray(orders) ? orders : [];
+
+            const existingOrderIds = new Set(invoiceList.filter(i => i.orderId).map(i => i.orderId));
+            const derivedOrderRows = orderList
+                .filter(o => (o.orderStatus === 'Pending' || o.orderStatus === 'Confirmed') && !existingOrderIds.has(o.orderId))
+                .map(o => {
+                    const paidAmount = o.paidAmount || 0;
+                    const totalAmount = o.totalAmount || 0;
+                    const balanceDue = Math.max(0, totalAmount - paidAmount);
+                    const derivedStatus = o.paymentStatus === 'Paid'
+                        ? 'Paid'
+                        : (paidAmount > 0 ? 'Partial' : 'Pending');
+
+                    return {
+                        invoiceId: -o.orderId,
+                        invoiceNumber: `ORD-${o.orderNumber}`,
+                        orderId: o.orderId,
+                        orderNumber: o.orderNumber,
+                        customerId: o.customerId,
+                        customerName: o.customerName,
+                        invoiceDate: o.orderDate,
+                        dueDate: o.orderDate,
+                        totalAmount: totalAmount,
+                        paidAmount: paidAmount,
+                        balanceDue: balanceDue,
+                        subtotal: o.subtotal || totalAmount,
+                        taxAmount: o.taxAmount || 0,
+                        shippingAmount: o.shippingAmount || 0,
+                        discountAmount: o.discountAmount || 0,
+                        status: derivedStatus,
+                        isOrderDerived: true,
+                        orderStatus: o.orderStatus,
+                        paymentStatus: o.paymentStatus,
+                        paymentMethod: o.paymentMethod,
+                        shippingMethod: o.shippingMethod,
+                        trackingNumber: o.trackingNumber,
+                        confirmedAt: o.confirmedAt,
+                        notes: o.notes,
+                        items: o.items || []
+                    };
+                });
+
+            this.data = [...invoiceList, ...derivedOrderRows];
             this.render();
             this.updateStats();
         } catch (error) {
@@ -156,7 +204,6 @@ const Invoices = {
                     <div class="btn-group">
                         <button class="btn btn-sm btn-outline-primary" onclick="Invoices.view(${i.invoiceId})" title="View">${Icons.view}</button>
                         <button class="btn btn-sm btn-outline-info" onclick="Invoices.print(${i.invoiceId})" title="Print">${Icons.print}</button>
-                        ${i.status !== 'Paid' && i.status !== 'Cancelled' && i.status !== 'Void' ? `<button class="btn btn-sm btn-outline-success" onclick="Invoices.recordPayment(${i.invoiceId})" title="Record Payment">${Icons.payment}</button>` : ''}
                     </div>
                 </td>
             </tr>
@@ -165,9 +212,9 @@ const Invoices = {
 
     updateStats() {
         const total = this.data.reduce((sum, i) => sum + (i.totalAmount || 0), 0);
-        const paid = this.data.filter(i => i.status === 'Paid').reduce((sum, i) => sum + (i.totalAmount || 0), 0);
+        const paid = this.data.filter(i => i.status === 'Paid' || i.status === 'Paid/Confirmed').reduce((sum, i) => sum + (i.totalAmount || 0), 0);
         const pending = this.data.filter(i => i.status === 'Pending' || i.status === 'Partial').reduce((sum, i) => sum + ((i.totalAmount || 0) - (i.paidAmount || 0)), 0);
-        const overdue = this.data.filter(i => i.status === 'Overdue' || (i.status !== 'Paid' && i.status !== 'Cancelled' && i.status !== 'Void' && new Date(i.dueDate) < new Date())).reduce((sum, i) => sum + ((i.totalAmount || 0) - (i.paidAmount || 0)), 0);
+        const overdue = this.data.filter(i => i.status === 'Overdue' || (!['Paid', 'Paid/Confirmed', 'Cancelled', 'Void'].includes(i.status) && new Date(i.dueDate) < new Date())).reduce((sum, i) => sum + ((i.totalAmount || 0) - (i.paidAmount || 0)), 0);
 
         if (document.getElementById('totalInvoiced')) document.getElementById('totalInvoiced').textContent = Format.currency(total);
         if (document.getElementById('totalPaid')) document.getElementById('totalPaid').textContent = Format.currency(paid);
@@ -176,6 +223,62 @@ const Invoices = {
     },
 
     async view(id) {
+        if (id < 0) {
+            const orderId = Math.abs(id);
+            const order = await API.get(`/orders/${orderId}`);
+            this.currentId = id;
+            const content = document.getElementById('viewInvoiceContent');
+            if (!content) return;
+
+            const orderItems = Array.isArray(order.orderItems) ? order.orderItems : [];
+            const itemsHtml = orderItems.length > 0
+                ? `<div class="col-12 mt-3"><h6 class="mb-2">Order Items</h6><div class="table-responsive"><table class="table table-sm table-bordered"><thead class="table-light"><tr><th>Description</th><th class="text-center">Qty</th><th class="text-end">Unit Price</th><th class="text-end">Amount</th></tr></thead><tbody>${orderItems.map(item => `<tr><td>${item.productName}${item.productCode ? ` <small class="text-muted">(${item.productCode})</small>` : ''}</td><td class="text-center">${item.quantity}</td><td class="text-end">${Format.currency(item.unitPrice)}</td><td class="text-end">${Format.currency(item.totalPrice)}</td></tr>`).join('')}</tbody></table></div></div>`
+                : '';
+
+            const total = order.totalAmount || 0;
+            const paid = order.paidAmount || 0;
+            const balance = Math.max(0, total - paid);
+            const status = order.paymentStatus === 'Paid' ? 'Paid' : (paid > 0 ? 'Partial' : 'Pending');
+
+            content.innerHTML = `
+                <div class="row g-4">
+                    <div class="col-12 d-flex justify-content-between align-items-start border-bottom pb-3">
+                        <div>
+                            <h5 class="mb-1">Order ${order.orderNumber}</h5>
+                            <small class="text-muted">Order Date: ${Format.date(order.orderDate)}</small>
+                        </div>
+                        ${Format.statusBadge(status)}
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-1">Customer</h6>
+                        <div class="fw-semibold">${order.customer?.firstName || ''} ${order.customer?.lastName || ''}</div>
+                        <div class="text-muted small">${order.customer?.email || ''}</div>
+                        <div class="text-muted small">${order.customer?.phone || ''}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-1">Order Details</h6>
+                        <div><small class="text-muted">Order Status:</small> ${Format.statusBadge(order.orderStatus || 'Pending')}</div>
+                        <div><small class="text-muted">Payment Status:</small> ${Format.statusBadge(order.paymentStatus || 'Pending')}</div>
+                        <div><small class="text-muted">Payment Method:</small> ${order.paymentMethod || '-'}</div>
+                        <div><small class="text-muted">Shipping Method:</small> ${order.shippingMethod || '-'}</div>
+                        <div><small class="text-muted">Tracking #:</small> ${order.trackingNumber || '-'}</div>
+                    </div>
+                    ${itemsHtml}
+                    <div class="col-12">
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-3"><div class="card bg-light"><div class="card-body text-center py-3"><div class="small text-muted">Subtotal</div><h5 class="mb-0">${Format.currency(order.subtotal || total)}</h5></div></div></div>
+                            <div class="col-md-3"><div class="card bg-light"><div class="card-body text-center py-3"><div class="small text-muted">Tax</div><h5 class="mb-0">${Format.currency(order.taxAmount || 0)}</h5></div></div></div>
+                            <div class="col-md-3"><div class="card bg-primary text-white"><div class="card-body text-center py-3"><div class="small">Total</div><h4 class="mb-0">${Format.currency(total)}</h4></div></div></div>
+                            <div class="col-md-3"><div class="card ${balance > 0 ? 'bg-danger' : 'bg-success'} text-white"><div class="card-body text-center py-3"><div class="small">Balance</div><h4 class="mb-0">${Format.currency(balance)}</h4></div></div></div>
+                        </div>
+                    </div>
+                    ${order.notes ? `<div class="col-12"><h6 class="text-muted">Notes</h6><p>${order.notes}</p></div>` : ''}
+                </div>`;
+
+            Modal.show('viewInvoiceModal');
+            return;
+        }
+
         try {
             const result = await API.get(`/invoices/${id}/pdf`);
             const inv = result.data || result;
@@ -279,6 +382,96 @@ const Invoices = {
     },
 
     async print(id) {
+        if (id < 0) {
+            try {
+                const orderId = Math.abs(id);
+                const order = await API.get(`/orders/${orderId}`);
+                const derivedInvoice = {
+                    invoiceNumber: `ORD-${order.orderNumber}`,
+                    customerName: order.customer ? `${order.customer.firstName || ''} ${order.customer.lastName || ''}`.trim() : 'N/A',
+                    billingAddress: order.billingAddress || order.shippingAddress || '',
+                    billingCity: order.billingCity || order.shippingCity || '',
+                    billingState: order.billingState || order.shippingState || '',
+                    billingZipCode: order.billingZipCode || order.shippingZipCode || '',
+                    customerEmail: order.customer?.email || '',
+                    invoiceDate: order.orderDate,
+                    dueDate: order.orderDate,
+                    paymentTerms: 'Order Based',
+                    orderNumber: order.orderNumber,
+                    status: order.paymentStatus === 'Paid' ? 'Paid' : ((order.paidAmount || 0) > 0 ? 'Partial' : 'Pending'),
+                    subtotal: order.subtotal || order.totalAmount || 0,
+                    discountAmount: order.discountAmount || 0,
+                    taxAmount: order.taxAmount || 0,
+                    shippingAmount: order.shippingAmount || 0,
+                    totalAmount: order.totalAmount || 0,
+                    paidAmount: order.paidAmount || 0,
+                    balanceDue: Math.max(0, (order.totalAmount || 0) - (order.paidAmount || 0)),
+                    notes: order.notes || '',
+                    items: Array.isArray(order.orderItems) ? order.orderItems.map(i => ({
+                        description: i.productName,
+                        productCode: i.productCode,
+                        quantity: i.quantity,
+                        unitPrice: i.unitPrice,
+                        totalPrice: i.totalPrice
+                    })) : [],
+                    payments: []
+                };
+
+                const inv = derivedInvoice;
+
+                let itemsRows = '';
+                if (inv.items && inv.items.length > 0) {
+                    itemsRows = inv.items.map(item => `<tr>
+                        <td style="padding:8px;border:1px solid #ddd;">${item.description}${item.productCode ? ' (' + item.productCode + ')' : ''}</td>
+                        <td style="padding:8px;border:1px solid #ddd;text-align:center;">${item.quantity}</td>
+                        <td style="padding:8px;border:1px solid #ddd;text-align:right;">${Format.currency(item.unitPrice)}</td>
+                        <td style="padding:8px;border:1px solid #ddd;text-align:right;">${Format.currency(item.totalPrice)}</td>
+                    </tr>`).join('');
+                }
+
+                const w = window.open('', '_blank');
+                w.document.write(`<!DOCTYPE html><html><head><title>Invoice ${inv.invoiceNumber}</title>
+                <style>
+                    body{font-family:Arial,sans-serif;margin:0;padding:20px;color:#333}
+                    .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #008080;padding-bottom:20px;margin-bottom:30px}
+                    .company{font-size:28px;font-weight:bold;color:#008080}
+                    .inv-title{font-size:24px;color:#333;text-align:right}
+                    .inv-num{font-size:14px;color:#666}
+                    .bill-section{display:flex;justify-content:space-between;margin-bottom:30px}
+                    .bill-to,.inv-details{width:48%}
+                    .bill-to h3,.inv-details h3{color:#008080;margin-bottom:10px;font-size:14px;text-transform:uppercase}
+                    table{width:100%;border-collapse:collapse}
+                    th{background:#008080;color:white;padding:10px 8px;text-align:left}
+                    td{padding:8px;border:1px solid #ddd}
+                    .totals{margin-top:20px;text-align:right}
+                    .totals table{width:300px;margin-left:auto}
+                    .totals td{border:none;padding:5px 8px}
+                    .total-row{font-size:18px;font-weight:bold;color:#008080;border-top:2px solid #008080!important}
+                    .footer{margin-top:40px;padding-top:15px;border-top:1px solid #ddd;text-align:center;color:#999;font-size:12px}
+                </style></head><body>
+                    <div class="header"><div><div class="company">CompuGear</div><div style="color:#666">Computer Parts & Solutions</div></div>
+                    <div style="text-align:right"><div class="inv-title">ORDER INVOICE DETAILS</div><div class="inv-num">${inv.invoiceNumber}</div></div></div>
+                    <div class="bill-section">
+                        <div class="bill-to"><h3>Customer</h3><strong>${inv.customerName || 'N/A'}</strong><br>${inv.billingAddress ? inv.billingAddress + '<br>' : ''}${inv.customerEmail || ''}</div>
+                        <div class="inv-details"><h3>Details</h3><table style="width:100%;border:none"><tr><td style="border:none;padding:3px 0;color:#666">Order Date:</td><td style="border:none;padding:3px 0;text-align:right">${Format.date(inv.invoiceDate)}</td></tr><tr><td style="border:none;padding:3px 0;color:#666">Order Ref:</td><td style="border:none;padding:3px 0;text-align:right">${inv.orderNumber || '-'}</td></tr></table></div>
+                    </div>
+                    <table><thead><tr><th>Description</th><th style="text-align:center;width:80px">Qty</th><th style="text-align:right;width:120px">Unit Price</th><th style="text-align:right;width:120px">Amount</th></tr></thead>
+                    <tbody>${itemsRows || '<tr><td colspan="4" style="text-align:center;padding:20px;border:1px solid #ddd">No items</td></tr>'}</tbody></table>
+                    <div class="totals"><table>
+                        <tr><td style="color:#666">Total:</td><td style="text-align:right">${Format.currency(inv.totalAmount)}</td></tr>
+                        <tr><td style="color:#666">Paid:</td><td style="text-align:right;color:#10B981">${Format.currency(inv.paidAmount)}</td></tr>
+                        <tr style="font-weight:bold"><td>Balance Due:</td><td style="text-align:right;color:${(inv.balanceDue||0)>0?'#dc3545':'#10B981'}">${Format.currency(inv.balanceDue)}</td></tr>
+                    </table></div>
+                    <div class="footer"><p>Generated on ${new Date().toLocaleDateString('en-PH')}</p></div>
+                </body></html>`);
+                w.document.close();
+                return;
+            } catch (error) {
+                Toast.error('Failed to generate order invoice details for printing');
+                return;
+            }
+        }
+
         try {
             const result = await API.get(`/invoices/${id}/pdf`);
             const inv = result.data || result;
@@ -364,40 +557,6 @@ const Invoices = {
         }
     },
 
-    recordPayment(id) {
-        this.currentId = id;
-        const invoice = this.data.find(i => i.invoiceId === id);
-        if (!invoice) return;
-        const balance = invoice.balance || (invoice.totalAmount - (invoice.paidAmount || 0));
-        document.getElementById('paymentInvoiceId').value = id;
-        if (document.getElementById('paymentInvoiceNumber')) document.getElementById('paymentInvoiceNumber').textContent = invoice.invoiceNumber;
-        document.getElementById('paymentAmount').value = balance.toFixed(2);
-        document.getElementById('paymentAmount').max = balance;
-        if (document.getElementById('outstandingBalance')) document.getElementById('outstandingBalance').textContent = Format.currency(balance);
-        Modal.show('paymentModal');
-    },
-
-    async savePayment() {
-        const invoiceId = parseInt(document.getElementById('paymentInvoiceId').value);
-        const data = {
-            invoiceId: invoiceId,
-            amount: parseFloat(document.getElementById('paymentAmount').value) || 0,
-            paymentMethod: document.getElementById('paymentMethod').value,
-            reference: document.getElementById('paymentReference')?.value || '',
-            notes: document.getElementById('paymentNotes')?.value || '',
-            status: 'Completed'
-        };
-        if (data.amount <= 0) { Toast.error('Please enter a valid amount'); return; }
-        try {
-            await API.post('/payments', data);
-            Toast.success('Payment recorded successfully');
-            Modal.hide('paymentModal');
-            this.load();
-        } catch (error) {
-            Toast.error('Failed to record payment');
-        }
-    },
-
     filter(search = '', status = '') {
         let filtered = this.data;
         if (search) { const s = search.toLowerCase(); filtered = filtered.filter(i => i.invoiceNumber?.toLowerCase().includes(s) || i.customerName?.toLowerCase().includes(s)); }
@@ -419,7 +578,7 @@ const Invoices = {
             <td class="text-center"><div class="btn-group">
                 <button class="btn btn-sm btn-outline-primary" onclick="Invoices.view(${i.invoiceId})" title="View">${Icons.view}</button>
                 <button class="btn btn-sm btn-outline-info" onclick="Invoices.print(${i.invoiceId})" title="Print">${Icons.print}</button>
-                ${i.status!=='Paid'&&i.status!=='Cancelled'&&i.status!=='Void'?`<button class="btn btn-sm btn-outline-success" onclick="Invoices.recordPayment(${i.invoiceId})" title="Record Payment">${Icons.payment}</button>`:''}</div></td>
+                </div></td>
         </tr>`).join('');
     }
 };
@@ -448,7 +607,7 @@ const Payments = {
             <td>${p.customerName || 'N/A'}</td>
             <td>${Format.date(p.paymentDate)}</td>
             <td class="text-end fw-semibold text-success">${Format.currency(p.amount)}</td>
-            <td><span class="badge bg-info">${p.paymentMethod}</span></td>
+            <td><span class="badge bg-info">${p.paymentMethodType || p.paymentMethod || '-'}</span></td>
             <td>${Format.statusBadge(p.status || 'Completed')}</td>
         </tr>`).join('');
     },
@@ -479,7 +638,7 @@ const Payments = {
             <td>${p.customerName || 'N/A'}</td>
             <td>${Format.date(p.paymentDate)}</td>
             <td class="text-end fw-semibold text-success">${Format.currency(p.amount)}</td>
-            <td><span class="badge bg-info">${p.paymentMethod}</span></td>
+            <td><span class="badge bg-info">${p.paymentMethodType || p.paymentMethod || '-'}</span></td>
             <td>${Format.statusBadge(p.status || 'Completed')}</td>
         </tr>`).join('');
     }

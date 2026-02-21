@@ -401,8 +401,23 @@ const SalesOrders = {
         tbody.innerHTML = this.data.map(o => {
             let actions = `<button class="btn btn-sm btn-outline-primary" onclick="SalesOrders.view(${o.orderId})" title="View">${Icons.view}</button>`;
 
-            if (o.orderStatus !== 'Cancelled' && o.orderStatus !== 'Completed') {
-                actions += `<button class="btn btn-sm btn-outline-info" onclick="SalesOrders.openUpdateStatus(${o.orderId})" title="Update Status">${Icons.update}</button>`;
+            if (o.orderStatus === 'Pending') {
+                 // Pending orders: Approve + Reject (Cancel)
+                 actions += `
+                    <button class="btn btn-sm btn-success" onclick="SalesOrders.updateStatusDirect(${o.orderId}, 'Confirmed')" title="Approve/Confirm">
+                        ${Icons.approve || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>'}
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="SalesOrders.updateStatusDirect(${o.orderId}, 'Cancelled')" title="Reject/Cancel">
+                        ${Icons.reject || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'}
+                    </button>`;
+            } else if (o.orderStatus !== 'Cancelled' && o.orderStatus !== 'Completed' && o.orderStatus !== 'Delivered') {
+                actions += `
+                    <button class="btn btn-sm btn-outline-info" onclick="SalesOrders.openUpdateStatus(${o.orderId})" title="Update Status">
+                        ${Icons.update}
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="SalesOrders.updateStatusDirect(${o.orderId}, 'Cancelled')" title="Cancel Order">
+                        ${Icons.toggleOff}
+                    </button>`;
             }
 
             return `<tr>
@@ -421,6 +436,7 @@ const SalesOrders = {
                 </td>
             </tr>`;
         }).join('');
+        this.updateStats();
     },
 
     updateStats() {
@@ -560,20 +576,43 @@ const SalesOrders = {
         }).join('');
     },
 
+    async updateStatusDirect(id, status) {
+        if (!status) return;
+        if (!confirm(`Are you sure you want to change status to ${status}?`)) return;
+        
+        try {
+            await API.put(`/orders/${id}/status`, { status: status, notes: `Status updated to ${status} by Sales Staff` });
+            Toast.success(`Order status updated to ${status}`);
+            this.load();
+        } catch (error) {
+            Toast.error('Failed to update status: ' + (error.message || 'Unknown error'));
+        }
+    },
+
     printOrder() {
         const id = this.currentId;
         if (!id) return;
         const o = this.data.find(ord => ord.orderId === id);
         if (!o) return;
         const items = o.items || [];
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`<html><head><title>Order ${o.orderNumber}</title>
-            <style>body{font-family:'Segoe UI',Arial,sans-serif;margin:40px;color:#333}.header{display:flex;justify-content:space-between;border-bottom:3px solid #008080;padding-bottom:20px;margin-bottom:30px}.company h1{color:#008080;margin:0;font-size:28px}.badge{background:#008080;color:white;padding:8px 20px;border-radius:5px;font-size:18px}table{width:100%;border-collapse:collapse;margin-bottom:20px}th{background:#008080;color:white;padding:10px;text-align:left}td{padding:10px;border-bottom:1px solid #eee}.total-row td{font-weight:bold;font-size:18px;color:#008080;border-top:2px solid #008080}</style></head><body>
-            <div class="header"><div class="company"><h1>CompuGear</h1><p>Computer & Gear Solutions</p></div><div><span class="badge">${o.orderNumber}</span></div></div>
+        
+        const html = `<html><head><title>Order ${o.orderNumber}</title>
+            <style>body{font-family:'Segoe UI',Arial,sans-serif;margin:40px;color:#333}.header{display:flex;justify-content:space-between;border-bottom:3px solid #008080;padding-bottom:20px;margin-bottom:30px}.company-logo img{height:50px}.badge{background:#008080;color:white;padding:8px 20px;border-radius:5px;font-size:18px}table{width:100%;border-collapse:collapse;margin-bottom:20px}th{background:#008080;color:white;padding:10px;text-align:left}td{padding:10px;border-bottom:1px solid #eee}.total-row td{font-weight:bold;font-size:18px;color:#008080;border-top:2px solid #008080}</style></head><body>
+            <div class="header">
+                <div class="company-logo">
+                    <img src="${window.location.origin}/images/compugearlogo.png" alt="CompuGear" onerror="this.style.display='none';document.getElementById('fallback-title').style.display='block'">
+                    <h1 id="fallback-title" style="display:none;color:#008080;margin:0;">CompuGear</h1>
+                    <p>Computer & Gear Solutions</p>
+                </div>
+                <div><span class="badge">${o.orderNumber}</span></div>
+            </div>
             <table><thead><tr><th>Product</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
             <tbody>${items.map(i => `<tr><td>${i.productName}</td><td>${i.quantity}</td><td>${Format.currency(i.unitPrice)}</td><td>${Format.currency(i.totalPrice)}</td></tr>`).join('')}</tbody></table>
             <p style="text-align:right;font-size:1.2em"><strong>Total: ${Format.currency(o.totalAmount)}</strong></p>
-            <script>window.onload=function(){window.print();}<\/script></body></html>`);
+            <script>window.onload=function(){window.print();window.close();}<\/script></body></html>`;
+            
+        var printWindow = window.open('', '_blank');
+        printWindow.document.write(html);
         printWindow.document.close();
     },
 
@@ -963,20 +1002,18 @@ const SalesProducts = {
 // ===========================================
 const SalesReportPDF = {
     generate(orders, period, periodLabel) {
-        const printWindow = window.open('', '_blank');
         const now = new Date();
         const filteredOrders = this.filterByPeriod(orders, period);
         const totalRevenue = filteredOrders.reduce((s, o) => s + (o.totalAmount || 0), 0);
         const avgOrder = filteredOrders.length > 0 ? totalRevenue / filteredOrders.length : 0;
         const completedOrders = filteredOrders.filter(o => o.orderStatus === 'Completed' || o.orderStatus === 'Delivered').length;
 
-        printWindow.document.write(`<html><head><title>CompuGear Sales Report - ${periodLabel}</title>
+        const html = `<html><head><title>CompuGear Sales Report - ${periodLabel}</title>
             <style>
                 *{margin:0;padding:0;box-sizing:border-box}
                 body{font-family:'Segoe UI',Arial,sans-serif;margin:0;padding:40px;color:#333;font-size:12px}
                 .header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #008080;padding-bottom:20px;margin-bottom:30px}
-                .company h1{color:#008080;font-size:28px;margin-bottom:5px}
-                .company p{color:#666}
+                .company-logo img { height: 50px; margin-bottom: 5px; }
                 .report-title{text-align:right}
                 .report-title h2{color:#008080;font-size:20px}
                 .report-title p{color:#666}
@@ -997,7 +1034,12 @@ const SalesReportPDF = {
                 @media print{body{margin:15px;padding:15px}.no-print{display:none}}
             </style></head><body>
             <div class="header">
-                <div class="company"><h1>CompuGear</h1><p>Computer & Gear Solutions</p></div>
+                <div class="company">
+                    <div class="company-logo">
+                        <img src="${window.location.origin}/images/compugearlogo.png" alt="CompuGear" onerror="this.outerHTML='<h1 style=\\'color:#008080;font-size:28px;margin-bottom:5px\\'>CompuGear</h1>'">
+                    </div>
+                    <p>Computer & Gear Solutions</p>
+                </div>
                 <div class="report-title"><h2>Sales Report</h2><p>Period: ${periodLabel}</p><p>Generated: ${now.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}</p></div>
             </div>
             <div class="summary-cards">
@@ -1021,7 +1063,10 @@ const SalesReportPDF = {
                 <tr class="total-row"><td colspan="4" class="text-end"><strong>Grand Total:</strong></td><td class="text-end"><strong>${Format.currency(totalRevenue)}</strong></td><td colspan="2"></td></tr>
             </tbody></table>
             <div class="footer"><p>CompuGear Sales Report - Generated on ${now.toLocaleString('en-PH')} - Confidential</p></div>
-            <script>window.onload=function(){window.print();}<\/script></body></html>`);
+            <script>window.onload=function(){window.print();window.close();}<\/script></body></html>`;
+            
+        var printWindow = window.open('', '_blank');
+        printWindow.document.write(html);
         printWindow.document.close();
     },
 

@@ -89,88 +89,156 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/admin.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+    (function() {
+        // ========== SELF-CONTAINED SALES REPORT ==========
+        var allOrders = [];
+        var currentPeriod = 'month';
         var salesChart = null;
-        var allAdminOrders = [];
-        var adminPeriod = 'month';
 
-        document.addEventListener('DOMContentLoaded', function() {
-            loadSalesReport();
-        });
+        function normalizeStatus(status) {
+            return (status || '').toString().trim().toLowerCase();
+        }
 
+        // Revenue should only reflect after approval (Confirmed) and beyond.
+        function isRevenueStatus(status) {
+            var s = normalizeStatus(status);
+            return s === 'confirmed' || s === 'processing' || s === 'completed' || s === 'delivered' || s === 'shipped';
+        }
+
+        // Currency formatter
+        function formatCurrency(amount) {
+            return '₱' + parseFloat(amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        // Set text of element by id
+        function setText(id, txt) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = txt;
+        }
+
+        // Load orders from API
+        function loadReport() {
+            setText('revenueInfo', 'Loading...');
+            setText('ordersInfo', 'Loading...');
+            setText('completedInfo', 'Loading...');
+
+            fetch('/api/orders', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(function(response) {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.json();
+            })
+            .then(function(result) {
+                // Handle wrapped response {success: true, data: [...]}
+                if (result && result.data && Array.isArray(result.data)) {
+                    allOrders = result.data;
+                } else if (Array.isArray(result)) {
+                    allOrders = result;
+                } else {
+                    allOrders = [];
+                }
+                updateReport();
+            })
+            .catch(function(error) {
+                console.error('Failed to load report:', error);
+                allOrders = [];
+                updateReport();
+            });
+        }
+
+        // Filter orders by period
         function filterByPeriod(orders, period) {
+            if (!orders || !orders.length) return [];
             var now = new Date();
             var startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            var result = [];
-            var i, d;
+            var d;
+
             switch (period) {
                 case 'day':
-                    for (i = 0; i < orders.length; i++) { if (new Date(orders[i].orderDate) >= startOfToday) result.push(orders[i]); }
-                    return result;
+                    return orders.filter(function(o) { return o.orderDate && new Date(o.orderDate) >= startOfToday; });
                 case 'week':
                     d = new Date(startOfToday);
                     d.setDate(d.getDate() - d.getDay());
-                    for (i = 0; i < orders.length; i++) { if (new Date(orders[i].orderDate) >= d) result.push(orders[i]); }
-                    return result;
+                    return orders.filter(function(o) { return o.orderDate && new Date(o.orderDate) >= d; });
                 case 'month':
                     d = new Date(now.getFullYear(), now.getMonth(), 1);
-                    for (i = 0; i < orders.length; i++) { if (new Date(orders[i].orderDate) >= d) result.push(orders[i]); }
-                    return result;
+                    return orders.filter(function(o) { return o.orderDate && new Date(o.orderDate) >= d; });
                 case 'year':
                     d = new Date(now.getFullYear(), 0, 1);
-                    for (i = 0; i < orders.length; i++) { if (new Date(orders[i].orderDate) >= d) result.push(orders[i]); }
-                    return result;
-                default: return orders;
+                    return orders.filter(function(o) { return o.orderDate && new Date(o.orderDate) >= d; });
+                default:
+                    return orders;
             }
         }
 
-        function setAdminPeriod(period) {
-            adminPeriod = period;
-            var btns = document.querySelectorAll('#adminPeriodFilter .btn');
-            for (var b = 0; b < btns.length; b++) btns[b].classList.remove('active');
-            var activeBtn = document.querySelector('#adminPeriodFilter [data-period="' + period + '"]');
-            if (activeBtn) activeBtn.classList.add('active');
-            var labels = { day: 'Today', week: 'This Week', month: 'This Month', year: 'This Year', all: 'All Time' };
-            document.getElementById('adminPeriodLabel').textContent = labels[period] || period;
-            updateAdminReport();
-        }
-
-        function updateAdminReport() {
-            var filtered = filterByPeriod(allAdminOrders, adminPeriod);
+        // Update all stats and chart
+        function updateReport() {
+            var filtered = filterByPeriod(allOrders, currentPeriod);
             var revenue = 0;
             var completed = 0;
+
+            var revenueOrders = [];
             for (var i = 0; i < filtered.length; i++) {
-                revenue += (filtered[i].totalAmount || 0);
-                if (filtered[i].orderStatus === 'Completed' || filtered[i].orderStatus === 'Delivered') completed++;
+                if (isRevenueStatus(filtered[i].orderStatus)) revenueOrders.push(filtered[i]);
             }
-            var avg = filtered.length > 0 ? revenue / filtered.length : 0;
 
-            document.getElementById('periodRevenue').textContent = Format.currency(revenue);
-            document.getElementById('periodOrders').textContent = filtered.length;
-            document.getElementById('periodCompleted').textContent = completed;
-            document.getElementById('avgOrderValue').textContent = Format.currency(avg);
-            document.getElementById('revenueInfo').textContent = filtered.length + ' orders in period';
-            document.getElementById('ordersInfo').textContent = completed + ' completed';
-            document.getElementById('completedInfo').textContent = ((filtered.length > 0 ? (completed / filtered.length * 100) : 0).toFixed(0)) + '% completion rate';
+            for (var i = 0; i < revenueOrders.length; i++) {
+                revenue += parseFloat(revenueOrders[i].totalAmount) || 0;
+            }
 
-            // Update chart
+            for (var i = 0; i < filtered.length; i++) {
+                var st = filtered[i].orderStatus;
+                if (st === 'Completed' || st === 'Delivered') completed++;
+            }
+
+            var avg = revenueOrders.length > 0 ? revenue / revenueOrders.length : 0;
+            var completionRate = filtered.length > 0 ? (completed / filtered.length * 100) : 0;
+
+            setText('periodRevenue', formatCurrency(revenue));
+            setText('periodOrders', filtered.length);
+            setText('periodCompleted', completed);
+            setText('avgOrderValue', formatCurrency(avg));
+            setText('revenueInfo', revenueOrders.length + ' confirmed+ orders');
+            setText('ordersInfo', completed + ' completed');
+            setText('completedInfo', completionRate.toFixed(0) + '% completion rate');
+
+            renderChart();
+        }
+
+        // Render Chart.js bar chart
+        function renderChart() {
+            var ctx = document.getElementById('salesChart');
+            if (!ctx) return;
+            if (typeof Chart === 'undefined') {
+                ctx.parentElement.innerHTML = '<div class="alert alert-warning text-center">Chart library not available</div>';
+                return;
+            }
+
             var monthlyData = [0,0,0,0,0,0,0,0,0,0,0,0];
             var currentYear = new Date().getFullYear();
-            for (var j = 0; j < filtered.length; j++) {
-                var d = new Date(filtered[j].orderDate);
-                if (d.getFullYear() === currentYear) monthlyData[d.getMonth()] += (filtered[j].totalAmount || 0);
+
+            for (var i = 0; i < allOrders.length; i++) {
+                var o = allOrders[i];
+                if (!o.orderDate) continue;
+                if (!isRevenueStatus(o.orderStatus)) continue;
+                var d = new Date(o.orderDate);
+                if (d.getFullYear() === currentYear) {
+                    monthlyData[d.getMonth()] += parseFloat(o.totalAmount) || 0;
+                }
             }
 
-            var ctx = document.getElementById('salesChart').getContext('2d');
-            if (salesChart) salesChart.destroy();
-            salesChart = new Chart(ctx, {
+            if (salesChart) { salesChart.destroy(); }
+
+            salesChart = new Chart(ctx.getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
                     datasets: [{
-                        label: 'Sales',
+                        label: 'Sales (₱)',
                         data: monthlyData,
                         backgroundColor: '#008080',
                         borderRadius: 4
@@ -180,53 +248,77 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, ticks: { callback: function(v) { return '\u20B1' + (v / 1000).toFixed(0) + 'k'; } } } }
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: function(v) { return '₱' + (v >= 1000 ? (v/1000).toFixed(0) + 'k' : v); } }
+                        }
+                    }
                 }
             });
         }
 
-        function loadSalesReport() {
-            API.get('/orders').then(function(data) {
-                allAdminOrders = data;
-                updateAdminReport();
-            }).catch(function(error) {
-                console.error('Failed to load sales report:', error);
-                Toast.error('Failed to load sales report');
-            });
-        }
+        // Period filter button handler
+        window.setAdminPeriod = function(period) {
+            currentPeriod = period;
 
-        function generateAdminPdfReport() {
+            // Toggle active button
+            var btns = document.querySelectorAll('#adminPeriodFilter .btn');
+            for (var i = 0; i < btns.length; i++) { btns[i].classList.remove('active'); }
+            var activeBtn = document.querySelector('#adminPeriodFilter [data-period="' + period + '"]');
+            if (activeBtn) activeBtn.classList.add('active');
+
             var labels = { day: 'Today', week: 'This Week', month: 'This Month', year: 'This Year', all: 'All Time' };
-            var periodLabel = labels[adminPeriod] || 'All Time';
-            var filtered = filterByPeriod(allAdminOrders, adminPeriod);
-            var totalRevenue = filtered.reduce(function(s, o) { return s + (o.totalAmount || 0); }, 0);
-            var avgOrder = filtered.length > 0 ? totalRevenue / filtered.length : 0;
+            setText('adminPeriodLabel', labels[period] || period);
+
+            updateReport();
+        };
+
+        // Generate PDF report
+        window.generateAdminPdfReport = function() {
+            var labels = { day: 'Today', week: 'This Week', month: 'This Month', year: 'This Year', all: 'All Time' };
+            var periodLabel = labels[currentPeriod] || 'All Time';
+            var filtered = filterByPeriod(allOrders, currentPeriod);
+            var totalRevenue = 0;
             var completedOrders = 0;
-            for (var ci = 0; ci < filtered.length; ci++) {
-                if (filtered[ci].orderStatus === 'Completed' || filtered[ci].orderStatus === 'Delivered') completedOrders++;
+
+            var revenueOrders = [];
+            for (var i = 0; i < filtered.length; i++) {
+                if (isRevenueStatus(filtered[i].orderStatus)) revenueOrders.push(filtered[i]);
             }
+
+            for (var i = 0; i < revenueOrders.length; i++) {
+                totalRevenue += parseFloat(revenueOrders[i].totalAmount) || 0;
+            }
+
+            for (var i = 0; i < filtered.length; i++) {
+                var st = filtered[i].orderStatus;
+                if (st === 'Completed' || st === 'Delivered') completedOrders++;
+            }
+            var avgOrder = revenueOrders.length > 0 ? totalRevenue / revenueOrders.length : 0;
             var now = new Date();
 
             var rowsHtml = '';
-            for (var ri = 0; ri < filtered.length; ri++) {
-                var o = filtered[ri];
-                var statusClass = 'bg-info';
-                if (o.orderStatus === 'Completed' || o.orderStatus === 'Delivered') statusClass = 'bg-success';
-                else if (o.orderStatus === 'Pending') statusClass = 'bg-warning';
-                else if (o.orderStatus === 'Cancelled') statusClass = 'bg-danger';
-                var payClass = 'bg-danger';
-                if (o.paymentStatus === 'Paid') payClass = 'bg-success';
-                else if (o.paymentStatus === 'Pending') payClass = 'bg-warning';
+            for (var i = 0; i < filtered.length; i++) {
+                var o = filtered[i];
+                var statusClass = 'background:#0dcaf0;color:#333';
+                if (o.orderStatus === 'Completed' || o.orderStatus === 'Delivered') statusClass = 'background:#198754;color:#fff';
+                else if (o.orderStatus === 'Pending') statusClass = 'background:#ffc107;color:#333';
+                else if (o.orderStatus === 'Cancelled') statusClass = 'background:#dc3545;color:#fff';
+
+                var payClass = 'background:#dc3545;color:#fff';
+                if (o.paymentStatus === 'Paid') payClass = 'background:#198754;color:#fff';
+                else if (o.paymentStatus === 'Pending') payClass = 'background:#ffc107;color:#333';
 
                 rowsHtml += '<tr>' +
                     '<td><strong>' + (o.orderNumber || '') + '</strong></td>' +
                     '<td>' + (o.customerName || 'Guest') + '</td>' +
-                    '<td>' + new Date(o.orderDate).toLocaleDateString('en-PH') + '</td>' +
-                    '<td class="text-center">' + (o.itemCount || 0) + '</td>' +
-                    '<td class="text-end">' + Format.currency(o.totalAmount) + '</td>' +
-                    '<td class="text-center"><span class="badge ' + statusClass + '">' + (o.orderStatus || '') + '</span></td>' +
-                    '<td class="text-center"><span class="badge ' + payClass + '">' + (o.paymentStatus || 'Pending') + '</span></td>' +
-                    '</tr>';
+                    '<td>' + (o.orderDate ? new Date(o.orderDate).toLocaleDateString('en-PH') : '-') + '</td>' +
+                    '<td style="text-align:center">' + (o.itemCount || 0) + '</td>' +
+                    '<td style="text-align:right">' + formatCurrency(o.totalAmount) + '</td>' +
+                    '<td style="text-align:center"><span style="padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600;' + statusClass + '">' + (o.orderStatus || '') + '</span></td>' +
+                    '<td style="text-align:center"><span style="padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600;' + payClass + '">' + (o.paymentStatus || 'Pending') + '</span></td>' +
+                '</tr>';
             }
 
             var html = '<html><head><title>CompuGear Sales Report - ' + periodLabel + '</title>' +
@@ -247,34 +339,46 @@
                 'th{background:#008080;color:white;padding:10px 8px;text-align:left;font-weight:600}' +
                 'td{padding:8px;border-bottom:1px solid #e0e0e0}' +
                 'tr:nth-child(even){background:#f8f9fa}' +
-                '.text-end{text-align:right}' +
-                '.text-center{text-align:center}' +
-                '.badge{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600;color:white}' +
-                '.bg-success{background:#198754}.bg-warning{background:#ffc107;color:#333}.bg-danger{background:#dc3545}.bg-info{background:#0dcaf0;color:#333}.bg-primary{background:#0d6efd}' +
                 '.footer{margin-top:30px;padding-top:15px;border-top:2px solid #e0e0e0;text-align:center;color:#666;font-size:10px}' +
                 '.total-row{font-weight:bold;background:#e8f5f5!important}' +
-                '</style></head><body>' +
+                '</style></head><body onload="window.print()">' +
                 '<div class="header">' +
-                '<div class="company"><h1>CompuGear</h1><p>Computer & Gear Solutions</p></div>' +
-                '<div class="report-title"><h2>Sales Report</h2><p>Period: ' + periodLabel + '</p><p>Generated: ' + now.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' }) + '</p></div>' +
+                    '<div class="company"><h1>CompuGear</h1><p>Computer &amp; Gear Solutions</p></div>' +
+                    '<div class="report-title"><h2>Sales Report</h2><p>Period: ' + periodLabel + '</p><p>Generated: ' + now.toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' }) + '</p></div>' +
                 '</div>' +
                 '<div class="summary-cards">' +
-                '<div class="summary-card"><div class="value">' + filtered.length + '</div><div class="label">Total Orders</div></div>' +
-                '<div class="summary-card"><div class="value">' + Format.currency(totalRevenue) + '</div><div class="label">Total Revenue</div></div>' +
-                '<div class="summary-card"><div class="value">' + Format.currency(avgOrder) + '</div><div class="label">Avg Order Value</div></div>' +
-                '<div class="summary-card"><div class="value">' + completedOrders + '</div><div class="label">Completed Orders</div></div>' +
+                    '<div class="summary-card"><div class="value">' + filtered.length + '</div><div class="label">Total Orders</div></div>' +
+                    '<div class="summary-card"><div class="value">' + formatCurrency(totalRevenue) + '</div><div class="label">Total Revenue</div></div>' +
+                    '<div class="summary-card"><div class="value">' + formatCurrency(avgOrder) + '</div><div class="label">Avg Order Value</div></div>' +
+                    '<div class="summary-card"><div class="value">' + completedOrders + '</div><div class="label">Completed Orders</div></div>' +
                 '</div>' +
                 '<h3 style="color:#008080;margin-bottom:15px">Order Details</h3>' +
-                '<table><thead><tr><th>Order #</th><th>Customer</th><th>Date</th><th class="text-center">Items</th><th class="text-end">Amount</th><th class="text-center">Status</th><th class="text-center">Payment</th></tr></thead>' +
+                '<table><thead><tr><th>Order #</th><th>Customer</th><th>Date</th><th style="text-align:center">Items</th><th style="text-align:right">Amount</th><th style="text-align:center">Status</th><th style="text-align:center">Payment</th></tr></thead>' +
                 '<tbody>' + rowsHtml +
-                '<tr class="total-row"><td colspan="4" class="text-end"><strong>Grand Total:</strong></td><td class="text-end"><strong>' + Format.currency(totalRevenue) + '</strong></td><td colspan="2"></td></tr>' +
+                '<tr class="total-row"><td colspan="4" style="text-align:right"><strong>Grand Total:</strong></td><td style="text-align:right"><strong>' + formatCurrency(totalRevenue) + '</strong></td><td colspan="2"></td></tr>' +
                 '</tbody></table>' +
-                '<div class="footer"><p>CompuGear Sales Report - Generated on ' + now.toLocaleString('en-PH') + ' - Confidential</p></div>' +
-                '<' + 'script>window.onload=function(){window.print();}</' + 'script>' + '</body></html>';
+                '<div class="footer"><p>CompuGear Sales Report &mdash; Generated on ' + now.toLocaleString('en-PH') + ' &mdash; Confidential</p></div>' +
+                '</body></html>';
 
             var printWindow = window.open('', '_blank');
-            printWindow.document.write(html);
-            printWindow.document.close();
-        }
+            if (printWindow) {
+                printWindow.document.write(html);
+                printWindow.document.close();
+
+                // Fallback: some browsers block body onload for about:blank writes
+                try {
+                    printWindow.onload = function() {
+                        try { printWindow.focus(); } catch (e) {}
+                        try { printWindow.print(); } catch (e) {}
+                    };
+                } catch (e) {}
+            } else {
+                alert('Please allow pop-ups to generate the PDF report.');
+            }
+        };
+
+        // ========== INIT: Load immediately ==========
+        loadReport();
+    })();
     </script>
 }

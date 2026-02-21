@@ -238,7 +238,7 @@
                 </div>
 
                 <button type="button" class="btn-subscribe" id="btnSubscribe" onclick="submitSubscription()">
-                    <span class="btn-text">Complete Subscription</span>
+                    <span class="btn-text">Proceed to Payment</span>
                     <div class="spinner" id="btnSpinner"></div>
                 </button>
             </form>
@@ -286,9 +286,11 @@
         <div class="check-circle">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
-        <h2>Subscription Successful!</h2>
-        <p id="successMessage">Your CompuGear ERP account has been created. You can now log in and access your subscribed modules.</p>
-        <a href="/Auth/Login" class="btn-login">Go to Login</a>
+        <h2>Redirecting to Payment...</h2>
+        <p id="successMessage">You are being redirected to our secure payment gateway (PayMongo) to complete your subscription. Please do not close this window.</p>
+        <div style="margin-top: 16px;">
+            <div class="spinner" style="display: block; width: 32px; height: 32px; border: 3px solid rgba(0,128,128,0.2); border-top-color: #008080; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto;"></div>
+        </div>
     </div>
 </div>
 
@@ -395,7 +397,9 @@
             spinner.style.display = 'block';
 
             try {
-                const response = await fetch('/api/erpwebsite/subscribe', {
+                // Step 1: Send data to create-checkout endpoint which validates,
+                // stores registration data in session, and creates a PayMongo checkout
+                const response = await fetch('/api/erpwebsite/create-checkout', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -417,17 +421,21 @@
 
                 const result = await response.json();
 
-                if (result.success) {
-                    document.getElementById('successMessage').textContent =
-                        `Your ${result.planName || 'CompuGear ERP'} subscription has been created for ${companyName}. You can now log in with ${adminEmail} to access your modules.`;
+                if (result.success && result.checkoutUrl) {
+                    // Show redirect overlay then navigate to PayMongo checkout
                     document.getElementById('successOverlay').classList.add('show');
+                    setTimeout(() => {
+                        window.location.href = result.checkoutUrl;
+                    }, 1500);
                 } else {
                     alert(result.message || 'An error occurred. Please try again.');
+                    btn.disabled = false;
+                    btnText.style.display = 'inline';
+                    spinner.style.display = 'none';
                 }
             } catch (err) {
                 alert('An error occurred. Please try again.');
                 console.error(err);
-            } finally {
                 btn.disabled = false;
                 btnText.style.display = 'inline';
                 spinner.style.display = 'none';

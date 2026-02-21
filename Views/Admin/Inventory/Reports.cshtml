@@ -155,8 +155,10 @@
 @section Scripts {
     <script src="~/js/admin.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
     <script>
-        const LOW_STOCK_THRESHOLD = 15;
+        const INVENTORY_LOW_STOCK_THRESHOLD = 15;
         let inventoryChart = null;
         let valueChart = null;
         let allProducts = [];
@@ -174,7 +176,7 @@
                 // Calculate stats
                 const totalValue = products.reduce((sum, p) => sum + (p.stockQuantity * (p.costPrice || p.sellingPrice || 0)), 0);
                 const totalUnits = products.reduce((sum, p) => sum + p.stockQuantity, 0);
-                const lowStock = products.filter(p => p.stockQuantity <= LOW_STOCK_THRESHOLD && p.stockQuantity > 0).length;
+                const lowStock = products.filter(p => p.stockQuantity <= INVENTORY_LOW_STOCK_THRESHOLD && p.stockQuantity > 0).length;
                 const outOfStock = products.filter(p => p.stockQuantity === 0).length;
 
                 // Update stats
@@ -302,7 +304,7 @@
                 if (p.stockQuantity === 0) {
                     statusClass = 'badge-error';
                     statusText = 'Out of Stock';
-                } else if (p.stockQuantity <= LOW_STOCK_THRESHOLD) {
+                } else if (p.stockQuantity <= INVENTORY_LOW_STOCK_THRESHOLD) {
                     statusClass = 'badge-warning';
                     statusText = 'Low Stock';
                 } else {
@@ -316,7 +318,7 @@
                         <td><strong>${p.productName}</strong></td>
                         <td>${p.categoryName || 'Uncategorized'}</td>
                         <td>${p.supplierName || '-'}</td>
-                        <td class="${p.stockQuantity <= LOW_STOCK_THRESHOLD ? 'text-warning fw-600' : ''}">${p.stockQuantity}</td>
+                        <td class="${p.stockQuantity <= INVENTORY_LOW_STOCK_THRESHOLD ? 'text-warning fw-600' : ''}">${p.stockQuantity}</td>
                         <td>${Format.currency(p.costPrice || 0)}</td>
                         <td>${Format.currency(p.sellingPrice || 0)}</td>
                         <td class="fw-600">${Format.currency(stockValue)}</td>
@@ -370,7 +372,7 @@
             const headers = ['SKU', 'Product Name', 'Category', 'Supplier', 'Stock Qty', 'Cost Price', 'Selling Price', 'Stock Value', 'Status'];
             const rows = allProducts.map(p => {
                 const stockValue = p.stockQuantity * (p.costPrice || p.sellingPrice || 0);
-                const status = p.stockQuantity === 0 ? 'Out of Stock' : p.stockQuantity <= LOW_STOCK_THRESHOLD ? 'Low Stock' : 'In Stock';
+                const status = p.stockQuantity === 0 ? 'Out of Stock' : p.stockQuantity <= INVENTORY_LOW_STOCK_THRESHOLD ? 'Low Stock' : 'In Stock';
                 return [
                     p.sku || 'N/A',
                     p.productName,
@@ -411,8 +413,8 @@
             
             sorted.forEach(p => {
                 const stockValue = p.stockQuantity * (p.costPrice || p.sellingPrice || 0);
-                const status = p.stockQuantity === 0 ? 'Out of Stock' : p.stockQuantity <= LOW_STOCK_THRESHOLD ? 'Low Stock' : 'In Stock';
-                const statusColor = p.stockQuantity === 0 ? '#dc3545' : p.stockQuantity <= LOW_STOCK_THRESHOLD ? '#ffc107' : '#198754';
+                const status = p.stockQuantity === 0 ? 'Out of Stock' : p.stockQuantity <= INVENTORY_LOW_STOCK_THRESHOLD ? 'Low Stock' : 'In Stock';
+                const statusColor = p.stockQuantity === 0 ? '#dc3545' : p.stockQuantity <= INVENTORY_LOW_STOCK_THRESHOLD ? '#ffc107' : '#198754';
                 
                 productTableHTML += `<tr>
                     <td style="padding:5px 8px;border:1px solid #ddd;font-size:11px;">${p.sku || 'N/A'}</td>
@@ -451,85 +453,68 @@
                 </tr>`;
             });
             
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Inventory Report</title>
-                    <style>
-                        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 30px; color: #333; }
-                        .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #008080; padding-bottom: 15px; }
-                        .header h1 { margin: 0; color: #008080; font-size: 24px; }
-                        .header p { margin: 5px 0 0; color: #666; }
-                        .summary-cards { display: flex; gap: 15px; margin-bottom: 25px; }
-                        .summary-card { flex: 1; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; text-align: center; }
-                        .summary-card .label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
-                        .summary-card .value { font-size: 20px; font-weight: 700; color: #008080; margin-top: 5px; }
-                        h3 { color: #008080; border-bottom: 2px solid #008080; padding-bottom: 5px; margin-top: 25px; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                        th { background: #008080; color: #fff; padding: 6px 8px; font-size: 11px; text-align: left; }
-                        tr:nth-child(even) { background: #f8f9fa; }
-                        .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
-                        @@media print { body { padding: 10px; } }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">
-                        <h1>Inventory Report</h1>
-                        <p>Generated on ${new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                    </div>
-                    
-                    <div class="summary-cards">
-                        <div class="summary-card">
-                            <div class="label">Total Inventory Value</div>
-                            <div class="value">${totalValue}</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="label">Total Products</div>
-                            <div class="value">${totalProducts}</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="label">Total Stock Units</div>
-                            <div class="value">${totalUnits}</div>
-                        </div>
-                        <div class="summary-card">
-                            <div class="label">Low Stock Items</div>
-                            <div class="value" style="color:#dc3545;">${lowStockItems}</div>
-                        </div>
-                    </div>
-                    
-                    <h3>Category Summary</h3>
-                    <table>
-                        <thead><tr>
-                            <th>Category</th><th style="text-align:center">Products</th>
-                            <th style="text-align:center">Total Stock</th><th style="text-align:right">Value</th>
-                            <th style="text-align:center">% of Inventory</th>
-                        </tr></thead>
-                        <tbody>${categoryTableHTML}</tbody>
-                    </table>
-                    
-                    <h3>Detailed Inventory</h3>
-                    <table>
-                        <thead><tr>
-                            <th>SKU</th><th>Product</th><th>Category</th><th>Supplier</th>
-                            <th style="text-align:right">Stock</th><th style="text-align:right">Cost</th>
-                            <th style="text-align:right">Selling</th><th style="text-align:right">Value</th><th>Status</th>
-                        </tr></thead>
-                        <tbody>${productTableHTML}</tbody>
-                    </table>
-                    
-                    <div class="footer">
-                        <p>CompuGear ERP System &mdash; Inventory Report &mdash; Confidential</p>
-                    </div>
-                    
-                    <script>
-                        window.onload = function() { window.print(); };
-                    <\/script>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                Toast.error('PDF library not loaded. Please refresh and try again.');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+            const generatedOn = new Date().toLocaleString('en-PH');
+
+            doc.setFontSize(16);
+            doc.text('CompuGear Inventory Report', 14, 15);
+            doc.setFontSize(10);
+            doc.text(`Generated: ${generatedOn}`, 14, 21);
+            doc.text(`Total Inventory Value: ${totalValue} | Total Products: ${totalProducts} | Total Units: ${totalUnits} | Low Stock: ${lowStockItems}`, 14, 27);
+
+            const summaryRows = Object.entries(categoryData).map(([category, data]) => {
+                const pct = totalInvValue > 0 ? ((data.value / totalInvValue) * 100).toFixed(1) + '%' : '0%';
+                return [
+                    category,
+                    data.count,
+                    data.stock,
+                    `₱${data.value.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    pct
+                ];
+            });
+
+            doc.autoTable({
+                startY: 32,
+                head: [['Category', 'Products', 'Total Stock', 'Value', '% of Inventory']],
+                body: summaryRows,
+                theme: 'grid',
+                headStyles: { fillColor: [0, 128, 128] },
+                styles: { fontSize: 9 }
+            });
+
+            const productRows = sorted.map(p => {
+                const stockValue = p.stockQuantity * (p.costPrice || p.sellingPrice || 0);
+                const status = p.stockQuantity === 0 ? 'Out of Stock' : p.stockQuantity <= INVENTORY_LOW_STOCK_THRESHOLD ? 'Low Stock' : 'In Stock';
+                return [
+                    p.sku || 'N/A',
+                    p.productName || '-',
+                    p.categoryName || 'Uncategorized',
+                    p.supplierName || '-',
+                    p.stockQuantity || 0,
+                    `₱${(p.costPrice || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    `₱${(p.sellingPrice || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    `₱${stockValue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    status
+                ];
+            });
+
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY + 6,
+                head: [['SKU', 'Product', 'Category', 'Supplier', 'Stock', 'Cost', 'Selling', 'Value', 'Status']],
+                body: productRows,
+                theme: 'striped',
+                headStyles: { fillColor: [0, 128, 128] },
+                styles: { fontSize: 8 }
+            });
+
+            doc.save(`inventory_report_${new Date().toISOString().split('T')[0]}.pdf`);
+            Toast.success('Inventory PDF downloaded successfully!');
         }
     </script>
 }

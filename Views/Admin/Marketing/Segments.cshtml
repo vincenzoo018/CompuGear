@@ -30,14 +30,15 @@
     background: white;
     border-radius: 16px;
     padding: 24px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.04);
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     height: 100%;
     border-left: 4px solid;
 }
 .segment-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.1);
 }
 .segment-card.vip { border-left-color: #10b981; }
 .segment-card.business { border-left-color: #3b82f6; }
@@ -138,13 +139,18 @@
             const now = new Date();
             const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
+            // Determine VIP threshold: top 10% by totalSpent or min ₱500
+            const sorted = [...customers].sort((a,b) => (b.totalSpent||0) - (a.totalSpent||0));
+            const top10 = Math.max(1, Math.floor(sorted.length / 10));
+            const highSpendThreshold = Math.max(sorted.length ? sorted[top10 - 1]?.totalSpent || 500 : 500, 500);
+
             const segments = {
                 vip: {
                     name: "VIP & Premium Customers",
-                    description: "High-value customers with VIP or Premium status",
+                    description: "High-value customers with significant purchase history",
                     customerType: "VIP / Premium",
                     priority: "High priority support",
-                    count: customers.filter(c => c.customerType === 'VIP' || c.customerType === 'Premium').length,
+                    count: customers.filter(c => (c.totalSpent || 0) >= highSpendThreshold || (c.loyaltyPoints || 0) >= 500).length,
                     color: "#10b981"
                 },
                 business: {
@@ -152,7 +158,7 @@
                     description: "B2B and enterprise customers",
                     customerType: "Business",
                     features: "Bulk orders, invoicing",
-                    count: customers.filter(c => c.customerType === 'Business' || c.companyName).length,
+                    count: customers.filter(c => c.companyName).length,
                     color: "#3b82f6"
                 },
                 newCustomers: {
@@ -168,13 +174,13 @@
                     description: "Standard customer accounts",
                     engagement: "Newsletter, promotions",
                     potential: "Upgrade to VIP",
-                    count: customers.filter(c => c.customerType === 'Regular' || !c.customerType).length,
+                    count: customers.filter(c => (c.totalSpent || 0) < highSpendThreshold && !c.companyName && new Date(c.createdAt) < thirtyDaysAgo).length,
                     color: "#6b7280"
                 },
                 all: {
                     name: "All Customers",
                     description: "Complete customer database",
-                    active: customers.filter(c => c.isActive !== false).length,
+                    active: customers.filter(c => c.status === 'Active').length,
                     withEmail: customers.filter(c => c.email).length,
                     count: customers.length,
                     color: "#008080"
@@ -381,19 +387,57 @@
     }
 
     function viewSegmentCustomers(type) {
-        window.location.href = `/Customers/List?type=${type}`;
+        // Store filter preference so List page can apply it
+        sessionStorage.setItem('customerSegmentFilter', type);
+        window.location.href = '/Customers/List';
     }
 
     function viewAllCustomers() {
+        sessionStorage.removeItem('customerSegmentFilter');
         window.location.href = '/Customers/List';
     }
 
     function createCampaign(segment) {
-        window.location.href = `/Marketing/Campaigns?segment=${segment}`;
+        // Store segment info so Campaigns page can pre-fill the create modal
+        sessionStorage.setItem('campaignTargetSegment', segment);
+        window.location.href = '/Marketing/Campaigns';
     }
 
-    function sendWelcomeEmails() {
-        Toast.success('Welcome emails queued for sending!');
+    async function sendWelcomeEmails() {
+        try {
+            const customers = await API.get('/customers');
+            const now = new Date();
+            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            const newCustomers = customers.filter(c => new Date(c.createdAt) >= thirtyDaysAgo);
+
+            if (newCustomers.length === 0) {
+                Toast.warning('No new customers found in the last 30 days.');
+                return;
+            }
+
+            if (!confirm(`Send welcome emails to ${newCustomers.length} new customer(s)?\n\nRecipients:\n${newCustomers.slice(0, 5).map(c => `• ${c.firstName} ${c.lastName} (${c.email})`).join('\n')}${newCustomers.length > 5 ? `\n...and ${newCustomers.length - 5} more` : ''}`)) {
+                return;
+            }
+
+            // Generate email list CSV for admin to use with their mail tool
+            const csv = ['Email,First Name,Last Name,Customer Code,Created Date'];
+            newCustomers.forEach(c => {
+                csv.push(`"${c.email}","${c.firstName}","${c.lastName}","${c.customerCode}","${new Date(c.createdAt).toLocaleDateString()}"`);
+            });
+
+            const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `welcome-email-list-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            Toast.success(`Email list exported for ${newCustomers.length} new customer(s). Use your email tool to send welcome messages.`);
+        } catch (error) {
+            console.error('Failed to prepare welcome emails:', error);
+            Toast.error('Failed to prepare email list.');
+        }
     }
 </script>
 }

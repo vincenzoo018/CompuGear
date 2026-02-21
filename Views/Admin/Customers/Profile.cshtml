@@ -102,12 +102,11 @@
 
     async function loadCustomerProfile(customerId) {
         try {
-            const [customers, orders] = await Promise.all([
-                API.get('/customers'),
+            const [customer, orders] = await Promise.all([
+                API.get('/customers/' + customerId),
                 API.get('/orders')
             ]);
 
-            const customer = customers.find(c => c.customerId == customerId);
             if (!customer) {
                 Toast.error('Customer not found');
                 return;
@@ -119,15 +118,15 @@
             
             document.getElementById('customerInitials').textContent = initials;
             document.getElementById('customerName').textContent = name;
-            document.getElementById('customerType').textContent = customer.customerType || 'Regular';
-            document.getElementById('customerStatus').innerHTML = customer.isActive !== false 
+            document.getElementById('customerType').textContent = customer.categoryName || 'Regular';
+            document.getElementById('customerStatus').innerHTML = customer.status === 'Active' 
                 ? '<span class="badge-dot"></span>Active' 
                 : '<span class="badge-dot"></span>Inactive';
-            document.getElementById('customerStatus').className = customer.isActive !== false ? 'badge badge-success' : 'badge badge-neutral';
+            document.getElementById('customerStatus').className = customer.status === 'Active' ? 'badge badge-success' : 'badge badge-neutral';
             document.getElementById('contactName').textContent = customer.firstName + ' ' + customer.lastName;
             document.getElementById('customerEmail').textContent = customer.email || '-';
             document.getElementById('customerPhone').textContent = customer.phone || '-';
-            document.getElementById('customerAddress').textContent = [customer.address, customer.city].filter(Boolean).join(', ') || '-';
+            document.getElementById('customerAddress').textContent = [customer.billingAddress, customer.billingCity, customer.shippingCity].filter(Boolean).join(', ') || '-';
             document.getElementById('memberSince').textContent = customer.createdAt ? Format.date(customer.createdAt) : '-';
 
             // Filter customer orders
@@ -150,7 +149,7 @@
                         <td>#${o.orderNumber || 'ORD-' + o.orderId}</td>
                         <td>${Format.date(o.orderDate)}</td>
                         <td>${Format.currency(o.totalAmount)}</td>
-                        <td><span class="badge ${statusClasses[o.status] || 'badge-neutral'}">${o.status}</span></td>
+                        <td><span class="badge ${statusClasses[o.orderStatus] || 'badge-neutral'}">${o.orderStatus || 'Unknown'}</span></td>
                     </tr>
                 `).join('');
             }

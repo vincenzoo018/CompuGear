@@ -4,15 +4,19 @@
 }
 
 <style>
-    .deals-page { min-height: 100vh; }
+    .deals-page {
+        min-height: 100vh;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
 
-    /* Hero Banner with Orange-Red Gradient */
+    /* ===== Hero Banner ===== */
     .hero-banner {
-        background: linear-gradient(135deg, #FF6B35 0%, #EF4444 100%);
-        border-radius: 20px;
-        padding: 48px;
-        color: white;
-        margin-bottom: 32px;
+        background: linear-gradient(135deg, #FF6B35 0%, #E8453C 50%, #EF4444 100%);
+        border-radius: var(--radius-lg);
+        padding: 52px 48px;
+        color: #fff;
+        margin-bottom: 36px;
         position: relative;
         overflow: hidden;
         text-align: center;
@@ -21,114 +25,152 @@
     .hero-banner::before {
         content: '';
         position: absolute;
-        top: -80px;
-        right: -80px;
-        width: 300px;
-        height: 300px;
-        background: rgba(255,255,255,0.1);
+        top: -100px;
+        right: -60px;
+        width: 320px;
+        height: 320px;
+        background: rgba(255, 255, 255, 0.06);
         border-radius: 50%;
+        pointer-events: none;
     }
 
     .hero-banner::after {
-        content: '🔥';
+        content: '';
         position: absolute;
-        right: 60px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 6rem;
-        opacity: 0.2;
+        bottom: -80px;
+        left: -40px;
+        width: 220px;
+        height: 220px;
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 50%;
+        pointer-events: none;
     }
 
-    .hero-content { position: relative; z-index: 1; }
-    .hero-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 8px; }
-    .hero-subtitle { font-size: 1.2rem; opacity: 0.95; margin-bottom: 24px; }
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
 
-    /* Flash Sale Countdown */
+    .hero-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+        letter-spacing: -0.5px;
+    }
+
+    .hero-subtitle {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 400;
+        opacity: 0.92;
+        margin-bottom: 28px;
+    }
+
+    /* ===== Countdown ===== */
     .countdown-container {
         display: inline-flex;
-        gap: 16px;
-        background: rgba(0,0,0,0.2);
-        padding: 16px 32px;
-        border-radius: 16px;
+        align-items: center;
+        gap: 12px;
+        background: rgba(0, 0, 0, 0.18);
+        padding: 16px 28px;
+        border-radius: var(--radius);
+        backdrop-filter: blur(4px);
     }
 
     .countdown-item {
         text-align: center;
-        min-width: 70px;
+        min-width: 60px;
     }
 
     .countdown-value {
-        font-size: 2.5rem;
-        font-weight: 800;
+        font-family: 'Inter', sans-serif;
+        font-size: 2.2rem;
+        font-weight: 700;
         line-height: 1;
+        letter-spacing: -1px;
     }
 
     .countdown-label {
-        font-size: 0.75rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.7rem;
+        font-weight: 500;
         text-transform: uppercase;
-        opacity: 0.9;
-        margin-top: 4px;
+        letter-spacing: 1px;
+        opacity: 0.8;
+        margin-top: 6px;
     }
 
     .countdown-separator {
-        font-size: 2rem;
-        font-weight: 700;
-        opacity: 0.7;
+        font-size: 1.6rem;
+        font-weight: 600;
+        opacity: 0.5;
         line-height: 1;
+        margin-top: -8px;
     }
 
-    /* Section */
-    .section { margin-bottom: 40px; }
+    /* ===== Sections ===== */
+    .section {
+        margin-bottom: 40px;
+    }
 
     .section-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
+        margin-bottom: 20px;
     }
 
     .section-title {
-        font-size: 1.5rem;
-        font-weight: 800;
+        font-family: 'Inter', sans-serif;
+        font-size: 1.35rem;
+        font-weight: 700;
         color: var(--foreground);
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
+        letter-spacing: -0.3px;
     }
 
     .view-all-link {
+        font-family: 'Inter', sans-serif;
         color: var(--primary);
         text-decoration: none;
         font-weight: 500;
+        font-size: 0.9rem;
         display: flex;
         align-items: center;
         gap: 4px;
+        transition: color 0.2s ease;
     }
 
-    .view-all-link:hover { text-decoration: underline; }
+    .view-all-link:hover {
+        color: var(--primary-hover);
+        text-decoration: underline;
+    }
 
-    /* Promo Code Cards Grid */
+    /* ===== Promo Code Cards ===== */
     .promo-codes-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 20px;
+        gap: 16px;
     }
 
     .promo-code-card {
         background: var(--card);
         border-radius: var(--radius);
-        border: 2px dashed var(--border);
-        padding: 24px;
+        border: 1.5px dashed var(--border);
+        padding: 22px;
         position: relative;
-        transition: all 0.3s;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
         cursor: pointer;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        box-shadow: var(--shadow-sm);
     }
 
     .promo-code-card:hover {
-        border-color: rgba(0,128,128,0.2);
-        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
-        transform: translateY(-4px);
+        border-color: var(--primary);
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
     }
 
     .promo-code-card.copied {
@@ -137,22 +179,27 @@
     }
 
     .promo-discount {
-        font-size: 2rem;
-        font-weight: 800;
+        font-family: 'Inter', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 700;
         color: var(--accent);
-        margin-bottom: 8px;
+        margin-bottom: 6px;
+        letter-spacing: -0.5px;
     }
 
     .promo-name {
+        font-family: 'Inter', sans-serif;
         font-weight: 600;
+        font-size: 0.95rem;
         color: var(--foreground);
         margin-bottom: 4px;
     }
 
     .promo-desc {
-        font-size: 0.85rem;
+        font-size: 0.83rem;
         color: var(--muted-foreground);
         margin-bottom: 16px;
+        line-height: 1.5;
     }
 
     .promo-code-display {
@@ -160,35 +207,38 @@
         align-items: center;
         justify-content: space-between;
         background: var(--muted);
-        padding: 12px 16px;
-        border-radius: 8px;
+        padding: 10px 14px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
     }
 
     .promo-code-text {
-        font-family: monospace;
-        font-size: 1.1rem;
-        font-weight: 700;
+        font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+        font-size: 1rem;
+        font-weight: 600;
         color: var(--primary);
-        letter-spacing: 2px;
+        letter-spacing: 1.5px;
     }
 
     .copy-indicator {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         color: var(--muted-foreground);
         display: flex;
         align-items: center;
         gap: 4px;
     }
 
-    .promo-code-card.copied .copy-indicator { color: var(--success-fg); }
+    .promo-code-card.copied .copy-indicator {
+        color: var(--success-fg);
+    }
 
     .promo-validity {
-        font-size: 0.75rem;
+        font-size: 0.73rem;
         color: var(--muted-foreground);
         margin-top: 12px;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
     }
 
     .promo-min-order {
@@ -197,143 +247,23 @@
         right: 12px;
         background: var(--info-light);
         color: var(--info-fg);
-        padding: 4px 10px;
+        padding: 3px 10px;
         border-radius: 20px;
-        font-size: 0.7rem;
+        font-size: 0.68rem;
         font-weight: 600;
+        letter-spacing: 0.2px;
     }
 
-    /* Deal Cards Grid */
-    .deals-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 24px;
-    }
-
-    .deal-card {
-        background: var(--card);
-        border-radius: var(--radius);
-        border: 1.5px solid var(--border);
-        overflow: hidden;
-        transition: all 0.3s;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-    }
-
-    .deal-card:hover {
-        border-color: rgba(0,128,128,0.2);
-        box-shadow: 0 12px 32px rgba(0,0,0,0.08);
-        transform: translateY(-4px);
-    }
-
-    .deal-image {
-        height: 180px;
-        background: linear-gradient(135deg, var(--muted) 0%, var(--border) 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 4rem;
-        position: relative;
-    }
-
-    .deal-badge {
-        position: absolute;
-        top: 12px;
-        left: 12px;
-        background: var(--accent);
-        color: white;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 700;
-    }
-
-    .deal-savings {
-        position: absolute;
-        bottom: 12px;
-        right: 12px;
-        background: var(--success);
-        color: white;
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-
-    .deal-body { padding: 20px; }
-
-    .deal-category {
-        color: var(--primary);
-        font-size: 0.7rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        margin-bottom: 4px;
-    }
-
-    .deal-name {
-        font-weight: 600;
-        color: var(--foreground);
-        margin-bottom: 8px;
-        font-size: 1rem;
-    }
-
-    .deal-pricing {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 12px;
-    }
-
-    .deal-current-price {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: var(--accent);
-    }
-
-    .deal-original-price {
-        font-size: 0.9rem;
-        color: var(--muted-foreground);
-        text-decoration: line-through;
-    }
-
-    .deal-rating {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        margin-bottom: 12px;
-    }
-
-    .stars { color: #FCD34D; font-size: 0.9rem; }
-    .rating-count { color: var(--muted-foreground); font-size: 0.8rem; }
-
-    .btn-shop {
-        width: 100%;
-        padding: 12px;
-        background: var(--primary);
-        color: white;
-        border: none;
-        border-radius: var(--radius-sm);
-        font-family: 'Poppins', sans-serif;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-    }
-
-    .btn-shop:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,128,128,0.25); }
-
-    /* Campaign Banner */
+    /* ===== Campaign Banner ===== */
     .campaign-banner {
-        background: linear-gradient(135deg, #1F2937 0%, #374151 100%);
-        border-radius: 20px;
-        padding: 40px;
-        color: white;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        border-radius: var(--radius-lg);
+        padding: 44px;
+        color: #fff;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 40px;
+        gap: 36px;
         margin-bottom: 40px;
         position: relative;
         overflow: hidden;
@@ -342,78 +272,330 @@
     .campaign-banner::before {
         content: '';
         position: absolute;
-        top: -50%;
-        right: -10%;
-        width: 300px;
-        height: 300px;
-        background: rgba(255,107,53,0.1);
+        top: -60%;
+        right: -5%;
+        width: 280px;
+        height: 280px;
+        background: rgba(255, 107, 53, 0.08);
         border-radius: 50%;
+        pointer-events: none;
     }
 
-    .campaign-content { position: relative; z-index: 1; flex: 1; }
-    .campaign-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; margin-bottom: 8px; }
-    .campaign-title { font-size: 2rem; font-weight: 800; margin-bottom: 12px; }
-    .campaign-desc { opacity: 0.9; margin-bottom: 20px; max-width: 500px; }
+    .campaign-content {
+        position: relative;
+        z-index: 1;
+        flex: 1;
+    }
+
+    .campaign-label {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        opacity: 0.7;
+        margin-bottom: 10px;
+    }
+
+    .campaign-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        letter-spacing: -0.5px;
+        line-height: 1.3;
+    }
+
+    .campaign-desc {
+        font-size: 0.95rem;
+        opacity: 0.85;
+        margin-bottom: 22px;
+        max-width: 480px;
+        line-height: 1.6;
+    }
 
     .campaign-cta {
         display: inline-flex;
         align-items: center;
-        gap: 10px;
-        padding: 14px 28px;
+        gap: 8px;
+        padding: 12px 24px;
         background: var(--primary);
-        color: white;
+        color: #fff;
         border-radius: var(--radius-sm);
         text-decoration: none;
-        font-family: 'Poppins', sans-serif;
+        font-family: 'Inter', sans-serif;
         font-weight: 600;
-        transition: all 0.3s;
+        font-size: 0.9rem;
+        transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .campaign-cta:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,128,128,0.25); color: white; }
+    .campaign-cta:hover {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(0, 128, 128, 0.3);
+        color: #fff;
+    }
 
     .campaign-image {
-        font-size: 6rem;
+        font-size: 5rem;
         position: relative;
         z-index: 1;
+        opacity: 0.9;
     }
 
-    /* Empty State */
+    /* ===== Deal Cards ===== */
+    .deals-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 20px;
+    }
+
+    .deal-card {
+        background: var(--card);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        overflow: hidden;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .deal-card:hover {
+        border-color: rgba(0, 128, 128, 0.3);
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-2px);
+    }
+
+    .deal-image {
+        height: 170px;
+        background: var(--muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3.5rem;
+        position: relative;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .deal-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: var(--accent);
+        color: #fff;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+    }
+
+    .deal-savings {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: var(--success);
+        color: #fff;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    .deal-body {
+        padding: 18px;
+    }
+
+    .deal-category {
+        font-family: 'Inter', sans-serif;
+        color: var(--primary);
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+
+    .deal-name {
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        color: var(--foreground);
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+
+    .deal-pricing {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .deal-current-price {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--accent);
+        letter-spacing: -0.3px;
+    }
+
+    .deal-original-price {
+        font-size: 0.85rem;
+        color: var(--muted-foreground);
+        text-decoration: line-through;
+    }
+
+    .deal-rating {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 14px;
+    }
+
+    .stars {
+        color: #FBBF24;
+        font-size: 0.85rem;
+        letter-spacing: 1px;
+    }
+
+    .rating-count {
+        color: var(--muted-foreground);
+        font-size: 0.78rem;
+    }
+
+    .btn-shop {
+        width: 100%;
+        padding: 10px 16px;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        font-size: 0.88rem;
+        cursor: pointer;
+        transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .btn-shop:hover {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 128, 128, 0.2);
+    }
+
+    /* ===== Empty State ===== */
     .empty-state {
         text-align: center;
-        padding: 60px 20px;
+        padding: 56px 20px;
         color: var(--muted-foreground);
     }
 
-    .empty-state-icon { font-size: 4rem; margin-bottom: 16px; opacity: 0.5; }
-    .empty-state-text { font-size: 1.1rem; }
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 12px;
+        opacity: 0.4;
+    }
 
-    /* Responsive */
+    .empty-state-text {
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    /* ===== Responsive ===== */
     @@media (max-width: 992px) {
-        .hero-banner { padding: 32px; }
-        .hero-title { font-size: 2rem; }
-        .campaign-banner { flex-direction: column; text-align: center; padding: 32px; }
-        .campaign-image { font-size: 4rem; }
-        .campaign-desc { max-width: none; }
+        .hero-banner {
+            padding: 36px 28px;
+        }
+
+        .hero-title {
+            font-size: 1.85rem;
+        }
+
+        .campaign-banner {
+            flex-direction: column;
+            text-align: center;
+            padding: 32px;
+        }
+
+        .campaign-image {
+            font-size: 4rem;
+        }
+
+        .campaign-desc {
+            max-width: none;
+        }
     }
 
     @@media (max-width: 768px) {
-        .hero-banner { padding: 24px; }
-        .hero-title { font-size: 1.6rem; }
-        .hero-subtitle { font-size: 1rem; }
-        .countdown-container { padding: 12px 20px; gap: 12px; }
-        .countdown-item { min-width: 50px; }
-        .countdown-value { font-size: 1.8rem; }
-        .hero-banner::after { display: none; }
-        .promo-codes-grid { grid-template-columns: 1fr; }
-        .deals-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
-        .deal-image { height: 140px; font-size: 2.5rem; }
+        .hero-banner {
+            padding: 28px 20px;
+        }
+
+        .hero-title {
+            font-size: 1.5rem;
+        }
+
+        .hero-subtitle {
+            font-size: 0.92rem;
+        }
+
+        .countdown-container {
+            padding: 12px 18px;
+            gap: 8px;
+        }
+
+        .countdown-item {
+            min-width: 48px;
+        }
+
+        .countdown-value {
+            font-size: 1.6rem;
+        }
+
+        .promo-codes-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .deals-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .deal-image {
+            height: 130px;
+            font-size: 2.5rem;
+        }
+
+        .deal-body {
+            padding: 14px;
+        }
     }
 
     @@media (max-width: 576px) {
-        .countdown-container { flex-wrap: wrap; justify-content: center; }
-        .countdown-separator { display: none; }
-        .campaign-title { font-size: 1.5rem; }
-        .section-title { font-size: 1.2rem; }
+        .countdown-container {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .countdown-separator {
+            display: none;
+        }
+
+        .campaign-title {
+            font-size: 1.35rem;
+        }
+
+        .section-title {
+            font-size: 1.15rem;
+        }
+
+        .deals-grid {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 
@@ -421,8 +603,8 @@
     <!-- Hero Banner with Countdown -->
     <section class="hero-banner animate-fade-in">
         <div class="hero-content">
-            <h1 class="hero-title">🔥 Flash Sale!</h1>
-            <p class="hero-subtitle">Massive discounts on computer accessories - Up to 70% OFF!</p>
+            <h1 class="hero-title">Flash Sale</h1>
+            <p class="hero-subtitle">Massive discounts on computer accessories -- Up to 70% OFF</p>
             <div class="countdown-container">
                 <div class="countdown-item">
                     <div class="countdown-value" id="countdownDays">00</div>
@@ -450,12 +632,12 @@
     <!-- Promo Codes Section -->
     <section class="section animate-fade-in" style="animation-delay: 0.1s">
         <div class="section-header">
-            <h2 class="section-title">🏷️ Promo Codes</h2>
-            <span style="color: var(--muted-foreground); font-size: 0.9rem;">Click to copy</span>
+            <h2 class="section-title">Promo Codes</h2>
+            <span style="color: var(--muted-foreground); font-size: 0.85rem; font-weight: 500;">Click to copy</span>
         </div>
         <div class="promo-codes-grid" id="promoCodesGrid">
             <div class="empty-state" style="grid-column: 1 / -1;">
-                <div class="empty-state-icon">🔄</div>
+                <div class="empty-state-icon">...</div>
                 <p class="empty-state-text">Loading promo codes...</p>
             </div>
         </div>
@@ -472,13 +654,13 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </a>
         </div>
-        <div class="campaign-image" id="campaignEmoji">🎮</div>
+        <div class="campaign-image" id="campaignEmoji">&#127918;</div>
     </section>
 
     <!-- Hot Deals Section -->
     <section class="section animate-fade-in" style="animation-delay: 0.3s">
         <div class="section-header">
-            <h2 class="section-title">💥 Hot Deals</h2>
+            <h2 class="section-title">Hot Deals</h2>
             <a href="/CustomerPortal/Products?onSale=true" class="view-all-link">
                 View All
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -486,7 +668,7 @@
         </div>
         <div class="deals-grid" id="dealsGrid">
             <div class="empty-state" style="grid-column: 1 / -1;">
-                <div class="empty-state-icon">🔄</div>
+                <div class="empty-state-icon">...</div>
                 <p class="empty-state-text">Loading deals...</p>
             </div>
         </div>
@@ -580,8 +762,8 @@
         const grid = document.getElementById('promoCodesGrid');
 
         grid.innerHTML = promotions.slice(0, 4).map((promo, i) => {
-            const discountText = promo.discountType === 'Percentage' 
-                ? `${promo.discountValue}% OFF` 
+            const discountText = promo.discountType === 'Percentage'
+                ? `${promo.discountValue}% OFF`
                 : `₱${promo.discountValue} OFF`;
 
             const endDate = promo.endDate ? new Date(promo.endDate).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' }) : 'Limited time';

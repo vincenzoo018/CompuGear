@@ -186,6 +186,7 @@ function initDarkMode() {
     // Restore dark mode preference
     const isDarkMode = localStorage.getItem('darkMode') === 'true';
     if (isDarkMode) {
+        document.documentElement.classList.add('dark-mode');
         document.body.classList.add('dark-mode');
         updateDarkModeIcon(true);
     }
@@ -197,6 +198,7 @@ function initDarkMode() {
 
 function toggleDarkMode() {
     const isDark = document.body.classList.toggle('dark-mode');
+    document.documentElement.classList.toggle('dark-mode', isDark);
     localStorage.setItem('darkMode', isDark);
     updateDarkModeIcon(isDark);
     
@@ -249,13 +251,15 @@ async function loadNotifications() {
         const response = await fetch('/api/products');
         if (!response.ok) return;
         
-        const products = await response.json();
+        const result = await response.json();
+        const products = Array.isArray(result) ? result : (Array.isArray(result?.data) ? result.data : []);
         
         // Get low stock products (threshold 15)
         const lowStockProducts = products.filter(p => p.stockQuantity <= LOW_STOCK_THRESHOLD);
-        
+
         const previousCount = notifications.length;
-        
+        const readMap = new Map((notifications || []).map(n => [n.productId, !!n.read]));
+
         notifications = lowStockProducts.map(p => ({
             id: p.productId,
             productId: p.productId,
@@ -266,7 +270,7 @@ async function loadNotifications() {
             stockQuantity: p.stockQuantity,
             sku: p.sku || 'N/A',
             time: 'Just now',
-            read: false
+            read: readMap.get(p.productId) === true
         }));
         
         // Play sound if new notifications
@@ -305,11 +309,11 @@ function updateNotificationUI() {
     
     if (!badge || !list) return;
     
-    const unreadCount = notifications.filter(n => !n.read).length;
+    const notificationCount = notifications.length;
     
     // Update badge with animation
-    if (unreadCount > 0) {
-        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+    if (notificationCount > 0) {
+        badge.textContent = notificationCount > 99 ? '99+' : notificationCount;
         badge.style.display = 'flex';
         badge.classList.add('pulse');
         setTimeout(() => badge.classList.remove('pulse'), 1000);

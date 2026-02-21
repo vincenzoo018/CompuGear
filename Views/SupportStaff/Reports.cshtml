@@ -14,6 +14,7 @@
             <button class="btn btn-outline-primary active" data-period="week">This Week</button>
             <button class="btn btn-outline-primary" data-period="month">This Month</button>
             <button class="btn btn-outline-primary" data-period="year">This Year</button>
+            <button class="btn btn-primary" id="btnGenerateReport">Generate Report</button>
         </div>
     </div>
 
@@ -136,8 +137,12 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
     <script>
         let ticketTrendChart, categoryChart, priorityChart, resolutionTimeChart;
+        let currentPeriod = 'week';
+        let currentFilteredTickets = [];
 
         document.addEventListener('DOMContentLoaded', function () {
             loadReports('week');
@@ -149,10 +154,13 @@
                     loadReports(this.dataset.period);
                 });
             });
+
+            document.getElementById('btnGenerateReport')?.addEventListener('click', generateSupportReport);
         });
 
         async function loadReports(period) {
             try {
+                currentPeriod = period;
                 const res = await fetch('/api/tickets');
                 let tickets = [];
                 if (res.ok) {
@@ -167,6 +175,7 @@
                 else startDate = new Date(now.getFullYear(), now.getMonth(), 1);
 
                 const filtered = tickets.filter(t => new Date(t.createdAt) >= startDate);
+                currentFilteredTickets = filtered;
 
                 // Summary Cards
                 document.getElementById('totalTickets').textContent = filtered.length;
@@ -194,6 +203,57 @@
             } catch (err) {
                 console.error('Failed to load reports:', err);
             }
+        }
+
+        function generateSupportReport() {
+            const jsPDFRef = window.jspdf;
+            if (!jsPDFRef || !jsPDFRef.jsPDF) {
+                alert('Report library failed to load. Please refresh and try again.');
+                return;
+            }
+
+            const doc = new jsPDFRef.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+            const now = new Date();
+
+            doc.setFontSize(16);
+            doc.text('Support Performance Report', 40, 40);
+            doc.setFontSize(10);
+            doc.text(`Period: ${currentPeriod.toUpperCase()}`, 40, 58);
+            doc.text(`Generated: ${now.toLocaleString()}`, 40, 72);
+
+            const resolved = currentFilteredTickets.filter(t => t.status === 'Resolved' || t.status === 'Closed').length;
+            const avgResolution = (() => {
+                const resolvedTickets = currentFilteredTickets.filter(t => (t.status === 'Resolved' || t.status === 'Closed') && t.resolvedAt);
+                if (!resolvedTickets.length) return 0;
+                const totalMs = resolvedTickets.reduce((sum, t) => sum + (new Date(t.resolvedAt) - new Date(t.createdAt)), 0);
+                return Math.round(totalMs / resolvedTickets.length / 3600000);
+            })();
+
+            doc.setFontSize(11);
+            doc.text(`Total Tickets: ${currentFilteredTickets.length}`, 40, 98);
+            doc.text(`Resolved Tickets: ${resolved}`, 220, 98);
+            doc.text(`Avg. Resolution: ${avgResolution}h`, 420, 98);
+
+            const rows = currentFilteredTickets.map(t => [
+                t.ticketNumber || `T-${t.ticketId}`,
+                t.subject || '-',
+                t.customerName || t.contactName || '-',
+                t.status || '-',
+                t.priority || '-',
+                t.categoryName || t.category || '-',
+                t.createdAt ? new Date(t.createdAt).toLocaleDateString() : '-',
+                t.resolvedAt ? new Date(t.resolvedAt).toLocaleDateString() : '-'
+            ]);
+
+            doc.autoTable({
+                startY: 112,
+                head: [['Ticket #', 'Subject', 'Customer', 'Status', 'Priority', 'Category', 'Created', 'Resolved']],
+                body: rows.length ? rows : [['-', 'No tickets found for this period', '-', '-', '-', '-', '-', '-']],
+                styles: { fontSize: 9, cellPadding: 4 }
+            });
+
+            const fileDate = now.toISOString().slice(0, 10);
+            doc.save(`support-report-${currentPeriod}-${fileDate}.pdf`);
         }
 
         function renderTicketTrend(tickets, period) {

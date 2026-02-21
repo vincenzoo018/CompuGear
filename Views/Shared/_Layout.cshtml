@@ -4,6 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - CompuGear CRM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <style id="sidebar-preload-style">
@@ -27,7 +30,7 @@
             <div class="sidebar-header">
                 <a href="/" class="sidebar-brand">
                     <div class="sidebar-brand-icon">
-                        <img src="/images/compugear.png" alt="CG" onerror="this.onerror=null; this.parentElement.innerHTML='<svg viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' style=\'width:24px;height:24px;color:#008080\'><rect x=\'2\' y=\'3\' width=\'20\' height=\'14\' rx=\'2\' ry=\'2\'/><line x1=\'8\' y1=\'21\' x2=\'16\' y2=\'21\'/><line x1=\'12\' y1=\'17\' x2=\'12\' y2=\'21\'/></svg>';">
+                        <img src="/images/compugearlogo.png" alt="CG" style="height: 32px; width: auto;" onerror="this.onerror=null; this.parentElement.innerHTML='<svg viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' style=\'width:24px;height:24px;color:#008080\'><rect x=\'2\' y=\'3\' width=\'20\' height=\'14\' rx=\'2\' ry=\'2\'/><line x1=\'8\' y1=\'21\' x2=\'16\' y2=\'21\'/><line x1=\'12\' y1=\'17\' x2=\'12\' y2=\'21\'/></svg>';">
                     </div>
                     <div class="sidebar-brand-text">
                         <span class="sidebar-brand-name">CompuGear</span>
@@ -532,8 +535,8 @@
                 loadGlobalNotifications();
             }
             
-            // Refresh every 60 seconds
-            setInterval(loadGlobalNotifications, 60000);
+            // Refresh every 15 seconds for near real-time updates
+            setInterval(loadGlobalNotifications, 15000);
             
             // markAllRead function
             window.markAllRead = function() {
