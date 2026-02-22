@@ -244,6 +244,7 @@ namespace CompuGear.Models
 
         [Required]
         [StringLength(50)]
+        [Column("PaymentMethod")]
         public string PaymentMethodType { get; set; } = string.Empty;
 
         // Status

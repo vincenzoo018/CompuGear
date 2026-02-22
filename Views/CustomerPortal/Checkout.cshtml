@@ -279,29 +279,6 @@
         border-radius: var(--radius-sm, 8px);
     }
 
-    .loading-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255,255,255,0.95);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-    }
-
-    .loading-overlay.active { display: flex; }
-
-    .loading-content { text-align: center; }
-    .loading-spinner { font-size: 4rem; animation: spin 1s linear infinite; }
-
-    @@keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-
     .back-link {
         display: inline-flex;
         align-items: center;
@@ -499,14 +476,73 @@
     </div>
 </div>
 
-<!-- Loading Overlay -->
-<div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-content">
-        <div class="loading-spinner">⏳</div>
-        <h3 style="margin-top: 20px; color: var(--foreground, #111827);">Processing your order...</h3>
-        <p style="color: var(--muted-foreground, #6B7280);">Please wait while we redirect you to payment</p>
+<!-- Payment Result Overlay -->
+<div class="result-overlay" id="resultOverlay">
+    <div class="result-card" id="resultCard">
+        <!-- Dynamically filled -->
     </div>
 </div>
+
+<style>
+    .result-overlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.55);
+        display: none; align-items: center; justify-content: center;
+        z-index: 10000; backdrop-filter: blur(6px);
+    }
+    .result-overlay.active { display: flex; }
+
+    .result-card {
+        background: #fff; border-radius: 24px; padding: 52px 44px;
+        max-width: 480px; width: 92%; text-align: center;
+        box-shadow: 0 24px 64px rgba(0,0,0,0.22);
+        animation: resultPop 0.4s cubic-bezier(.2,1,.3,1);
+    }
+    @@keyframes resultPop { from { transform: scale(0.8) translateY(30px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+
+    .result-icon {
+        width: 90px; height: 90px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 24px;
+    }
+    .result-icon.success { background: rgba(16,185,129,0.12); }
+    .result-icon.error   { background: rgba(239,68,68,0.12); }
+
+    .result-card h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 10px; }
+    .result-card h2.success-title { color: #059669; }
+    .result-card h2.error-title   { color: #dc2626; }
+
+    .result-card .result-msg { color: #6b7280; font-size: 0.95rem; line-height: 1.65; margin-bottom: 24px; }
+
+    .result-details {
+        background: #f9fafb; border-radius: 14px; padding: 18px 22px;
+        text-align: left; margin-bottom: 28px;
+    }
+    .result-details .detail-row {
+        display: flex; justify-content: space-between;
+        padding: 7px 0; font-size: 0.9rem; border-bottom: 1px solid #f0f0f0;
+    }
+    .result-details .detail-row:last-child { border-bottom: none; }
+    .result-details .detail-label { color: #9ca3af; }
+    .result-details .detail-value { font-weight: 600; color: #1f2937; }
+
+    .result-btn {
+        display: inline-block; padding: 14px 44px;
+        border: none; border-radius: 12px;
+        font-weight: 700; font-size: 1rem; cursor: pointer;
+        font-family: 'Inter', sans-serif; transition: all 0.25s;
+    }
+    .result-btn-primary {
+        background: linear-gradient(135deg, #008080, #006666);
+        color: #fff; box-shadow: 0 4px 16px rgba(0,128,128,0.25);
+    }
+    .result-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,128,128,0.35); }
+    .result-btn-secondary {
+        background: #fff; color: #6b7280; border: 2px solid #e5e7eb;
+        margin-right: 12px;
+    }
+    .result-btn-secondary:hover { background: #f9fafb; }
+</style>
 
 @section Scripts {
 <script>
@@ -706,9 +742,11 @@
     }
 
     async function executeOrder(firstName, lastName, email, phone, address, city, province, zipCode) {
-        // Show loading
-        document.getElementById('loadingOverlay').classList.add('active');
-        document.getElementById('placeOrderBtn').disabled = true;
+        // Show processing state on button
+        const btn = document.getElementById('placeOrderBtn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Processing...';
 
         try {
             // Step 1: Create the order in the database
@@ -739,7 +777,7 @@
                 throw new Error(orderResult.message || 'Failed to create order');
             }
 
-            // Step 2: Process payment with PayMongo
+            // Step 2: Process payment (PayMongo — no redirect)
             const paymentData = {
                 orderId: orderResult.data.orderId,
                 paymentMethod: selectedPayment,
@@ -756,59 +794,94 @@
 
             const paymentResult = await paymentResponse.json();
 
-            if (paymentResult.success) {
-                // Clear cart and checkout data
-                localStorage.removeItem('cart');
-                localStorage.removeItem('checkoutData');
+            // Clear cart regardless
+            localStorage.removeItem('cart');
+            localStorage.removeItem('checkoutData');
 
-                if (paymentResult.checkoutUrl) {
-                    // Redirect to PayMongo payment page (GCash, GrabPay, etc.)
-                    showToast('✅ Order created! Redirecting to payment...', '#10b981');
-                    setTimeout(() => {
-                        window.location.href = paymentResult.checkoutUrl;
-                    }, 1500);
-                } else if (paymentResult.status === 'succeeded') {
-                    // Payment already succeeded (card)
-                    showSuccessAndRedirect(orderResult.data.orderNumber);
-                } else {
-                    // Fallback - redirect to orders
-                    showSuccessAndRedirect(orderResult.data.orderNumber);
-                }
+            if (paymentResult.success) {
+                showResultCard('success', {
+                    orderNumber: paymentResult.orderNumber || orderResult.data.orderNumber,
+                    total: paymentResult.totalAmount || checkoutData.total,
+                    paymentRef: paymentResult.paymentIntentId || '-'
+                });
             } else {
-                // Payment failed but order was created - still redirect to orders
-                localStorage.removeItem('cart');
-                localStorage.removeItem('checkoutData');
-                showToast('⚠️ Order created but payment pending. You can pay later from your orders.', '#f59e0b');
-                setTimeout(() => {
-                    window.location.href = `/CustomerPortal/Orders?orderId=${orderResult.data.orderId}`;
-                }, 3000);
+                showResultCard('error', {
+                    orderNumber: orderResult.data.orderNumber,
+                    message: paymentResult.detail || paymentResult.message || 'Payment could not be completed.'
+                });
             }
         } catch (error) {
             console.error('Error:', error);
-            showToast(error.message || 'An error occurred', '#ef4444');
-            document.getElementById('loadingOverlay').classList.remove('active');
-            document.getElementById('placeOrderBtn').disabled = false;
+            showResultCard('error', {
+                orderNumber: null,
+                message: error.message || 'An unexpected error occurred. Please try again.'
+            });
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     }
 
-    function showSuccessAndRedirect(orderNumber) {
-        document.getElementById('loadingOverlay').classList.remove('active');
+    function showResultCard(type, data) {
+        const overlay = document.getElementById('resultOverlay');
+        const card = document.getElementById('resultCard');
 
-        // Show success overlay
-        const overlay = document.createElement('div');
-        overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(4px);';
-        overlay.innerHTML = `
-            <div style="background: white; border-radius: 20px; padding: 50px; max-width: 450px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: scaleIn 0.3s ease;">
-                <div style="font-size: 5rem; margin-bottom: 16px;">🎉</div>
-                <h2 style="font-size: 1.8rem; font-weight: 800; color: #1f2937; margin-bottom: 8px;">Order Placed!</h2>
-                <p style="color: #6b7280; margin-bottom: 8px;">Your order <strong>#${orderNumber}</strong> has been placed successfully!</p>
-                <p style="color: #10b981; font-weight: 600; margin-bottom: 24px;">Payment received ✓</p>
-                <button onclick="window.location.href='/CustomerPortal/Orders'"
-                    style="padding: 14px 32px; background: linear-gradient(135deg, #008080, #006666); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(0,128,128,0.3);">
-                    📦 View My Orders
-                </button>
-            </div>`;
-        document.body.appendChild(overlay);
+        if (type === 'success') {
+            card.innerHTML = `
+                <div class="result-icon success">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="8 12 11 15 16 9"/>
+                    </svg>
+                </div>
+                <h2 class="success-title">Payment Successful!</h2>
+                <p class="result-msg">Your order has been placed and payment confirmed. Thank you for shopping with CompuGear!</p>
+                <div class="result-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Order Number</span>
+                        <span class="detail-value">${data.orderNumber || '-'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Total Paid</span>
+                        <span class="detail-value">₱${Number(data.total).toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Payment Ref</span>
+                        <span class="detail-value" style="font-size:0.82rem;">${data.paymentRef ? data.paymentRef.substring(0, 20) + '...' : '-'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Status</span>
+                        <span class="detail-value" style="color:#10B981;">✓ Confirmed</span>
+                    </div>
+                </div>
+                <div>
+                    <button class="result-btn result-btn-primary" onclick="window.location.href='/CustomerPortal/Orders'">
+                        📦 View My Orders
+                    </button>
+                </div>`;
+        } else {
+            card.innerHTML = `
+                <div class="result-icon error">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
+                    </svg>
+                </div>
+                <h2 class="error-title">Payment Unsuccessful</h2>
+                <p class="result-msg">${data.message || 'Something went wrong while processing your payment.'}</p>
+                ${data.orderNumber ? `<p style="color:#9ca3af;font-size:0.88rem;margin-bottom:24px;">Order <strong>${data.orderNumber}</strong> was created. You can retry payment from your orders page.</p>` : ''}
+                <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                    <button class="result-btn result-btn-secondary" onclick="document.getElementById('resultOverlay').classList.remove('active')">
+                        Try Again
+                    </button>
+                    <button class="result-btn result-btn-primary" onclick="window.location.href='/CustomerPortal/Orders'">
+                        📦 Go to Orders
+                    </button>
+                </div>`;
+        }
+
+        overlay.classList.add('active');
     }
 
     function showToast(message, color) {
