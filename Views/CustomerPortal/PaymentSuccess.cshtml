@@ -1,0 +1,324 @@
+@{
+    ViewData["Title"] = "Payment Successful";
+    Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+}
+
+<style>
+    .success-page {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+    }
+    
+    .success-card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.1);
+        padding: 60px;
+        max-width: 550px;
+        width: 100%;
+        text-align: center;
+        animation: slideUp 0.6s ease-out;
+    }
+    
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(40px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .success-icon {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 30px;
+        animation: scaleIn 0.5s ease-out 0.3s both, pulse 2s ease-in-out 1s infinite;
+    }
+    
+    @@keyframes scaleIn {
+        from { transform: scale(0); }
+        to { transform: scale(1); }
+    }
+    
+    @@keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    .success-icon svg {
+        width: 60px;
+        height: 60px;
+        color: white;
+    }
+    
+    .success-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #1f2937;
+        margin-bottom: 15px;
+    }
+    
+    .success-subtitle {
+        font-size: 1.1rem;
+        color: #6b7280;
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+    
+    .order-info {
+        background: #f9fafb;
+        border-radius: 16px;
+        padding: 25px;
+        margin-bottom: 30px;
+        border: 1px solid #e5e7eb;
+    }
+    
+    .order-info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .order-info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .order-info-label {
+        color: #6b7280;
+        font-size: 0.95rem;
+    }
+    
+    .order-info-value {
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    .order-info-value.amount {
+        color: #0d9488;
+        font-size: 1.2rem;
+    }
+    
+    .countdown-text {
+        font-size: 0.95rem;
+        color: #9ca3af;
+        margin-bottom: 25px;
+    }
+    
+    .countdown-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        background: #0d9488;
+        color: white;
+        border-radius: 50%;
+        font-weight: 700;
+        margin: 0 5px;
+    }
+    
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .btn-view-orders {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 16px 32px;
+        background: linear-gradient(135deg, #0d9488, #0f766e);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s;
+        box-shadow: 0 8px 25px rgba(13, 148, 136, 0.3);
+    }
+    
+    .btn-view-orders:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(13, 148, 136, 0.4);
+        color: white;
+    }
+    
+    .btn-continue-shopping {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 14px 28px;
+        background: white;
+        color: #374151;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    
+    .btn-continue-shopping:hover {
+        border-color: #0d9488;
+        color: #0d9488;
+    }
+    
+    .confetti {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: 1;
+    }
+    
+    .confetti-piece {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: #0d9488;
+        animation: confetti-fall 3s ease-out forwards;
+    }
+    
+    @@keyframes confetti-fall {
+        0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+    
+    @@media (max-width: 576px) {
+        .success-card { padding: 40px 25px; }
+        .success-title { font-size: 1.5rem; }
+        .success-icon { width: 90px; height: 90px; }
+        .success-icon svg { width: 45px; height: 45px; }
+    }
+</style>
+
+<div class="success-page">
+    <div class="confetti" id="confetti"></div>
+    
+    <div class="success-card">
+        <div class="success-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+            </svg>
+        </div>
+        
+        <h1 class="success-title">Thank You for Your Purchase!</h1>
+        <p class="success-subtitle">
+            Your order has been placed successfully. We've sent a confirmation email with your order details.
+        </p>
+        
+        <div class="order-info" id="orderInfo">
+            <div class="order-info-row">
+                <span class="order-info-label">Order Number</span>
+                <span class="order-info-value" id="orderNumber">Loading...</span>
+            </div>
+            <div class="order-info-row">
+                <span class="order-info-label">Payment Status</span>
+                <span class="order-info-value" style="color: #10b981;">✓ Paid</span>
+            </div>
+            <div class="order-info-row">
+                <span class="order-info-label">Total Amount</span>
+                <span class="order-info-value amount" id="orderAmount">₱0.00</span>
+            </div>
+        </div>
+        
+        <div class="countdown-text">
+            Redirecting to home in <span class="countdown-number" id="countdown">10</span> seconds
+        </div>
+        
+        <div class="action-buttons">
+            <a href="/CustomerPortal/Orders" class="btn-view-orders">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                View My Orders
+            </a>
+            <a href="/CustomerPortal/Products" class="btn-continue-shopping">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Continue Shopping
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let countdown = 10;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        loadOrderDetails();
+        createConfetti();
+        startCountdown();
+    });
+    
+    function loadOrderDetails() {
+        // Get order details from URL params or session
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('orderId');
+        const orderNumber = urlParams.get('orderNumber') || 'ORD-' + (orderId || '0000');
+        const amount = urlParams.get('amount') || localStorage.getItem('lastOrderAmount') || '0';
+        
+        document.getElementById('orderNumber').textContent = orderNumber;
+        document.getElementById('orderAmount').textContent = '₱' + parseFloat(amount).toLocaleString('en-PH', {minimumFractionDigits: 2});
+        
+        // Clear cart data
+        localStorage.removeItem('cart');
+        localStorage.removeItem('checkoutData');
+        localStorage.removeItem('lastOrderAmount');
+        
+        // Dispatch cart update event
+        window.dispatchEvent(new Event('cartUpdated'));
+    }
+    
+    function startCountdown() {
+        const countdownEl = document.getElementById('countdown');
+        
+        const interval = setInterval(() => {
+            countdown--;
+            countdownEl.textContent = countdown;
+            
+            if (countdown <= 0) {
+                clearInterval(interval);
+                window.location.href = '/CustomerPortal/Index';
+            }
+        }, 1000);
+    }
+    
+    function createConfetti() {
+        const container = document.getElementById('confetti');
+        const colors = ['#0d9488', '#10b981', '#fbbf24', '#f472b6', '#818cf8', '#34d399'];
+        
+        for (let i = 0; i < 50; i++) {
+            const piece = document.createElement('div');
+            piece.className = 'confetti-piece';
+            piece.style.left = Math.random() * 100 + '%';
+            piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+            piece.style.animationDelay = Math.random() * 2 + 's';
+            piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+            piece.style.transform = 'rotate(' + Math.random() * 360 + 'deg)';
+            
+            if (Math.random() > 0.5) {
+                piece.style.borderRadius = '50%';
+            }
+            
+            container.appendChild(piece);
+        }
+    }
+</script>
+}

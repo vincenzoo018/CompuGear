@@ -622,15 +622,33 @@
             
             const paymentResult = await paymentResponse.json();
             
-            if (paymentResult.success && paymentResult.checkoutUrl) {
+            if (paymentResult.success) {
+                const orderNumber = paymentResult.orderNumber || orderResult.data?.orderNumber || 'ORD-' + orderResult.data?.orderId;
+                const amount = paymentResult.totalAmount || checkoutData.total;
+
+                localStorage.setItem('lastOrderAmount', amount);
+                localStorage.setItem('lastOrderNumber', orderNumber);
+                localStorage.setItem('lastOrderId', orderResult.data?.orderId || '');
+
                 // Clear cart and checkout data
                 localStorage.removeItem('cart');
                 localStorage.removeItem('checkoutData');
-                
-                // Redirect to PayMongo checkout
-                window.location.href = paymentResult.checkoutUrl;
+
+                if (paymentResult.checkoutUrl) {
+                    // Redirect to PayMongo checkout if provided
+                    window.location.href = paymentResult.checkoutUrl;
+                    return;
+                }
+
+                const successUrl = `/CustomerPortal/PaymentSuccess?orderId=${encodeURIComponent(orderResult.data?.orderId || '')}`
+                    + `&orderNumber=${encodeURIComponent(orderNumber)}`
+                    + `&amount=${encodeURIComponent(amount)}`;
+                window.location.href = successUrl;
             } else {
-                throw new Error(paymentResult.message || 'Payment processing failed');
+                const errorCode = paymentResult.errorCode || 'PAYMENT_FAILED';
+                const errorMessage = paymentResult.message || 'Payment processing failed.';
+                const failedUrl = `/CustomerPortal/PaymentFailed?error=${encodeURIComponent(errorCode)}&message=${encodeURIComponent(errorMessage)}`;
+                window.location.href = failedUrl;
             }
         } catch (error) {
             console.error('Error:', error);

@@ -131,6 +131,25 @@ namespace CompuGear.Controllers
             return View();
         }
 
+        // Payment Success - Thank you page
+        public IActionResult PaymentSuccess(string? orderId, string? orderNumber, decimal? amount)
+        {
+            ViewData["Title"] = "Payment Successful";
+            ViewData["OrderId"] = orderId;
+            ViewData["OrderNumber"] = orderNumber ?? "ORD-" + DateTime.Now.ToString("yyyyMMddHHmmss");
+            ViewData["Amount"] = amount ?? 0;
+            return View();
+        }
+
+        // Payment Failed page
+        public IActionResult PaymentFailed(string? errorCode, string? errorMessage)
+        {
+            ViewData["Title"] = "Payment Failed";
+            ViewData["ErrorCode"] = errorCode ?? "UNKNOWN";
+            ViewData["ErrorMessage"] = errorMessage ?? "An error occurred during payment processing.";
+            return View();
+        }
+
         // Wishlist
         public IActionResult Wishlist()
         {
