@@ -5,29 +5,42 @@
 
 <style>
     .ticket-form-card {
-        background: white;
-        border-radius: 20px;
+        background: var(--card);
+        border-radius: var(--radius);
         padding: 40px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
     }
 
     .form-label {
         font-weight: 600;
-        color: #374151;
+        color: var(--foreground);
         margin-bottom: 8px;
+        font-family: 'Inter', -apple-system, sans-serif;
     }
 
     .form-control, .form-select {
-        border: 2px solid #e5e7eb;
-        border-radius: 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
         padding: 12px 16px;
+        font-family: 'Inter', -apple-system, sans-serif;
         font-size: 0.95rem;
-        transition: all 0.3s;
+        transition: all 0.2s;
+        background: var(--card);
+        color: var(--foreground);
+    }
+
+    .form-control::placeholder, .form-select::placeholder {
+        color: var(--muted-foreground);
+    }
+
+    textarea.form-control {
+        font-family: 'Inter', -apple-system, sans-serif;
     }
 
     .form-control:focus, .form-select:focus {
-        border-color: #008080;
-        box-shadow: 0 0 0 4px rgba(0,128,128,0.1);
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(0,128,128,0.08);
     }
 
     .required-asterisk {
@@ -35,47 +48,50 @@
     }
 
     .file-upload-area {
-        border: 2px dashed #d1d5db;
-        border-radius: 12px;
+        border: 1px dashed var(--border);
+        border-radius: var(--radius-sm);
         padding: 30px;
         text-align: center;
         cursor: pointer;
-        transition: all 0.3s;
-        background: #f9fafb;
+        transition: all 0.2s;
+        background: var(--muted);
     }
 
     .file-upload-area:hover {
-        border-color: #008080;
-        background: #f0fdfa;
+        border-color: var(--primary);
+        background: rgba(0, 128, 128, 0.04);
     }
 
     .file-upload-area.dragover {
-        border-color: #008080;
-        background: #f0fdfa;
+        border-color: var(--primary);
+        background: rgba(0, 128, 128, 0.04);
     }
 
     .ticket-type-card {
-        border: 2px solid #e5e7eb;
-        border-radius: 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
         padding: 20px;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: all 0.2s;
         text-align: center;
+        background: var(--card);
     }
 
     .ticket-type-card:hover {
-        border-color: #008080;
+        border-color: rgba(0,128,128,0.3);
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
     }
 
     .ticket-type-card.selected {
-        border-color: #008080;
-        background: linear-gradient(135deg, #f0fdfa, #e6fffa);
+        border-color: var(--primary);
+        background: rgba(0, 128, 128, 0.05);
     }
 
     .ticket-type-card .icon {
         width: 50px;
         height: 50px;
-        border-radius: 12px;
+        border-radius: var(--radius-sm);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -87,37 +103,40 @@
         display: inline-flex;
         align-items: center;
         padding: 8px 16px;
-        border-radius: 20px;
+        border-radius: var(--radius-sm);
+        font-family: 'Inter', -apple-system, sans-serif;
         font-size: 0.85rem;
         font-weight: 500;
         cursor: pointer;
-        transition: all 0.3s;
-        border: 2px solid transparent;
+        transition: all 0.2s;
+        border: 1px solid transparent;
     }
 
     .priority-badge:hover {
-        transform: scale(1.05);
+        transform: translateY(-1px);
     }
 
     .priority-badge.selected {
-        transform: scale(1.05);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow);
     }
 
     .btn-submit-ticket {
-        background: linear-gradient(135deg, #008080, #006666);
+        background: var(--primary);
         border: none;
         color: white;
         padding: 15px 40px;
-        border-radius: 12px;
+        border-radius: var(--radius-sm);
+        font-family: 'Inter', -apple-system, sans-serif;
         font-weight: 600;
         font-size: 1rem;
-        transition: all 0.3s;
+        transition: all 0.2s;
     }
 
     .btn-submit-ticket:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 30px rgba(0,128,128,0.3);
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
         color: white;
     }
 
@@ -125,20 +144,23 @@
         display: flex;
         align-items: center;
         padding: 15px;
-        border-radius: 12px;
+        border-radius: var(--radius-sm);
         cursor: pointer;
-        transition: all 0.3s;
-        border: 2px solid #e5e7eb;
+        transition: all 0.2s;
+        border: 1px solid var(--border);
         margin-bottom: 10px;
+        background: var(--card);
     }
 
     .order-select-item:hover {
-        border-color: #008080;
+        border-color: rgba(0,128,128,0.3);
+        box-shadow: var(--shadow);
+        transform: translateY(-2px);
     }
 
     .order-select-item.selected {
-        border-color: #008080;
-        background: #f0fdfa;
+        border-color: var(--primary);
+        background: rgba(0, 128, 128, 0.05);
     }
 
     .attached-file {
@@ -146,27 +168,41 @@
         align-items: center;
         gap: 10px;
         padding: 10px 15px;
-        background: #f3f4f6;
-        border-radius: 10px;
+        background: var(--muted);
+        border-radius: var(--radius-sm);
         margin-top: 10px;
+        border: 1px solid var(--border);
+    }
+
+    .portal-card {
+        background: var(--card);
+        border-radius: var(--radius);
+        padding: 25px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .modal-content {
+        border-radius: var(--radius) !important;
+        border: 1px solid var(--border);
     }
 </style>
 
 <!-- Breadcrumb -->
 <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb" style="background: none; padding: 0;">
-        <li class="breadcrumb-item"><a href="/CustomerPortal/Support" style="color: #008080; text-decoration: none;">Support Center</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Submit Ticket</li>
+        <li class="breadcrumb-item"><a href="/CustomerPortal/Support" style="color: var(--primary); text-decoration: none;">Support Center</a></li>
+        <li class="breadcrumb-item active" aria-current="page" style="color: var(--muted-foreground);">Submit Ticket</li>
     </ol>
 </nav>
 
 <div class="row">
     <div class="col-lg-8">
         <div class="ticket-form-card">
-            <h4 style="font-weight: 700; color: #1f2937; margin-bottom: 5px;">
-                🎫 Submit a Support Ticket
+            <h4 style="font-weight: 700; color: var(--foreground); margin-bottom: 5px; font-family: 'Inter', -apple-system, sans-serif;">
+                Submit a Support Ticket
             </h4>
-            <p style="color: #6b7280; margin-bottom: 30px;">Fill in the details below and our team will assist you as soon as possible.</p>
+            <p style="color: var(--muted-foreground); margin-bottom: 30px;">Fill in the details below and our team will assist you as soon as possible.</p>
 
             <form id="ticketForm">
                 <!-- Ticket Type Selection -->
@@ -176,25 +212,25 @@
                         <div class="col-md-3">
                             <div class="ticket-type-card" onclick="selectTicketType(this, 'Order Issue')" data-type="order">
                                 <div class="icon" style="background: #fef3c7;">📦</div>
-                                <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem;">Order Issue</div>
+                                <div style="font-weight: 600; color: var(--foreground); font-size: 0.9rem;">Order Issue</div>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="ticket-type-card" onclick="selectTicketType(this, 'Product Defect')" data-type="defect">
                                 <div class="icon" style="background: #fee2e2;">⚠️</div>
-                                <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem;">Product Defect</div>
+                                <div style="font-weight: 600; color: var(--foreground); font-size: 0.9rem;">Product Defect</div>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="ticket-type-card" onclick="selectTicketType(this, 'Return/Refund')" data-type="return">
                                 <div class="icon" style="background: #dbeafe;">↩️</div>
-                                <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem;">Return/Refund</div>
+                                <div style="font-weight: 600; color: var(--foreground); font-size: 0.9rem;">Return/Refund</div>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="ticket-type-card" onclick="selectTicketType(this, 'General Inquiry')" data-type="general">
                                 <div class="icon" style="background: #e0f2f1;">❓</div>
-                                <div style="font-weight: 600; color: #1f2937; font-size: 0.9rem;">General Inquiry</div>
+                                <div style="font-weight: 600; color: var(--foreground); font-size: 0.9rem;">General Inquiry</div>
                             </div>
                         </div>
                     </div>
@@ -205,11 +241,7 @@
                 <div class="mb-4" id="orderSection" style="display: none;">
                     <label class="form-label">Related Order (if applicable)</label>
                     <select class="form-select" id="relatedOrder" name="relatedOrder">
-                        <option value="">-- Select an order --</option>
-                        <option value="ORD-2026-0892">ORD-2026-0892 - HyperX Gaming Headset (Jan 15, 2026)</option>
-                        <option value="ORD-2026-0756">ORD-2026-0756 - Razer Keyboard + Mouse Bundle (Jan 10, 2026)</option>
-                        <option value="ORD-2026-0698">ORD-2026-0698 - Samsung 1TB SSD (Jan 5, 2026)</option>
-                        <option value="ORD-2025-0543">ORD-2025-0543 - Logitech Webcam (Dec 20, 2025)</option>
+                        <option value="">-- Loading orders... --</option>
                     </select>
                 </div>
 
@@ -244,7 +276,7 @@
 • When did it occur?
 • What were you trying to do?
 • Any error messages?" required></textarea>
-                    <div class="form-text">Minimum 50 characters. Be specific to help us resolve your issue faster.</div>
+                    <div class="form-text" style="color: var(--muted-foreground);">Minimum 50 characters. Be specific to help us resolve your issue faster.</div>
                 </div>
 
                 <!-- Product Details (for defect reports) -->
@@ -267,10 +299,10 @@
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" style="margin-bottom: 10px;">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
                         </svg>
-                        <p style="margin: 0; color: #6b7280;">
-                            <span style="color: #008080; font-weight: 600;">Click to upload</span> or drag and drop
+                        <p style="margin: 0; color: var(--muted-foreground);">
+                            <span style="color: var(--primary); font-weight: 600;">Click to upload</span> or drag and drop
                         </p>
-                        <p style="margin: 5px 0 0; font-size: 0.8rem; color: #9ca3af;">PNG, JPG, PDF up to 10MB</p>
+                        <p style="margin: 5px 0 0; font-size: 0.8rem; color: var(--muted-foreground);">PNG, JPG, PDF up to 10MB</p>
                     </div>
                     <input type="file" id="fileInput" name="attachments" multiple accept=".png,.jpg,.jpeg,.pdf" style="display: none;" onchange="handleFileSelect(event)">
                     <div id="fileList"></div>
@@ -280,19 +312,19 @@
                 <div class="mb-4">
                     <label class="form-label">How would you like us to respond?</label>
                     <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" name="contactMethod" id="contactEmail" value="email" checked style="border-color: #008080;">
+                        <input class="form-check-input" type="radio" name="contactMethod" id="contactEmail" value="email" checked style="border-color: var(--primary);">
                         <label class="form-check-label" for="contactEmail">
                             Email notification (customer@@example.com)
                         </label>
                     </div>
                     <div class="form-check mb-2">
-                        <input class="form-check-input" type="radio" name="contactMethod" id="contactSMS" value="sms" style="border-color: #008080;">
+                        <input class="form-check-input" type="radio" name="contactMethod" id="contactSMS" value="sms" style="border-color: var(--primary);">
                         <label class="form-check-label" for="contactSMS">
                             SMS notification (+63 9XX XXX XXXX)
                         </label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="contactMethod" id="contactBoth" value="both" style="border-color: #008080;">
+                        <input class="form-check-input" type="radio" name="contactMethod" id="contactBoth" value="both" style="border-color: var(--primary);">
                         <label class="form-check-label" for="contactBoth">
                             Both email and SMS
                         </label>
@@ -301,7 +333,7 @@
 
                 <!-- Submit Button -->
                 <div class="d-flex justify-content-between align-items-center mt-5">
-                    <a href="/CustomerPortal/Support" class="btn btn-outline-secondary" style="border-radius: 12px; padding: 12px 25px;">
+                    <a href="/CustomerPortal/Support" class="btn btn-outline-secondary" style="border-radius: var(--radius-sm); padding: 12px 25px;">
                         ← Back to Support
                     </a>
                     <button type="submit" class="btn-submit-ticket">
@@ -319,10 +351,10 @@
     <div class="col-lg-4">
         <!-- Guidelines -->
         <div class="portal-card mb-4">
-            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 15px;">
-                📋 Ticket Guidelines
+            <h6 style="font-weight: 600; color: var(--foreground); margin-bottom: 15px;">
+                Ticket Guidelines
             </h6>
-            <ul style="color: #6b7280; font-size: 0.9rem; padding-left: 20px; margin: 0;">
+            <ul style="color: var(--muted-foreground); font-size: 0.9rem; padding-left: 20px; margin: 0;">
                 <li class="mb-2">Be specific about your issue</li>
                 <li class="mb-2">Include order number if applicable</li>
                 <li class="mb-2">Attach photos for product defects</li>
@@ -333,37 +365,37 @@
 
         <!-- Response Time -->
         <div class="portal-card mb-4">
-            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 15px;">
-                ⏱️ Expected Response Time
+            <h6 style="font-weight: 600; color: var(--foreground); margin-bottom: 15px;">
+                Expected Response Time
             </h6>
             <div class="mb-3">
                 <div class="d-flex justify-content-between align-items-center">
-                    <span style="font-size: 0.9rem; color: #374151;"><span style="color: #22c55e;">🟢</span> Low Priority</span>
-                    <span style="font-weight: 600; color: #008080;">48 hours</span>
+                    <span style="font-size: 0.9rem; color: var(--foreground);"><span style="color: #22c55e;">●</span> Low Priority</span>
+                    <span style="font-weight: 600; color: var(--primary);">48 hours</span>
                 </div>
             </div>
             <div class="mb-3">
                 <div class="d-flex justify-content-between align-items-center">
-                    <span style="font-size: 0.9rem; color: #374151;"><span style="color: #eab308;">🟡</span> Medium Priority</span>
-                    <span style="font-weight: 600; color: #008080;">24 hours</span>
+                    <span style="font-size: 0.9rem; color: var(--foreground);"><span style="color: #eab308;">●</span> Medium Priority</span>
+                    <span style="font-weight: 600; color: var(--primary);">24 hours</span>
                 </div>
             </div>
             <div>
                 <div class="d-flex justify-content-between align-items-center">
-                    <span style="font-size: 0.9rem; color: #374151;"><span style="color: #ef4444;">🔴</span> High Priority</span>
-                    <span style="font-weight: 600; color: #008080;">4-8 hours</span>
+                    <span style="font-size: 0.9rem; color: var(--foreground);"><span style="color: #ef4444;">●</span> High Priority</span>
+                    <span style="font-weight: 600; color: var(--primary);">4-8 hours</span>
                 </div>
             </div>
         </div>
 
         <!-- Quick Help -->
-        <div class="portal-card" style="background: linear-gradient(135deg, #f0fdfa, #e0f2f1);">
-            <h6 style="font-weight: 600; color: #1f2937; margin-bottom: 15px;">
-                💡 Need Faster Help?
+        <div class="portal-card">
+            <h6 style="font-weight: 600; color: var(--foreground); margin-bottom: 15px;">
+                Need Faster Help?
             </h6>
-            <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 15px;">Try our AI Assistant for instant answers to common questions!</p>
-            <a href="/CustomerPortal/Support" class="btn w-100" style="background: #008080; color: white; border-radius: 10px;">
-                🤖 Chat with AI
+            <p style="color: var(--muted-foreground); font-size: 0.9rem; margin-bottom: 15px;">Try our AI Assistant for instant answers to common questions!</p>
+            <a href="/CustomerPortal/Support" class="btn w-100" style="background: var(--primary); color: white; border-radius: var(--radius-sm);">
+                Chat with AI
             </a>
         </div>
     </div>
@@ -372,19 +404,19 @@
 <!-- Success Modal -->
 <div class="modal fade" id="successModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius: 20px; text-align: center; padding: 40px;">
-            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #10b981, #34d399); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2.5rem;">
+        <div class="modal-content" style="text-align: center; padding: 40px;">
+            <div style="width: 80px; height: 80px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2.5rem; color: white;">
                 ✓
             </div>
-            <h4 style="font-weight: 700; color: #1f2937;">Ticket Submitted!</h4>
-            <p style="color: #6b7280; margin: 15px 0;">Your ticket has been submitted successfully. Our support team will respond within the estimated timeframe.</p>
-            <div style="background: #f3f4f6; border-radius: 12px; padding: 15px; margin: 20px 0;">
-                <div style="font-size: 0.8rem; color: #6b7280;">Ticket Number</div>
-                <div style="font-size: 1.3rem; font-weight: 700; color: #008080;" id="ticketNumber">TKT-2026-0001</div>
+            <h4 style="font-weight: 700; color: var(--foreground);">Ticket Submitted!</h4>
+            <p style="color: var(--muted-foreground); margin: 15px 0;">Your ticket has been submitted successfully. Our support team will respond within the estimated timeframe.</p>
+            <div style="background: var(--muted); border-radius: var(--radius-sm); padding: 15px; margin: 20px 0; border: 1px solid var(--border);">
+                <div style="font-size: 0.8rem; color: var(--muted-foreground);">Ticket Number</div>
+                <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary);" id="ticketNumber">TKT-2026-0001</div>
             </div>
             <div class="d-flex gap-3 justify-content-center">
-                <a href="/CustomerPortal/MyTickets" class="btn" style="background: #008080; color: white; border-radius: 10px; padding: 12px 25px;">View My Tickets</a>
-                <a href="/CustomerPortal/Support" class="btn btn-outline-secondary" style="border-radius: 10px; padding: 12px 25px;">Back to Support</a>
+                <a href="/CustomerPortal/MyTickets" class="btn" style="background: var(--primary); color: white; border-radius: var(--radius-sm); padding: 12px 25px;">View My Tickets</a>
+                <a href="/CustomerPortal/Support" class="btn btn-outline-secondary" style="border-radius: var(--radius-sm); padding: 12px 25px;">Back to Support</a>
             </div>
         </div>
     </div>
@@ -403,9 +435,9 @@
 
         // Show/hide related sections
         const dataType = element.getAttribute('data-type');
-        document.getElementById('orderSection').style.display = 
+        document.getElementById('orderSection').style.display =
             ['order', 'defect', 'return'].includes(dataType) ? 'block' : 'none';
-        document.getElementById('productSection').style.display = 
+        document.getElementById('productSection').style.display =
             dataType === 'defect' ? 'block' : 'none';
     }
 
@@ -475,6 +507,26 @@
         button.parentElement.remove();
     }
 
+    // Load real customer orders for the dropdown
+    async function loadCustomerOrders() {
+        try {
+            const res = await fetch('/CustomerPortal/GetCustomerOrders');
+            const result = await res.json();
+            const select = document.getElementById('relatedOrder');
+            select.innerHTML = '<option value="">-- Select an order --</option>';
+            if (result.success && result.data) {
+                result.data.forEach(o => {
+                    const opt = document.createElement('option');
+                    opt.value = o.orderNumber;
+                    const d = new Date(o.orderDate).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'});
+                    opt.textContent = `${o.orderNumber} - ${o.itemSummary || 'Order'} (${d})`;
+                    select.appendChild(opt);
+                });
+            }
+        } catch(e) { console.error('Error loading orders:', e); }
+    }
+    loadCustomerOrders();
+
     document.getElementById('ticketForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
@@ -499,17 +551,22 @@
         submitBtn.textContent = 'Submitting...';
 
         try {
-            const response = await fetch('/CustomerPortal/CreateTicket', {
+            // Use FormData so file attachments are included
+            const formData = new FormData();
+            formData.append('Subject', subject || ticketType);
+            formData.append('Description', description);
+            formData.append('Priority', priority);
+            formData.append('ContactName', document.getElementById('contactName')?.value || '');
+            formData.append('ContactEmail', document.getElementById('contactEmail')?.value || '');
+            formData.append('ContactPhone', document.getElementById('contactPhone')?.value || '');
+            const relatedOrder = document.getElementById('relatedOrder')?.value;
+            if (relatedOrder) formData.append('RelatedOrder', relatedOrder);
+            // Append all selected files
+            selectedFiles.forEach(f => formData.append('Attachments', f));
+
+            const response = await fetch('/CustomerPortal/CreateTicketWithFiles', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    subject: subject || ticketType,
-                    description: description,
-                    priority: priority,
-                    contactName: document.getElementById('contactName')?.value,
-                    contactEmail: document.getElementById('contactEmail')?.value,
-                    contactPhone: document.getElementById('contactPhone')?.value
-                })
+                body: formData
             });
 
             const result = await response.json();

@@ -6,49 +6,49 @@
 <style>
     .checkout-page {
         min-height: 100vh;
-        background: var(--background, #FFFFFF);
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         padding: 40px 20px;
     }
-
+    
     .checkout-container {
+        max-width: 1100px;
         margin: 0 auto;
     }
-
+    
     .checkout-header {
         text-align: center;
         margin-bottom: 40px;
     }
-
+    
     .checkout-header h1 {
         font-size: 2.5rem;
         font-weight: 800;
-        color: var(--foreground, #111827);
+        color: #1f2937;
         margin-bottom: 10px;
     }
-
-    .checkout-header p { color: var(--muted-foreground, #6B7280); }
-
+    
+    .checkout-header p { color: #6b7280; }
+    
     .checkout-steps {
         display: flex;
         justify-content: center;
         gap: 20px;
         margin-bottom: 40px;
     }
-
+    
     .step {
         display: flex;
         align-items: center;
         gap: 10px;
         padding: 12px 25px;
         background: white;
-        border-radius: var(--radius-sm, 8px);
-        border: 1px solid var(--border, #E5E7EB);
-        box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.04));
+        border-radius: 50px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     }
-
-    .step.active { background: var(--primary, #008080); color: white; border-color: var(--primary, #008080); }
-    .step.completed { background: #10b981; color: white; border-color: #10b981; }
-
+    
+    .step.active { background: #008080; color: white; }
+    .step.completed { background: #10b981; color: white; }
+    
     .step-number {
         width: 30px;
         height: 30px;
@@ -59,215 +59,200 @@
         justify-content: center;
         font-weight: 700;
     }
-
+    
     .checkout-content {
         display: grid;
         grid-template-columns: 1fr 400px;
         gap: 30px;
     }
-
+    
     @@media (max-width: 992px) {
         .checkout-content { grid-template-columns: 1fr; }
     }
-
+    
     .checkout-card {
         background: white;
-        border-radius: var(--radius, 12px);
-        border: 1px solid var(--border, #E5E7EB);
-        box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.04));
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
         overflow: hidden;
-        transition: all 0.3s;
     }
-
-    .checkout-card:hover {
-        border-color: rgba(0,128,128,0.2);
-        box-shadow: var(--shadow-md, 0 4px 12px rgba(0,0,0,0.06));
-        transform: translateY(-2px);
-    }
-
+    
     .card-header {
         padding: 25px 30px;
-        border-bottom: 1px solid var(--border, #E5E7EB);
+        border-bottom: 1px solid #e5e7eb;
     }
-
+    
     .card-header h3 {
         font-weight: 700;
-        color: var(--foreground, #111827);
+        color: #1f2937;
         margin: 0;
         display: flex;
         align-items: center;
         gap: 10px;
     }
-
+    
     .card-body { padding: 30px; }
-
+    
     .form-group { margin-bottom: 25px; }
-    .form-label { display: block; font-weight: 600; color: var(--foreground, #111827); margin-bottom: 10px; }
+    .form-label { display: block; font-weight: 600; color: #374151; margin-bottom: 10px; }
     .form-required { color: #ef4444; }
-
+    
     .form-input {
         width: 100%;
         padding: 14px 18px;
-        border: 1.5px solid var(--border, #E5E7EB);
-        border-radius: var(--radius-sm, 8px);
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
         font-size: 1rem;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         transition: all 0.3s;
     }
-
-    .form-input::placeholder {
-        color: var(--muted-foreground, #6B7280);
-    }
-
+    
     .form-input:focus {
         outline: none;
-        border-color: var(--primary, #008080);
-        box-shadow: 0 0 0 3px rgba(0,128,128,0.08);
+        border-color: #008080;
+        box-shadow: 0 0 0 4px rgba(0, 128, 128, 0.1);
     }
-
+    
     .form-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 15px;
     }
-
+    
     .form-textarea {
         min-height: 100px;
         resize: vertical;
     }
-
+    
     .payment-methods { display: flex; flex-direction: column; gap: 15px; }
-
+    
     .payment-option {
         display: flex;
         align-items: center;
         gap: 15px;
         padding: 20px;
-        border: 1.5px solid var(--border, #E5E7EB);
-        border-radius: var(--radius-sm, 8px);
+        border: 2px solid #e5e7eb;
+        border-radius: 14px;
         cursor: pointer;
         transition: all 0.3s;
     }
-
-    .payment-option:hover { border-color: var(--primary, #008080); }
-    .payment-option.selected { border-color: var(--primary, #008080); background: var(--muted, #F9FAFB); }
-
+    
+    .payment-option:hover { border-color: #008080; }
+    .payment-option.selected { border-color: #008080; background: #f0f9f9; }
+    
     .payment-option input { display: none; }
-
+    
     .payment-radio {
         width: 24px;
         height: 24px;
-        border: 2px solid var(--border, #E5E7EB);
+        border: 2px solid #d1d5db;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
     }
-
+    
     .payment-option.selected .payment-radio {
-        border-color: var(--primary, #008080);
+        border-color: #008080;
     }
-
+    
     .payment-option.selected .payment-radio::after {
         content: '';
         width: 12px;
         height: 12px;
-        background: var(--primary, #008080);
+        background: #008080;
         border-radius: 50%;
     }
-
+    
     .payment-icon { font-size: 2rem; flex-shrink: 0; }
-
-    .payment-info h4 { font-weight: 600; color: var(--foreground, #111827); margin: 0 0 5px 0; }
-    .payment-info p { color: var(--muted-foreground, #6B7280); font-size: 0.85rem; margin: 0; }
-
+    
+    .payment-info h4 { font-weight: 600; color: #1f2937; margin: 0 0 5px 0; }
+    .payment-info p { color: #6b7280; font-size: 0.85rem; margin: 0; }
+    
     .summary-item {
         display: flex;
         align-items: center;
         gap: 15px;
         padding: 15px 0;
-        border-bottom: 1px solid var(--muted, #F9FAFB);
+        border-bottom: 1px solid #f3f4f6;
     }
-
+    
     .summary-item:last-child { border-bottom: none; }
-
+    
     .summary-thumb {
         width: 60px;
         height: 60px;
-        background: var(--muted, #F9FAFB);
-        border-radius: var(--radius-sm, 8px);
+        background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.5rem;
     }
-
+    
     .summary-details { flex: 1; }
-    .summary-name { font-weight: 600; color: var(--foreground, #111827); font-size: 0.95rem; }
-    .summary-qty { color: var(--muted-foreground, #6B7280); font-size: 0.85rem; }
-    .summary-price { font-weight: 700; color: var(--primary, #008080); }
-
-    .summary-totals { margin-top: 20px; padding-top: 20px; border-top: 2px solid var(--muted, #F9FAFB); }
-
+    .summary-name { font-weight: 600; color: #1f2937; font-size: 0.95rem; }
+    .summary-qty { color: #6b7280; font-size: 0.85rem; }
+    .summary-price { font-weight: 700; color: #008080; }
+    
+    .summary-totals { margin-top: 20px; padding-top: 20px; border-top: 2px solid #f3f4f6; }
+    
     .summary-row {
         display: flex;
         justify-content: space-between;
         margin-bottom: 12px;
     }
-
-    .summary-row-label { color: var(--muted-foreground, #6B7280); }
-    .summary-row-value { font-weight: 600; color: var(--foreground, #111827); }
+    
+    .summary-row-label { color: #6b7280; }
+    .summary-row-value { font-weight: 600; color: #1f2937; }
     .summary-row-value.discount { color: #10b981; }
-
+    
     .summary-total {
         display: flex;
         justify-content: space-between;
         padding-top: 15px;
         margin-top: 15px;
-        border-top: 2px solid var(--primary, #008080);
+        border-top: 2px solid #008080;
     }
-
-    .total-label { font-size: 1.1rem; font-weight: 700; color: var(--foreground, #111827); }
-    .total-value { font-size: 1.5rem; font-weight: 800; color: var(--primary, #008080); }
-
+    
+    .total-label { font-size: 1.1rem; font-weight: 700; color: #1f2937; }
+    .total-value { font-size: 1.5rem; font-weight: 800; color: #008080; }
+    
     .checkout-btn {
         width: 100%;
         padding: 18px;
-        background: var(--primary, #008080);
+        background: linear-gradient(135deg, #008080 0%, #006666 100%);
         color: white;
         border: none;
-        border-radius: var(--radius-sm, 8px);
+        border-radius: 14px;
         font-size: 1.1rem;
         font-weight: 700;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         cursor: pointer;
         margin-top: 25px;
         transition: all 0.3s;
     }
-
+    
     .checkout-btn:hover {
-        background: var(--primary-hover, #006666);
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-md, 0 4px 12px rgba(0,128,128,0.15));
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(0, 128, 128, 0.3);
     }
-
+    
     .checkout-btn:disabled {
         background: #9ca3af;
         cursor: not-allowed;
         transform: none;
     }
-
+    
     .secure-badge {
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
         margin-top: 20px;
-        color: var(--muted-foreground, #6B7280);
+        color: #6b7280;
         font-size: 0.85rem;
     }
-
+    
     .paymongo-badge {
         display: flex;
         align-items: center;
@@ -275,32 +260,55 @@
         gap: 10px;
         margin-top: 15px;
         padding: 15px;
-        background: var(--muted, #F9FAFB);
-        border-radius: var(--radius-sm, 8px);
+        background: #f0f9f9;
+        border-radius: 10px;
     }
-
+    
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255,255,255,0.95);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+    
+    .loading-overlay.active { display: flex; }
+    
+    .loading-content { text-align: center; }
+    .loading-spinner { font-size: 4rem; animation: spin 1s linear infinite; }
+    
+    @@keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
     .back-link {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        color: var(--primary, #008080);
+        color: #008080;
         text-decoration: none;
         margin-bottom: 20px;
         font-weight: 500;
     }
-
-    .back-link:hover { color: var(--primary-hover, #006666); }
+    
+    .back-link:hover { color: #006666; }
 </style>
 
 <div class="checkout-page">
     <div class="checkout-container">
         <a href="/CustomerPortal/Cart" class="back-link">← Back to Cart</a>
-
+        
         <div class="checkout-header">
             <h1>🔒 Secure Checkout</h1>
             <p>Complete your order securely</p>
         </div>
-
+        
         <div class="checkout-steps">
             <div class="step completed">
                 <span class="step-number">✓</span>
@@ -315,7 +323,7 @@
                 <span>Payment</span>
             </div>
         </div>
-
+        
         <div class="checkout-content">
             <div>
                 <!-- Shipping Information -->
@@ -334,22 +342,22 @@
                                 <input type="text" class="form-input" id="lastName" required>
                             </div>
                         </div>
-
+                        
                         <div class="form-group">
                             <label class="form-label">Email <span class="form-required">*</span></label>
                             <input type="email" class="form-input" id="email" required>
                         </div>
-
+                        
                         <div class="form-group">
                             <label class="form-label">Phone Number <span class="form-required">*</span></label>
                             <input type="tel" class="form-input" id="phone" placeholder="+63">
                         </div>
-
+                        
                         <div class="form-group">
                             <label class="form-label">Complete Address <span class="form-required">*</span></label>
                             <textarea class="form-input form-textarea" id="address" placeholder="House/Unit No., Street, Barangay"></textarea>
                         </div>
-
+                        
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">City <span class="form-required">*</span></label>
@@ -360,14 +368,14 @@
                                 <input type="text" class="form-input" id="province">
                             </div>
                         </div>
-
+                        
                         <div class="form-group">
                             <label class="form-label">ZIP Code <span class="form-required">*</span></label>
                             <input type="text" class="form-input" id="zipCode" style="max-width: 200px;">
                         </div>
                     </div>
                 </div>
-
+                
                 <!-- Payment Method -->
                 <div class="checkout-card">
                     <div class="card-header">
@@ -384,7 +392,7 @@
                                     <p>Visa, Mastercard, JCB via PayMongo</p>
                                 </div>
                             </label>
-
+                            
                             <label class="payment-option" onclick="selectPayment('gcash')">
                                 <input type="radio" name="payment" value="gcash">
                                 <span class="payment-radio"></span>
@@ -394,7 +402,7 @@
                                     <p>Pay with your GCash wallet</p>
                                 </div>
                             </label>
-
+                            
                             <label class="payment-option" onclick="selectPayment('grab_pay')">
                                 <input type="radio" name="payment" value="grab_pay">
                                 <span class="payment-radio"></span>
@@ -404,7 +412,7 @@
                                     <p>Pay with GrabPay</p>
                                 </div>
                             </label>
-
+                            
                             <label class="payment-option" onclick="selectPayment('paymaya')">
                                 <input type="radio" name="payment" value="paymaya">
                                 <span class="payment-radio"></span>
@@ -415,7 +423,7 @@
                                 </div>
                             </label>
                         </div>
-
+                        
                         <div class="paymongo-badge">
                             <span>🔐</span>
                             <span>Secured by <strong>PayMongo</strong></span>
@@ -423,7 +431,7 @@
                     </div>
                 </div>
             </div>
-
+            
             <!-- Order Summary -->
             <div>
                 <div class="checkout-card" style="position: sticky; top: 100px;">
@@ -434,7 +442,7 @@
                         <div id="summaryItems">
                             <div class="text-center text-muted py-3">Loading...</div>
                         </div>
-
+                        
                         <div class="summary-totals">
                             <div class="summary-row">
                                 <span class="summary-row-label">Subtotal</span>
@@ -448,24 +456,16 @@
                                 <span class="summary-row-label">Discount</span>
                                 <span class="summary-row-value discount" id="summaryDiscount">-₱0.00</span>
                             </div>
-                            <div class="summary-row" id="vatableSalesRow" style="display: none;">
-                                <span class="summary-row-label">VATable Sales</span>
-                                <span class="summary-row-value" id="summaryVatable">₱0.00</span>
-                            </div>
-                            <div class="summary-row" id="vatRow" style="display: none;">
-                                <span class="summary-row-label">VAT (12%)</span>
-                                <span class="summary-row-value" id="summaryVat">₱0.00</span>
-                            </div>
                             <div class="summary-total">
                                 <span class="total-label">Total</span>
                                 <span class="total-value" id="summaryTotal">₱0.00</span>
                             </div>
                         </div>
-
+                        
                         <button class="checkout-btn" id="placeOrderBtn" onclick="placeOrder()">
                             🔒 Place Order & Pay
                         </button>
-
+                        
                         <div class="secure-badge">
                             🔐 Your payment is secure and encrypted
                         </div>
@@ -476,118 +476,34 @@
     </div>
 </div>
 
-<!-- Payment Result Overlay -->
-<div class="result-overlay" id="resultOverlay">
-    <div class="result-card" id="resultCard">
-        <!-- Dynamically filled -->
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+        <div class="loading-spinner">⏳</div>
+        <h3 style="margin-top: 20px; color: #1f2937;">Processing your order...</h3>
+        <p style="color: #6b7280;">Please wait while we redirect you to payment</p>
     </div>
 </div>
-
-<style>
-    .result-overlay {
-        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.55);
-        display: none; align-items: center; justify-content: center;
-        z-index: 10000; backdrop-filter: blur(6px);
-    }
-    .result-overlay.active { display: flex; }
-
-    .result-card {
-        background: #fff; border-radius: 24px; padding: 52px 44px;
-        max-width: 480px; width: 92%; text-align: center;
-        box-shadow: 0 24px 64px rgba(0,0,0,0.22);
-        animation: resultPop 0.4s cubic-bezier(.2,1,.3,1);
-    }
-    @@keyframes resultPop { from { transform: scale(0.8) translateY(30px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
-
-    .result-icon {
-        width: 90px; height: 90px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        margin: 0 auto 24px;
-    }
-    .result-icon.success { background: rgba(16,185,129,0.12); }
-    .result-icon.error   { background: rgba(239,68,68,0.12); }
-
-    .result-card h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 10px; }
-    .result-card h2.success-title { color: #059669; }
-    .result-card h2.error-title   { color: #dc2626; }
-
-    .result-card .result-msg { color: #6b7280; font-size: 0.95rem; line-height: 1.65; margin-bottom: 24px; }
-
-    .result-details {
-        background: #f9fafb; border-radius: 14px; padding: 18px 22px;
-        text-align: left; margin-bottom: 28px;
-    }
-    .result-details .detail-row {
-        display: flex; justify-content: space-between;
-        padding: 7px 0; font-size: 0.9rem; border-bottom: 1px solid #f0f0f0;
-    }
-    .result-details .detail-row:last-child { border-bottom: none; }
-    .result-details .detail-label { color: #9ca3af; }
-    .result-details .detail-value { font-weight: 600; color: #1f2937; }
-
-    .result-btn {
-        display: inline-block; padding: 14px 44px;
-        border: none; border-radius: 12px;
-        font-weight: 700; font-size: 1rem; cursor: pointer;
-        font-family: 'Inter', sans-serif; transition: all 0.25s;
-    }
-    .result-btn-primary {
-        background: linear-gradient(135deg, #008080, #006666);
-        color: #fff; box-shadow: 0 4px 16px rgba(0,128,128,0.25);
-    }
-    .result-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,128,128,0.35); }
-    .result-btn-secondary {
-        background: #fff; color: #6b7280; border: 2px solid #e5e7eb;
-        margin-right: 12px;
-    }
-    .result-btn-secondary:hover { background: #f9fafb; }
-</style>
 
 @section Scripts {
 <script>
     let checkoutData = null;
-    let selectedPayment = 'gcash';
+    let selectedPayment = 'card';
     const productIcons = ['🖥️', '⌨️', '🖱️', '🎧', '💾', '🎮', '📱', '🔌'];
-    const VAT_RATE = 0.12;
 
     document.addEventListener('DOMContentLoaded', function() {
         loadCheckoutData();
         loadCustomerInfo();
-
-        // Select GCash by default
-        selectPayment('gcash');
     });
 
     function loadCheckoutData() {
         checkoutData = JSON.parse(localStorage.getItem('checkoutData') || 'null');
-
+        
         if (!checkoutData || !checkoutData.items || checkoutData.items.length === 0) {
-            // Try loading from cart directly
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            if (cart.length === 0) {
-                window.location.href = '/CustomerPortal/Cart';
-                return;
-            }
-
-            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const shipping = subtotal >= 2000 ? 0 : 150;
-            const afterDiscount = subtotal;
-            const vatableSales = afterDiscount / (1 + VAT_RATE);
-            const vatAmount = afterDiscount - vatableSales;
-
-            checkoutData = {
-                items: cart,
-                subtotal: subtotal,
-                discount: 0,
-                vatableSales: vatableSales,
-                vatAmount: vatAmount,
-                shipping: shipping,
-                total: subtotal + shipping,
-                promoCode: null
-            };
+            window.location.href = '/CustomerPortal/Cart';
+            return;
         }
-
+        
         renderSummary();
     }
 
@@ -595,17 +511,17 @@
         try {
             const response = await fetch('/CustomerPortal/GetProfile');
             const result = await response.json();
-
+            
             if (result.success && result.data) {
                 const data = result.data;
                 document.getElementById('firstName').value = data.firstName || '';
                 document.getElementById('lastName').value = data.lastName || '';
                 document.getElementById('email').value = data.email || '';
                 document.getElementById('phone').value = data.phone || '';
-                document.getElementById('address').value = data.shippingAddress || data.billingAddress || '';
-                document.getElementById('city').value = data.shippingCity || data.billingCity || '';
-                document.getElementById('province').value = data.shippingState || data.billingState || '';
-                document.getElementById('zipCode').value = data.shippingZipCode || data.billingZipCode || '';
+                document.getElementById('address').value = data.address || '';
+                document.getElementById('city').value = data.city || '';
+                document.getElementById('province').value = data.province || '';
+                document.getElementById('zipCode').value = data.postalCode || '';
             }
         } catch (error) {
             console.error('Error loading customer info:', error);
@@ -614,7 +530,7 @@
 
     function renderSummary() {
         const container = document.getElementById('summaryItems');
-
+        
         container.innerHTML = checkoutData.items.map((item, index) => `
             <div class="summary-item">
                 <div class="summary-thumb">${productIcons[index % productIcons.length]}</div>
@@ -625,39 +541,25 @@
                 <div class="summary-price">₱${(item.price * item.quantity).toLocaleString('en-PH', {minimumFractionDigits: 2})}</div>
             </div>
         `).join('');
-
-        // VAT breakdown
-        const vatableSales = checkoutData.vatableSales || (checkoutData.subtotal - checkoutData.discount) / (1 + VAT_RATE);
-        const vatAmount = checkoutData.vatAmount || (checkoutData.subtotal - checkoutData.discount) - vatableSales;
-
+        
         document.getElementById('summarySubtotal').textContent = `₱${checkoutData.subtotal.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
         document.getElementById('summaryShipping').textContent = checkoutData.shipping === 0 ? 'FREE' : `₱${checkoutData.shipping.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
-
-        // Show VAT row
-        document.getElementById('vatRow').style.display = 'flex';
-        document.getElementById('summaryVat').textContent = `₱${vatAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
-        document.getElementById('vatableSalesRow').style.display = 'flex';
-        document.getElementById('summaryVatable').textContent = `₱${vatableSales.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
-
+        
         if (checkoutData.discount > 0) {
             document.getElementById('discountRow').style.display = 'flex';
             document.getElementById('summaryDiscount').textContent = `-₱${checkoutData.discount.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
         }
-
+        
         document.getElementById('summaryTotal').textContent = `₱${checkoutData.total.toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
     }
 
     function selectPayment(method) {
         selectedPayment = method;
         document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
-        const radio = document.querySelector(`input[value="${method}"]`);
-        if (radio) {
-            radio.closest('.payment-option').classList.add('selected');
-            radio.checked = true;
-        }
+        document.querySelector(`input[value="${method}"]`).closest('.payment-option').classList.add('selected');
     }
 
-    function placeOrder() {
+    async function placeOrder() {
         // Validate form
         const firstName = document.getElementById('firstName').value.trim();
         const lastName = document.getElementById('lastName').value.trim();
@@ -667,226 +569,80 @@
         const city = document.getElementById('city').value.trim();
         const province = document.getElementById('province').value.trim();
         const zipCode = document.getElementById('zipCode').value.trim();
-
+        
         if (!firstName || !lastName || !email || !address || !city || !province || !zipCode) {
             showToast('Please fill in all required fields', '#ef4444');
             return;
         }
-
-        // Show confirmation dialog
-        showConfirmationDialog(firstName, lastName, email, phone, address, city, province, zipCode);
-    }
-
-    function showConfirmationDialog(firstName, lastName, email, phone, address, city, province, zipCode) {
-        const paymentLabels = {
-            'gcash': 'GCash',
-            'card': 'Credit/Debit Card',
-            'grab_pay': 'GrabPay',
-            'paymaya': 'Maya'
-        };
-
-        // Store form data for later use
-        window.pendingOrderData = { firstName, lastName, email, phone, address, city, province, zipCode };
-
-        // Create confirmation overlay
-        const overlay = document.createElement('div');
-        overlay.id = 'confirmOverlay';
-        overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(4px);';
-
-        overlay.innerHTML = `
-            <div style="background: white; border-radius: 20px; padding: 40px; max-width: 500px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: scaleIn 0.3s ease;">
-                <div style="font-size: 4rem; margin-bottom: 16px;">🛒</div>
-                <h2 style="font-size: 1.5rem; font-weight: 800; color: #1f2937; margin-bottom: 8px;">Confirm Your Order?</h2>
-                <p style="color: #6b7280; margin-bottom: 24px;">You are about to place an order for <strong>₱${checkoutData.total.toLocaleString('en-PH', {minimumFractionDigits: 2})}</strong></p>
-
-                <div style="background: #f9fafb; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: left;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span style="color: #6b7280;">Items:</span>
-                        <span style="font-weight: 600;">${checkoutData.items.reduce((s, i) => s + i.quantity, 0)} product(s)</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span style="color: #6b7280;">Payment:</span>
-                        <span style="font-weight: 600;">${paymentLabels[selectedPayment] || selectedPayment}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span style="color: #6b7280;">VAT (12%):</span>
-                        <span style="font-weight: 600;">₱${(checkoutData.vatAmount || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; border-top: 1px solid #e5e7eb; padding-top: 8px;">
-                        <span style="font-weight: 700; color: #1f2937;">Total:</span>
-                        <span style="font-weight: 800; color: #008080; font-size: 1.2rem;">₱${checkoutData.total.toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 12px;">
-                    <button onclick="document.getElementById('confirmOverlay').remove()"
-                        style="flex: 1; padding: 14px; border: 2px solid #e5e7eb; background: white; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 1rem; color: #6b7280; transition: all 0.2s;">
-                        ❌ Cancel
-                    </button>
-                    <button id="confirmOrderBtn"
-                        style="flex: 1; padding: 14px; border: none; background: linear-gradient(135deg, #008080, #006666); color: white; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1rem; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,128,128,0.3);">
-                        ✅ Yes, Place Order
-                    </button>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(overlay);
-
-        // Add click handler to confirm button
-        document.getElementById('confirmOrderBtn').addEventListener('click', function() {
-            document.getElementById('confirmOverlay').remove();
-            const d = window.pendingOrderData;
-            executeOrder(d.firstName, d.lastName, d.email, d.phone, d.address, d.city, d.province, d.zipCode);
-        });
-    }
-
-    async function executeOrder(firstName, lastName, email, phone, address, city, province, zipCode) {
-        // Show processing state on button
-        const btn = document.getElementById('placeOrderBtn');
-        const originalText = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '⏳ Processing...';
-
+        
+        // Show loading
+        document.getElementById('loadingOverlay').classList.add('active');
+        document.getElementById('placeOrderBtn').disabled = true;
+        
         try {
-            // Step 1: Create the order in the database
+            // Create order
             const orderData = {
                 items: checkoutData.items.map(item => ({
                     productId: item.productId,
-                    quantity: item.quantity
+                    quantity: item.quantity,
+                    unitPrice: item.price
                 })),
                 promoCode: checkoutData.promoCode || null,
-                paymentMethod: selectedPayment,
-                shippingAddress: address,
-                shippingCity: city,
-                shippingState: province,
-                shippingZipCode: zipCode,
-                shippingCountry: 'Philippines',
+                shippingAddress: `${address}, ${city}, ${province} ${zipCode}`,
                 notes: ''
             };
-
+            
             const orderResponse = await fetch('/CustomerPortal/CreateOrder', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(orderData)
             });
-
+            
             const orderResult = await orderResponse.json();
-
+            
             if (!orderResult.success) {
                 throw new Error(orderResult.message || 'Failed to create order');
             }
-
-            // Step 2: Process payment (PayMongo — no redirect)
+            
+            // Process payment
             const paymentData = {
                 orderId: orderResult.data.orderId,
+                amount: checkoutData.total,
                 paymentMethod: selectedPayment,
-                customerName: `${firstName} ${lastName}`,
                 customerEmail: email,
+                customerName: `${firstName} ${lastName}`,
                 customerPhone: phone
             };
-
+            
             const paymentResponse = await fetch('/CustomerPortal/ProcessPayment', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(paymentData)
             });
-
+            
             const paymentResult = await paymentResponse.json();
-
-            // Clear cart regardless
-            localStorage.removeItem('cart');
-            localStorage.removeItem('checkoutData');
-
-            if (paymentResult.success) {
-                showResultCard('success', {
-                    orderNumber: paymentResult.orderNumber || orderResult.data.orderNumber,
-                    total: paymentResult.totalAmount || checkoutData.total,
-                    paymentRef: paymentResult.paymentIntentId || '-'
-                });
+            
+            if (paymentResult.success && paymentResult.checkoutUrl) {
+                // Clear cart and checkout data
+                localStorage.removeItem('cart');
+                localStorage.removeItem('checkoutData');
+                
+                // Redirect to PayMongo checkout
+                window.location.href = paymentResult.checkoutUrl;
             } else {
-                showResultCard('error', {
-                    orderNumber: orderResult.data.orderNumber,
-                    message: paymentResult.detail || paymentResult.message || 'Payment could not be completed.'
-                });
+                throw new Error(paymentResult.message || 'Payment processing failed');
             }
         } catch (error) {
             console.error('Error:', error);
-            showResultCard('error', {
-                orderNumber: null,
-                message: error.message || 'An unexpected error occurred. Please try again.'
-            });
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
+            showToast(error.message || 'An error occurred', '#ef4444');
+            document.getElementById('loadingOverlay').classList.remove('active');
+            document.getElementById('placeOrderBtn').disabled = false;
         }
-    }
-
-    function showResultCard(type, data) {
-        const overlay = document.getElementById('resultOverlay');
-        const card = document.getElementById('resultCard');
-
-        if (type === 'success') {
-            card.innerHTML = `
-                <div class="result-icon success">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="8 12 11 15 16 9"/>
-                    </svg>
-                </div>
-                <h2 class="success-title">Payment Successful!</h2>
-                <p class="result-msg">Your order has been placed and payment confirmed. Thank you for shopping with CompuGear!</p>
-                <div class="result-details">
-                    <div class="detail-row">
-                        <span class="detail-label">Order Number</span>
-                        <span class="detail-value">${data.orderNumber || '-'}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Total Paid</span>
-                        <span class="detail-value">₱${Number(data.total).toLocaleString('en-PH', {minimumFractionDigits: 2})}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Payment Ref</span>
-                        <span class="detail-value" style="font-size:0.82rem;">${data.paymentRef ? data.paymentRef.substring(0, 20) + '...' : '-'}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Status</span>
-                        <span class="detail-value" style="color:#10B981;">✓ Confirmed</span>
-                    </div>
-                </div>
-                <div>
-                    <button class="result-btn result-btn-primary" onclick="window.location.href='/CustomerPortal/Orders'">
-                        📦 View My Orders
-                    </button>
-                </div>`;
-        } else {
-            card.innerHTML = `
-                <div class="result-icon error">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="15" y1="9" x2="9" y2="15"/>
-                        <line x1="9" y1="9" x2="15" y2="15"/>
-                    </svg>
-                </div>
-                <h2 class="error-title">Payment Unsuccessful</h2>
-                <p class="result-msg">${data.message || 'Something went wrong while processing your payment.'}</p>
-                ${data.orderNumber ? `<p style="color:#9ca3af;font-size:0.88rem;margin-bottom:24px;">Order <strong>${data.orderNumber}</strong> was created. You can retry payment from your orders page.</p>` : ''}
-                <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-                    <button class="result-btn result-btn-secondary" onclick="document.getElementById('resultOverlay').classList.remove('active')">
-                        Try Again
-                    </button>
-                    <button class="result-btn result-btn-primary" onclick="window.location.href='/CustomerPortal/Orders'">
-                        📦 Go to Orders
-                    </button>
-                </div>`;
-        }
-
-        overlay.classList.add('active');
     }
 
     function showToast(message, color) {
         const toast = document.createElement('div');
-        toast.innerHTML = `<div style="position: fixed; bottom: 20px; right: 20px; background: ${color}; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 9999; font-weight: 500; max-width: 400px;">${message}</div>`;
+        toast.innerHTML = `<div style="position: fixed; bottom: 20px; right: 20px; background: ${color}; color: white; padding: 15px 25px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 9999;">${message}</div>`;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 4000);
     }

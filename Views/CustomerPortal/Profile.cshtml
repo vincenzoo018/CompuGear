@@ -4,859 +4,263 @@
 }
 
 <style>
-    /* ===== Base ===== */
-    .profile-page {
+    .profile-container {
         min-height: 100vh;
-        font-family: 'Inter', sans-serif;
-        max-width: 960px;
-        margin: 0 auto;
+        padding: 20px 0;
     }
 
-    /* ===== Profile Header Card ===== */
     .profile-header {
-        background: #FFFFFF;
-        border: 1px solid #E5E7EB;
-        border-radius: 12px;
-        padding: 32px;
-        display: flex;
-        align-items: center;
-        gap: 28px;
-        margin-bottom: 24px;
-        box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
-        position: relative;
-        overflow: hidden;
-    }
-
-    .profile-header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #0D9488, #14B8A6);
+        background: linear-gradient(135deg, #008080, #006666);
+        border-radius: 20px;
+        padding: 40px;
+        color: white;
+        text-align: center;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 40px rgba(0, 128, 128, 0.3);
     }
 
     .profile-avatar {
-        width: 88px;
-        height: 88px;
+        width: 120px;
+        height: 120px;
         border-radius: 50%;
-        background: #F0FDFA;
-        border: 2px solid #CCFBF1;
+        background: white;
+        color: #008080;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2.25rem;
-        position: relative;
-        flex-shrink: 0;
-        color: #0D9488;
-    }
-
-    .avatar-edit {
-        position: absolute;
-        bottom: -2px;
-        right: -2px;
-        width: 30px;
-        height: 30px;
-        background: #FFFFFF;
-        border-radius: 50%;
-        border: 1px solid #E5E7EB;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.8rem;
-        box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
-        transition: border-color 0.2s;
-    }
-
-    .avatar-edit:hover {
-        border-color: #0D9488;
-    }
-
-    .profile-info {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .profile-name {
-        font-size: 1.5rem;
+        font-size: 3rem;
         font-weight: 700;
-        color: #111827;
-        margin-bottom: 2px;
-        letter-spacing: -0.01em;
+        margin: 0 auto 20px;
+        border: 4px solid rgba(255,255,255,0.3);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
     }
 
-    .profile-email {
-        font-size: 0.875rem;
-        color: #6B7280;
-        margin-bottom: 16px;
-    }
-
-    .profile-stats {
-        display: flex;
-        gap: 32px;
-    }
-
-    .profile-stat {
-        text-align: left;
-    }
-
-    .profile-stat-value {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #111827;
-    }
-
-    .profile-stat-label {
-        font-size: 0.75rem;
-        color: #9CA3AF;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-    }
-
-    /* ===== Tabs Container ===== */
-    .profile-tabs {
-        background: #FFFFFF;
-        border-radius: 12px;
-        border: 1px solid #E5E7EB;
-        overflow: hidden;
-        box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,0.05));
-    }
-
-    .tabs-nav {
-        display: flex;
-        border-bottom: 1px solid #E5E7EB;
-        padding: 0 8px;
-        gap: 0;
-        overflow-x: auto;
-        background: #F9FAFB;
-    }
-
-    .tab-pill {
-        padding: 14px 20px;
-        background: none;
-        border: none;
-        color: #6B7280;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        position: relative;
-        white-space: nowrap;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        transition: color 0.2s;
-    }
-
-    .tab-pill:hover {
-        color: #111827;
-    }
-
-    .tab-pill.active {
-        color: #0D9488;
-        font-weight: 600;
-        background: #FFFFFF;
-    }
-
-    .tab-pill.active::after {
-        content: '';
-        position: absolute;
-        bottom: -1px;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: #0D9488;
-        border-radius: 2px 2px 0 0;
-    }
-
-    .tab-content {
-        padding: 32px;
-        display: none;
-    }
-
-    .tab-content.active {
-        display: block;
-    }
-
-    /* ===== Form Styles ===== */
-    .form-section {
-        margin-bottom: 32px;
-    }
-
-    .form-section:last-child {
-        margin-bottom: 0;
-    }
-
-    .form-section-title {
-        font-size: 0.9375rem;
-        font-weight: 600;
-        color: #111827;
+    .profile-card {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
         margin-bottom: 20px;
-        padding-bottom: 12px;
-        border-bottom: 1px solid #F3F4F6;
-        display: flex;
-        align-items: center;
-        gap: 8px;
     }
 
-    .form-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
+    .profile-card h6 {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e5e7eb;
     }
 
-    .form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .form-group.full-width {
-        grid-column: 1 / -1;
-    }
-
-    .form-label {
+    .tab-btn {
+        padding: 12px 25px;
+        border-radius: 10px;
+        border: none;
+        background: #f3f4f6;
+        color: #6b7280;
         font-weight: 500;
-        color: #374151;
-        font-size: 0.8125rem;
+        cursor: pointer;
+        transition: all 0.3s;
     }
 
-    .form-input,
-    .form-select,
-    .form-textarea {
-        padding: 10px 14px;
-        border: 1px solid #E5E7EB;
-        border-radius: 8px;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.875rem;
-        background: #FFFFFF;
-        color: #111827;
-        transition: border-color 0.2s, box-shadow 0.2s;
+    .tab-btn.active {
+        background: #008080;
+        color: white;
     }
 
-    .form-input::placeholder,
-    .form-textarea::placeholder {
-        color: #9CA3AF;
+    .form-control {
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 12px 15px;
     }
 
-    .form-input:focus,
-    .form-select:focus,
-    .form-textarea:focus {
-        outline: none;
-        border-color: #0D9488;
-        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.08);
-    }
-
-    .form-textarea {
-        resize: vertical;
-        min-height: 100px;
-    }
-
-    .form-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        padding-top: 20px;
-        border-top: 1px solid #F3F4F6;
+    .form-control:focus {
+        border-color: #008080;
+        box-shadow: 0 0 0 4px rgba(0,128,128,0.1);
     }
 
     .btn-save {
-        padding: 10px 24px;
-        background: #0D9488;
-        color: #FFFFFF;
+        background: linear-gradient(135deg, #008080, #006666);
+        color: white;
         border: none;
-        border-radius: 8px;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.875rem;
+        padding: 12px 30px;
+        border-radius: 10px;
         font-weight: 600;
         cursor: pointer;
-        transition: background 0.2s, box-shadow 0.2s;
     }
 
-    .btn-save:hover {
-        background: #0F766E;
-        box-shadow: var(--shadow-md, 0 4px 6px rgba(0,0,0,0.07));
-    }
-
-    .btn-cancel {
-        padding: 10px 24px;
-        background: #FFFFFF;
-        color: #374151;
-        border: 1px solid #E5E7EB;
-        border-radius: 8px;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-
-    .btn-cancel:hover {
-        background: #F9FAFB;
-    }
-
-    /* ===== Loyalty Card ===== */
     .loyalty-card {
-        background: #FFFFFF;
-        border-radius: 12px;
-        border: 1px solid #E5E7EB;
-        padding: 28px;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .loyalty-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #F59E0B, #FCD34D);
-    }
-
-    .loyalty-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 24px;
-    }
-
-    .loyalty-tier {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .tier-icon {
-        font-size: 2rem;
-    }
-
-    .tier-name {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #111827;
-    }
-
-    .tier-label {
-        font-size: 0.75rem;
-        color: #9CA3AF;
-        font-weight: 500;
+        background: linear-gradient(135deg, #ff6b35, #ff8c42);
+        border-radius: 20px;
+        padding: 25px;
+        color: white;
     }
 
     .loyalty-points {
-        text-align: right;
+        font-size: 2.5rem;
+        font-weight: 800;
     }
 
-    .points-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #111827;
-    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
-    .points-label {
-        font-size: 0.75rem;
-        color: #9CA3AF;
-        font-weight: 500;
-    }
-
-    .loyalty-progress {
-        margin-bottom: 20px;
-    }
-
-    .progress-label {
+    .info-row {
         display: flex;
         justify-content: space-between;
-        font-size: 0.8125rem;
-        margin-bottom: 8px;
-        color: #6B7280;
+        padding: 12px 0;
+        border-bottom: 1px solid #f3f4f6;
     }
-
-    .progress-bar {
-        height: 8px;
-        background: #F3F4F6;
-        border-radius: 99px;
-        overflow: hidden;
-    }
-
-    .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #F59E0B, #FBBF24);
-        border-radius: 99px;
-        transition: width 0.5s ease;
-    }
-
-    .loyalty-perks {
-        display: flex;
-        gap: 20px;
-        padding-top: 16px;
-        border-top: 1px solid #F3F4F6;
-    }
-
-    .perk-item {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.8125rem;
-        color: #374151;
-        font-weight: 500;
-    }
-
-    .perk-icon {
-        font-size: 1rem;
-    }
-
-    /* ===== Address Cards ===== */
-    .address-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 16px;
-    }
-
-    .address-card {
-        background: #FFFFFF;
-        border-radius: 10px;
-        border: 1px solid #E5E7EB;
-        padding: 20px;
-        position: relative;
-        transition: border-color 0.2s;
-    }
-
-    .address-card:hover {
-        border-color: #D1D5DB;
-    }
-
-    .address-card.default {
-        border-color: #0D9488;
-        background: #F0FDFA;
-    }
-
-    .address-card.default::before {
-        content: 'Default';
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        background: #0D9488;
-        color: #FFFFFF;
-        padding: 3px 10px;
-        border-radius: 99px;
-        font-size: 0.6875rem;
-        font-weight: 600;
-        letter-spacing: 0.02em;
-    }
-
-    .address-type {
-        font-weight: 600;
-        color: #111827;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.875rem;
-    }
-
-    .address-text {
-        color: #6B7280;
-        font-size: 0.8125rem;
-        line-height: 1.7;
-        margin-bottom: 16px;
-    }
-
-    .address-actions {
-        display: flex;
-        gap: 8px;
-    }
-
-    .btn-address {
-        padding: 6px 14px;
-        background: #F9FAFB;
-        border: 1px solid #E5E7EB;
-        border-radius: 6px;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.8125rem;
-        font-weight: 500;
-        color: #374151;
-        cursor: pointer;
-        transition: background 0.2s, border-color 0.2s;
-    }
-
-    .btn-address:hover {
-        background: #F3F4F6;
-        border-color: #D1D5DB;
-    }
-
-    .btn-add-address {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 36px;
-        border: 1.5px dashed #D1D5DB;
-        border-radius: 10px;
-        color: #9CA3AF;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: border-color 0.2s, color 0.2s, background 0.2s;
-        background: transparent;
-    }
-
-    .btn-add-address:hover {
-        border-color: #0D9488;
-        color: #0D9488;
-        background: #F0FDFA;
-    }
-
-    /* ===== Security ===== */
-    .security-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 18px 20px;
-        background: #F9FAFB;
-        border: 1px solid #F3F4F6;
-        border-radius: 10px;
-        margin-bottom: 10px;
-        transition: background 0.2s;
-    }
-
-    .security-item:hover {
-        background: #F3F4F6;
-    }
-
-    .security-info {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-    }
-
-    .security-icon {
-        font-size: 1.25rem;
-    }
-
-    .security-title {
-        font-weight: 600;
-        color: #111827;
-        font-size: 0.875rem;
-    }
-
-    .security-desc {
-        font-size: 0.8125rem;
-        color: #9CA3AF;
-    }
-
-    .btn-security {
-        padding: 8px 18px;
-        background: #FFFFFF;
-        border: 1px solid #E5E7EB;
-        border-radius: 8px;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.8125rem;
-        color: #374151;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.2s, border-color 0.2s, color 0.2s;
-        white-space: nowrap;
-    }
-
-    .btn-security:hover {
-        background: #0D9488;
-        border-color: #0D9488;
-        color: #FFFFFF;
-    }
-
-    /* ===== Responsive ===== */
-    @@media (max-width: 768px) {
-        .profile-header {
-            flex-direction: column;
-            text-align: center;
-            padding: 28px 24px;
-        }
-
-        .profile-stats {
-            justify-content: center;
-        }
-
-        .profile-stat {
-            text-align: center;
-        }
-
-        .form-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .tabs-nav {
-            padding: 0 4px;
-        }
-
-        .tab-pill {
-            padding: 12px 14px;
-            font-size: 0.8125rem;
-        }
-
-        .tab-content {
-            padding: 24px 16px;
-        }
-
-        .loyalty-perks {
-            flex-wrap: wrap;
-        }
-
-        .address-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .security-item {
-            flex-direction: column;
-            gap: 12px;
-            align-items: flex-start;
-        }
-
-        .btn-security {
-            width: 100%;
-            text-align: center;
-        }
-    }
-
-    @@media (max-width: 576px) {
-        .profile-avatar {
-            width: 72px;
-            height: 72px;
-            font-size: 1.75rem;
-        }
-
-        .profile-name {
-            font-size: 1.25rem;
-        }
-
-        .profile-stats {
-            gap: 20px;
-        }
-
-        .loyalty-header {
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .loyalty-points {
-            text-align: left;
-        }
-    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: #6b7280; }
+    .info-value { font-weight: 500; color: #1f2937; }
 </style>
 
-<div class="profile-page">
-    <!-- Profile Header -->
-    <div class="profile-header">
-        <div class="profile-avatar" id="profileAvatar">
-            <span id="profileInitials" style="font-size: 1.75rem; font-weight: 700; color: #0D9488; font-family: 'Inter', sans-serif;">--</span>
-            <button class="avatar-edit" title="Change photo">
-                <svg width="14" height="14" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-            </button>
-        </div>
-        <div class="profile-info">
-            <h1 class="profile-name" id="profileName">Loading...</h1>
-            <p class="profile-email" id="profileEmail">Loading...</p>
-            <div class="profile-stats">
-                <div class="profile-stat">
-                    <div class="profile-stat-value" id="statOrders">0</div>
-                    <div class="profile-stat-label">Orders</div>
-                </div>
-                <div class="profile-stat">
-                    <div class="profile-stat-value" id="statSpent">&#x20B1;0</div>
-                    <div class="profile-stat-label">Total Spent</div>
-                </div>
-                <div class="profile-stat">
-                    <div class="profile-stat-value" id="statMember">-</div>
-                    <div class="profile-stat-label">Member Since</div>
-                </div>
-            </div>
-        </div>
+<div class="profile-container">
+    <div id="loadingState" style="text-align: center; padding: 50px;">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-2">Loading profile...</p>
     </div>
 
-    <!-- Profile Tabs -->
-    <div class="profile-tabs">
-        <div class="tabs-nav">
-            <button class="tab-pill active" onclick="switchTab('personal', this)">
-                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                Personal Info
-            </button>
-            <button class="tab-pill" onclick="switchTab('addresses', this)">
-                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                Addresses
-            </button>
-            <button class="tab-pill" onclick="switchTab('loyalty', this)">
-                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                Rewards
-            </button>
-            <button class="tab-pill" onclick="switchTab('security', this)">
-                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-                Security
-            </button>
-        </div>
-
-        <!-- Personal Info Tab -->
-        <div class="tab-content active" id="tab-personal">
-            <form id="personalForm" onsubmit="savePersonalInfo(event)">
-                <div class="form-section">
-                    <h3 class="form-section-title">
-                        <svg width="16" height="16" fill="none" stroke="#0D9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        Basic Information
-                    </h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label">First Name</label>
-                            <input type="text" class="form-input" id="firstName" placeholder="Juan">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Last Name</label>
-                            <input type="text" class="form-input" id="lastName" placeholder="Dela Cruz">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Email Address</label>
-                            <input type="email" class="form-input" id="email" placeholder="juan@@email.com">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Phone Number</label>
-                            <input type="tel" class="form-input" id="phone" placeholder="+63 917 123 4567">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Date of Birth</label>
-                            <input type="date" class="form-input" id="birthDate">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Gender</label>
-                            <select class="form-select" id="gender">
-                                <option value="">Select gender</option>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                                <option value="other">Other</option>
-                                <option value="prefer-not">Prefer not to say</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="button" class="btn-cancel" onclick="resetPersonalForm()">Cancel</button>
-                    <button type="submit" class="btn-save">Save Changes</button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Addresses Tab -->
-        <div class="tab-content" id="tab-addresses">
-            <div class="form-section">
-                <h3 class="form-section-title">
-                    <svg width="16" height="16" fill="none" stroke="#0D9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    Saved Addresses
-                </h3>
-                <div class="address-grid" id="addressGrid">
-                    <!-- Addresses loaded dynamically -->
-                </div>
+    <div id="profileContent" style="display: none;">
+        <div class="profile-header">
+            <div class="profile-avatar" id="profileAvatar">U</div>
+            <h3 id="profileName" style="font-weight: 700; margin-bottom: 5px;">Loading...</h3>
+            <p id="memberSince" style="opacity: 0.9; margin-bottom: 15px;">Member since...</p>
+            <div class="d-flex justify-content-center gap-4 flex-wrap">
+                <div><div style="font-size: 1.5rem; font-weight: 700;" id="totalOrders">0</div><div style="font-size: 0.85rem; opacity: 0.9;">Orders</div></div>
+                <div><div style="font-size: 1.5rem; font-weight: 700;" id="loyaltyPoints">0</div><div style="font-size: 0.85rem; opacity: 0.9;">Loyalty Points</div></div>
+                <div><div style="font-size: 1.5rem; font-weight: 700;" id="totalSpent">₱0</div><div style="font-size: 0.85rem; opacity: 0.9;">Total Spent</div></div>
             </div>
         </div>
 
-        <!-- Loyalty Tab -->
-        <div class="tab-content" id="tab-loyalty">
-            <div class="loyalty-card">
-                <div class="loyalty-header">
-                    <div class="loyalty-tier">
-                        <span class="tier-icon" id="tierIcon">&#x1F948;</span>
-                        <div>
-                            <div class="tier-name" id="tierName">Silver Member</div>
-                            <div class="tier-label">Your current tier</div>
-                        </div>
-                    </div>
-                    <div class="loyalty-points">
-                        <div class="points-value" id="pointsValue">1,250</div>
-                        <div class="points-label">Available Points</div>
-                    </div>
-                </div>
-                <div class="loyalty-progress">
-                    <div class="progress-label">
-                        <span id="progressText">750 points to Gold tier</span>
-                        <span id="progressPercent">62%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill" style="width: 62%"></div>
-                    </div>
-                </div>
-                <div class="loyalty-perks">
-                    <div class="perk-item"><span class="perk-icon">&#x1F381;</span> 5% cashback on orders</div>
-                    <div class="perk-item"><span class="perk-icon">&#x1F69A;</span> Free shipping over &#x20B1;1,000</div>
-                    <div class="perk-item"><span class="perk-icon">&#x1F382;</span> Birthday bonus points</div>
-                </div>
-            </div>
+        <div id="alertContainer"></div>
 
-            <div class="form-section" style="margin-top: 28px">
-                <h3 class="form-section-title">
-                    <svg width="16" height="16" fill="none" stroke="#0D9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                    Recent Rewards Activity
-                </h3>
-                <div id="rewardsActivity">
-                    <p style="color: #9CA3AF; font-size: 0.875rem;">Loading activity...</p>
-                </div>
-            </div>
+        <div class="d-flex gap-2 mb-4 flex-wrap">
+            <button class="tab-btn active" onclick="showTab('personal', this)">👤 Personal Info</button>
+            <button class="tab-btn" onclick="showTab('addresses', this)">📍 Addresses</button>
+            <button class="tab-btn" onclick="showTab('security', this)">🔒 Security</button>
+            <button class="tab-btn" onclick="showTab('preferences', this)">⚙️ Preferences</button>
         </div>
 
-        <!-- Security Tab -->
-        <div class="tab-content" id="tab-security">
-            <div class="form-section">
-                <h3 class="form-section-title">
-                    <svg width="16" height="16" fill="none" stroke="#0D9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    Account Security
-                </h3>
-                <div class="security-item">
-                    <div class="security-info">
-                        <span class="security-icon">
-                            <svg width="20" height="20" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-                        </span>
-                        <div>
-                            <div class="security-title">Password</div>
-                            <div class="security-desc">Last changed 30 days ago</div>
-                        </div>
+        <div class="row">
+            <div class="col-lg-8">
+                <div id="tab-personal" class="tab-content active">
+                    <div class="profile-card">
+                        <h6>👤 Personal Information</h6>
+                        <form id="personalForm">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="firstName" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="lastName" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="email" readonly style="background: #f3f4f6;">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Date of Birth</label>
+                                    <input type="date" class="form-control" id="dateOfBirth">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Gender</label>
+                                    <select class="form-control" id="gender">
+                                        <option value="">Select...</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 mt-3">
+                                    <button type="submit" class="btn-save">💾 Save Changes</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                    <button class="btn-security" onclick="changePassword()">Change Password</button>
                 </div>
-                <div class="security-item">
-                    <div class="security-info">
-                        <span class="security-icon">
-                            <svg width="20" height="20" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-                        </span>
-                        <div>
-                            <div class="security-title">Two-Factor Authentication</div>
-                            <div class="security-desc">Add an extra layer of security</div>
+
+                <div id="tab-addresses" class="tab-content">
+                    <div class="profile-card">
+                        <h6>🏠 Billing Address</h6>
+                        <div class="row g-3">
+                            <div class="col-12"><input type="text" class="form-control" id="billingAddress" placeholder="Street Address"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" id="billingCity" placeholder="City"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" id="billingState" placeholder="State/Province"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" id="billingZipCode" placeholder="ZIP Code"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" id="billingCountry" placeholder="Country" value="Philippines"></div>
                         </div>
                     </div>
-                    <button class="btn-security" onclick="setup2FA()">Enable 2FA</button>
+                    <div class="profile-card">
+                        <h6>📦 Shipping Address</h6>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="sameAsBilling" onchange="copyBillingAddress()">
+                            <label class="form-check-label" for="sameAsBilling">Same as billing address</label>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-12"><input type="text" class="form-control" id="shippingAddress" placeholder="Street Address"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" id="shippingCity" placeholder="City"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" id="shippingState" placeholder="State/Province"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" id="shippingZipCode" placeholder="ZIP Code"></div>
+                            <div class="col-md-6"><input type="text" class="form-control" id="shippingCountry" placeholder="Country" value="Philippines"></div>
+                        </div>
+                        <div class="mt-3">
+                            <button type="button" class="btn-save" onclick="saveAddresses()">💾 Save Addresses</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="security-item">
-                    <div class="security-info">
-                        <span class="security-icon">
-                            <svg width="20" height="20" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                        </span>
-                        <div>
-                            <div class="security-title">Email Notifications</div>
-                            <div class="security-desc">Manage email preferences</div>
+
+                <div id="tab-security" class="tab-content">
+                    <div class="profile-card">
+                        <h6>🔒 Change Password</h6>
+                        <div class="row g-3">
+                            <div class="col-12"><input type="password" class="form-control" id="currentPassword" placeholder="Current Password"></div>
+                            <div class="col-md-6"><input type="password" class="form-control" id="newPassword" placeholder="New Password"></div>
+                            <div class="col-md-6"><input type="password" class="form-control" id="confirmPassword" placeholder="Confirm Password"></div>
+                            <div class="col-12 mt-3"><button type="button" class="btn-save">🔒 Update Password</button></div>
                         </div>
                     </div>
-                    <button class="btn-security" onclick="manageEmails()">Manage</button>
                 </div>
-                <div class="security-item">
-                    <div class="security-info">
-                        <span class="security-icon">
-                            <svg width="20" height="20" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                        </span>
+
+                <div id="tab-preferences" class="tab-content">
+                    <div class="profile-card">
+                        <h6>⚙️ Notification Preferences</h6>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="marketingOptIn" checked style="width: 3em; height: 1.5em;">
+                            <label class="form-check-label" for="marketingOptIn">Marketing Communications</label>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="orderUpdates" checked style="width: 3em; height: 1.5em;">
+                            <label class="form-check-label" for="orderUpdates">Order Updates</label>
+                        </div>
+                        <button type="button" class="btn-save" onclick="savePreferences()">💾 Save Preferences</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="loyalty-card mb-4">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span style="font-size: 2rem;">⭐</span>
                         <div>
-                            <div class="security-title">Delete Account</div>
-                            <div class="security-desc">Permanently delete your account and data</div>
+                            <div style="font-weight: 700;">Loyalty Rewards</div>
+                            <div id="customerCategory" style="opacity: 0.9; font-size: 0.9rem;">Standard Member</div>
                         </div>
                     </div>
-                    <button class="btn-security" style="border-color: #FEE2E2; color: #EF4444; background: #FEF2F2;" onclick="deleteAccount()">Delete</button>
+                    <div class="loyalty-points" id="sidebarPoints">0</div>
+                    <div style="opacity: 0.9; font-size: 0.9rem;">Available Points</div>
+                </div>
+
+                <div class="profile-card">
+                    <h6>📋 Account Info</h6>
+                    <div class="info-row"><span class="info-label">Customer ID</span><span class="info-value" id="customerId">-</span></div>
+                    <div class="info-row"><span class="info-label">Status</span><span class="info-value"><span class="badge bg-success" id="accountStatus">Active</span></span></div>
+                    <div class="info-row"><span class="info-label">Member Since</span><span class="info-value" id="createdAt">-</span></div>
                 </div>
             </div>
         </div>
@@ -871,394 +275,117 @@
         try {
             const response = await fetch('/CustomerPortal/GetProfile');
             const result = await response.json();
-
             if (result.success) {
                 populateProfile(result.data);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('profileContent').style.display = 'block';
             }
         } catch (error) {
-            console.error('Error loading profile:', error);
+            console.error('Error:', error);
         }
     }
 
     function populateProfile(data) {
-        // API returns flat structure: data.firstName, data.totalOrders, etc.
-        const fullName = ((data.firstName || '') + ' ' + (data.lastName || '')).trim() || 'Customer';
-
-        // Header
-        document.getElementById('profileName').textContent = fullName;
-        document.getElementById('profileEmail').textContent = data.email || '';
-        document.getElementById('statOrders').textContent = data.totalOrders || 0;
-        document.getElementById('statSpent').textContent = '₱' + (data.totalSpent || 0).toLocaleString();
-
-        if (data.createdAt) {
-            const date = new Date(data.createdAt);
-            document.getElementById('statMember').textContent = date.toLocaleDateString('en-PH', { month: 'short', year: 'numeric' });
-        }
-
-        // Form fields
+        const initials = (data.firstName?.[0] || '') + (data.lastName?.[0] || '');
+        document.getElementById('profileAvatar').textContent = initials || 'U';
+        document.getElementById('profileName').textContent = `${data.firstName || ''} ${data.lastName || ''}`;
+        const memberDate = data.createdAt ? new Date(data.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) : 'N/A';
+        document.getElementById('memberSince').textContent = `Member since ${memberDate}`;
+        document.getElementById('totalOrders').textContent = data.totalOrders || 0;
+        document.getElementById('loyaltyPoints').textContent = (data.loyaltyPoints || 0).toLocaleString();
+        document.getElementById('totalSpent').textContent = `₱${(data.totalSpent || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}`;
         document.getElementById('firstName').value = data.firstName || '';
         document.getElementById('lastName').value = data.lastName || '';
         document.getElementById('email').value = data.email || '';
         document.getElementById('phone').value = data.phone || '';
-
-        if (data.dateOfBirth) {
-            const dobInput = document.getElementById('birthDate');
-            if (dobInput) dobInput.value = data.dateOfBirth.split('T')[0];
-        }
-        if (data.gender) {
-            const genderSelect = document.getElementById('gender');
-            if (genderSelect) genderSelect.value = data.gender;
-        }
-
-        // Loyalty - points stored directly on customer
-        const points = data.loyaltyPoints || 0;
-        let tier = 'Bronze';
-        if (points >= 10000) tier = 'Platinum';
-        else if (points >= 5000) tier = 'Gold';
-        else if (points >= 1000) tier = 'Silver';
-
-        document.getElementById('pointsValue').textContent = points.toLocaleString();
-        document.getElementById('tierName').textContent = tier + ' Member';
-
-        const tiers = { 'Bronze': '🥉', 'Silver': '🥈', 'Gold': '🥇', 'Platinum': '💎' };
-        document.getElementById('tierIcon').textContent = tiers[tier] || '🥉';
-
-        // Addresses - API returns Addresses array with AddressLine1, City, etc.
-        const addresses = (data.addresses || []).map(a => ({
-            id: a.addressId,
-            type: (a.addressType || 'home').toLowerCase(),
-            street: a.addressLine1 || '',
-            barangay: a.addressLine2 || '',
-            city: a.city || '',
-            province: a.state || '',
-            postalCode: a.zipCode || '',
-            isDefault: a.isDefault || false
-        }));
-        loadAddresses(addresses);
-
-        // Rewards activity
-        loadRewardsActivity(data.rewardsHistory || []);
+        document.getElementById('dateOfBirth').value = data.dateOfBirth ? data.dateOfBirth.split('T')[0] : '';
+        document.getElementById('gender').value = data.gender || '';
+        document.getElementById('billingAddress').value = data.billingAddress || '';
+        document.getElementById('billingCity').value = data.billingCity || '';
+        document.getElementById('billingState').value = data.billingState || '';
+        document.getElementById('billingZipCode').value = data.billingZipCode || '';
+        document.getElementById('billingCountry').value = data.billingCountry || 'Philippines';
+        document.getElementById('shippingAddress').value = data.shippingAddress || '';
+        document.getElementById('shippingCity').value = data.shippingCity || '';
+        document.getElementById('shippingState').value = data.shippingState || '';
+        document.getElementById('shippingZipCode').value = data.shippingZipCode || '';
+        document.getElementById('shippingCountry').value = data.shippingCountry || 'Philippines';
+        document.getElementById('sidebarPoints').textContent = (data.loyaltyPoints || 0).toLocaleString();
+        document.getElementById('customerCategory').textContent = data.categoryName || 'Standard Member';
+        document.getElementById('customerId').textContent = data.customerCode || '-';
+        document.getElementById('accountStatus').textContent = data.status || 'Active';
+        document.getElementById('createdAt').textContent = memberDate;
+        document.getElementById('marketingOptIn').checked = data.marketingOptIn;
     }
 
-    function loadAddresses(addresses) {
-        const grid = document.getElementById('addressGrid');
-
-        if (addresses.length === 0) {
-            grid.innerHTML = `
-                <div class="btn-add-address" onclick="addNewAddress()">
-                    ➕ Add New Address
-                </div>`;
-            return;
-        }
-
-        grid.innerHTML = addresses.map((addr, i) => `
-            <div class="address-card ${addr.isDefault ? 'default' : ''}">
-                <div class="address-type">${addr.type === 'home' ? '🏠 Home' : '🏢 Office'}</div>
-                <div class="address-text">
-                    ${addr.street}<br>
-                    ${addr.barangay}, ${addr.city}<br>
-                    ${addr.province} ${addr.postalCode}
-                </div>
-                <div class="address-actions">
-                    <button class="btn-address" onclick="editAddress(${addr.id})">Edit</button>
-                    ${!addr.isDefault ? `<button class="btn-address" onclick="setDefaultAddress(${addr.id})">Set Default</button>` : ''}
-                </div>
-            </div>`).join('') + `
-            <div class="btn-add-address" onclick="addNewAddress()">
-                ➕ Add New Address
-            </div>`;
-    }
-
-    function loadRewardsActivity(history) {
-        const container = document.getElementById('rewardsActivity');
-
-        if (history.length === 0) {
-            container.innerHTML = `
-                <p style="color: var(--muted-foreground); text-align: center; padding: 20px;">
-                    No rewards activity yet. Start shopping to earn points! 🛒
-                </p>`;
-            return;
-        }
-
-        container.innerHTML = history.slice(0, 5).map(item => `
-            <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border);">
-                <div>
-                    <div style="font-weight: 500; color: var(--foreground);">${item.description}</div>
-                    <div style="font-size: 0.8rem; color: var(--muted-foreground);">${new Date(item.date).toLocaleDateString()}</div>
-                </div>
-                <div style="font-weight: 600; color: ${item.points > 0 ? 'var(--success)' : 'var(--error)'};">
-                    ${item.points > 0 ? '+' : ''}${item.points} pts
-                </div>
-            </div>`).join('');
-    }
-
-    function switchTab(tabId, btn) {
-        document.querySelectorAll('.tab-pill').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
+    function showTab(tabName, btn) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tabName).classList.add('active');
         btn.classList.add('active');
-        document.getElementById('tab-' + tabId).classList.add('active');
     }
 
-    async function savePersonalInfo(e) {
+    document.getElementById('personalForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-
-        const data = {
+        await updateProfile({
             firstName: document.getElementById('firstName').value,
             lastName: document.getElementById('lastName').value,
-            email: document.getElementById('email').value,
             phone: document.getElementById('phone').value,
-            birthDate: document.getElementById('birthDate').value,
-            gender: document.getElementById('gender').value
-        };
+            dateOfBirth: document.getElementById('dateOfBirth').value || null,
+            gender: document.getElementById('gender').value,
+            marketingOptIn: document.getElementById('marketingOptIn').checked
+        });
+    });
 
+    async function saveAddresses() {
+        await updateProfile({
+            billingAddress: document.getElementById('billingAddress').value,
+            billingCity: document.getElementById('billingCity').value,
+            billingState: document.getElementById('billingState').value,
+            billingZipCode: document.getElementById('billingZipCode').value,
+            billingCountry: document.getElementById('billingCountry').value,
+            shippingAddress: document.getElementById('shippingAddress').value,
+            shippingCity: document.getElementById('shippingCity').value,
+            shippingState: document.getElementById('shippingState').value,
+            shippingZipCode: document.getElementById('shippingZipCode').value,
+            shippingCountry: document.getElementById('shippingCountry').value,
+            marketingOptIn: document.getElementById('marketingOptIn').checked
+        });
+    }
+
+    async function savePreferences() {
+        await updateProfile({ marketingOptIn: document.getElementById('marketingOptIn').checked });
+    }
+
+    async function updateProfile(data) {
         try {
             const response = await fetch('/CustomerPortal/UpdateProfile', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-
             const result = await response.json();
-            if (result.success) {
-                showToast('✓ Profile updated successfully!', 'success');
-                document.getElementById('profileName').textContent = data.firstName + ' ' + data.lastName;
-                document.getElementById('profileEmail').textContent = data.email;
-            } else {
-                showToast('Failed to update profile', 'error');
-            }
+            showAlert(result.success ? 'Profile updated successfully!' : 'Error: ' + result.message, result.success ? 'success' : 'error');
+            if (result.success) loadProfile();
         } catch (error) {
-            showToast('Error saving profile', 'error');
+            showAlert('Failed to update profile', 'error');
         }
     }
 
-    function resetPersonalForm() {
-        loadProfile();
+    function copyBillingAddress() {
+        if (document.getElementById('sameAsBilling').checked) {
+            document.getElementById('shippingAddress').value = document.getElementById('billingAddress').value;
+            document.getElementById('shippingCity').value = document.getElementById('billingCity').value;
+            document.getElementById('shippingState').value = document.getElementById('billingState').value;
+            document.getElementById('shippingZipCode').value = document.getElementById('billingZipCode').value;
+            document.getElementById('shippingCountry').value = document.getElementById('billingCountry').value;
+        }
     }
 
-    function addNewAddress() {
-        const modal = document.createElement('div');
-        modal.id = 'addressModal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
-        modal.innerHTML = `
-        <div style="background:white;border-radius:var(--radius);padding:32px;width:90%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-            <h3 style="margin-bottom:20px;color:var(--foreground);">Add New Address</h3>
-            <div style="display:grid;gap:12px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                    <div>
-                        <label class="form-label">Type</label>
-                        <select id="newAddrType" class="form-select" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:Poppins,sans-serif;">
-                            <option value="Shipping">Shipping</option>
-                            <option value="Billing">Billing</option>
-                            <option value="Home">Home</option>
-                            <option value="Office">Office</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="form-label">Zip Code</label>
-                        <input type="text" id="newAddrZip" class="form-input" placeholder="e.g. 1200">
-                    </div>
-                </div>
-                <div>
-                    <label class="form-label">Address Line 1 *</label>
-                    <input type="text" id="newAddrLine1" class="form-input" placeholder="Street address, unit number">
-                </div>
-                <div>
-                    <label class="form-label">Address Line 2</label>
-                    <input type="text" id="newAddrLine2" class="form-input" placeholder="Barangay, building, etc.">
-                </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                    <div>
-                        <label class="form-label">City *</label>
-                        <input type="text" id="newAddrCity" class="form-input" placeholder="City">
-                    </div>
-                    <div>
-                        <label class="form-label">Province/State</label>
-                        <input type="text" id="newAddrState" class="form-input" placeholder="Province">
-                    </div>
-                </div>
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-                    <input type="checkbox" id="newAddrDefault"> Set as default address
-                </label>
-            </div>
-            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
-                <button onclick="document.getElementById('addressModal').remove()" style="padding:10px 20px;border:1.5px solid var(--border);background:white;border-radius:var(--radius-sm);cursor:pointer;font-family:Poppins,sans-serif;">Cancel</button>
-                <button onclick="saveNewAddress()" style="padding:10px 20px;background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-weight:600;font-family:Poppins,sans-serif;">Save Address</button>
-            </div>
-        </div>`;
-        document.body.appendChild(modal);
-    }
-
-    async function saveNewAddress() {
-        const data = {
-            addressType: document.getElementById('newAddrType').value,
-            addressLine1: document.getElementById('newAddrLine1').value,
-            addressLine2: document.getElementById('newAddrLine2').value,
-            city: document.getElementById('newAddrCity').value,
-            state: document.getElementById('newAddrState').value,
-            zipCode: document.getElementById('newAddrZip').value,
-            country: 'Philippines',
-            isDefault: document.getElementById('newAddrDefault').checked
-        };
-        if (!data.addressLine1 || !data.city) { showToast('Address & City are required', 'error'); return; }
-        try {
-            const res = await fetch('/CustomerPortal/AddAddress', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
-            const result = await res.json();
-            if (result.success) { showToast('✓ Address added!', 'success'); document.getElementById('addressModal').remove(); loadProfile(); }
-            else showToast(result.message, 'error');
-        } catch(e) { showToast('Error adding address', 'error'); }
-    }
-
-    function editAddress(id) {
-        const cards = document.querySelectorAll('.address-card');
-        // Find the address card that contains the edit button for this id
-        const modal = document.createElement('div');
-        modal.id = 'editAddrModal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
-        modal.innerHTML = `
-        <div style="background:white;border-radius:var(--radius);padding:32px;width:90%;max-width:500px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-            <h3 style="margin-bottom:20px;">Edit Address</h3>
-            <div style="display:grid;gap:12px;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                    <div><label class="form-label">Type</label><select id="editAddrType" class="form-select" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:Poppins,sans-serif;"><option value="Shipping">Shipping</option><option value="Billing">Billing</option><option value="Home">Home</option><option value="Office">Office</option></select></div>
-                    <div><label class="form-label">Zip Code</label><input type="text" id="editAddrZip" class="form-input"></div>
-                </div>
-                <div><label class="form-label">Address Line 1 *</label><input type="text" id="editAddrLine1" class="form-input"></div>
-                <div><label class="form-label">Address Line 2</label><input type="text" id="editAddrLine2" class="form-input"></div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                    <div><label class="form-label">City *</label><input type="text" id="editAddrCity" class="form-input"></div>
-                    <div><label class="form-label">Province/State</label><input type="text" id="editAddrState" class="form-input"></div>
-                </div>
-            </div>
-            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
-                <button onclick="deleteAddress(${id})" style="padding:10px 20px;background:var(--error-light);color:var(--error-fg);border:none;border-radius:var(--radius-sm);cursor:pointer;font-family:Poppins,sans-serif;">Delete</button>
-                <button onclick="document.getElementById('editAddrModal').remove()" style="padding:10px 20px;border:1.5px solid var(--border);background:white;border-radius:var(--radius-sm);cursor:pointer;font-family:Poppins,sans-serif;">Cancel</button>
-                <button onclick="saveEditAddress(${id})" style="padding:10px 20px;background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-weight:600;font-family:Poppins,sans-serif;">Save</button>
-            </div>
-        </div>`;
-        document.body.appendChild(modal);
-    }
-
-    async function saveEditAddress(id) {
-        const data = {
-            addressId: id,
-            addressType: document.getElementById('editAddrType').value,
-            addressLine1: document.getElementById('editAddrLine1').value,
-            addressLine2: document.getElementById('editAddrLine2').value,
-            city: document.getElementById('editAddrCity').value,
-            state: document.getElementById('editAddrState').value,
-            zipCode: document.getElementById('editAddrZip').value,
-            country: 'Philippines'
-        };
-        if (!data.addressLine1 || !data.city) { showToast('Address & City are required', 'error'); return; }
-        try {
-            const res = await fetch('/CustomerPortal/UpdateAddress', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
-            const result = await res.json();
-            if (result.success) { showToast('✓ Address updated!', 'success'); document.getElementById('editAddrModal').remove(); loadProfile(); }
-            else showToast(result.message, 'error');
-        } catch(e) { showToast('Error updating address', 'error'); }
-    }
-
-    async function deleteAddress(id) {
-        if (!confirm('Delete this address?')) return;
-        try {
-            const res = await fetch('/CustomerPortal/DeleteAddress', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ addressId: id }) });
-            const result = await res.json();
-            if (result.success) { showToast('Address deleted', 'success'); const m = document.getElementById('editAddrModal'); if(m) m.remove(); loadProfile(); }
-            else showToast(result.message, 'error');
-        } catch(e) { showToast('Error deleting address', 'error'); }
-    }
-
-    async function setDefaultAddress(id) {
-        try {
-            const res = await fetch('/CustomerPortal/SetDefaultAddress', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ addressId: id }) });
-            const result = await res.json();
-            if (result.success) { showToast('✓ Default address updated!', 'success'); loadProfile(); }
-            else showToast(result.message, 'error');
-        } catch(e) { showToast('Error setting default', 'error'); }
-    }
-
-    function changePassword() {
-        const modal = document.createElement('div');
-        modal.id = 'pwModal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
-        modal.innerHTML = `
-        <div style="background:white;border-radius:var(--radius);padding:32px;width:90%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-            <h3 style="margin-bottom:20px;">🔑 Change Password</h3>
-            <div style="display:grid;gap:12px;">
-                <div><label class="form-label">Current Password</label><input type="password" id="currentPw" class="form-input"></div>
-                <div><label class="form-label">New Password</label><input type="password" id="newPw" class="form-input" placeholder="Min 8 characters"></div>
-                <div><label class="form-label">Confirm New Password</label><input type="password" id="confirmPw" class="form-input"></div>
-            </div>
-            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
-                <button onclick="document.getElementById('pwModal').remove()" style="padding:10px 20px;border:1.5px solid var(--border);background:white;border-radius:var(--radius-sm);cursor:pointer;font-family:Poppins,sans-serif;">Cancel</button>
-                <button onclick="submitPasswordChange()" style="padding:10px 20px;background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-weight:600;font-family:Poppins,sans-serif;">Change Password</button>
-            </div>
-        </div>`;
-        document.body.appendChild(modal);
-    }
-
-    async function submitPasswordChange() {
-        const current = document.getElementById('currentPw').value;
-        const newPw = document.getElementById('newPw').value;
-        const confirm = document.getElementById('confirmPw').value;
-        if (!current || !newPw) { showToast('Please fill all fields', 'error'); return; }
-        if (newPw.length < 8) { showToast('Password must be at least 8 characters', 'error'); return; }
-        if (newPw !== confirm) { showToast('Passwords do not match', 'error'); return; }
-        try {
-            const res = await fetch('/CustomerPortal/ChangePassword', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ currentPassword:current, newPassword:newPw }) });
-            const result = await res.json();
-            if (result.success) { showToast('✓ Password changed successfully!', 'success'); document.getElementById('pwModal').remove(); }
-            else showToast(result.message, 'error');
-        } catch(e) { showToast('Error changing password', 'error'); }
-    }
-
-    function setup2FA() {
-        showToast('Two-factor authentication requires email/SMS verification. This feature will be available in the next update.', 'info');
-    }
-
-    function manageEmails() {
-        const modal = document.createElement('div');
-        modal.id = 'emailPrefModal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
-        modal.innerHTML = `
-        <div style="background:white;border-radius:var(--radius);padding:32px;width:90%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-            <h3 style="margin-bottom:20px;">📧 Email Preferences</h3>
-            <div style="display:grid;gap:16px;">
-                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" id="prefMarketing" checked> Marketing emails & promotions</label>
-                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" id="prefOrders" checked disabled> Order confirmations (required)</label>
-                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" id="prefSupport" checked disabled> Support ticket updates (required)</label>
-                <div><label class="form-label">Preferred Contact Method</label>
-                <select id="prefContact" class="form-select" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:Poppins,sans-serif;">
-                    <option value="email">Email</option><option value="sms">SMS</option><option value="both">Both</option>
-                </select></div>
-            </div>
-            <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px;">
-                <button onclick="document.getElementById('emailPrefModal').remove()" style="padding:10px 20px;border:1.5px solid var(--border);background:white;border-radius:var(--radius-sm);cursor:pointer;font-family:Poppins,sans-serif;">Cancel</button>
-                <button onclick="saveEmailPrefs()" style="padding:10px 20px;background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-weight:600;font-family:Poppins,sans-serif;">Save Preferences</button>
-            </div>
-        </div>`;
-        document.body.appendChild(modal);
-    }
-
-    async function saveEmailPrefs() {
-        try {
-            const res = await fetch('/CustomerPortal/UpdateEmailPreferences', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ marketingOptIn: document.getElementById('prefMarketing').checked, preferredContactMethod: document.getElementById('prefContact').value }) });
-            const result = await res.json();
-            if (result.success) { showToast('✓ Preferences saved!', 'success'); document.getElementById('emailPrefModal').remove(); }
-            else showToast(result.message, 'error');
-        } catch(e) { showToast('Error saving preferences', 'error'); }
-    }
-
-    async function deleteAccount() {
-        if (!confirm('Are you sure you want to delete your account? This action cannot be undone. All your data will be permanently removed within 30 days.')) return;
-        if (!confirm('This is your FINAL confirmation. Type DELETE to proceed.')) return;
-        try {
-            const res = await fetch('/CustomerPortal/DeleteAccount', { method:'POST', headers:{'Content-Type':'application/json'} });
-            const result = await res.json();
-            if (result.success) { showToast('Account deletion request submitted. You will be logged out.', 'info'); setTimeout(() => window.location.href = '/Auth/Logout', 2000); }
-            else showToast(result.message, 'error');
-        } catch(e) { showToast('Error submitting deletion request', 'error'); }
+    function showAlert(message, type) {
+        const container = document.getElementById('alertContainer');
+        container.innerHTML = `<div class="alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+        setTimeout(() => container.innerHTML = '', 5000);
     }
 </script>
 }

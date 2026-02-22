@@ -4,219 +4,338 @@
 }
 
 <style>
-    .tickets-page { padding: 30px 0; background: #f8f9fa; min-height: 100vh; }
-    
+    .tickets-page {
+        min-height: 100vh;
+        font-family: 'Inter', -apple-system, sans-serif;
+    }
+
+    /* Page Header */
     .page-header {
-        background: linear-gradient(135deg, #008080 0%, #20b2aa 100%);
-        color: white;
-        padding: 40px;
-        border-radius: 20px;
-        margin-bottom: 30px;
+        margin-bottom: 28px;
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
-    
-    .page-header h1 { font-weight: 800; margin: 0 0 5px 0; font-size: 2rem; }
-    .page-header p { opacity: 0.9; margin: 0; }
-    
+
+    .page-header-text h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--foreground);
+        margin: 0 0 6px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        letter-spacing: -0.02em;
+    }
+
+    .page-header-text p {
+        color: var(--muted-foreground);
+        font-size: 0.925rem;
+        margin: 0;
+    }
+
     .btn-new-ticket {
-        padding: 14px 30px;
-        background: white;
-        color: #008080;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 22px;
+        background: var(--primary);
+        color: white;
         border: none;
-        border-radius: 12px;
+        border-radius: var(--radius-sm);
+        font-family: 'Inter', -apple-system, sans-serif;
         font-weight: 600;
+        font-size: 0.875rem;
         text-decoration: none;
-        transition: all 0.3s;
+        transition: background-color 0.15s ease;
     }
-    
+
     .btn-new-ticket:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        color: #006666;
+        background: var(--primary-hover, #006b6b);
+        color: white;
     }
-    
+
+    /* Stats Row */
     .stats-row {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
-        margin-bottom: 30px;
+        gap: 16px;
+        margin-bottom: 28px;
     }
-    
-    @@media (max-width: 768px) {
-        .stats-row { grid-template-columns: repeat(2, 1fr); }
-    }
-    
+
     .stat-card {
-        background: white;
-        border-radius: 16px;
-        padding: 25px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        background: #FFFFFF;
+        border-radius: var(--radius);
+        border: 1px solid #E5E7EB;
+        padding: 20px 22px;
         text-align: center;
+        position: relative;
+        overflow: hidden;
+        transition: border-color 0.2s ease;
     }
-    
-    .stat-icon { font-size: 2rem; margin-bottom: 10px; }
-    .stat-value { font-size: 2rem; font-weight: 800; color: #1f2937; }
-    .stat-label { color: #6b7280; font-size: 0.9rem; }
-    
+
+    .stat-card:hover {
+        border-color: #D1D5DB;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+    }
+
+    .stat-card:nth-child(1)::before { background: var(--primary); }
+    .stat-card:nth-child(2)::before { background: #3b82f6; }
+    .stat-card:nth-child(3)::before { background: #f59e0b; }
+    .stat-card:nth-child(4)::before { background: #10b981; }
+
+    .stat-icon {
+        font-size: 1.35rem;
+        margin-bottom: 10px;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--foreground);
+        line-height: 1;
+        letter-spacing: -0.02em;
+    }
+
+    .stat-label {
+        font-size: 0.825rem;
+        color: var(--muted-foreground);
+        margin-top: 4px;
+        font-weight: 500;
+    }
+
+    /* Tickets Container */
     .tickets-container {
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        background: #FFFFFF;
+        border-radius: var(--radius);
+        border: 1px solid #E5E7EB;
         overflow: hidden;
     }
-    
+
     .tickets-header {
-        padding: 20px 25px;
-        border-bottom: 1px solid #e5e7eb;
+        padding: 12px 20px;
+        border-bottom: 1px solid #E5E7EB;
         display: flex;
-        gap: 10px;
+        gap: 6px;
         flex-wrap: wrap;
+        background: #F9FAFB;
     }
-    
+
     .filter-tab {
-        padding: 10px 20px;
+        padding: 8px 16px;
         border: none;
-        background: #f3f4f6;
-        border-radius: 10px;
+        background: none;
+        border-radius: var(--radius-sm);
         cursor: pointer;
+        font-family: 'Inter', -apple-system, sans-serif;
         font-weight: 500;
-        color: #6b7280;
-        transition: all 0.3s;
+        font-size: 0.875rem;
+        color: var(--muted-foreground);
+        transition: all 0.2s ease;
     }
-    
-    .filter-tab:hover, .filter-tab.active {
-        background: #008080;
+
+    .filter-tab:hover {
+        color: var(--foreground);
+        background: #FFFFFF;
+    }
+
+    .filter-tab.active {
+        background: var(--primary);
         color: white;
+        font-weight: 600;
     }
-    
+
+    /* Ticket Cards */
     .ticket-card {
         display: block;
-        padding: 25px;
-        border-bottom: 1px solid #f3f4f6;
+        padding: 20px 24px;
+        border-bottom: 1px solid #F3F4F6;
         text-decoration: none;
         color: inherit;
-        border-left: 4px solid transparent;
-        transition: all 0.3s;
+        border-left: 3px solid transparent;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
     }
-    
+
     .ticket-card:hover {
-        background: #fafafa;
-        transform: translateX(5px);
+        background: #F9FAFB;
+        border-left-color: var(--primary);
     }
-    
+
     .ticket-card:last-child { border-bottom: none; }
-    
+
     .ticket-card.status-Open { border-left-color: #3b82f6; }
     .ticket-card.status-InProgress { border-left-color: #f59e0b; }
     .ticket-card.status-Resolved { border-left-color: #10b981; }
     .ticket-card.status-Closed { border-left-color: #6b7280; }
-    
+
+    .ticket-card.status-Open:hover { border-left-color: #3b82f6; }
+    .ticket-card.status-InProgress:hover { border-left-color: #f59e0b; }
+    .ticket-card.status-Resolved:hover { border-left-color: #10b981; }
+    .ticket-card.status-Closed:hover { border-left-color: #6b7280; }
+
     .ticket-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         margin-bottom: 10px;
     }
-    
+
     .status-badge {
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 0.75rem;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.725rem;
         font-weight: 600;
+        letter-spacing: 0.01em;
     }
-    
+
     .status-badge.Open { background: #dbeafe; color: #1d4ed8; }
     .status-badge.InProgress { background: #fef3cd; color: #856404; }
     .status-badge.Resolved { background: #d4edda; color: #155724; }
-    .status-badge.Closed { background: #e5e7eb; color: #6b7280; }
-    
+    .status-badge.Closed { background: #F3F4F6; color: var(--muted-foreground); }
+
     .priority-badge {
         font-size: 0.8rem;
         margin-left: 10px;
+        font-weight: 500;
     }
-    
+
     .priority-badge.High { color: #ef4444; }
     .priority-badge.Medium { color: #f59e0b; }
     .priority-badge.Low { color: #10b981; }
-    
-    .ticket-number { color: #9ca3af; font-size: 0.85rem; }
-    
+
+    .ticket-number {
+        color: var(--muted-foreground);
+        font-size: 0.825rem;
+    }
+
     .ticket-title {
         font-weight: 600;
-        color: #1f2937;
-        font-size: 1.1rem;
+        color: var(--foreground);
+        font-size: 1rem;
         margin-bottom: 8px;
     }
-    
+
     .ticket-description {
-        color: #6b7280;
-        font-size: 0.9rem;
+        color: var(--muted-foreground);
+        font-size: 0.875rem;
         line-height: 1.5;
-        margin-bottom: 15px;
+        margin-bottom: 14px;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
     }
-    
+
     .ticket-meta {
         display: flex;
-        gap: 20px;
+        gap: 16px;
         flex-wrap: wrap;
-        font-size: 0.85rem;
-        color: #6b7280;
+        font-size: 0.8rem;
+        color: var(--muted-foreground);
     }
-    
+
     .ticket-meta span {
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 4px;
     }
-    
+
+    /* Empty State */
     .empty-state {
         text-align: center;
-        padding: 60px;
+        padding: 56px 20px;
     }
-    
-    .empty-state-icon { font-size: 4rem; margin-bottom: 20px; }
-    .empty-state h3 { color: #1f2937; margin-bottom: 10px; }
-    .empty-state p { color: #6b7280; margin-bottom: 20px; }
-    
+
+    .empty-state-icon {
+        font-size: 3rem;
+        opacity: 0.4;
+        margin-bottom: 14px;
+    }
+
+    .empty-state h3 {
+        color: var(--foreground);
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .empty-state p {
+        color: var(--muted-foreground);
+        margin-bottom: 20px;
+        font-size: 0.925rem;
+    }
+
+    /* Pagination */
     .pagination {
         display: flex;
         justify-content: center;
-        gap: 10px;
+        gap: 8px;
         padding: 20px;
     }
-    
+
     .page-btn {
-        padding: 10px 15px;
-        border: 2px solid #e5e7eb;
-        background: white;
-        border-radius: 8px;
+        padding: 8px 14px;
+        border: 1px solid #E5E7EB;
+        background: #FFFFFF;
+        border-radius: var(--radius-sm);
         cursor: pointer;
-        transition: all 0.3s;
+        font-family: 'Inter', -apple-system, sans-serif;
+        font-size: 0.875rem;
+        color: var(--foreground);
+        transition: all 0.15s ease;
     }
-    
-    .page-btn:hover, .page-btn.active {
-        background: #008080;
+
+    .page-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: #F9FAFB;
+    }
+
+    .page-btn.active {
+        background: var(--primary);
         color: white;
-        border-color: #008080;
+        border-color: var(--primary);
+    }
+
+    /* Responsive */
+    @@media (max-width: 1024px) {
+        .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @@media (max-width: 768px) {
+        .stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .stat-card { padding: 16px; }
+        .stat-value { font-size: 1.5rem; }
+        .page-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+        .tickets-header { padding: 10px 14px; }
+        .filter-tab { padding: 7px 12px; font-size: 0.825rem; }
+    }
+
+    @@media (max-width: 576px) {
+        .stats-row { grid-template-columns: 1fr 1fr; }
+        .page-header-text h1 { font-size: 1.35rem; }
     }
 </style>
 
 <div class="tickets-page">
     <div class="container">
+        <!-- Page Header -->
         <div class="page-header">
-            <div>
-                <h1>📋 My Support Tickets</h1>
+            <div class="page-header-text">
+                <h1>My Support Tickets</h1>
                 <p>Track and manage your support requests</p>
             </div>
-            <a href="/CustomerPortal/SubmitTicket" class="btn-new-ticket">➕ New Ticket</a>
+            <a href="/CustomerPortal/SubmitTicket" class="btn-new-ticket">+ New Ticket</a>
         </div>
-        
+
+        <!-- Stats Cards -->
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-icon">📋</div>
@@ -239,7 +358,8 @@
                 <div class="stat-label">Resolved</div>
             </div>
         </div>
-        
+
+        <!-- Tickets List -->
         <div class="tickets-container">
             <div class="tickets-header">
                 <button class="filter-tab active" data-status="">All</button>
@@ -248,7 +368,7 @@
                 <button class="filter-tab" data-status="Resolved">Resolved</button>
                 <button class="filter-tab" data-status="Closed">Closed</button>
             </div>
-            
+
             <div id="ticketsContent">
                 <div class="empty-state">
                     <div class="empty-state-icon">⏳</div>
@@ -284,7 +404,7 @@
         try {
             const response = await fetch('/CustomerPortal/GetTickets');
             const result = await response.json();
-            
+
             if (result.success) {
                 allTickets = result.data;
                 updateStats();
@@ -303,7 +423,7 @@
         const open = allTickets.filter(t => t.status === 'Open').length;
         const progress = allTickets.filter(t => t.status === 'In Progress').length;
         const resolved = allTickets.filter(t => t.status === 'Resolved' || t.status === 'Closed').length;
-        
+
         document.getElementById('totalTickets').textContent = total;
         document.getElementById('openTickets').textContent = open;
         document.getElementById('progressTickets').textContent = progress;
@@ -317,11 +437,11 @@
     function renderTickets() {
         const container = document.getElementById('ticketsContent');
         let tickets = allTickets;
-        
+
         if (currentFilter) {
             tickets = allTickets.filter(t => t.status === currentFilter);
         }
-        
+
         if (!tickets || tickets.length === 0) {
             renderEmpty();
             return;
