@@ -45,6 +45,20 @@
         font-size: 0.95rem; color: #6b7280; line-height: 1.7; margin-bottom: 8px;
     }
 
+    .success-note {
+        margin-top: 16px;
+        font-size: 0.95rem;
+        color: #475569;
+    }
+
+    .success-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 18px;
+    }
+
     #successState p,
     #errorState p,
     #verifyingState p {
@@ -135,7 +149,7 @@
                     <polyline points="8 12 11 15 16 9"/>
                 </svg>
             </div>
-            <h2>Payment Successful!</h2>
+            <h2>Thank You for Subscribing!</h2>
             <p>Your CompuGear ERP subscription is now active. Your account has been created and is ready to use.</p>
 
             <div class="payment-details">
@@ -161,7 +175,13 @@
                 </div>
             </div>
 
-            <a href="/Auth/Login" class="btn-login">Go to Login</a>
+            <p class="success-note">
+                You will be redirected to the login page in <strong id="redirectSeconds">10</strong> seconds.
+            </p>
+            <div class="success-actions">
+                <a href="/Auth/Login" class="btn-login">Go to Login</a>
+                <a href="/ERPWebsite/Pricing" class="btn-retry" style="margin-top: 0;">View Plans</a>
+            </div>
         </div>
 
         <!-- Error State -->
@@ -221,6 +241,7 @@
                         ? result.paymentId.substring(0, 16) + '...'
                         : '-';
                     showState('success');
+                    startRedirectCountdown();
                 } else {
                     showState('error', result.message || 'Payment verification failed.');
                 }
@@ -228,6 +249,23 @@
                 console.error('Verification error:', err);
                 showState('error', 'Network error. Please check your connection and try again.');
             }
+        }
+
+        function startRedirectCountdown() {
+            const secondsEl = document.getElementById('redirectSeconds');
+            if (!secondsEl) return;
+
+            let seconds = 10;
+            secondsEl.textContent = seconds;
+
+            const timer = setInterval(() => {
+                seconds -= 1;
+                secondsEl.textContent = seconds;
+                if (seconds <= 0) {
+                    clearInterval(timer);
+                    window.location.href = '/Auth/Login';
+                }
+            }, 1000);
         }
 
         function retryVerification() {

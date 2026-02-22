@@ -711,6 +711,8 @@
                 <select class="form-select" id="transferAgentSelect">
                     <option value="">Select an agent...</option>
                 </select>
+                <label class="form-label mt-3">Reason (optional)</label>
+                <textarea class="form-control" id="transferReason" rows="3" placeholder="Reason for transfer"></textarea>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -1091,12 +1093,25 @@
             showError('Please select an agent');
             return;
         }
+        const reason = document.getElementById('transferReason').value.trim();
         
         try {
-            // Update the session's agent and status
-            const session = await fetch(`/api/GetChatMessages?sessionId=${currentSessionId}`);
-            
-            // For now, we'll just change the status to Transferred
+            const response = await fetch('/api/TransferChat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sessionId: currentSessionId,
+                    toAgentId: parseInt(newAgentId, 10),
+                    reason: reason || null
+                })
+            });
+            const result = await response.json();
+
+            if (!result.success) {
+                showError(result.message || 'Failed to transfer chat');
+                return;
+            }
+
             showSuccess('Chat transfer initiated');
             bootstrap.Modal.getInstance(document.getElementById('transferModal')).hide();
             currentSessionId = null;
