@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CompuGear.Data;
 using CompuGear.Models;
+using CompuGear.Services;
 
 namespace CompuGear.Controllers
 {
@@ -11,10 +12,12 @@ namespace CompuGear.Controllers
     public class AuthController : Controller
     {
         private readonly CompuGearDbContext _context;
+        private readonly IAuditService _auditService;
 
-        public AuthController(CompuGearDbContext context)
+        public AuthController(CompuGearDbContext context, IAuditService auditService)
         {
             _context = context;
+            _auditService = auditService;
         }
 
         // Debug: Check current session (useful for troubleshooting)
@@ -190,6 +193,7 @@ namespace CompuGear.Controllers
                                     HttpContext.Session.SetInt32("CompanyId", customer.CompanyId.Value);
                                 }
                             }
+                            await _auditService.LogLoginAsync(user.UserId, user.FullName, true);
                             return Json(new { success = true, message = "Login successful", redirectUrl = "/CustomerPortal/Index" });
                         }
 
@@ -207,6 +211,7 @@ namespace CompuGear.Controllers
                             _ => "/Home/Index"
                         };
 
+                        await _auditService.LogLoginAsync(user.UserId, user.FullName, true);
                         return Json(new { success = true, message = "Login successful", redirectUrl });
                     }
                 }
@@ -245,15 +250,18 @@ namespace CompuGear.Controllers
                                 HttpContext.Session.SetInt32("CompanyId", customerUser.CompanyId.Value);
                             }
 
+                            await _auditService.LogLoginAsync(customerUser.UserId, customer2.FullName, true);
                             return Json(new { success = true, message = "Login successful", redirectUrl = "/CustomerPortal/Index" });
                         }
                     }
                 }
 
+                await _auditService.LogLoginAsync(0, request.Email, false, "Invalid email or password");
                 return Json(new { success = false, message = "Invalid email or password" });
             }
             catch (Exception ex)
             {
+                await _auditService.LogLoginAsync(0, request.Email, false, ex.Message);
                 return Json(new { success = false, message = "An error occurred: " + ex.Message });
             }
         }
@@ -340,8 +348,16 @@ namespace CompuGear.Controllers
         }
 
         // Logout
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
+            var userId = HttpContext.Session.GetInt32("UserId") ?? 0;
+            var userName = HttpContext.Session.GetString("UserName") ?? HttpContext.Session.GetString("CustomerName") ?? "User";
+
+            if (userId > 0)
+            {
+                await _auditService.LogLogoutAsync(userId, userName);
+            }
+
             HttpContext.Session.Clear();
             return RedirectToAction("Login");
         }

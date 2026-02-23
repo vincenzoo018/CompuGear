@@ -172,6 +172,10 @@
                 if (!response.ok) {
                     throw new Error('HTTP ' + response.status);
                 }
+                var contentType = response.headers.get('content-type') || '';
+                if (contentType.indexOf('application/json') === -1) {
+                    throw new Error('Non-JSON response received');
+                }
                 return response.json();
             })
             .then(function(result) {
@@ -387,7 +391,7 @@
                 </body>
                 </html>`;
 
-            var printWindow = window.open('', '_blank');
+            var printWindow = window.open('about:blank', '_blank');
             if (!printWindow) {
                 alert('Please allow pop-ups to generate the PDF report.');
                 return;

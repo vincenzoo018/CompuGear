@@ -78,6 +78,7 @@ app.UseRouting();
 
 app.UseSession();
 app.UseAuthorization();
+app.UseMiddleware<ActivityAuditMiddleware>();
 
 app.MapControllerRoute(
     name: "default",

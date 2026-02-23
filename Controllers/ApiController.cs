@@ -35,6 +35,52 @@ namespace CompuGear.Controllers
             return HttpContext.Session.GetInt32("RoleId");
         }
 
+        private IQueryable<ActivityLog> GetScopedActivityLogQuery()
+        {
+            var query = _context.ActivityLogs.AsQueryable();
+            var companyId = GetCompanyId();
+
+            if (!companyId.HasValue)
+                return query;
+
+            var staffUserIds = _context.Users
+                .Where(u => u.CompanyId == companyId)
+                .Select(u => u.UserId);
+
+            var customerLinkedUserIds = _context.Customers
+                .Where(c => c.CompanyId == companyId && c.UserId.HasValue)
+                .Select(c => c.UserId!.Value);
+
+            var companyUserIds = staffUserIds.Union(customerLinkedUserIds);
+
+            return query.Where(a => a.UserId.HasValue && companyUserIds.Contains(a.UserId.Value));
+        }
+
+        private IQueryable<ActivityLog> ApplyUserTypeFilter(IQueryable<ActivityLog> query, string? userType)
+        {
+            if (string.IsNullOrWhiteSpace(userType))
+                return query;
+
+            var normalized = userType.Trim().ToLowerInvariant();
+
+            if (normalized == "system")
+                return query.Where(a => !a.UserId.HasValue);
+
+            if (normalized == "customer")
+            {
+                return query.Where(a => a.UserId.HasValue && _context.Users
+                    .Any(u => u.UserId == a.UserId.Value && u.RoleId == 7));
+            }
+
+            if (normalized == "staff")
+            {
+                return query.Where(a => a.UserId.HasValue && _context.Users
+                    .Any(u => u.UserId == a.UserId.Value && u.RoleId != 7));
+            }
+
+            return query;
+        }
+
         private bool HasFullBillingAccess()
         {
             return false;
@@ -4928,12 +4974,14 @@ namespace CompuGear.Controllers
         #region ===== ACTIVITY LOGS =====
 
         [HttpGet("activity-logs")]
-        public async Task<IActionResult> GetActivityLogs([FromQuery] string? module, [FromQuery] int? limit)
+        public async Task<IActionResult> GetActivityLogs([FromQuery] string? module, [FromQuery] string? userType, [FromQuery] int? limit)
         {
-            var query = _context.ActivityLogs.AsQueryable();
+            var query = GetScopedActivityLogQuery();
 
             if (!string.IsNullOrEmpty(module))
                 query = query.Where(a => a.Module == module);
+
+            query = ApplyUserTypeFilter(query, userType);
 
             var logs = await query
                 .OrderByDescending(a => a.CreatedAt)
@@ -4948,6 +4996,11 @@ namespace CompuGear.Controllers
                     a.EntityType,
                     a.EntityId,
                     a.Description,
+                    UserType = !a.UserId.HasValue
+                        ? "System"
+                        : (_context.Users.Where(u => u.UserId == a.UserId)
+                            .Select(u => u.RoleId)
+                            .FirstOrDefault() == 7 ? "Customer" : "Staff"),
                     a.CreatedAt
                 })
                 .ToListAsync();
@@ -4960,18 +5013,20 @@ namespace CompuGear.Controllers
         #region Audit Trail & Activity Logs
 
         [HttpGet("audit-logs")]
-        public async Task<IActionResult> GetAuditLogs([FromQuery] string? module, [FromQuery] string? action, 
+        public async Task<IActionResult> GetAuditLogs([FromQuery] string? module, [FromQuery] string? action, [FromQuery] string? userType,
             [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
             try
             {
-                var query = _context.ActivityLogs.AsQueryable();
+                var query = GetScopedActivityLogQuery();
 
                 if (!string.IsNullOrEmpty(module))
                     query = query.Where(a => a.Module == module);
 
                 if (!string.IsNullOrEmpty(action))
                     query = query.Where(a => a.Action == action);
+
+                query = ApplyUserTypeFilter(query, userType);
 
                 if (startDate.HasValue)
                     query = query.Where(a => a.CreatedAt >= startDate.Value);
@@ -4994,6 +5049,11 @@ namespace CompuGear.Controllers
                         a.EntityType,
                         a.EntityId,
                         a.Description,
+                        UserType = !a.UserId.HasValue
+                            ? "System"
+                            : (_context.Users.Where(u => u.UserId == a.UserId)
+                                .Select(u => u.RoleId)
+                                .FirstOrDefault() == 7 ? "Customer" : "Staff"),
                         a.IPAddress,
                         a.CreatedAt
                     })
@@ -5017,7 +5077,7 @@ namespace CompuGear.Controllers
         [HttpGet("audit-logs/modules")]
         public async Task<IActionResult> GetAuditModules()
         {
-            var modules = await _context.ActivityLogs
+            var modules = await GetScopedActivityLogQuery()
                 .Select(a => a.Module)
                 .Distinct()
                 .OrderBy(m => m)
@@ -5028,7 +5088,7 @@ namespace CompuGear.Controllers
         [HttpGet("audit-logs/actions")]
         public async Task<IActionResult> GetAuditActions()
         {
-            var actions = await _context.ActivityLogs
+            var actions = await GetScopedActivityLogQuery()
                 .Select(a => a.Action)
                 .Distinct()
                 .OrderBy(a => a)
@@ -5139,9 +5199,11 @@ namespace CompuGear.Controllers
         }
 
         [HttpGet("export/audit-logs")]
-        public async Task<IActionResult> ExportAuditLogs([FromQuery] DateTime? startDate = null, [FromQuery] DateTime? endDate = null, [FromQuery] string format = "csv")
+        public async Task<IActionResult> ExportAuditLogs([FromQuery] DateTime? startDate = null, [FromQuery] DateTime? endDate = null, [FromQuery] string? userType = null, [FromQuery] string format = "csv")
         {
-            var query = _context.ActivityLogs.AsQueryable();
+            var query = GetScopedActivityLogQuery();
+
+            query = ApplyUserTypeFilter(query, userType);
 
             if (startDate.HasValue)
                 query = query.Where(a => a.CreatedAt >= startDate.Value);
@@ -5156,11 +5218,20 @@ namespace CompuGear.Controllers
 
             if (format == "csv")
             {
+                var userIds = logs.Where(a => a.UserId.HasValue).Select(a => a.UserId!.Value).Distinct().ToList();
+                var roleMap = await _context.Users
+                    .Where(u => userIds.Contains(u.UserId))
+                    .Select(u => new { u.UserId, u.RoleId })
+                    .ToDictionaryAsync(u => u.UserId, u => u.RoleId);
+
                 var csv = new StringBuilder();
-                csv.AppendLine("Date/Time,User,Action,Module,Entity Type,Entity ID,Description,IP Address");
+                csv.AppendLine("Date/Time,User,User Type,Action,Module,Entity Type,Entity ID,Description,IP Address");
                 foreach (var a in logs)
                 {
-                    csv.AppendLine($"\"{a.CreatedAt:yyyy-MM-dd HH:mm:ss}\",\"{a.UserName}\",\"{a.Action}\",\"{a.Module}\",\"{a.EntityType}\",{a.EntityId},\"{a.Description?.Replace("\"", "\"\"")}\",\"{a.IPAddress}\"");
+                    var type = !a.UserId.HasValue
+                        ? "System"
+                        : (roleMap.TryGetValue(a.UserId.Value, out var roleId) && roleId == 7 ? "Customer" : "Staff");
+                    csv.AppendLine($"\"{a.CreatedAt:yyyy-MM-dd HH:mm:ss}\",\"{a.UserName}\",\"{type}\",\"{a.Action}\",\"{a.Module}\",\"{a.EntityType}\",{a.EntityId},\"{a.Description?.Replace("\"", "\"\"")}\",\"{a.IPAddress}\"");
                 }
                 return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", $"audit_logs_{DateTime.Now:yyyyMMdd}.csv");
             }
