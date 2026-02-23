@@ -1,0 +1,103 @@
+@{
+    ViewData["Title"] = "Campaigns Archive";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Campaigns Archive</h1>
+        <p class="page-subtitle">Paused campaigns</p>
+    </div>
+    <a href="/Marketing/Campaigns" class="btn btn-primary">Back to Campaigns</a>
+</div>
+
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Archived Campaigns</h5>
+        <span class="badge bg-secondary" id="archiveCount">0 archived</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Campaign</th>
+                        <th>Type</th>
+                        <th>Duration</th>
+                        <th>Budget</th>
+                        <th>ROI</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="archiveTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/admin.js"></script>
+<script>
+    let archivedCampaigns = [];
+
+    document.addEventListener('DOMContentLoaded', loadArchivedCampaigns);
+
+    async function loadArchivedCampaigns() {
+        try {
+            const campaigns = await API.get('/campaigns');
+            archivedCampaigns = (campaigns || []).filter(c => (c.status || '').toLowerCase() === 'paused');
+            renderArchivedCampaigns();
+        } catch (error) {
+            Toast.error('Failed to load archived campaigns');
+        }
+    }
+
+    function renderArchivedCampaigns() {
+        const tbody = document.getElementById('archiveTableBody');
+        document.getElementById('archiveCount').textContent = `${archivedCampaigns.length} archived`;
+
+        if (!archivedCampaigns.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No archived campaigns</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = archivedCampaigns.map(c => `
+            <tr>
+                <td>
+                    <div class="fw-semibold">${c.campaignName || '-'}</div>
+                    <small class="text-muted">${c.campaignCode || '-'}</small>
+                </td>
+                <td>${c.type || 'General'}</td>
+                <td>${Format.date(c.startDate)} - ${Format.date(c.endDate)}</td>
+                <td>${Format.currency(c.budget || 0)}</td>
+                <td>${Format.percentage(c.roi || 0)}</td>
+                <td>
+                    <button class="btn btn-sm btn-success" onclick="restoreCampaign(${c.campaignId})">Activate</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function restoreCampaign(id) {
+        try {
+            const campaign = archivedCampaigns.find(c => c.campaignId === id);
+            if (!campaign) return;
+
+            await API.put(`/campaigns/${id}`, {
+                campaignName: campaign.campaignName,
+                description: campaign.description,
+                type: campaign.type,
+                status: 'Active',
+                startDate: campaign.startDate,
+                endDate: campaign.endDate,
+                budget: campaign.budget,
+                targetSegment: campaign.targetSegment
+            });
+
+            Toast.success('Campaign activated');
+            loadArchivedCampaigns();
+        } catch (error) {
+            Toast.error('Failed to activate campaign');
+        }
+    }
+</script>
+}

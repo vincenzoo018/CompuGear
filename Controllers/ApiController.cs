@@ -429,6 +429,31 @@ namespace CompuGear.Controllers
             }
         }
 
+        [HttpPut("promotions/{id}/status")]
+        public async Task<IActionResult> UpdatePromotionStatus(int id, [FromBody] StatusUpdateDto status)
+        {
+            if (!HasMarketingAccess())
+                return StatusCode(StatusCodes.Status403Forbidden, new { success = false, message = "You do not have permission to update promotions." });
+
+            try
+            {
+                var companyId = GetCompanyId();
+                var promotion = await _context.Promotions.FindAsync(id);
+                if (promotion == null || (companyId != null && promotion.CompanyId != companyId))
+                    return NotFound(new { success = false, message = "Promotion not found" });
+
+                promotion.IsActive = status.IsActive;
+                promotion.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = $"Promotion {(status.IsActive ? "activated" : "deactivated")} successfully", isActive = promotion.IsActive });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
+            }
+        }
+
         [HttpDelete("promotions/{id}")]
         public async Task<IActionResult> DeletePromotion(int id)
         {
@@ -818,7 +843,6 @@ namespace CompuGear.Controllers
             try
             {
                 var companyId = GetCompanyId();
-                product.CompanyId = companyId;
                 product.ProductCode = $"PRD-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
                 product.CreatedAt = DateTime.UtcNow;
                 product.UpdatedAt = DateTime.UtcNow;
@@ -861,6 +885,28 @@ namespace CompuGear.Controllers
 
                 await _context.SaveChangesAsync();
                 return Ok(new { success = true, message = "Product updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
+            }
+        }
+
+        [HttpPut("products/{id}/status")]
+        public async Task<IActionResult> UpdateProductStatus(int id, [FromBody] StatusUpdateRequest request)
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                var product = await _context.Products.FindAsync(id);
+                if (product == null || (companyId != null && product.CompanyId != companyId))
+                    return NotFound(new { success = false, message = "Product not found" });
+
+                product.Status = string.IsNullOrWhiteSpace(request.Status) ? product.Status : request.Status.Trim();
+                product.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = $"Product {(product.Status == "Active" ? "activated" : "deactivated")} successfully", status = product.Status });
             }
             catch (Exception ex)
             {
@@ -1030,18 +1076,37 @@ namespace CompuGear.Controllers
         {
             try
             {
+                Console.WriteLine($"[STATUS UPDATE] Category ID: {id}, New IsActive: {status?.IsActive}");
+                
+                if (status == null)
+                {
+                    Console.WriteLine("[STATUS UPDATE] Status payload is null!");
+                    return BadRequest(new { success = false, message = "Invalid status payload" });
+                }
+                
                 var category = await _context.ProductCategories.FindAsync(id);
                 if (category == null)
+                {
+                    Console.WriteLine($"[STATUS UPDATE] Category not found: {id}");
                     return NotFound(new { success = false, message = "Category not found" });
+                }
 
+                Console.WriteLine($"[STATUS UPDATE] Found category: {category.CategoryName}, Current IsActive: {category.IsActive}");
+                
                 category.IsActive = status.IsActive;
                 category.UpdatedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
+
+                _context.Entry(category).Property(c => c.IsActive).IsModified = true;
+                _context.Entry(category).Property(c => c.UpdatedAt).IsModified = true;
+
+                var changes = await _context.SaveChangesAsync();
+                Console.WriteLine($"[STATUS UPDATE] SaveChanges returned: {changes} changes");
 
                 return Ok(new { success = true, message = $"Category {(status.IsActive ? "activated" : "deactivated")} successfully" });
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[STATUS UPDATE] Error: {ex.Message}");
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
@@ -4921,6 +4986,24 @@ namespace CompuGear.Controllers
 
             await _context.SaveChangesAsync();
             return Ok(new { success = true, message = "Supplier updated" });
+        }
+
+        [HttpPut("suppliers/{id}/toggle-status")]
+        public async Task<IActionResult> ToggleSupplierStatus(int id)
+        {
+            var companyId = GetCompanyId();
+            var supplier = await _context.Suppliers
+                .Where(s => companyId == null || s.CompanyId == companyId)
+                .FirstOrDefaultAsync(s => s.SupplierId == id);
+
+            if (supplier == null)
+                return NotFound(new { success = false, message = "Supplier not found" });
+
+            supplier.Status = string.Equals(supplier.Status, "Active", StringComparison.OrdinalIgnoreCase) ? "Inactive" : "Active";
+            supplier.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true, message = $"Supplier {(supplier.Status == "Active" ? "activated" : "deactivated")}", status = supplier.Status });
         }
 
         #endregion

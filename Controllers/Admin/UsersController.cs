@@ -27,6 +27,11 @@ namespace CompuGear.Controllers
             return View("~/Views/Admin/Users/Accounts.cshtml");
         }
 
+        public IActionResult Archive()
+        {
+            return View("~/Views/Admin/Users/Archive.cshtml");
+        }
+
         public IActionResult Roles()
         {
             return View("~/Views/Admin/Users/Roles.cshtml");

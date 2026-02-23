@@ -8,6 +8,12 @@
         <p class="page-subtitle">Manage system users and their access levels</p>
     </div>
     <div class="d-flex gap-2">
+        <a href="/Users/Archive" class="btn btn-outline-secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line>
+            </svg>
+            Archive
+        </a>
         <button class="btn btn-outline-primary" onclick="exportUsers()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
@@ -400,6 +406,8 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         Users.load();
+        const statusFilter = document.getElementById('filterStatus');
+        if (statusFilter) statusFilter.value = 'active';
         
         document.getElementById('searchUsers')?.addEventListener('input', filterUsers);
         document.getElementById('filterRole')?.addEventListener('change', filterUsers);
@@ -437,7 +445,7 @@
     function filterUsers() {
         const search = (document.getElementById('searchUsers')?.value || '').toLowerCase();
         const role = document.getElementById('filterRole')?.value || '';
-        const status = document.getElementById('filterStatus')?.value || '';
+        const status = document.getElementById('filterStatus')?.value || 'active';
         
         Users.filter(search, role, status);
     }
@@ -445,8 +453,8 @@
     function resetFilters() {
         document.getElementById('searchUsers').value = '';
         document.getElementById('filterRole').value = '';
-        document.getElementById('filterStatus').value = '';
-        Users.load();
+        document.getElementById('filterStatus').value = 'active';
+        Users.filter('', '', 'active');
     }
 
     function togglePassword(fieldId) {

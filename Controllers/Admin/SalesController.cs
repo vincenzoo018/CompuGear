@@ -32,6 +32,11 @@ namespace CompuGear.Controllers
             return View("~/Views/Admin/Sales/Leads.cshtml");
         }
 
+        public IActionResult LeadsArchive()
+        {
+            return View("~/Views/Admin/Sales/LeadsArchive.cshtml");
+        }
+
         public IActionResult Reports()
         {
             return View("~/Views/Admin/Sales/Reports.cshtml");

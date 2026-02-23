@@ -1,0 +1,90 @@
+@{
+    ViewData["Title"] = "Product Archive";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Product Archive</h1>
+        <p class="page-subtitle">Inactive products</p>
+    </div>
+    <a href="/Inventory/Products" class="btn btn-primary">Back to Products</a>
+</div>
+
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Archived Products</h5>
+        <span class="badge bg-secondary" id="archiveCount">0 archived</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Brand</th>
+                        <th>Stock</th>
+                        <th>Selling Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="archiveTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/admin.js"></script>
+<script>
+    let archivedProducts = [];
+
+    document.addEventListener('DOMContentLoaded', loadArchivedProducts);
+
+    async function loadArchivedProducts() {
+        try {
+            const products = await API.get('/products');
+            archivedProducts = (products || []).filter(p => (p.status || '').toLowerCase() !== 'active');
+            renderArchivedProducts();
+        } catch (error) {
+            Toast.error('Failed to load archived products');
+        }
+    }
+
+    function renderArchivedProducts() {
+        const tbody = document.getElementById('archiveTableBody');
+        document.getElementById('archiveCount').textContent = `${archivedProducts.length} archived`;
+
+        if (!archivedProducts.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No archived products</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = archivedProducts.map(p => `
+            <tr>
+                <td>
+                    <div class="fw-semibold">${p.productName || '-'}</div>
+                    <small class="text-muted">${p.sku || p.productCode || '-'}</small>
+                </td>
+                <td>${p.categoryName || '-'}</td>
+                <td>${p.brandName || '-'}</td>
+                <td>${p.stockQuantity ?? 0}</td>
+                <td>₱${Number(p.sellingPrice || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td>
+                    <button class="btn btn-sm btn-success" onclick="restoreProduct(${p.productId})">Activate</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function restoreProduct(id) {
+        try {
+            await API.put(`/products/${id}/status`, { status: 'Active' });
+            Toast.success('Product activated');
+            loadArchivedProducts();
+        } catch (error) {
+            Toast.error('Failed to activate product');
+        }
+    }
+</script>
+}

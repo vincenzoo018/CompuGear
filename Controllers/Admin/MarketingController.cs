@@ -39,9 +39,19 @@ namespace CompuGear.Controllers
             return View("~/Views/Admin/Marketing/Campaigns.cshtml");
         }
 
+        public IActionResult CampaignsArchive()
+        {
+            return View("~/Views/Admin/Marketing/CampaignsArchive.cshtml");
+        }
+
         public IActionResult Promotions()
         {
             return View("~/Views/Admin/Marketing/Promotions.cshtml");
+        }
+
+        public IActionResult PromotionsArchive()
+        {
+            return View("~/Views/Admin/Marketing/PromotionsArchive.cshtml");
         }
 
         public IActionResult Segments()

@@ -1,0 +1,87 @@
+@{
+    ViewData["Title"] = "Customer Archive";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Customer Archive</h1>
+        <p class="page-subtitle">Temporarily deactivated customers</p>
+    </div>
+    <a href="/Customers/List" class="btn btn-primary">Back to Customer List</a>
+</div>
+
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Archived Customers</h5>
+        <span class="badge bg-secondary" id="archiveCount">0 archived</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Total Orders</th>
+                        <th>Total Spent</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="archiveTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/admin.js"></script>
+<script>
+    let archivedCustomers = [];
+
+    document.addEventListener('DOMContentLoaded', loadArchivedCustomers);
+
+    async function loadArchivedCustomers() {
+        try {
+            const customers = await API.get('/customers');
+            archivedCustomers = (customers || []).filter(c => (c.status || '').toLowerCase() !== 'active');
+            renderArchivedCustomers();
+        } catch (error) {
+            Toast.error('Failed to load archived customers');
+        }
+    }
+
+    function renderArchivedCustomers() {
+        const tbody = document.getElementById('archiveTableBody');
+        document.getElementById('archiveCount').textContent = `${archivedCustomers.length} archived`;
+
+        if (!archivedCustomers.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No archived customers</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = archivedCustomers.map(c => `
+            <tr>
+                <td><strong>${c.fullName || `${c.firstName || ''} ${c.lastName || ''}`.trim()}</strong></td>
+                <td>${c.email || '-'}</td>
+                <td>${c.phone || '-'}</td>
+                <td>${c.totalOrders || 0}</td>
+                <td>₱${Number(c.totalSpent || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td>
+                    <button class="btn btn-sm btn-success" onclick="restoreCustomer(${c.customerId})">Activate</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function restoreCustomer(id) {
+        try {
+            await API.put(`/customers/${id}/toggle-status`, {});
+            Toast.success('Customer activated');
+            loadArchivedCustomers();
+        } catch (error) {
+            Toast.error('Failed to activate customer');
+        }
+    }
+</script>
+}

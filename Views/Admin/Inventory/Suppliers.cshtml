@@ -7,12 +7,20 @@
         <h1 class="page-title">Suppliers</h1>
         <p class="page-subtitle">Manage your product suppliers</p>
     </div>
-    <button class="btn btn-primary" onclick="openAddModal()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-        Add Supplier
-    </button>
+    <div class="d-flex gap-2">
+        <a href="/Inventory/SuppliersArchive" class="btn btn-outline-secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line>
+            </svg>
+            Archive
+        </a>
+        <button class="btn btn-primary" onclick="openAddModal()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add Supplier
+        </button>
+    </div>
 </div>
 
 <!-- Stats Cards -->
@@ -226,8 +234,10 @@
 </div>
 
 @section Scripts {
+<script src="~/js/admin.js"></script>
 <script>
     let suppliers = [];
+    let allSuppliers = [];
     let modal, viewModalInstance;
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -242,7 +252,8 @@
             if (!response.ok) throw new Error('Failed to fetch suppliers');
             const result = await response.json();
             // Handle both array and { data: [...] } response formats
-            suppliers = Array.isArray(result) ? result : (result.data || []);
+            allSuppliers = Array.isArray(result) ? result : (result.data || []);
+            suppliers = allSuppliers.filter(s => (s.status || '').toLowerCase() === 'active');
             updateStats();
             renderTable(suppliers);
         } catch (error) {
@@ -254,9 +265,9 @@
     }
 
     function updateStats() {
-        document.getElementById('totalSuppliers').textContent = suppliers.length;
-        document.getElementById('activeSuppliers').textContent = suppliers.filter(s => s.status === 'Active').length;
-        document.getElementById('inactiveSuppliers').textContent = suppliers.filter(s => s.status !== 'Active').length;
+        document.getElementById('totalSuppliers').textContent = allSuppliers.length;
+        document.getElementById('activeSuppliers').textContent = allSuppliers.filter(s => s.status === 'Active').length;
+        document.getElementById('inactiveSuppliers').textContent = allSuppliers.filter(s => s.status !== 'Active').length;
     }
 
     function renderTable(data) {
@@ -385,7 +396,7 @@
     async function saveSupplier() {
         const id = parseInt(document.getElementById('supplierId').value);
         const supplierName = document.getElementById('supplierName').value.trim();
-        if (!supplierName) { alert('Please fill in Supplier Name'); return; }
+        if (!supplierName) { Toast.error('Please fill in Supplier Name'); return; }
 
         const data = {
             supplierName: supplierName,
@@ -417,15 +428,15 @@
             }
             const result = await response.json();
             if (result.success) {
-                alert(id === 0 ? 'Supplier added successfully!' : 'Supplier updated successfully!');
+                Toast.success(id === 0 ? 'Supplier added successfully!' : 'Supplier updated successfully!');
                 modal.hide();
                 loadSuppliers();
             } else {
-                alert(result.message || 'Error saving supplier');
+                Toast.error(result.message || 'Error saving supplier');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error saving supplier. Please try again.');
+            Toast.error('Error saving supplier. Please try again.');
         }
     }
 
@@ -433,36 +444,21 @@
         const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
         const action = currentStatus === 'Active' ? 'deactivate' : 'activate';
         if (!confirm(`Are you sure you want to ${action} this supplier?`)) return;
-        const s = suppliers.find(x => x.supplierId === id);
-        if (!s) return;
-        const data = {
-            supplierName: s.supplierName,
-            contactPerson: s.contactPerson,
-            phone: s.phone,
-            email: s.email,
-            address: s.address,
-            city: s.city,
-            country: s.country,
-            website: s.website,
-            paymentTerms: s.paymentTerms,
-            status: newStatus
-        };
         try {
-            const response = await fetch(`/api/suppliers/${id}`, {
+            const response = await fetch(`/api/suppliers/${id}/toggle-status`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                headers: { 'Content-Type': 'application/json' }
             });
             const result = await response.json();
             if (result.success) {
-                alert(`Supplier ${newStatus === 'Active' ? 'activated' : 'deactivated'} successfully!`);
+                Toast.success(`Supplier ${newStatus === 'Active' ? 'activated' : 'deactivated'} successfully!`);
                 loadSuppliers();
             } else {
-                alert(result.message || 'Error updating status');
+                Toast.error(result.message || 'Error updating status');
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Error updating status');
+            Toast.error('Error updating status');
         }
     }
 

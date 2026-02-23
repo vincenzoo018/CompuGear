@@ -8,6 +8,9 @@
         <p class="page-subtitle">Manage your product catalog and inventory</p>
     </div>
     <div class="d-flex gap-2">
+        <a href="/Inventory/ProductsArchive" class="btn btn-outline-secondary">
+            Archive
+        </a>
         <button class="btn btn-outline-primary" onclick="exportProducts()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
@@ -451,11 +454,36 @@
 <script src="~/js/admin.js"></script>
 <script>
     let currentImageUrl = '';
+    let activeProducts = [];
+
+    function isProductActive(product) {
+        return (product?.status || '').toLowerCase() === 'active';
+    }
+
+    function updateProductStats(data) {
+        const source = Array.isArray(data) ? data : [];
+        const inStock = source.filter(p => p.stockQuantity > p.reorderLevel).length;
+        const lowStock = source.filter(p => p.stockQuantity > 0 && p.stockQuantity <= p.reorderLevel).length;
+        const outOfStock = source.filter(p => p.stockQuantity <= 0).length;
+
+        document.getElementById('totalProducts').textContent = source.length;
+        document.getElementById('inStockProducts').textContent = inStock;
+        document.getElementById('lowStockProducts').textContent = lowStock;
+        document.getElementById('outOfStockProducts').textContent = outOfStock;
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
         loadCategoriesDropdown();
         loadBrandsDropdown();
         loadSuppliersDropdown();
+
+        const originalLoadProducts = Inventory.products.load.bind(Inventory.products);
+        Inventory.products.load = async function() {
+            await originalLoadProducts();
+            activeProducts = this.data || [];
+            updateProductStats(this.data);
+        };
+
         Inventory.products.load();
         
         document.getElementById('searchProducts')?.addEventListener('input', filterProducts);
@@ -661,8 +689,37 @@
         const category = document.getElementById('filterCategory')?.value || '';
         const brand = document.getElementById('filterBrand')?.value || '';
         const stock = document.getElementById('filterStock')?.value || '';
-        
-        Inventory.products.filter(search, category, brand, stock);
+
+        let filtered = activeProducts;
+
+        if (search) {
+            filtered = filtered.filter(p =>
+                (p.productName || '').toLowerCase().includes(search) ||
+                (p.sku || '').toLowerCase().includes(search) ||
+                (p.productCode || '').toLowerCase().includes(search)
+            );
+        }
+
+        if (category) {
+            filtered = filtered.filter(p => p.categoryId == category || (p.categoryName || '').toLowerCase() === category.toLowerCase());
+        }
+
+        if (brand) {
+            filtered = filtered.filter(p => p.brandId == brand || (p.brandName || '').toLowerCase() === brand.toLowerCase());
+        }
+
+        if (stock) {
+            if (stock === 'instock') {
+                filtered = filtered.filter(p => p.stockQuantity > p.reorderLevel);
+            } else if (stock === 'low') {
+                filtered = filtered.filter(p => p.stockQuantity > 0 && p.stockQuantity <= p.reorderLevel);
+            } else if (stock === 'outofstock') {
+                filtered = filtered.filter(p => p.stockQuantity <= 0);
+            }
+        }
+
+        Inventory.products.renderFiltered(filtered);
+        updateProductStats(filtered);
     }
 
     function resetFilters() {

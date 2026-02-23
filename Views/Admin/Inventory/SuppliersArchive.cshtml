@@ -1,0 +1,83 @@
+@{
+    ViewData["Title"] = "Supplier Archive";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Supplier Archive</h1>
+        <p class="page-subtitle">Inactive suppliers</p>
+    </div>
+    <a href="/Inventory/Suppliers" class="btn btn-primary">Back to Suppliers</a>
+</div>
+
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Archived Suppliers</h5>
+        <span class="badge bg-secondary" id="archiveCount">0 archived</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Supplier</th>
+                        <th>Contact</th>
+                        <th>Email</th>
+                        <th>City</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="archiveTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/admin.js"></script>
+<script>
+    let archivedSuppliers = [];
+
+    document.addEventListener('DOMContentLoaded', loadArchivedSuppliers);
+
+    async function loadArchivedSuppliers() {
+        try {
+            const suppliers = await API.get('/suppliers');
+            archivedSuppliers = (suppliers || []).filter(s => (s.status || '').toLowerCase() !== 'active');
+            renderArchivedSuppliers();
+        } catch (error) {
+            Toast.error('Failed to load archived suppliers');
+        }
+    }
+
+    function renderArchivedSuppliers() {
+        const tbody = document.getElementById('archiveTableBody');
+        document.getElementById('archiveCount').textContent = `${archivedSuppliers.length} archived`;
+
+        if (!archivedSuppliers.length) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No archived suppliers</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = archivedSuppliers.map(s => `
+            <tr>
+                <td><strong>${s.supplierName || '-'}</strong></td>
+                <td>${s.contactPerson || '-'}</td>
+                <td>${s.email || '-'}</td>
+                <td>${s.city || '-'}</td>
+                <td><button class="btn btn-sm btn-success" onclick="restoreSupplier(${s.supplierId})">Activate</button></td>
+            </tr>
+        `).join('');
+    }
+
+    async function restoreSupplier(id) {
+        try {
+            await API.put(`/suppliers/${id}/toggle-status`, {});
+            Toast.success('Supplier activated');
+            loadArchivedSuppliers();
+        } catch (error) {
+            Toast.error('Failed to activate supplier');
+        }
+    }
+</script>
+}

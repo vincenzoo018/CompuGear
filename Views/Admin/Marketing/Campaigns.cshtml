@@ -8,6 +8,7 @@
         <p class="page-subtitle">Manage and track marketing campaigns</p>
     </div>
     <div class="d-flex gap-2">
+        <a href="/Marketing/CampaignsArchive" class="btn btn-outline-secondary">Archive</a>
         <button class="btn btn-outline-primary" onclick="viewAnalytics()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
@@ -486,6 +487,8 @@
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
         Marketing.campaigns.load();
+        const statusFilter = document.getElementById('filterStatus');
+        if (statusFilter) statusFilter.value = 'Active';
         
         // Search filter
         document.getElementById('searchCampaigns').addEventListener('input', filterCampaigns);
@@ -552,7 +555,7 @@
     // Filter campaigns
     function filterCampaigns() {
         const search = (document.getElementById('searchCampaigns')?.value || '').toLowerCase();
-        const statusFilter = document.getElementById('filterStatus')?.value || '';
+        const statusFilter = document.getElementById('filterStatus')?.value || 'Active';
 
         Marketing.campaigns.filter(search, statusFilter);
     }
@@ -560,9 +563,9 @@
     function resetFilters() {
         document.getElementById('searchCampaigns').value = '';
         document.getElementById('filterType').value = '';
-        document.getElementById('filterStatus').value = '';
+        document.getElementById('filterStatus').value = 'Active';
         document.getElementById('filterDateRange').value = '';
-        Marketing.campaigns.load();
+        Marketing.campaigns.filter('', 'Active');
     }
 
     function applyFilters() {

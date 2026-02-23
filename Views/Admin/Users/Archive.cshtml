@@ -1,0 +1,83 @@
+@{
+    ViewData["Title"] = "User Archive";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">User Archive</h1>
+        <p class="page-subtitle">Temporarily deactivated user accounts</p>
+    </div>
+    <a href="/Users/Accounts" class="btn btn-primary">Back to User Accounts</a>
+</div>
+
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Archived Users</h5>
+        <span class="badge bg-secondary" id="archiveCount">0 archived</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Last Login</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="archiveTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/admin.js"></script>
+<script>
+    let archivedUsers = [];
+
+    document.addEventListener('DOMContentLoaded', loadArchivedUsers);
+
+    async function loadArchivedUsers() {
+        try {
+            const users = await API.get('/users');
+            archivedUsers = (users || []).filter(u => !u.isActive);
+            renderArchivedUsers();
+        } catch (error) {
+            Toast.error('Failed to load archived users');
+        }
+    }
+
+    function renderArchivedUsers() {
+        const tbody = document.getElementById('archiveTableBody');
+        document.getElementById('archiveCount').textContent = `${archivedUsers.length} archived`;
+
+        if (!archivedUsers.length) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No archived users</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = archivedUsers.map(u => `
+            <tr>
+                <td><strong>${u.fullName || `${u.firstName || ''} ${u.lastName || ''}`.trim()}</strong><br><small class="text-muted">&#64;${u.username || '-'}</small></td>
+                <td>${u.email || '-'}</td>
+                <td>${u.roleName || '-'}</td>
+                <td>${u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : 'Never'}</td>
+                <td><button class="btn btn-sm btn-success" onclick="restoreUser(${u.userId})">Activate</button></td>
+            </tr>
+        `).join('');
+    }
+
+    async function restoreUser(id) {
+        try {
+            await API.put(`/users/${id}/toggle-status`, {});
+            Toast.success('User activated');
+            loadArchivedUsers();
+        } catch (error) {
+            Toast.error('Failed to activate user');
+        }
+    }
+</script>
+}

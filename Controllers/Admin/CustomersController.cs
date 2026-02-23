@@ -27,6 +27,11 @@ namespace CompuGear.Controllers
             return View("~/Views/Admin/Customers/List.cshtml");
         }
 
+        public IActionResult Archive()
+        {
+            return View("~/Views/Admin/Customers/Archive.cshtml");
+        }
+
         public IActionResult Profile(int? id)
         {
             return View("~/Views/Admin/Customers/Profile.cshtml");

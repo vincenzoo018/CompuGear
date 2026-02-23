@@ -355,11 +355,13 @@ const Marketing = {
     // Campaigns
     campaigns: {
         data: [],
+        allData: [],
         currentId: null,
 
         async load() {
             try {
-                this.data = await API.get('/campaigns');
+                this.allData = await API.get('/campaigns');
+                this.data = (this.allData || []).filter(c => (c.status || '').toLowerCase() !== 'paused');
                 this.render();
             } catch (error) {
                 Toast.error('Failed to load campaigns');
@@ -415,10 +417,11 @@ const Marketing = {
         },
 
         updateStats() {
-            const total = this.data.length;
-            const active = this.data.filter(c => c.status === 'Active').length;
-            const totalBudget = this.data.reduce((sum, c) => sum + (c.budget || 0), 0);
-            const avgRoi = this.data.length > 0 ? this.data.reduce((sum, c) => sum + (c.roi || 0), 0) / this.data.length : 0;
+            const source = Array.isArray(this.allData) ? this.allData : this.data;
+            const total = source.length;
+            const active = source.filter(c => c.status === 'Active').length;
+            const totalBudget = source.reduce((sum, c) => sum + (c.budget || 0), 0);
+            const avgRoi = source.length > 0 ? source.reduce((sum, c) => sum + (c.roi || 0), 0) / source.length : 0;
 
             document.getElementById('totalCampaigns')?.textContent && (document.getElementById('totalCampaigns').textContent = total);
             document.getElementById('activeCampaigns')?.textContent && (document.getElementById('activeCampaigns').textContent = active);
@@ -651,11 +654,14 @@ const Marketing = {
     // Promotions
     promotions: {
         data: [],
+        allData: [],
         currentId: null,
 
         async load() {
             try {
-                this.data = await API.get('/promotions');
+                const promotions = await API.get('/promotions');
+                this.allData = Array.isArray(promotions) ? promotions : [];
+                this.data = this.allData.filter(p => p.isActive !== false);
                 this.render();
             } catch (error) {
                 Toast.error('Failed to load promotions');
@@ -724,10 +730,11 @@ const Marketing = {
         },
 
         updateStats() {
-            const total = this.data.length;
-            const active = this.data.filter(p => p.isActive).length;
-            const deployed = this.data.filter(p => p.isShowInCustomer).length;
-            const totalUsage = this.data.reduce((sum, p) => sum + (p.timesUsed || 0), 0);
+            const source = Array.isArray(this.allData) && this.allData.length > 0 ? this.allData : this.data;
+            const total = source.length;
+            const active = source.filter(p => p.isActive).length;
+            const deployed = source.filter(p => p.isShowInCustomer).length;
+            const totalUsage = source.reduce((sum, p) => sum + (p.timesUsed || 0), 0);
 
             document.getElementById('totalPromotions')?.textContent && (document.getElementById('totalPromotions').textContent = total);
             document.getElementById('activePromotions')?.textContent && (document.getElementById('activePromotions').textContent = active);
@@ -978,15 +985,19 @@ const Marketing = {
 // ===========================================
 const Customers = {
     data: [],
+    allData: [],
     categories: [],
     currentId: null,
 
     async load() {
         try {
-            [this.data, this.categories] = await Promise.all([
+            const [customers, categories] = await Promise.all([
                 API.get('/customers'),
                 API.get('/customer-categories')
             ]);
+            this.allData = Array.isArray(customers) ? customers : [];
+            this.data = this.allData.filter(c => (c.status || '').toLowerCase() === 'active');
+            this.categories = categories;
             this.render();
         } catch (error) {
             Toast.error('Failed to load customers');
@@ -1041,9 +1052,10 @@ const Customers = {
     },
 
     updateStats() {
-        const total = this.data.length;
-        const active = this.data.filter(c => c.status === 'Active').length;
-        const totalSpent = this.data.reduce((sum, c) => sum + (c.totalSpent || 0), 0);
+        const source = Array.isArray(this.allData) ? this.allData : this.data;
+        const total = source.length;
+        const active = source.filter(c => c.status === 'Active').length;
+        const totalSpent = source.reduce((sum, c) => sum + (c.totalSpent || 0), 0);
 
         document.getElementById('totalCustomers')?.textContent && (document.getElementById('totalCustomers').textContent = total);
         document.getElementById('activeCustomers')?.textContent && (document.getElementById('activeCustomers').textContent = active);
@@ -1181,7 +1193,7 @@ const Customers = {
             if (!customer) return;
             
             const newStatus = customer.status === 'Active' ? 'Inactive' : 'Active';
-            await API.put(`/customers/${id}/status`, { status: newStatus });
+            await API.put(`/customers/${id}/toggle-status`, {});
             Toast.success(`Customer ${newStatus === 'Active' ? 'activated' : 'deactivated'} successfully`);
             this.load();
         } catch (error) {
@@ -1210,8 +1222,6 @@ const Customers = {
         
         if (status === 'active') {
             filtered = filtered.filter(c => c.status === 'Active');
-        } else if (status === 'inactive') {
-            filtered = filtered.filter(c => c.status !== 'Active');
         }
         
         this.renderFiltered(filtered);
@@ -1284,6 +1294,7 @@ const Customers = {
 const Inventory = {
     products: {
         data: [],
+        allData: [],
         categories: [],
         brands: [],
         currentId: null,
@@ -1291,11 +1302,15 @@ const Inventory = {
 
         async load() {
             try {
-                [this.data, this.categories, this.brands] = await Promise.all([
+                const [products, categories, brands] = await Promise.all([
                     API.get('/products'),
                     API.get('/product-categories'),
                     API.get('/brands')
                 ]);
+                this.allData = Array.isArray(products) ? products : [];
+                this.data = this.allData.filter(p => (p.status || '').toLowerCase() === 'active');
+                this.categories = categories;
+                this.brands = brands;
                 this.render();
             } catch (error) {
                 Toast.error('Failed to load products');
@@ -1363,13 +1378,17 @@ const Inventory = {
         },
 
         updateStats() {
-            const total = this.data.length;
-            const lowStock = this.data.filter(p => p.stockQuantity <= p.reorderLevel).length;
-            const totalValue = this.data.reduce((sum, p) => sum + (p.stockQuantity * p.costPrice), 0);
+            const source = Array.isArray(this.allData) && this.allData.length > 0 ? this.allData : this.data;
+            const total = source.length;
+            const active = source.filter(p => (p.status || '').toLowerCase() === 'active');
+            const inStock = active.filter(p => p.stockQuantity > p.reorderLevel).length;
+            const lowStock = active.filter(p => p.stockQuantity > 0 && p.stockQuantity <= p.reorderLevel).length;
+            const outOfStock = active.filter(p => p.stockQuantity <= 0).length;
 
-            document.getElementById('totalProducts')?.textContent && (document.getElementById('totalProducts').textContent = total);
-            document.getElementById('lowStockCount')?.textContent && (document.getElementById('lowStockCount').textContent = lowStock);
-            document.getElementById('inventoryValue')?.textContent && (document.getElementById('inventoryValue').textContent = Format.currency(totalValue));
+            document.getElementById('totalProducts')?.textContent && (document.getElementById('totalProducts').textContent = active.length);
+            document.getElementById('inStockProducts')?.textContent && (document.getElementById('inStockProducts').textContent = inStock);
+            document.getElementById('lowStockProducts')?.textContent && (document.getElementById('lowStockProducts').textContent = lowStock);
+            document.getElementById('outOfStockProducts')?.textContent && (document.getElementById('outOfStockProducts').textContent = outOfStock);
         },
 
         showModal(product = null) {
@@ -2030,11 +2049,13 @@ const Sales = {
 
     leads: {
         data: [],
+        allData: [],
         currentId: null,
 
         async load() {
             try {
-                this.data = await API.get('/leads');
+                this.allData = await API.get('/leads');
+                this.data = (this.allData || []).filter(l => (l.status || '').toLowerCase() !== 'inactive');
                 this.render();
             } catch (error) {
                 Toast.error('Failed to load leads');
@@ -2083,9 +2104,10 @@ const Sales = {
         },
 
         updateStats() {
-            const total = this.data.length;
-            const hot = this.data.filter(l => l.status === 'Hot').length;
-            const totalValue = this.data.reduce((sum, l) => sum + (l.estimatedValue || 0), 0);
+            const source = Array.isArray(this.allData) ? this.allData : this.data;
+            const total = source.length;
+            const hot = source.filter(l => l.status === 'Hot').length;
+            const totalValue = source.reduce((sum, l) => sum + (l.estimatedValue || 0), 0);
 
             document.getElementById('totalLeads')?.textContent && (document.getElementById('totalLeads').textContent = total);
             document.getElementById('hotLeads')?.textContent && (document.getElementById('hotLeads').textContent = hot);
@@ -2243,8 +2265,7 @@ const Sales = {
                 if (!lead) return;
                 
                 const isActive = lead.status === 'Active' || lead.status === 'Hot' || lead.status === 'Warm';
-                const newStatus = isActive ? 'Cold' : 'Active';
-                await API.put(`/leads/${id}/status`, { status: newStatus });
+                await API.put(`/leads/${id}/toggle-status`, {});
                 Toast.success(`Lead ${isActive ? 'deactivated' : 'activated'} successfully`);
                 this.load();
             } catch (error) {
@@ -2833,15 +2854,19 @@ const Support = {
 // ===========================================
 const Users = {
     data: [],
+    allData: [],
     roles: [],
     currentId: null,
 
     async load() {
         try {
-            [this.data, this.roles] = await Promise.all([
+            const [users, roles] = await Promise.all([
                 API.get('/users'),
                 API.get('/roles')
             ]);
+            this.allData = Array.isArray(users) ? users : [];
+            this.data = this.allData.filter(u => u.isActive);
+            this.roles = roles;
             this.render();
         } catch (error) {
             Toast.error('Failed to load users');
@@ -2894,10 +2919,11 @@ const Users = {
     },
 
     updateStats() {
-        const total = this.data.length;
-        const active = this.data.filter(u => u.isActive).length;
+        const source = Array.isArray(this.allData) ? this.allData : this.data;
+        const total = source.length;
+        const active = source.filter(u => u.isActive).length;
         const inactive = total - active;
-        const admins = this.data.filter(u => u.roleId === 1 || u.roleId === 2).length;
+        const admins = source.filter(u => u.roleId === 1 || u.roleId === 2).length;
 
         const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
         setEl('totalUsers', total);
@@ -3079,8 +3105,6 @@ const Users = {
         
         if (status === 'active') {
             filtered = filtered.filter(u => u.isActive);
-        } else if (status === 'inactive') {
-            filtered = filtered.filter(u => !u.isActive);
         }
         
         this.renderFiltered(filtered);

@@ -27,9 +27,19 @@ namespace CompuGear.Controllers
             return View("~/Views/Admin/Inventory/Products.cshtml");
         }
 
+        public IActionResult ProductsArchive()
+        {
+            return View("~/Views/Admin/Inventory/ProductsArchive.cshtml");
+        }
+
         public IActionResult Categories()
         {
             return View("~/Views/Admin/Inventory/Categories.cshtml");
+        }
+
+        public IActionResult CategoriesArchive()
+        {
+            return View("~/Views/Admin/Inventory/CategoriesArchive.cshtml");
         }
 
         public IActionResult Stock()
@@ -50,6 +60,11 @@ namespace CompuGear.Controllers
         public IActionResult Suppliers()
         {
             return View("~/Views/Admin/Inventory/Suppliers.cshtml");
+        }
+
+        public IActionResult SuppliersArchive()
+        {
+            return View("~/Views/Admin/Inventory/SuppliersArchive.cshtml");
         }
 
         public IActionResult PurchaseOrders()
