@@ -72,20 +72,23 @@
 
     async function restoreUser(id) {
         try {
-            const response = await fetch(`/api/users/${id}/toggle-status`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({})
-            });
-            const result = await response.json();
-            if (!response.ok || result.success === false) {
-                Toast.error(result.message || 'Failed to activate user');
+            await API.put(`/users/${id}/toggle-status`, {});
+            Toast.success('User activated');
+
+            archivedUsers = archivedUsers.filter(u => u.userId !== id);
+            renderArchivedUsers();
+
+            if (archivedUsers.length === 0) {
+                setTimeout(() => { window.location.href = '/Users/Accounts'; }, 500);
+            }
+        } catch (error) {
+            const message = error?.message || 'Failed to activate user';
+            if (message.toLowerCase().includes('not found')) {
+                await loadArchivedUsers();
+                Toast.warning('User was already updated. Archive list refreshed.');
                 return;
             }
-            Toast.success('User activated');
-            window.location.href = '/Users/Accounts';
-        } catch (error) {
-            Toast.error('Failed to activate user');
+            Toast.error(message);
         }
     }
 </script>

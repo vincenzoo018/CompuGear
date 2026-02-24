@@ -30,8 +30,7 @@ builder.Services.AddDbContext<CompuGearDbContext>(options =>
             maxRetryDelay: TimeSpan.FromSeconds(5),
             errorNumbersToAdd: null);
         sqlOptions.CommandTimeout(30);
-    })
-    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
+    }));
 
 // Add HttpContextAccessor for services that need HTTP context
 builder.Services.AddHttpContextAccessor();

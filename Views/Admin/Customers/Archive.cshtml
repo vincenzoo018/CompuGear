@@ -76,20 +76,25 @@
 
     async function restoreCustomer(id) {
         try {
-            const response = await fetch(`/api/customers/${id}/toggle-status`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({})
-            });
-            const result = await response.json();
-            if (!response.ok || result.success === false) {
-                Toast.error(result.message || 'Failed to activate customer');
+            await API.put(`/customers/${id}/toggle-status`, {});
+            Toast.success('Customer activated');
+
+            archivedCustomers = archivedCustomers.filter(c => c.customerId !== id);
+            renderArchivedCustomers();
+
+            if (archivedCustomers.length === 0) {
+                setTimeout(() => {
+                    window.location.href = '/Customers/List';
+                }, 500);
+            }
+        } catch (error) {
+            const message = error?.message || 'Failed to activate customer';
+            if (message.toLowerCase().includes('not found')) {
+                await loadArchivedCustomers();
+                Toast.warning('Customer was already updated. Archive list refreshed.');
                 return;
             }
-            Toast.success('Customer activated');
-            window.location.href = '/Customers/List';
-        } catch (error) {
-            Toast.error('Failed to activate customer');
+            Toast.error(message);
         }
     }
 </script>

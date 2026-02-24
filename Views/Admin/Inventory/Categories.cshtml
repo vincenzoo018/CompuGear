@@ -8,12 +8,6 @@
         <p class="page-subtitle">Manage product categories for your inventory</p>
     </div>
     <div class="d-flex gap-2">
-        <a href="/Inventory/CategoriesArchive" class="btn btn-outline-secondary">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line>
-            </svg>
-            Archive
-        </a>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="openCreateCategoryModal()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -225,12 +219,9 @@
 <script>
     // Categories module data
     let categoriesData = [];
-    let allCategoriesData = [];
     let currentCategoryId = null;
 
     document.addEventListener('DOMContentLoaded', function() {
-        const statusFilter = document.getElementById('filterStatus');
-        if (statusFilter) statusFilter.value = 'active';
         loadCategories();
         
         document.getElementById('searchCategories')?.addEventListener('input', filterCategories);
@@ -239,19 +230,14 @@
 
     async function loadCategories() {
         try {
-            const response = await API.get(`/product-categories/all?ts=${Date.now()}`);
-            allCategoriesData = response || [];
-            categoriesData = allCategoriesData.filter(c => c.isActive === true || c.isActive === 'true' || c.isActive === 1);
+            const response = await API.get('/product-categories/all');
+            categoriesData = response || [];
             renderCategories(categoriesData);
             updateCategoryStats();
         } catch (error) {
             console.error('Failed to load categories:', error);
             Toast.error('Failed to load categories');
         }
-    }
-
-    function isCategoryActive(value) {
-        return value === true || value === 1 || value === 'true';
     }
 
     function renderCategories(data) {
@@ -265,9 +251,7 @@
             return;
         }
 
-        tbody.innerHTML = data.map(c => {
-            const isActive = isCategoryActive(c.isActive);
-            return `
+        tbody.innerHTML = data.map(c => `
             <tr>
                 <td>
                     <div class="fw-semibold">${c.categoryName}</div>
@@ -277,7 +261,7 @@
                     <span class="badge bg-info">${c.productCount || 0}</span>
                 </td>
                 <td class="text-center">
-                    <span class="badge ${isActive ? 'bg-success' : 'bg-secondary'}">${isActive ? 'Active' : 'Inactive'}</span>
+                    <span class="badge ${c.isActive ? 'bg-success' : 'bg-secondary'}">${c.isActive ? 'Active' : 'Inactive'}</span>
                 </td>
                 <td class="text-center">${Format.date(c.createdAt)}</td>
                 <td class="text-center">
@@ -288,22 +272,21 @@
                         <button class="btn btn-sm btn-outline-warning" onclick="editCategory(${c.categoryId})" title="Edit">
                             ${Icons.edit}
                         </button>
-                        <button class="btn btn-sm btn-outline-${isActive ? 'danger' : 'success'}" onclick="toggleCategoryStatus(${c.categoryId})" title="${isActive ? 'Deactivate' : 'Activate'}">
-                            ${isActive ? Icons.toggleOff : Icons.toggleOn}
+                        <button class="btn btn-sm btn-outline-${c.isActive ? 'danger' : 'success'}" onclick="toggleCategoryStatus(${c.categoryId})" title="${c.isActive ? 'Deactivate' : 'Activate'}">
+                            ${c.isActive ? Icons.toggleOff : Icons.toggleOn}
                         </button>
                     </div>
                 </td>
             </tr>
-        `;
-        }).join('');
+        `).join('');
 
         document.getElementById('categoryCount').textContent = data.length + ' categories';
         document.getElementById('categoryPagination').textContent = `Showing ${data.length} categories`;
     }
 
     function updateCategoryStats() {
-        const total = allCategoriesData.length;
-        const active = allCategoriesData.filter(c => isCategoryActive(c.isActive)).length;
+        const total = categoriesData.length;
+        const active = categoriesData.filter(c => c.isActive).length;
         const inactive = total - active;
 
         document.getElementById('totalCategories').textContent = total;
@@ -325,7 +308,9 @@
         }
 
         if (status === 'active') {
-            filtered = filtered.filter(c => isCategoryActive(c.isActive));
+            filtered = filtered.filter(c => c.isActive);
+        } else if (status === 'inactive') {
+            filtered = filtered.filter(c => !c.isActive);
         }
 
         renderCategories(filtered);
@@ -333,7 +318,7 @@
 
     function resetCategoryFilters() {
         document.getElementById('searchCategories').value = '';
-        document.getElementById('filterStatus').value = 'active';
+        document.getElementById('filterStatus').value = '';
         renderCategories(categoriesData);
     }
 
@@ -366,7 +351,7 @@
                     </div>
                     <div class="col-md-6">
                         <h6 class="text-muted mb-1">Status</h6>
-                        <p><span class="badge ${isCategoryActive(category.isActive) ? 'bg-success' : 'bg-secondary'}">${isCategoryActive(category.isActive) ? 'Active' : 'Inactive'}</span></p>
+                        <p><span class="badge ${category.isActive ? 'bg-success' : 'bg-secondary'}">${category.isActive ? 'Active' : 'Inactive'}</span></p>
                     </div>
                     <div class="col-md-6">
                         <h6 class="text-muted mb-1">Display Order</h6>
@@ -401,7 +386,7 @@
         document.getElementById('categoryName').value = category.categoryName;
         document.getElementById('categoryDescription').value = category.description || '';
         document.getElementById('displayOrder').value = category.displayOrder || 0;
-        document.getElementById('categoryStatus').value = isCategoryActive(category.isActive) ? 'true' : 'false';
+        document.getElementById('categoryStatus').value = category.isActive ? 'true' : 'false';
 
         Modal.show('categoryModal');
     }
@@ -445,38 +430,13 @@
     async function toggleCategoryStatus(id) {
         try {
             const category = categoriesData.find(c => c.categoryId === id);
-            if (!category) {
-                console.error('Category not found in data:', id);
-                return;
-            }
+            if (!category) return;
 
-            const currentStatus = isCategoryActive(category.isActive);
-            const newStatus = !currentStatus;
-            
-            console.log('Toggle category:', id, 'Current isActive:', category.isActive, 'Parsed as:', currentStatus, 'New status:', newStatus);
-            
-            // Use the dedicated status endpoint with proper payload
-            const payload = { isActive: newStatus };
-            console.log('Sending payload:', JSON.stringify(payload));
-            
-            const response = await fetch(`/api/product-categories/${id}/status`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            
-            const result = await response.json();
-            console.log('API Response:', response.status, result);
-            
-            if (!response.ok || result.success === false) {
-                Toast.error(result.message || 'Failed to update category status');
-                return;
-            }
-            
+            const newStatus = !category.isActive;
+            await API.put(`/product-categories/${id}/status`, { isActive: newStatus });
             Toast.success(`Category ${newStatus ? 'activated' : 'deactivated'} successfully`);
-            await loadCategories();
+            loadCategories();
         } catch (error) {
-            console.error('Toggle error:', error);
             Toast.error('Failed to update category status');
         }
     }

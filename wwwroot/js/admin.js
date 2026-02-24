@@ -997,62 +997,15 @@ const Customers = {
             ]);
             this.allData = Array.isArray(customers) ? customers : [];
             this.data = this.allData;
-            this.categories = categories;
-            this.render();
+            this.categories = Array.isArray(categories) ? categories : [];
+            this.applyCurrentFilters();
         } catch (error) {
             Toast.error('Failed to load customers');
         }
     },
 
     render() {
-        const tbody = document.getElementById('customersTableBody');
-        if (!tbody) return;
-
-        // Show only active customers by default in the main list
-        const displayData = this.data.filter(c => (c.status || '').toLowerCase() === 'active');
-
-        if (displayData.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No customers found. Click "Add Customer" to create one.</td></tr>';
-            return;
-        }
-
-        tbody.innerHTML = displayData.map(c => `
-            <tr>
-                <td>
-                    <div class="d-flex align-items-center">
-                        <div class="avatar-circle me-3">${(c.firstName?.[0] || '') + (c.lastName?.[0] || '')}</div>
-                        <div>
-                            <div class="fw-semibold">${c.fullName}</div>
-                            <small class="text-muted">${c.customerCode}</small>
-                        </div>
-                    </div>
-                </td>
-                <td>
-                    <div>${c.email}</div>
-                    <small class="text-muted">${c.phone || '-'}</small>
-                </td>
-                <td><span class="badge bg-info">${c.categoryName}</span></td>
-                <td>${Format.statusBadge(c.status)}</td>
-                <td class="text-center">${c.totalOrders}</td>
-                <td class="text-end">${Format.currency(c.totalSpent)}</td>
-                <td class="text-center">
-                    <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-primary" onclick="Customers.view(${c.customerId})" title="View">
-                            ${Icons.view}
-                        </button>
-                        <button class="btn btn-sm btn-outline-warning" onclick="Customers.edit(${c.customerId})" title="Edit">
-                            ${Icons.edit}
-                        </button>
-                        <button class="btn btn-sm btn-outline-${c.status === 'Active' ? 'danger' : 'success'}" onclick="Customers.toggleStatus(${c.customerId})" title="${c.status === 'Active' ? 'Deactivate' : 'Activate'}">
-                            ${c.status === 'Active' ? Icons.toggleOff : Icons.toggleOn}
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-
-        document.getElementById('customerCount').textContent = displayData.length + ' customers';
-        this.updateStats();
+        this.applyCurrentFilters();
     },
 
     updateStats() {
@@ -1064,6 +1017,13 @@ const Customers = {
         document.getElementById('totalCustomers')?.textContent && (document.getElementById('totalCustomers').textContent = total);
         document.getElementById('activeCustomers')?.textContent && (document.getElementById('activeCustomers').textContent = active);
         document.getElementById('totalRevenue')?.textContent && (document.getElementById('totalRevenue').textContent = Format.currency(totalSpent));
+    },
+
+    applyCurrentFilters() {
+        const search = (document.getElementById('searchCustomers')?.value || '').toLowerCase();
+        const type = document.getElementById('filterType')?.value || '';
+        const status = document.getElementById('filterStatus')?.value || 'active';
+        this.filter(search, type, status);
     },
 
     showModal(customer = null) {
@@ -1093,6 +1053,7 @@ const Customers = {
 
     async save() {
         const id = document.getElementById('customerId').value;
+        const isEdit = !!id;
         const isActive = document.getElementById('isActive').value === 'true';
         const data = {
             firstName: document.getElementById('firstName').value,
@@ -1111,7 +1072,7 @@ const Customers = {
         };
 
         try {
-            if (id) {
+            if (isEdit) {
                 await API.put(`/customers/${id}`, data);
                 Toast.success('Customer updated successfully');
             } else {
@@ -1119,7 +1080,12 @@ const Customers = {
                 Toast.success('Customer added successfully');
             }
             Modal.hide('customerModal');
-            this.load();
+            await this.load();
+
+            const statusFilter = document.getElementById('filterStatus')?.value || 'active';
+            if (data.status === 'Inactive' && statusFilter === 'active') {
+                Toast.warning('Customer was saved as inactive and moved to Archive view.');
+            }
         } catch (error) {
             Toast.error(error.message || 'Failed to save customer');
         }
@@ -1209,7 +1175,7 @@ const Customers = {
     },
 
     filter(search, type, status) {
-        let filtered = this.allData || this.data;
+        let filtered = [...(this.allData || this.data || [])];
         
         if (search) {
             filtered = filtered.filter(c => 
@@ -1242,7 +1208,9 @@ const Customers = {
 
         if (data.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No customers match your search criteria.</td></tr>';
-            document.getElementById('customerCount').textContent = '0 customers';
+            const customerCount = document.getElementById('customerCount');
+            if (customerCount) customerCount.textContent = '0 customers';
+            this.updateStats();
             return;
         }
 
@@ -1281,7 +1249,9 @@ const Customers = {
             </tr>
         `).join('');
 
-        document.getElementById('customerCount').textContent = data.length + ' customers';
+        const customerCount = document.getElementById('customerCount');
+        if (customerCount) customerCount.textContent = data.length + ' customers';
+        this.updateStats();
     },
 
     async delete(id) {
@@ -2885,14 +2855,25 @@ const Users = {
             ]);
             this.allData = Array.isArray(users) ? users : [];
             this.data = this.allData;
-            this.roles = roles;
-            this.render();
+            this.roles = Array.isArray(roles) ? roles : [];
+            this.applyCurrentFilters();
         } catch (error) {
             Toast.error('Failed to load users');
         }
     },
 
+    applyCurrentFilters() {
+        const search = (document.getElementById('searchUsers')?.value || '').toLowerCase();
+        const role = document.getElementById('filterRole')?.value || '';
+        const status = document.getElementById('filterStatus')?.value || 'active';
+        this.filter(search, role, status);
+    },
+
     render() {
+        this.applyCurrentFilters();
+    },
+
+    renderDefault() {
         const tbody = document.getElementById('usersTableBody');
         if (!tbody) return;
 
@@ -3033,7 +3014,7 @@ const Users = {
                 Toast.success('User added successfully');
             }
             Modal.hide('userModal');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error(error.message || 'Failed to save user');
         }
@@ -3091,8 +3072,8 @@ const Users = {
     async toggleStatus(id) {
         try {
             const result = await API.put(`/users/${id}/toggle-status`);
-            Toast.success(result.message);
-            this.load();
+            Toast.success(result.message || 'Status updated');
+            await this.load();
         } catch (error) {
             Toast.error('Failed to toggle user status');
         }
