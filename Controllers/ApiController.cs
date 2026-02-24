@@ -228,7 +228,12 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var existing = await _context.Campaigns.FindAsync(id);
-                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
+                if (existing == null) return NotFound();
+                if (companyId != null && existing.CompanyId != null && existing.CompanyId != companyId) return NotFound();
+
+                // Assign CompanyId if not set (legacy data migration)
+                if (existing.CompanyId == null && companyId != null)
+                    existing.CompanyId = companyId;
 
                 existing.CampaignName = campaign.CampaignName;
                 existing.Description = campaign.Description;
@@ -257,7 +262,8 @@ namespace CompuGear.Controllers
 
             var companyId = GetCompanyId();
             var campaign = await _context.Campaigns.FindAsync(id);
-            if (campaign == null || (companyId != null && campaign.CompanyId != companyId)) return NotFound();
+            if (campaign == null) return NotFound();
+            if (companyId != null && campaign.CompanyId != null && campaign.CompanyId != companyId) return NotFound();
 
             _context.Campaigns.Remove(campaign);
             await _context.SaveChangesAsync();
@@ -380,7 +386,12 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var existing = await _context.Promotions.FindAsync(id);
-                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
+                if (existing == null) return NotFound();
+                if (companyId != null && existing.CompanyId != null && existing.CompanyId != companyId) return NotFound();
+
+                // Assign CompanyId if not set (legacy data migration)
+                if (existing.CompanyId == null && companyId != null)
+                    existing.CompanyId = companyId;
 
                 existing.PromotionCode = promotion.PromotionCode;
                 existing.PromotionName = promotion.PromotionName;
@@ -415,7 +426,8 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var promotion = await _context.Promotions.FindAsync(id);
-                if (promotion == null || (companyId != null && promotion.CompanyId != companyId)) return NotFound();
+                if (promotion == null) return NotFound();
+                if (companyId != null && promotion.CompanyId != null && promotion.CompanyId != companyId) return NotFound();
 
                 promotion.IsActive = !promotion.IsActive;
                 promotion.UpdatedAt = DateTime.UtcNow;
@@ -439,7 +451,9 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var promotion = await _context.Promotions.FindAsync(id);
-                if (promotion == null || (companyId != null && promotion.CompanyId != companyId))
+                if (promotion == null)
+                    return NotFound(new { success = false, message = "Promotion not found" });
+                if (companyId != null && promotion.CompanyId != null && promotion.CompanyId != companyId)
                     return NotFound(new { success = false, message = "Promotion not found" });
 
                 promotion.IsActive = status.IsActive;
@@ -462,7 +476,8 @@ namespace CompuGear.Controllers
 
             var companyId = GetCompanyId();
             var promotion = await _context.Promotions.FindAsync(id);
-            if (promotion == null || (companyId != null && promotion.CompanyId != companyId)) return NotFound();
+            if (promotion == null) return NotFound();
+            if (companyId != null && promotion.CompanyId != null && promotion.CompanyId != companyId) return NotFound();
 
             _context.Promotions.Remove(promotion);
             await _context.SaveChangesAsync();
@@ -698,19 +713,31 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var existing = await _context.Customers.FindAsync(id);
-                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
+                if (existing == null) return NotFound();
+                if (companyId != null && existing.CompanyId != null && existing.CompanyId != companyId) return NotFound();
+
+                // Assign CompanyId if not set (legacy data migration)
+                if (existing.CompanyId == null && companyId != null)
+                    existing.CompanyId = companyId;
 
                 existing.FirstName = customer.FirstName;
                 existing.LastName = customer.LastName;
                 existing.Email = customer.Email;
                 existing.Phone = customer.Phone;
-                existing.Status = customer.Status;
                 existing.CategoryId = customer.CategoryId;
                 existing.BillingAddress = customer.BillingAddress;
                 existing.BillingCity = customer.BillingCity;
+                existing.BillingState = customer.BillingState;
+                existing.BillingZipCode = customer.BillingZipCode;
                 existing.BillingCountry = customer.BillingCountry;
+                existing.CompanyName = customer.CompanyName;
+                existing.CreditLimit = customer.CreditLimit;
                 existing.Notes = customer.Notes;
                 existing.UpdatedAt = DateTime.UtcNow;
+
+                // Update status if provided (Active/Inactive)
+                if (!string.IsNullOrEmpty(customer.Status))
+                    existing.Status = customer.Status;
 
                 await _context.SaveChangesAsync();
                 return Ok(new { success = true, message = "Customer updated successfully" });
@@ -726,7 +753,8 @@ namespace CompuGear.Controllers
         {
             var companyId = GetCompanyId();
             var customer = await _context.Customers.FindAsync(id);
-            if (customer == null || (companyId != null && customer.CompanyId != companyId)) return NotFound();
+            if (customer == null) return NotFound();
+            if (companyId != null && customer.CompanyId != null && customer.CompanyId != companyId) return NotFound();
 
             _context.Customers.Remove(customer);
             await _context.SaveChangesAsync();
@@ -741,7 +769,8 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var customer = await _context.Customers.FindAsync(id);
-                if (customer == null || (companyId != null && customer.CompanyId != companyId)) return NotFound();
+                if (customer == null) return NotFound();
+                if (companyId != null && customer.CompanyId != null && customer.CompanyId != companyId) return NotFound();
 
                 customer.Status = customer.Status == "Active" ? "Inactive" : "Active";
                 customer.UpdatedAt = DateTime.UtcNow;
@@ -843,6 +872,7 @@ namespace CompuGear.Controllers
             try
             {
                 var companyId = GetCompanyId();
+                product.CompanyId = companyId;
                 product.ProductCode = $"PRD-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
                 product.CreatedAt = DateTime.UtcNow;
                 product.UpdatedAt = DateTime.UtcNow;
@@ -865,7 +895,15 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var existing = await _context.Products.FindAsync(id);
-                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
+                if (existing == null) return NotFound();
+                
+                // Company isolation check: Company Admin can only edit their own products OR products with null CompanyId
+                if (companyId != null && existing.CompanyId != null && existing.CompanyId != companyId)
+                    return NotFound();
+
+                // If product has no CompanyId assigned, assign it to current company (migration for legacy data)
+                if (existing.CompanyId == null && companyId != null)
+                    existing.CompanyId = companyId;
 
                 existing.ProductName = product.ProductName;
                 existing.ShortDescription = product.ShortDescription;
@@ -899,8 +937,14 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var product = await _context.Products.FindAsync(id);
-                if (product == null || (companyId != null && product.CompanyId != companyId))
+                if (product == null) 
                     return NotFound(new { success = false, message = "Product not found" });
+                if (companyId != null && product.CompanyId != null && product.CompanyId != companyId)
+                    return NotFound(new { success = false, message = "Product not found" });
+
+                // Assign CompanyId if not set (legacy data migration)
+                if (product.CompanyId == null && companyId != null)
+                    product.CompanyId = companyId;
 
                 product.Status = string.IsNullOrWhiteSpace(request.Status) ? product.Status : request.Status.Trim();
                 product.UpdatedAt = DateTime.UtcNow;
@@ -922,8 +966,12 @@ namespace CompuGear.Controllers
                 var companyId = GetCompanyId();
                 var product = await _context.Products
                     .AsTracking()
-                    .FirstOrDefaultAsync(p => p.ProductId == id && (companyId == null || p.CompanyId == companyId));
+                    .FirstOrDefaultAsync(p => p.ProductId == id && (companyId == null || p.CompanyId == companyId || p.CompanyId == null));
                 if (product == null) return NotFound();
+
+                // Assign CompanyId if not set (legacy data migration)
+                if (product.CompanyId == null && companyId != null)
+                    product.CompanyId = companyId;
 
                 var previousStock = product.StockQuantity;
                 product.StockQuantity = request.NewQuantity;
@@ -957,7 +1005,8 @@ namespace CompuGear.Controllers
         {
             var companyId = GetCompanyId();
             var product = await _context.Products.FindAsync(id);
-            if (product == null || (companyId != null && product.CompanyId != companyId)) return NotFound();
+            if (product == null) return NotFound();
+            if (companyId != null && product.CompanyId != null && product.CompanyId != companyId) return NotFound();
 
             _context.Products.Remove(product);
             await _context.SaveChangesAsync();
@@ -1153,7 +1202,9 @@ namespace CompuGear.Controllers
                 var companyId = GetCompanyId();
                 // Verify product belongs to company
                 var product = await _context.Products.FindAsync(request.ProductId);
-                if (product == null || (companyId != null && product.CompanyId != companyId))
+                if (product == null)
+                    return NotFound(new { success = false, message = "Product not found" });
+                if (companyId != null && product.CompanyId != null && product.CompanyId != companyId)
                     return NotFound(new { success = false, message = "Product not found" });
 
                 // Check if alert already exists for this product
@@ -1357,7 +1408,9 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var order = await _context.PurchaseOrders.FindAsync(id);
-                if (order == null || (companyId != null && order.CompanyId != companyId))
+                if (order == null)
+                    return NotFound(new { success = false, message = "Purchase order not found" });
+                if (companyId != null && order.CompanyId != null && order.CompanyId != companyId)
                     return NotFound(new { success = false, message = "Purchase order not found" });
 
                 order.Status = "Approved";
@@ -1379,7 +1432,9 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var order = await _context.PurchaseOrders.FindAsync(id);
-                if (order == null || (companyId != null && order.CompanyId != companyId))
+                if (order == null)
+                    return NotFound(new { success = false, message = "Purchase order not found" });
+                if (companyId != null && order.CompanyId != null && order.CompanyId != companyId)
                     return NotFound(new { success = false, message = "Purchase order not found" });
 
                 order.Status = "Shipped";
@@ -1574,7 +1629,12 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var existing = await _context.Orders.FindAsync(id);
-                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
+                if (existing == null) return NotFound();
+                if (companyId != null && existing.CompanyId != null && existing.CompanyId != companyId) return NotFound();
+
+                // Assign CompanyId if not set (legacy data migration)
+                if (existing.CompanyId == null && companyId != null)
+                    existing.CompanyId = companyId;
 
                 existing.OrderStatus = order.OrderStatus;
                 existing.PaymentStatus = order.PaymentStatus;
@@ -1936,7 +1996,8 @@ namespace CompuGear.Controllers
 
             var companyId = GetCompanyId();
             var order = await _context.Orders.FindAsync(id);
-            if (order == null || (companyId != null && order.CompanyId != companyId)) return NotFound();
+            if (order == null) return NotFound();
+            if (companyId != null && order.CompanyId != null && order.CompanyId != companyId) return NotFound();
 
             _context.Orders.Remove(order);
             await _context.SaveChangesAsync();
@@ -2012,7 +2073,12 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var existing = await _context.Leads.FindAsync(id);
-                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
+                if (existing == null) return NotFound();
+                if (companyId != null && existing.CompanyId != null && existing.CompanyId != companyId) return NotFound();
+
+                // Assign CompanyId if not set (legacy data migration)
+                if (existing.CompanyId == null && companyId != null)
+                    existing.CompanyId = companyId;
 
                 existing.FirstName = lead.FirstName;
                 existing.LastName = lead.LastName;
@@ -2042,7 +2108,8 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var lead = await _context.Leads.FindAsync(id);
-                if (lead == null || (companyId != null && lead.CompanyId != companyId)) return NotFound();
+                if (lead == null) return NotFound();
+                if (companyId != null && lead.CompanyId != null && lead.CompanyId != companyId) return NotFound();
 
                 // Create customer from lead
                 var customer = new Customer
@@ -2083,7 +2150,8 @@ namespace CompuGear.Controllers
         {
             var companyId = GetCompanyId();
             var lead = await _context.Leads.FindAsync(id);
-            if (lead == null || (companyId != null && lead.CompanyId != companyId)) return NotFound();
+            if (lead == null) return NotFound();
+            if (companyId != null && lead.CompanyId != null && lead.CompanyId != companyId) return NotFound();
 
             _context.Leads.Remove(lead);
             await _context.SaveChangesAsync();
@@ -2098,7 +2166,8 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var lead = await _context.Leads.FindAsync(id);
-                if (lead == null || (companyId != null && lead.CompanyId != companyId)) return NotFound();
+                if (lead == null) return NotFound();
+                if (companyId != null && lead.CompanyId != null && lead.CompanyId != companyId) return NotFound();
 
                 lead.Status = lead.Status == "Active" || lead.Status == "New" || lead.Status == "Qualified" || lead.Status == "Hot" ? "Inactive" : "Active";
                 lead.UpdatedAt = DateTime.UtcNow;
@@ -2206,7 +2275,12 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var existing = await _context.SupportTickets.FindAsync(id);
-                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
+                if (existing == null) return NotFound();
+                if (companyId != null && existing.CompanyId != null && existing.CompanyId != companyId) return NotFound();
+
+                // Assign CompanyId if not set (legacy data migration)
+                if (existing.CompanyId == null && companyId != null)
+                    existing.CompanyId = companyId;
 
                 existing.Subject = ticket.Subject;
                 existing.Description = ticket.Description;
@@ -2237,7 +2311,8 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var ticket = await _context.SupportTickets.FindAsync(id);
-                if (ticket == null || (companyId != null && ticket.CompanyId != companyId)) return NotFound();
+                if (ticket == null) return NotFound();
+                if (companyId != null && ticket.CompanyId != null && ticket.CompanyId != companyId) return NotFound();
 
                 message.TicketId = id;
                 message.CreatedAt = DateTime.UtcNow;
@@ -2264,7 +2339,8 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var ticket = await _context.SupportTickets.FindAsync(id);
-                if (ticket == null || (companyId != null && ticket.CompanyId != companyId)) return NotFound();
+                if (ticket == null) return NotFound();
+                if (companyId != null && ticket.CompanyId != null && ticket.CompanyId != companyId) return NotFound();
 
                 // Get current user info from session
                 var userId = HttpContext.Session.GetInt32("UserId");
@@ -2311,7 +2387,8 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var ticket = await _context.SupportTickets.FindAsync(id);
-                if (ticket == null || (companyId != null && ticket.CompanyId != companyId)) return NotFound();
+                if (ticket == null) return NotFound();
+                if (companyId != null && ticket.CompanyId != null && ticket.CompanyId != companyId) return NotFound();
 
                 var userId = HttpContext.Session.GetInt32("UserId");
 
@@ -2345,7 +2422,8 @@ namespace CompuGear.Controllers
         {
             var companyId = GetCompanyId();
             var ticket = await _context.SupportTickets.FindAsync(id);
-            if (ticket == null || (companyId != null && ticket.CompanyId != companyId)) return NotFound();
+            if (ticket == null) return NotFound();
+            if (companyId != null && ticket.CompanyId != null && ticket.CompanyId != companyId) return NotFound();
 
             _context.SupportTickets.Remove(ticket);
             await _context.SaveChangesAsync();
@@ -2472,7 +2550,12 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var existing = await _context.Users.FindAsync(id);
-                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
+                if (existing == null) return NotFound();
+                if (companyId != null && existing.CompanyId != null && existing.CompanyId != companyId) return NotFound();
+
+                // Assign CompanyId if not set (legacy data migration)
+                if (existing.CompanyId == null && companyId != null)
+                    existing.CompanyId = companyId;
 
                 existing.FirstName = user.FirstName;
                 existing.LastName = user.LastName;
@@ -2508,7 +2591,8 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var user = await _context.Users.FindAsync(id);
-                if (user == null || (companyId != null && user.CompanyId != companyId)) return NotFound();
+                if (user == null) return NotFound();
+                if (companyId != null && user.CompanyId != null && user.CompanyId != companyId) return NotFound();
 
                 user.IsActive = !user.IsActive;
                 user.UpdatedAt = DateTime.UtcNow;
@@ -2527,7 +2611,8 @@ namespace CompuGear.Controllers
         {
             var companyId = GetCompanyId();
             var user = await _context.Users.FindAsync(id);
-            if (user == null || (companyId != null && user.CompanyId != companyId)) return NotFound();
+            if (user == null) return NotFound();
+            if (companyId != null && user.CompanyId != null && user.CompanyId != companyId) return NotFound();
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
@@ -2613,7 +2698,12 @@ namespace CompuGear.Controllers
 
                 var companyId = GetCompanyId();
                 var existing = await _context.Invoices.FindAsync(id);
-                if (existing == null || (companyId != null && existing.CompanyId != companyId)) return NotFound();
+                if (existing == null) return NotFound();
+                if (companyId != null && existing.CompanyId != null && existing.CompanyId != companyId) return NotFound();
+
+                // Assign CompanyId if not set (legacy data migration)
+                if (existing.CompanyId == null && companyId != null)
+                    existing.CompanyId = companyId;
 
                 existing.Status = invoice.Status;
                 existing.DueDate = invoice.DueDate;
@@ -2639,7 +2729,8 @@ namespace CompuGear.Controllers
 
                 var companyId = GetCompanyId();
                 var invoice = await _context.Invoices.FindAsync(id);
-                if (invoice == null || (companyId != null && invoice.CompanyId != companyId)) return NotFound();
+                if (invoice == null) return NotFound();
+                if (companyId != null && invoice.CompanyId != null && invoice.CompanyId != companyId) return NotFound();
 
                 _context.Invoices.Remove(invoice);
                 await _context.SaveChangesAsync();

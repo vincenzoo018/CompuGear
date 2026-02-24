@@ -337,7 +337,7 @@
 
 <!-- View Product Modal -->
 <div class="modal fade" id="viewProductModal" tabindex="-1" aria-labelledby="viewProductModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header modal-header-info">
                 <h5 class="modal-title" id="viewProductModalLabel">
@@ -348,51 +348,8 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-4 text-center mb-4">
-                        <div class="product-image-large bg-light rounded p-4 mb-3">
-                            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-primary">
-                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-                            </svg>
-                        </div>
-                        <span class="badge badge-success" id="viewProductStatus">In Stock</span>
-                    </div>
-                    <div class="col-md-8">
-                        <h4 id="viewProductName">ProBook 15 Laptop</h4>
-                        <p class="text-muted mb-3" id="viewProductDesc">Intel Core i7, 16GB RAM, 512GB SSD</p>
-                        <div class="row">
-                            <div class="col-6">
-                                <div class="detail-item mb-3">
-                                    <span class="detail-label">SKU:</span>
-                                    <span class="detail-value" id="viewProductSku">LAP-001</span>
-                                </div>
-                                <div class="detail-item mb-3">
-                                    <span class="detail-label">Category:</span>
-                                    <span class="detail-value" id="viewProductCategory">Laptops</span>
-                                </div>
-                                <div class="detail-item mb-3">
-                                    <span class="detail-label">Brand:</span>
-                                    <span class="detail-value" id="viewProductBrand">Dell</span>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="detail-item mb-3">
-                                    <span class="detail-label">Price:</span>
-                                    <span class="detail-value fw-bold text-primary" id="viewProductPrice">₱64,950.00</span>
-                                </div>
-                                <div class="detail-item mb-3">
-                                    <span class="detail-label">Stock:</span>
-                                    <span class="detail-value" id="viewProductStock">45 units</span>
-                                </div>
-                                <div class="detail-item mb-3">
-                                    <span class="detail-label">Reorder Level:</span>
-                                    <span class="detail-value" id="viewProductReorder">10 units</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="modal-body" id="viewProductContent">
+                <!-- Dynamic content loaded via JavaScript -->
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

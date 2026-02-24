@@ -295,7 +295,7 @@
 
 <!-- View User Modal -->
 <div class="modal fade" id="viewUserModal" tabindex="-1" aria-labelledby="viewUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header modal-header-info">
                 <h5 class="modal-title" id="viewUserModalLabel">
@@ -306,43 +306,8 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div class="user-profile-header text-center mb-4">
-                    <div class="avatar avatar-xl mx-auto mb-3">
-                        <span class="avatar-text bg-primary" id="viewAvatar">SA</span>
-                    </div>
-                    <h4 id="viewFullName">System Administrator</h4>
-                    <p class="text-muted mb-0" id="viewUsername">@@admin</p>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="detail-card">
-                            <h6>Contact Information</h6>
-                            <div class="detail-item">
-                                <span class="detail-label">Email:</span>
-                                <span class="detail-value" id="viewEmail">admin@compugear.com</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Phone:</span>
-                                <span class="detail-value" id="viewPhone">+63-XXX-XXX-XXXX</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="detail-card">
-                            <h6>Account Information</h6>
-                            <div class="detail-item">
-                                <span class="detail-label">Role:</span>
-                                <span class="detail-value" id="viewRole"><span class="badge badge-error">Super Admin</span></span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Status:</span>
-                                <span class="detail-value" id="viewStatus"><span class="badge badge-success">Active</span></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="modal-body" id="viewUserContent">
+                <!-- Dynamic content loaded via JavaScript -->
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

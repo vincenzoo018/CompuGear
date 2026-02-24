@@ -72,9 +72,18 @@
 
     async function restoreSupplier(id) {
         try {
-            await API.put(`/suppliers/${id}/toggle-status`, {});
+            const response = await fetch(`/api/suppliers/${id}/toggle-status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            });
+            const result = await response.json();
+            if (!response.ok || result.success === false) {
+                Toast.error(result.message || 'Failed to activate supplier');
+                return;
+            }
             Toast.success('Supplier activated');
-            loadArchivedSuppliers();
+            window.location.href = '/Inventory/Suppliers';
         } catch (error) {
             Toast.error('Failed to activate supplier');
         }

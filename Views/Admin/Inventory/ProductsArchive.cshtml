@@ -79,9 +79,18 @@
 
     async function restoreProduct(id) {
         try {
-            await API.put(`/products/${id}/status`, { status: 'Active' });
+            const response = await fetch(`/api/products/${id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'Active' })
+            });
+            const result = await response.json();
+            if (!response.ok || result.success === false) {
+                Toast.error(result.message || 'Failed to activate product');
+                return;
+            }
             Toast.success('Product activated');
-            loadArchivedProducts();
+            window.location.href = '/Inventory/Products';
         } catch (error) {
             Toast.error('Failed to activate product');
         }

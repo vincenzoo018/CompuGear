@@ -309,7 +309,7 @@
 
 <!-- View Customer Modal -->
 <div class="modal fade" id="viewCustomerModal" tabindex="-1" aria-labelledby="viewCustomerModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header modal-header-info">
                 <h5 class="modal-title" id="viewCustomerModalLabel">
@@ -320,55 +320,8 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div class="user-profile-header text-center mb-4">
-                    <div class="avatar avatar-xl mx-auto mb-3">
-                        <span class="avatar-text bg-primary" id="viewAvatar">AC</span>
-                    </div>
-                    <h4 id="viewCustomerName">Acme Corporation</h4>
-                    <p class="mb-0"><span class="badge badge-info" id="viewCategory">Business</span></p>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="detail-card">
-                            <h6>Contact Information</h6>
-                            <div class="detail-item">
-                                <span class="detail-label">Email:</span>
-                                <span class="detail-value" id="viewEmail">contact@acme.com</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Phone:</span>
-                                <span class="detail-value" id="viewPhone">+63-917-555-0101</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Address:</span>
-                                <span class="detail-value" id="viewAddress">Manila, Metro Manila</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="detail-card">
-                            <h6>Account Information</h6>
-                            <div class="detail-item">
-                                <span class="detail-label">Status:</span>
-                                <span class="detail-value" id="viewStatus"><span class="badge badge-success">Active</span></span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Total Orders:</span>
-                                <span class="detail-value" id="viewOrders">45</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Total Spent:</span>
-                                <span class="detail-value fw-bold text-primary" id="viewSpent">₱6,271,500</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Credit Limit:</span>
-                                <span class="detail-value" id="viewCredit">₱500,000</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="modal-body" id="viewCustomerContent">
+                <!-- Dynamic content loaded via JavaScript -->
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

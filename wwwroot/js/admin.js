@@ -361,7 +361,7 @@ const Marketing = {
         async load() {
             try {
                 this.allData = await API.get('/campaigns');
-                this.data = (this.allData || []).filter(c => (c.status || '').toLowerCase() !== 'paused');
+                this.data = this.allData;
                 this.render();
             } catch (error) {
                 Toast.error('Failed to load campaigns');
@@ -481,7 +481,7 @@ const Marketing = {
         },
 
         view(id) {
-            const campaign = this.data.find(c => c.campaignId === id);
+            const campaign = (this.allData || this.data).find(c => c.campaignId === id);
             if (!campaign) {
                 Toast.error('Campaign not found');
                 return;
@@ -548,7 +548,7 @@ const Marketing = {
         },
 
         edit(id) {
-            const campaign = this.data.find(c => c.campaignId === id);
+            const campaign = (this.allData || this.data).find(c => c.campaignId === id);
             if (!campaign) {
                 Toast.error('Campaign not found');
                 return;
@@ -558,7 +558,7 @@ const Marketing = {
         },
 
         async toggleStatus(id) {
-            const campaign = this.data.find(c => c.campaignId === id);
+            const campaign = (this.allData || this.data).find(c => c.campaignId === id);
             if (!campaign) return;
 
             const newStatus = campaign.status === 'Active' ? 'Paused' : 'Active';
@@ -585,7 +585,7 @@ const Marketing = {
         },
 
         filter(search, status) {
-            let filtered = this.data;
+            let filtered = this.allData || this.data;
             
             if (search) {
                 filtered = filtered.filter(c => 
@@ -661,7 +661,7 @@ const Marketing = {
             try {
                 const promotions = await API.get('/promotions');
                 this.allData = Array.isArray(promotions) ? promotions : [];
-                this.data = this.allData.filter(p => p.isActive !== false);
+                this.data = this.allData;
                 this.render();
             } catch (error) {
                 Toast.error('Failed to load promotions');
@@ -801,7 +801,7 @@ const Marketing = {
         },
 
         view(id) {
-            const p = this.data.find(promo => promo.promotionId === id);
+            const p = (this.allData || this.data).find(promo => promo.promotionId === id);
             if (!p) {
                 Toast.error('Promotion not found');
                 return;
@@ -856,7 +856,7 @@ const Marketing = {
         },
 
         edit(id) {
-            const promotion = this.data.find(p => p.promotionId === id);
+            const promotion = (this.allData || this.data).find(p => p.promotionId === id);
             if (!promotion) {
                 Toast.error('Promotion not found');
                 return;
@@ -877,7 +877,7 @@ const Marketing = {
 
         async toggleStatus(id) {
             try {
-                const promotion = this.data.find(p => p.promotionId === id);
+                const promotion = (this.allData || this.data).find(p => p.promotionId === id);
                 if (!promotion) return;
                 
                 const newStatus = !promotion.isActive;
@@ -902,7 +902,7 @@ const Marketing = {
         },
 
         filter(search, status) {
-            let filtered = this.data;
+            let filtered = this.allData || this.data;
             
             if (search) {
                 filtered = filtered.filter(p => 
@@ -996,7 +996,7 @@ const Customers = {
                 API.get('/customer-categories')
             ]);
             this.allData = Array.isArray(customers) ? customers : [];
-            this.data = this.allData.filter(c => (c.status || '').toLowerCase() === 'active');
+            this.data = this.allData;
             this.categories = categories;
             this.render();
         } catch (error) {
@@ -1008,12 +1008,15 @@ const Customers = {
         const tbody = document.getElementById('customersTableBody');
         if (!tbody) return;
 
-        if (this.data.length === 0) {
+        // Show only active customers by default in the main list
+        const displayData = this.data.filter(c => (c.status || '').toLowerCase() === 'active');
+
+        if (displayData.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No customers found. Click "Add Customer" to create one.</td></tr>';
             return;
         }
 
-        tbody.innerHTML = this.data.map(c => `
+        tbody.innerHTML = displayData.map(c => `
             <tr>
                 <td>
                     <div class="d-flex align-items-center">
@@ -1048,6 +1051,7 @@ const Customers = {
             </tr>
         `).join('');
 
+        document.getElementById('customerCount').textContent = displayData.length + ' customers';
         this.updateStats();
     },
 
@@ -1080,7 +1084,7 @@ const Customers = {
             document.getElementById('province').value = customer.billingState || '';
             document.getElementById('postalCode').value = customer.billingZipCode || '';
             document.getElementById('creditLimit').value = customer.creditLimit || 0;
-            document.getElementById('isActive').value = customer.isActive ? 'true' : 'false';
+            document.getElementById('isActive').value = (customer.status || '').toLowerCase() === 'active' ? 'true' : 'false';
             document.getElementById('notes').value = customer.notes || '';
         }
 
@@ -1089,6 +1093,7 @@ const Customers = {
 
     async save() {
         const id = document.getElementById('customerId').value;
+        const isActive = document.getElementById('isActive').value === 'true';
         const data = {
             firstName: document.getElementById('firstName').value,
             lastName: document.getElementById('lastName').value,
@@ -1101,7 +1106,7 @@ const Customers = {
             billingState: document.getElementById('province').value,
             billingZipCode: document.getElementById('postalCode').value,
             creditLimit: parseFloat(document.getElementById('creditLimit').value) || 0,
-            isActive: document.getElementById('isActive').value === 'true',
+            status: isActive ? 'Active' : 'Inactive',
             notes: document.getElementById('notes').value
         };
 
@@ -1121,14 +1126,16 @@ const Customers = {
     },
 
     view(id) {
-        const c = this.data.find(customer => customer.customerId === id);
+        const c = (this.allData || this.data).find(customer => customer.customerId === id);
         if (!c) {
             Toast.error('Customer not found');
             return;
         }
         
         this.currentId = id;
-        document.getElementById('viewCustomerContent').innerHTML = `
+        const viewContent = document.getElementById('viewCustomerContent') || document.querySelector('#viewCustomerModal .modal-body');
+        if (!viewContent) { Toast.error('View modal not found'); return; }
+        viewContent.innerHTML = `
             <div class="text-center mb-4">
                 <div class="avatar-circle avatar-lg mx-auto mb-3">${(c.firstName?.[0] || '') + (c.lastName?.[0] || '')}</div>
                 <h4>${c.firstName} ${c.lastName}</h4>
@@ -1178,7 +1185,7 @@ const Customers = {
     },
 
     edit(id) {
-        const customer = this.data.find(c => c.customerId === id);
+        const customer = (this.allData || this.data).find(c => c.customerId === id);
         if (!customer) {
             Toast.error('Customer not found');
             return;
@@ -1189,7 +1196,7 @@ const Customers = {
 
     async toggleStatus(id) {
         try {
-            const customer = this.data.find(c => c.customerId === id);
+            const customer = (this.allData || this.data).find(c => c.customerId === id);
             if (!customer) return;
             
             const newStatus = customer.status === 'Active' ? 'Inactive' : 'Active';
@@ -1202,7 +1209,7 @@ const Customers = {
     },
 
     filter(search, type, status) {
-        let filtered = this.data;
+        let filtered = this.allData || this.data;
         
         if (search) {
             filtered = filtered.filter(c => 
@@ -1222,6 +1229,8 @@ const Customers = {
         
         if (status === 'active') {
             filtered = filtered.filter(c => c.status === 'Active');
+        } else if (status === 'inactive') {
+            filtered = filtered.filter(c => c.status !== 'Active');
         }
         
         this.renderFiltered(filtered);
@@ -1308,7 +1317,7 @@ const Inventory = {
                     API.get('/brands')
                 ]);
                 this.allData = Array.isArray(products) ? products : [];
-                this.data = this.allData.filter(p => (p.status || '').toLowerCase() === 'active');
+                this.data = this.allData;
                 this.categories = categories;
                 this.brands = brands;
                 this.render();
@@ -1321,12 +1330,15 @@ const Inventory = {
             const tbody = document.getElementById('productsTableBody');
             if (!tbody) return;
 
-            if (this.data.length === 0) {
+            // Show only active products by default in the main list
+            const displayData = this.data.filter(p => (p.status || '').toLowerCase() === 'active');
+
+            if (displayData.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">No products found. Click "Add Product" to create one.</td></tr>';
                 return;
             }
 
-            tbody.innerHTML = this.data.map(p => `
+            tbody.innerHTML = displayData.map(p => `
                 <tr>
                     <td>
                         <div class="d-flex align-items-center">
@@ -1414,7 +1426,7 @@ const Inventory = {
                 document.getElementById('sellingPrice').value = product.sellingPrice || '';
                 document.getElementById('stockQuantity').value = product.stockQuantity || 0;
                 document.getElementById('reorderLevel').value = product.reorderLevel || 10;
-                document.getElementById('isActive').value = product.isActive ? 'true' : 'false';
+                document.getElementById('isActive').value = (product.status || '').toLowerCase() === 'active' ? 'true' : 'false';
 
                 // Show existing image if available
                 if (product.mainImageUrl && imagePreviewArea) {
@@ -1455,6 +1467,7 @@ const Inventory = {
 
         async save() {
             const id = document.getElementById('productId').value;
+            const isActive = document.getElementById('isActive').value === 'true';
             const data = {
                 productName: document.getElementById('productName').value,
                 sku: document.getElementById('productCode').value,
@@ -1466,7 +1479,7 @@ const Inventory = {
                 sellingPrice: parseFloat(document.getElementById('sellingPrice').value) || 0,
                 stockQuantity: parseInt(document.getElementById('stockQuantity').value) || 0,
                 reorderLevel: parseInt(document.getElementById('reorderLevel').value) || 10,
-                isActive: document.getElementById('isActive').value === 'true',
+                status: isActive ? 'Active' : 'Inactive',
                 mainImageUrl: document.getElementById('productImageUrl')?.value || this.currentImageUrl || ''
             };
 
@@ -1486,14 +1499,16 @@ const Inventory = {
         },
 
         view(id) {
-            const p = this.data.find(product => product.productId === id);
+            const p = (this.allData || this.data).find(product => product.productId === id);
             if (!p) {
                 Toast.error('Product not found');
                 return;
             }
             
             this.currentId = id;
-            document.getElementById('viewProductContent').innerHTML = `
+            const viewContent = document.getElementById('viewProductContent') || document.querySelector('#viewProductModal .modal-body');
+            if (!viewContent) { Toast.error('View modal not found'); return; }
+            viewContent.innerHTML = `
                 <div class="row g-4">
                     <div class="col-md-4 text-center">
                         <img src="${p.mainImageUrl || '/img/placeholder.png'}" class="img-fluid rounded mb-3" alt="">
@@ -1531,7 +1546,7 @@ const Inventory = {
         },
 
         edit(id) {
-            const product = this.data.find(p => p.productId === id);
+            const product = (this.allData || this.data).find(p => p.productId === id);
             if (!product) {
                 Toast.error('Product not found');
                 return;
@@ -1541,7 +1556,7 @@ const Inventory = {
         },
 
         updateStock(id) {
-            const product = this.data.find(p => p.productId === id);
+            const product = (this.allData || this.data).find(p => p.productId === id);
             if (!product) return;
 
             Modal.reset('stockForm');
@@ -1585,7 +1600,7 @@ const Inventory = {
 
         async toggleStatus(id) {
             try {
-                const product = this.data.find(p => p.productId === id);
+                const product = (this.allData || this.data).find(p => p.productId === id);
                 if (!product) return;
                 
                 const newStatus = product.status === 'Active' ? 'Inactive' : 'Active';
@@ -2055,7 +2070,7 @@ const Sales = {
         async load() {
             try {
                 this.allData = await API.get('/leads');
-                this.data = (this.allData || []).filter(l => (l.status || '').toLowerCase() !== 'inactive');
+                this.data = this.allData;
                 this.render();
             } catch (error) {
                 Toast.error('Failed to load leads');
@@ -2171,7 +2186,7 @@ const Sales = {
         },
 
         view(id) {
-            const l = this.data.find(lead => lead.leadId === id);
+            const l = (this.allData || this.data).find(lead => lead.leadId === id);
             if (!l) {
                 Toast.error('Lead not found');
                 return;
@@ -2226,7 +2241,7 @@ const Sales = {
         },
 
         edit(id) {
-            const lead = this.data.find(l => l.leadId === id);
+            const lead = (this.allData || this.data).find(l => l.leadId === id);
             if (!lead) {
                 Toast.error('Lead not found');
                 return;
@@ -2261,7 +2276,7 @@ const Sales = {
 
         async toggleStatus(id) {
             try {
-                const lead = this.data.find(l => l.leadId === id);
+                const lead = (this.allData || this.data).find(l => l.leadId === id);
                 if (!lead) return;
                 
                 const isActive = lead.status === 'Active' || lead.status === 'Hot' || lead.status === 'Warm';
@@ -2536,15 +2551,19 @@ const Sales = {
 const Support = {
     tickets: {
         data: [],
+        allData: [],
         categories: [],
         currentId: null,
 
         async load() {
             try {
-                [this.data, this.categories] = await Promise.all([
+                const [tickets, categories] = await Promise.all([
                     API.get('/tickets'),
                     API.get('/ticket-categories')
                 ]);
+                this.allData = tickets;
+                this.data = this.allData;
+                this.categories = categories;
                 this.render();
             } catch (error) {
                 Toast.error('Failed to load tickets');
@@ -2650,7 +2669,7 @@ const Support = {
         },
 
         view(id) {
-            const t = this.data.find(ticket => ticket.ticketId === id);
+            const t = (this.allData || this.data).find(ticket => ticket.ticketId === id);
             if (!t) {
                 Toast.error('Ticket not found');
                 return;
@@ -2716,7 +2735,7 @@ const Support = {
         },
 
         edit(id) {
-            const ticket = this.data.find(t => t.ticketId === id);
+            const ticket = (this.allData || this.data).find(t => t.ticketId === id);
             if (!ticket) {
                 Toast.error('Ticket not found');
                 return;
@@ -2726,7 +2745,7 @@ const Support = {
         },
 
         reply(id) {
-            const ticket = this.data.find(t => t.ticketId === id);
+            const ticket = (this.allData || this.data).find(t => t.ticketId === id);
             if (!ticket) return;
 
             Modal.reset('replyForm');
@@ -2769,11 +2788,11 @@ const Support = {
 
         async toggleStatus(id) {
             try {
-                const ticket = this.data.find(t => t.ticketId === id);
+                const ticket = (this.allData || this.data).find(t => t.ticketId === id);
                 if (!ticket) return;
                 
                 const newStatus = ticket.status === 'Closed' ? 'Open' : 'Closed';
-                await API.put(`/tickets/${id}/status`, { status: newStatus });
+                await API.put(`/tickets/${id}`, { ...ticket, status: newStatus });
                 Toast.success(`Ticket ${newStatus === 'Closed' ? 'closed' : 'reopened'} successfully`);
                 this.load();
             } catch (error) {
@@ -2782,7 +2801,7 @@ const Support = {
         },
 
         filter(search, status, priority) {
-            let filtered = this.data;
+            let filtered = this.allData || this.data;
             
             if (search) {
                 filtered = filtered.filter(t => 
@@ -2865,7 +2884,7 @@ const Users = {
                 API.get('/roles')
             ]);
             this.allData = Array.isArray(users) ? users : [];
-            this.data = this.allData.filter(u => u.isActive);
+            this.data = this.allData;
             this.roles = roles;
             this.render();
         } catch (error) {
@@ -2877,12 +2896,15 @@ const Users = {
         const tbody = document.getElementById('usersTableBody');
         if (!tbody) return;
 
-        if (this.data.length === 0) {
+        // Show only active users by default in the main list
+        const displayData = this.data.filter(u => u.isActive);
+
+        if (displayData.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No users found. Click "Add User" to create one.</td></tr>';
             return;
         }
 
-        tbody.innerHTML = this.data.map(u => `
+        tbody.innerHTML = displayData.map(u => `
             <tr>
                 <td>
                     <div class="d-flex align-items-center">
@@ -3018,14 +3040,16 @@ const Users = {
     },
 
     view(id) {
-        const u = this.data.find(user => user.userId === id);
+        const u = (this.allData || this.data).find(user => user.userId === id);
         if (!u) {
             Toast.error('User not found');
             return;
         }
         
         this.currentId = id;
-        document.getElementById('viewUserContent').innerHTML = `
+        const viewContent = document.getElementById('viewUserContent') || document.querySelector('#viewUserModal .modal-body');
+        if (!viewContent) { Toast.error('View modal not found'); return; }
+        viewContent.innerHTML = `
             <div class="text-center mb-4">
                 <div class="avatar-circle avatar-lg mx-auto mb-3">${(u.firstName?.[0] || '') + (u.lastName?.[0] || '')}</div>
                 <h4>${u.firstName} ${u.lastName}</h4>
@@ -3055,7 +3079,7 @@ const Users = {
     },
 
     edit(id) {
-        const user = this.data.find(u => u.userId === id);
+        const user = (this.allData || this.data).find(u => u.userId === id);
         if (!user) {
             Toast.error('User not found');
             return;
@@ -3087,7 +3111,7 @@ const Users = {
     },
 
     filter(search, role, status) {
-        let filtered = this.data;
+        let filtered = this.allData || this.data;
         
         if (search) {
             filtered = filtered.filter(u => 
@@ -3105,6 +3129,8 @@ const Users = {
         
         if (status === 'active') {
             filtered = filtered.filter(u => u.isActive);
+        } else if (status === 'inactive') {
+            filtered = filtered.filter(u => !u.isActive);
         }
         
         this.renderFiltered(filtered);
