@@ -66,5 +66,17 @@ namespace CompuGear.Controllers
         {
             return View("~/Views/SuperAdmin/Users.cshtml");
         }
+
+        // Company Archive
+        public IActionResult CompaniesArchive()
+        {
+            return View("~/Views/SuperAdmin/CompaniesArchive.cshtml");
+        }
+
+        // User Archive
+        public IActionResult UsersArchive()
+        {
+            return View("~/Views/SuperAdmin/UsersArchive.cshtml");
+        }
     }
 }

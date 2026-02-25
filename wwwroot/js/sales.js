@@ -188,6 +188,7 @@ const SalesCustomers = {
                 </td>
             </tr>
         `).join('');
+        this.applyCurrentFilters();
     },
 
     updateStats() {
@@ -297,7 +298,7 @@ const SalesCustomers = {
                 Toast.success('Customer created successfully');
             }
             Modal.hide('customerModal');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error(error.message || 'Failed to save customer');
         }
@@ -307,7 +308,7 @@ const SalesCustomers = {
         try {
             const result = await API.put(`/customers/${id}/toggle-status`);
             Toast.success(result.message || 'Status updated');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error('Failed to update status');
         }
@@ -318,9 +319,17 @@ const SalesCustomers = {
         try {
             await API.delete(`/customers/${id}`);
             Toast.success('Customer deleted successfully');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error('Failed to delete customer');
+        }
+    },
+
+    applyCurrentFilters() {
+        const search = document.getElementById('searchCustomers')?.value || '';
+        const status = document.getElementById('filterStatus')?.value || '';
+        if (search || status) {
+            this.filter(search, status);
         }
     },
 
@@ -634,6 +643,7 @@ const SalesLeads = {
                 </td>
             </tr>
         `).join('');
+        this.applyCurrentFilters();
     },
 
     updateStats() {
@@ -732,7 +742,7 @@ const SalesLeads = {
                 Toast.success('Lead created successfully');
             }
             Modal.hide('leadModal');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error(error.message || 'Failed to save lead');
         }
@@ -743,7 +753,7 @@ const SalesLeads = {
         try {
             const result = await API.put(`/leads/${id}/convert`);
             Toast.success(result.message || 'Lead converted to customer');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error(error.message || 'Failed to convert lead');
         }
@@ -753,7 +763,7 @@ const SalesLeads = {
         try {
             const result = await API.put(`/leads/${id}/toggle-status`);
             Toast.success(result.message || 'Status updated');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error('Failed to update status');
         }
@@ -764,9 +774,18 @@ const SalesLeads = {
         try {
             await API.delete(`/leads/${id}`);
             Toast.success('Lead deleted successfully');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error('Failed to delete lead');
+        }
+    },
+
+    applyCurrentFilters() {
+        const search = document.getElementById('leadSearch')?.value || '';
+        const status = document.getElementById('leadStatusFilter')?.value || '';
+        const source = document.getElementById('leadSourceFilter')?.value || '';
+        if (search || status || source) {
+            this.filter(search, status, source);
         }
     },
 

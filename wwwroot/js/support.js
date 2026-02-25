@@ -165,6 +165,7 @@ const SupportTickets = {
                 </td>
             </tr>
         `).join('');
+        this.applyCurrentFilters();
     },
 
     updateStats() {
@@ -259,7 +260,7 @@ const SupportTickets = {
         try {
             await API.delete(`/tickets/${id}`);
             Toast.success('Ticket deleted successfully');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error('Failed to delete ticket');
         }
@@ -270,7 +271,7 @@ const SupportTickets = {
         try {
             await API.put(`/tickets/${id}`, { status: 'Resolved' });
             Toast.success('Ticket resolved successfully');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error('Failed to resolve ticket');
         }
@@ -288,9 +289,18 @@ const SupportTickets = {
             await API.put(`/tickets/${data.ticketId}`, data);
             Toast.success('Ticket updated successfully');
             Modal.hide('ticketModal');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error('Failed to update ticket');
+        }
+    },
+
+    applyCurrentFilters() {
+        const search = document.getElementById('searchTickets')?.value || '';
+        const status = document.getElementById('filterStatus')?.value || '';
+        const priority = document.getElementById('filterPriority')?.value || '';
+        if (search || status || priority) {
+            this.filter(search, status, priority);
         }
     },
 

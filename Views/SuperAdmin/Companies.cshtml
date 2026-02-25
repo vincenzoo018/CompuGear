@@ -10,12 +10,20 @@
             <h1 class="page-title">Company Management</h1>
             <p class="page-subtitle">Manage all registered companies and their subscriptions.</p>
         </div>
-        <button class="btn btn-primary" onclick="openCreateCompanyModal()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            Add Company
-        </button>
+        <div class="d-flex gap-2">
+            <a href="/SuperAdmin/CompaniesArchive" class="btn btn-outline-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                    <polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>
+                </svg>
+                Archive
+            </a>
+            <button class="btn btn-primary" onclick="openCreateCompanyModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add Company
+            </button>
+        </div>
     </div>
 </div>
 
@@ -230,7 +238,7 @@
             try {
                 const res = await fetch('/api/superadmin/companies');
                 allCompanies = await res.json();
-                renderCompanies(allCompanies);
+                filterCompanies();
             } catch (e) { showError('Failed to load companies'); }
         }
 

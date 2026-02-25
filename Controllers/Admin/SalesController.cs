@@ -24,14 +24,27 @@ namespace CompuGear.Controllers
             _auditService = auditService;
         }
 
-        // Admin authorization check - only Super Admin (1) and Company Admin (2)
+        // Authorization check - Admins for views, all authenticated staff for API
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             base.OnActionExecuting(context);
             
             var roleId = HttpContext.Session.GetInt32("RoleId");
+            var isApiRequest = HttpContext.Request.Path.StartsWithSegments("/api");
             
-            if (roleId == null || (roleId != 1 && roleId != 2))
+            if (roleId == null)
+            {
+                context.Result = isApiRequest
+                    ? new JsonResult(new { success = false, message = "Not authenticated" }) { StatusCode = 401 }
+                    : RedirectToAction("Login", "Auth");
+                return;
+            }
+            
+            // API endpoints: allow all authenticated staff + admin roles (data is company-scoped)
+            if (isApiRequest) return;
+            
+            // View endpoints: admin only
+            if (roleId != 1 && roleId != 2)
             {
                 context.Result = RedirectToAction("Login", "Auth");
             }

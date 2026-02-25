@@ -167,6 +167,7 @@ const Products = {
                 </td>
             </tr>
         `).join('');
+        this.applyCurrentFilters();
     },
 
     updateStats() {
@@ -331,7 +332,7 @@ const Products = {
         try {
             await API.delete(`/products/${id}`);
             Toast.success('Product deleted successfully');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error('Failed to delete product');
         }
@@ -369,7 +370,7 @@ const Products = {
             await API.post('/stock-adjustments', data);
             Toast.success('Stock adjusted successfully');
             Modal.hide('stockAdjustmentModal');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error('Failed to adjust stock');
         }
@@ -395,9 +396,18 @@ const Products = {
             }
             Toast.success('Product saved successfully');
             Modal.hide('productModal');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error('Failed to save product');
+        }
+    },
+
+    applyCurrentFilters() {
+        const search = document.getElementById('productSearch')?.value || '';
+        const category = document.getElementById('categoryFilter')?.value || '';
+        const stock = document.getElementById('stockFilter')?.value || '';
+        if (search || category || stock) {
+            this.filter(search, category, stock);
         }
     }
 };
@@ -630,6 +640,7 @@ const Suppliers = {
                 </td>
             </tr>
         `).join('');
+        this.applyCurrentFilters();
     },
 
     view(id) {
@@ -732,9 +743,17 @@ const Suppliers = {
             }
             Toast.success('Supplier saved successfully');
             Modal.hide('supplierModal');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error('Failed to save supplier');
+        }
+    },
+
+    applyCurrentFilters() {
+        const search = document.getElementById('supplierSearch')?.value || '';
+        const status = document.getElementById('supplierStatusFilter')?.value || '';
+        if (search || status) {
+            this.filter(search, status);
         }
     },
 

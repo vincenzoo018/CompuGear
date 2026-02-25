@@ -157,7 +157,7 @@
 
     async function loadCategories() {
         try {
-            const response = await fetch('/api/categories');
+            const response = await fetch('/api/product-categories/all');
             const categories = await response.json();
             document.getElementById('totalCategories').textContent = categories.length;
             

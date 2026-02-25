@@ -167,6 +167,7 @@ const Campaigns = {
                 </td>
             </tr>
         `).join('');
+        this.applyCurrentFilters();
     },
 
     updateStats() {
@@ -289,7 +290,7 @@ const Campaigns = {
                 Toast.success('Campaign created successfully');
             }
             Modal.hide('campaignModal');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error('Failed to save campaign');
         }
@@ -303,7 +304,7 @@ const Campaigns = {
         try {
             await API.put(`/campaigns/${id}/status`, { status: newStatus });
             Toast.success(`Campaign ${newStatus.toLowerCase()}`);
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error('Failed to update campaign status');
         }
@@ -314,9 +315,18 @@ const Campaigns = {
         try {
             await API.delete(`/campaigns/${id}`);
             Toast.success('Campaign deleted successfully');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error('Failed to delete campaign');
+        }
+    },
+
+    applyCurrentFilters() {
+        const search = document.getElementById('campaignSearch')?.value || '';
+        const status = document.getElementById('campaignStatusFilter')?.value || '';
+        const type = document.getElementById('campaignTypeFilter')?.value || '';
+        if (search || status || type) {
+            this.filter(search, status, type);
         }
     },
 
@@ -426,6 +436,7 @@ const Promotions = {
                 </td>
             </tr>
         `).join('');
+        this.applyCurrentFilters();
     },
 
     updateStats() {
@@ -510,7 +521,7 @@ const Promotions = {
         try {
             await API.put(`/promotions/${id}/toggle`, {});
             Toast.success('Promotion status updated');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error('Failed to update promotion');
         }
@@ -521,7 +532,7 @@ const Promotions = {
         try {
             await API.delete(`/promotions/${id}`);
             Toast.success('Promotion deleted successfully');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error('Failed to delete promotion');
         }
@@ -548,9 +559,17 @@ const Promotions = {
                 Toast.success('Promotion created');
             }
             Modal.hide('promotionModal');
-            this.load();
+            await this.load();
         } catch (error) {
             Toast.error('Failed to save promotion');
+        }
+    },
+
+    applyCurrentFilters() {
+        const search = document.getElementById('promotionSearch')?.value || '';
+        const status = document.getElementById('promotionStatusFilter')?.value || '';
+        if (search || status) {
+            this.filter(search, status);
         }
     },
 
