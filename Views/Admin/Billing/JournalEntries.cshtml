@@ -1,0 +1,260 @@
+@{
+    ViewData["Title"] = "Journal Entries";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Journal Entries</h1>
+        <p class="page-subtitle">Record and manage accounting transactions</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" onclick="exportJournalEntries()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export
+        </button>
+        <button class="btn btn-primary" onclick="JE.openCreate()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            New Journal Entry
+        </button>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div class="stat-content"><div class="stat-value" id="totalEntries">0</div><div class="stat-label">Total Entries</div></div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="stat-content"><div class="stat-value" id="draftEntries">0</div><div class="stat-label">Draft</div></div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <div class="stat-content"><div class="stat-value" id="postedEntries">0</div><div class="stat-label">Posted</div></div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6 mb-3">
+        <div class="stat-card stat-card-danger">
+            <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="stat-content"><div class="stat-value" id="totalDebits">₱0</div><div class="stat-label">Total Debits (Posted)</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4 fade-in">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Search</label>
+                <div class="search-input">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" class="form-control" id="jeSearch" placeholder="Search entries...">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="jeStatusFilter">
+                    <option value="">All</option>
+                    <option value="Draft">Draft</option>
+                    <option value="Posted">Posted</option>
+                    <option value="Void">Void</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Source</label>
+                <select class="form-select" id="jeSourceFilter">
+                    <option value="">All Sources</option>
+                    <option value="Manual">Manual</option>
+                    <option value="System">System</option>
+                    <option value="Invoice">Invoice</option>
+                    <option value="Payment">Payment</option>
+                    <option value="Refund">Refund</option>
+                    <option value="COGS">COGS</option>
+                    <option value="Tax">Tax</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Date From</label>
+                <input type="date" class="form-control" id="jeDateFrom">
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-2 align-items-end h-100">
+                    <div class="flex-fill">
+                        <label class="form-label">Date To</label>
+                        <input type="date" class="form-control" id="jeDateTo">
+                    </div>
+                    <button class="btn btn-outline-secondary" onclick="JE.load()" title="Reset">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Table -->
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Journal Entries</h5>
+        <span class="badge bg-primary" id="jeCount">0 entries</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Entry #</th>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Reference</th>
+                        <th>Source</th>
+                        <th class="text-end">Debit</th>
+                        <th class="text-end">Credit</th>
+                        <th>Status</th>
+                        <th class="text-center" style="width: 180px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="jeTableBody">
+                    <tr><td colspan="9" class="text-center py-4">Loading journal entries...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Journal Entry Modal -->
+<div class="modal fade" id="jeModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header modal-header-primary">
+                <h5 class="modal-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    <span id="jeModalTitle">New Journal Entry</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="jeForm" onsubmit="JE.save(event)">
+                <div class="modal-body">
+                    <input type="hidden" id="jeId" value="0">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label required">Entry Date</label>
+                            <input type="date" class="form-control" id="jeDate" required>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label required">Description</label>
+                            <input type="text" class="form-control" id="jeDescription" required placeholder="Entry description">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Reference</label>
+                            <input type="text" class="form-control" id="jeReference" placeholder="INV-xxx, PO-xxx, etc.">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="jeNotes" rows="2" placeholder="Additional notes..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h6 class="form-section-title d-flex justify-content-between align-items-center">
+                            <span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
+                                Line Items
+                            </span>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="JE.addLine()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                Add Line
+                            </button>
+                        </h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm" id="jeLinesTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width:35%">Account</th>
+                                        <th style="width:25%">Description</th>
+                                        <th style="width:15%" class="text-end">Debit</th>
+                                        <th style="width:15%" class="text-end">Credit</th>
+                                        <th style="width:10%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="jeLinesBody"></tbody>
+                                <tfoot>
+                                    <tr class="table-primary">
+                                        <td colspan="2" class="text-end"><strong>Totals:</strong></td>
+                                        <td class="text-end"><strong id="jeTotalDebit">₱0.00</strong></td>
+                                        <td class="text-end"><strong id="jeTotalCredit">₱0.00</strong></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr id="jeBalanceRow">
+                                        <td colspan="2" class="text-end"><strong>Difference:</strong></td>
+                                        <td colspan="2" class="text-center"><strong id="jeDifference" class="text-success">₱0.00 (Balanced)</strong></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Journal Entry Modal -->
+<div class="modal fade" id="viewJeModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header modal-header-info">
+                <h5 class="modal-title">Journal Entry Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewJeContent">
+                <div class="text-center py-4"><div class="spinner-border text-primary"></div></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="~/js/admin.js"></script>
+<script src="~/js/accounting.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    JE.load();
+    document.getElementById('jeSearch').addEventListener('input', () => JE.applyFilters());
+    document.getElementById('jeStatusFilter').addEventListener('change', () => JE.applyFilters());
+    document.getElementById('jeSourceFilter').addEventListener('change', () => JE.applyFilters());
+    document.getElementById('jeDateFrom').addEventListener('change', () => JE.applyFilters());
+    document.getElementById('jeDateTo').addEventListener('change', () => JE.applyFilters());
+    document.getElementById('jeDate').value = new Date().toISOString().split('T')[0];
+});
+
+function exportJournalEntries() {
+    const data = JE.data;
+    if (!data || data.length === 0) { Toast.error('No entries to export'); return; }
+    const csv = [['Entry #','Date','Description','Reference','Debit','Credit','Status'].join(','),
+        ...data.map(e => [e.entryNumber, new Date(e.entryDate).toLocaleDateString(), `"${e.description}"`, e.reference||'', e.totalDebit?.toFixed(2), e.totalCredit?.toFixed(2), e.status].join(','))
+    ].join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `journal_entries_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    Toast.success('Exported successfully');
+}
+</script>
+}

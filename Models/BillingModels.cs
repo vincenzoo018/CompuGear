@@ -481,4 +481,180 @@ namespace CompuGear.Models
         [ForeignKey("TaxRateId")]
         public virtual TaxRate? TaxRate { get; set; }
     }
+
+    // =====================================================
+    // ACCOUNTING MODELS: COA, Journal Entries, General Ledger
+    // =====================================================
+
+    /// <summary>
+    /// Chart of Accounts - categorized index of all financial accounts
+    /// </summary>
+    public class ChartOfAccount
+    {
+        [Key]
+        public int AccountId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        [Required]
+        [StringLength(20)]
+        public string AccountCode { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100)]
+        public string AccountName { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(20)]
+        public string AccountType { get; set; } = "Asset"; // Asset, Liability, Equity, Revenue, Expense
+
+        public int? ParentAccountId { get; set; }
+
+        [StringLength(500)]
+        public string? Description { get; set; }
+
+        [StringLength(10)]
+        public string NormalBalance { get; set; } = "Debit"; // Debit or Credit
+
+        public bool IsActive { get; set; } = true;
+
+        public bool IsArchived { get; set; } = false;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        public int? CreatedBy { get; set; }
+
+        public int? UpdatedBy { get; set; }
+
+        // Navigation
+        [ForeignKey("ParentAccountId")]
+        public virtual ChartOfAccount? ParentAccount { get; set; }
+    }
+
+    /// <summary>
+    /// Journal Entry header
+    /// </summary>
+    public class JournalEntry
+    {
+        [Key]
+        public int EntryId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        [Required]
+        [StringLength(30)]
+        public string EntryNumber { get; set; } = string.Empty;
+
+        public DateTime EntryDate { get; set; } = DateTime.UtcNow;
+
+        [Required]
+        [StringLength(500)]
+        public string Description { get; set; } = string.Empty;
+
+        [StringLength(100)]
+        public string? Reference { get; set; }
+
+        [StringLength(20)]
+        public string Status { get; set; } = "Draft"; // Draft, Posted, Void
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal TotalDebit { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal TotalCredit { get; set; }
+
+        public bool IsArchived { get; set; } = false;
+
+        [StringLength(1000)]
+        public string? Notes { get; set; }
+
+        public DateTime? PostedAt { get; set; }
+
+        public int? PostedBy { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        public int? CreatedBy { get; set; }
+
+        public int? UpdatedBy { get; set; }
+
+        // Navigation
+        public virtual ICollection<JournalEntryLine> Lines { get; set; } = new List<JournalEntryLine>();
+    }
+
+    /// <summary>
+    /// Journal Entry line (debit/credit line item)
+    /// </summary>
+    public class JournalEntryLine
+    {
+        [Key]
+        public int LineId { get; set; }
+
+        public int EntryId { get; set; }
+
+        public int AccountId { get; set; }
+
+        [StringLength(255)]
+        public string? Description { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal DebitAmount { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal CreditAmount { get; set; }
+
+        // Navigation
+        [ForeignKey("EntryId")]
+        public virtual JournalEntry Entry { get; set; } = null!;
+
+        [ForeignKey("AccountId")]
+        public virtual ChartOfAccount Account { get; set; } = null!;
+    }
+
+    /// <summary>
+    /// General Ledger - record of all posted transactions per account
+    /// </summary>
+    public class GeneralLedgerEntry
+    {
+        [Key]
+        public int LedgerId { get; set; }
+
+        public int? CompanyId { get; set; }
+
+        public int AccountId { get; set; }
+
+        public int? EntryId { get; set; }
+
+        public DateTime TransactionDate { get; set; }
+
+        [StringLength(500)]
+        public string? Description { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal DebitAmount { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal CreditAmount { get; set; }
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal RunningBalance { get; set; }
+
+        [StringLength(100)]
+        public string? Reference { get; set; }
+
+        public bool IsArchived { get; set; } = false;
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // Navigation
+        [ForeignKey("AccountId")]
+        public virtual ChartOfAccount Account { get; set; } = null!;
+
+        [ForeignKey("EntryId")]
+        public virtual JournalEntry? JournalEntry { get; set; }
+    }
 }

@@ -232,6 +232,10 @@
                         <a asp-controller="Billing" asp-action="Payments" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Payments" ? "active" : "")">Payments</a>
                         <a asp-controller="Billing" asp-action="Summary" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Summary" ? "active" : "")">Financial Summary</a>
                         <a asp-controller="Billing" asp-action="Records" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Records" ? "active" : "")">Account Records</a>
+                        <div class="nav-submenu-divider"></div>
+                        <a asp-controller="Billing" asp-action="ChartOfAccounts" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "ChartOfAccounts" ? "active" : "")">Chart of Accounts</a>
+                        <a asp-controller="Billing" asp-action="JournalEntries" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "JournalEntries" ? "active" : "")">Journal Entries</a>
+                        <a asp-controller="Billing" asp-action="GeneralLedger" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "GeneralLedger" ? "active" : "")">General Ledger</a>
                     </div>
                 </div>
 

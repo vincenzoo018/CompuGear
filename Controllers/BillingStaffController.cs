@@ -106,5 +106,26 @@ namespace CompuGear.Controllers
             ViewData["Title"] = "Credit Notes";
             return View("~/Views/BillingStaff/CreditNotes.cshtml");
         }
+
+        // Chart of Accounts
+        public IActionResult ChartOfAccounts()
+        {
+            ViewData["Title"] = "Chart of Accounts";
+            return View("~/Views/BillingStaff/ChartOfAccounts.cshtml");
+        }
+
+        // Journal Entries
+        public IActionResult JournalEntries()
+        {
+            ViewData["Title"] = "Journal Entries";
+            return View("~/Views/BillingStaff/JournalEntries.cshtml");
+        }
+
+        // General Ledger
+        public IActionResult GeneralLedger()
+        {
+            ViewData["Title"] = "General Ledger";
+            return View("~/Views/BillingStaff/GeneralLedger.cshtml");
+        }
     }
 }

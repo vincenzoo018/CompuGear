@@ -112,6 +112,12 @@ namespace CompuGear.Data
         public DbSet<ProductTaxCategory> ProductTaxCategories { get; set; }
         public DbSet<TaxCalculation> TaxCalculations { get; set; }
 
+        // Accounting - COA, Journal Entries, General Ledger
+        public DbSet<ChartOfAccount> ChartOfAccounts { get; set; }
+        public DbSet<JournalEntry> JournalEntries { get; set; }
+        public DbSet<JournalEntryLine> JournalEntryLines { get; set; }
+        public DbSet<GeneralLedgerEntry> GeneralLedger { get; set; }
+
         // Customer Portal - Reviews & Loyalty
         public DbSet<ProductReview> ProductReviews { get; set; }
         public DbSet<ProductComparison> ProductComparisons { get; set; }
@@ -261,6 +267,20 @@ namespace CompuGear.Data
             // Chat Bot Intents
             modelBuilder.Entity<ChatBotIntent>()
                 .HasIndex(c => c.IntentName)
+                .IsUnique();
+
+            // Accounting - Table Mappings
+            modelBuilder.Entity<ChartOfAccount>().ToTable("ChartOfAccounts");
+            modelBuilder.Entity<JournalEntry>().ToTable("JournalEntries");
+            modelBuilder.Entity<JournalEntryLine>().ToTable("JournalEntryLines");
+            modelBuilder.Entity<GeneralLedgerEntry>().ToTable("GeneralLedger");
+
+            modelBuilder.Entity<JournalEntry>()
+                .HasIndex(j => j.EntryNumber)
+                .IsUnique();
+
+            modelBuilder.Entity<ChartOfAccount>()
+                .HasIndex(c => new { c.CompanyId, c.AccountCode })
                 .IsUnique();
 
             // ERP Modules

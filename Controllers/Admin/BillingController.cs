@@ -121,6 +121,21 @@ namespace CompuGear.Controllers
             return View("~/Views/Admin/Billing/Records.cshtml");
         }
 
+        public IActionResult ChartOfAccounts()
+        {
+            return View("~/Views/Admin/Billing/ChartOfAccounts.cshtml");
+        }
+
+        public IActionResult JournalEntries()
+        {
+            return View("~/Views/Admin/Billing/JournalEntries.cshtml");
+        }
+
+        public IActionResult GeneralLedger()
+        {
+            return View("~/Views/Admin/Billing/GeneralLedger.cshtml");
+        }
+
         #endregion
 
         #region Billing - Invoices (Create/Update/Delete/PDF/Financial)
@@ -1063,7 +1078,7 @@ namespace CompuGear.Controllers
                         PaymentId = -(derivedInvoiceOffset + i.InvoiceId),
                         PaymentNumber = "AUTO-" + i.InvoiceNumber,
                         InvoiceId = (int?)i.InvoiceId,
-                        InvoiceNumber = i.InvoiceNumber,
+                        InvoiceNumber = (string?)i.InvoiceNumber,
                         InvoiceSubtotal = i.Subtotal,
                         InvoiceTaxAmount = i.TaxAmount,
                         InvoiceDiscountAmount = i.DiscountAmount,
@@ -1075,7 +1090,7 @@ namespace CompuGear.Controllers
                         CustomerName = i.Customer != null ? i.Customer.FirstName + " " + i.Customer.LastName : "N/A",
                         PaymentDate = i.PaidAt ?? i.SentAt ?? i.InvoiceDate,
                         Amount = i.PaidAmount > 0 ? i.PaidAmount : i.TotalAmount,
-                        PaymentMethodType = i.Order != null ? i.Order.PaymentMethod : "Invoice Record",
+                        PaymentMethodType = (i.Order != null ? i.Order.PaymentMethod : "Invoice Record") ?? "Invoice Record",
                         Status = (i.PaidAmount > 0 || i.Status == "Paid") ? "Completed" : "Pending",
                         TransactionId = i.Order != null ? i.Order.PaymentReference : null,
                         ReferenceNumber = i.Order != null ? i.Order.PaymentReference : null,
@@ -1318,6 +1333,1111 @@ namespace CompuGear.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { success = true, message = "Refund status updated" });
+        }
+
+        #endregion
+
+        #region ===== CHART OF ACCOUNTS =====
+
+        /// <summary>
+        /// Helper: Build account code → accountId lookup from DB
+        /// </summary>
+        private async Task<Dictionary<string, int>> GetAccountCodeMap(int? companyId)
+        {
+            return await _context.ChartOfAccounts
+                .Where(a => !a.IsArchived && (companyId == null || a.CompanyId == companyId))
+                .ToDictionaryAsync(a => a.AccountCode, a => a.AccountId);
+        }
+
+        /// <summary>
+        /// Helper: Compute live balances for every COA account from GL records + system-derived transactions
+        /// </summary>
+        private async Task<Dictionary<int, (decimal debit, decimal credit)>> ComputeAccountBalances(int? companyId)
+        {
+            var balances = new Dictionary<int, (decimal debit, decimal credit)>();
+
+            void AddBal(int acctId, decimal dr, decimal cr)
+            {
+                if (balances.ContainsKey(acctId))
+                    balances[acctId] = (balances[acctId].debit + dr, balances[acctId].credit + cr);
+                else
+                    balances[acctId] = (dr, cr);
+            }
+
+            // 1) Manual GL entries (from posted journal entries)
+            var glEntries = await _context.GeneralLedger
+                .Where(g => !g.IsArchived && (companyId == null || g.CompanyId == companyId))
+                .GroupBy(g => g.AccountId)
+                .Select(g => new { AccountId = g.Key, Debit = g.Sum(x => x.DebitAmount), Credit = g.Sum(x => x.CreditAmount) })
+                .ToListAsync();
+            foreach (var g in glEntries) AddBal(g.AccountId, g.Debit, g.Credit);
+
+            var map = await GetAccountCodeMap(companyId);
+            int Acct(string code) => map.ContainsKey(code) ? map[code] : 0;
+
+            // 2) Invoices (Paid/Partial) → Debit 1010 AR, Credit 4000 Revenue, Credit 2020 Tax Payable
+            var invoices = await _context.Invoices
+                .Where(i => (companyId == null || i.CompanyId == companyId) && i.Status != "Cancelled" && i.Status != "Void" && i.Status != "Draft")
+                .Select(i => new { i.Subtotal, i.TaxAmount, i.DiscountAmount, i.ShippingAmount, i.TotalAmount })
+                .ToListAsync();
+            foreach (var inv in invoices)
+            {
+                if (Acct("1010") > 0) AddBal(Acct("1010"), inv.TotalAmount, 0); // DR Accounts Receivable
+                if (Acct("4000") > 0) AddBal(Acct("4000"), 0, inv.Subtotal - inv.DiscountAmount); // CR Sales Revenue
+                if (inv.TaxAmount > 0 && Acct("2020") > 0) AddBal(Acct("2020"), 0, inv.TaxAmount); // CR Sales Tax Payable
+                if (inv.ShippingAmount > 0 && Acct("4020") > 0) AddBal(Acct("4020"), 0, inv.ShippingAmount); // CR Other Income (shipping)
+            }
+
+            // 3) Payments (Completed) → Debit 1000 Cash, Credit 1010 AR
+            var payments = await _context.Payments
+                .Where(p => (companyId == null || p.CompanyId == companyId) && p.Status == "Completed")
+                .Select(p => new { p.Amount })
+                .ToListAsync();
+            foreach (var pay in payments)
+            {
+                if (Acct("1000") > 0) AddBal(Acct("1000"), pay.Amount, 0); // DR Cash
+                if (Acct("1010") > 0) AddBal(Acct("1010"), 0, pay.Amount); // CR Accounts Receivable
+            }
+
+            // 4) Refunds (Processed) → Debit 4000 Revenue, Credit 1000 Cash
+            var refunds = await _context.Refunds
+                .Where(r => (companyId == null || r.CompanyId == companyId) && r.Status == "Processed")
+                .Select(r => new { r.Amount })
+                .ToListAsync();
+            foreach (var ref_ in refunds)
+            {
+                if (Acct("4000") > 0) AddBal(Acct("4000"), ref_.Amount, 0); // DR Sales Revenue (reversal)
+                if (Acct("1000") > 0) AddBal(Acct("1000"), 0, ref_.Amount); // CR Cash
+            }
+
+            // 5) Orders with COGS (Confirmed/Delivered) → Debit 5000 COGS, Credit 1020 Inventory
+            var orderItems = await _context.Orders
+                .Where(o => (companyId == null || o.CompanyId == companyId) && (o.OrderStatus == "Confirmed" || o.OrderStatus == "Delivered" || o.OrderStatus == "Shipped"))
+                .SelectMany(o => o.OrderItems)
+                .Include(oi => oi.Product)
+                .Where(oi => oi.Product != null)
+                .Select(oi => new { CostTotal = oi.Product!.CostPrice * oi.Quantity })
+                .ToListAsync();
+            foreach (var oi in orderItems)
+            {
+                if (oi.CostTotal > 0)
+                {
+                    if (Acct("5000") > 0) AddBal(Acct("5000"), oi.CostTotal, 0); // DR Cost of Goods Sold
+                    if (Acct("1020") > 0) AddBal(Acct("1020"), 0, oi.CostTotal); // CR Inventory
+                }
+            }
+
+            // 6) Tax Calculations → already covered through invoices above (TaxAmount)
+            //    We also pull TaxCalculation records for any additional tax entries
+            var taxCalcs = await _context.TaxCalculations
+                .Where(t => (companyId == null || t.CompanyId == companyId))
+                .GroupBy(t => 1)
+                .Select(g => new { TotalTax = g.Sum(t => t.TaxAmount) })
+                .FirstOrDefaultAsync();
+            // Tax calculations are already included via invoice tax amounts - no double counting
+
+            return balances;
+        }
+
+        [HttpGet]
+        [Route("api/chart-of-accounts")]
+        public async Task<IActionResult> GetChartOfAccounts()
+        {
+            var companyId = GetCompanyId();
+            var accounts = await _context.ChartOfAccounts
+                .Where(a => !a.IsArchived && (companyId == null || a.CompanyId == companyId))
+                .OrderBy(a => a.AccountCode)
+                .Select(a => new
+                {
+                    a.AccountId,
+                    a.AccountCode,
+                    a.AccountName,
+                    a.AccountType,
+                    a.ParentAccountId,
+                    a.Description,
+                    a.NormalBalance,
+                    a.IsActive,
+                    a.IsArchived,
+                    a.CreatedAt,
+                    a.UpdatedAt
+                })
+                .ToListAsync();
+
+            // Compute live balances from system data
+            var balances = await ComputeAccountBalances(companyId);
+
+            var result = accounts.Select(a =>
+            {
+                var bal = balances.ContainsKey(a.AccountId) ? balances[a.AccountId] : (debit: 0m, credit: 0m);
+                var netBalance = bal.debit - bal.credit;
+                return new
+                {
+                    a.AccountId,
+                    a.AccountCode,
+                    a.AccountName,
+                    a.AccountType,
+                    a.ParentAccountId,
+                    a.Description,
+                    a.NormalBalance,
+                    a.IsActive,
+                    a.IsArchived,
+                    a.CreatedAt,
+                    a.UpdatedAt,
+                    TotalDebit = bal.debit,
+                    TotalCredit = bal.credit,
+                    Balance = netBalance,
+                    // Formatted balance uses normal balance side
+                    DisplayBalance = a.NormalBalance == "Credit" ? bal.credit - bal.debit : netBalance
+                };
+            }).ToList();
+
+            return Ok(new { success = true, data = result });
+        }
+
+        [HttpGet]
+        [Route("api/chart-of-accounts/{id}")]
+        public async Task<IActionResult> GetChartOfAccountById(int id)
+        {
+            var companyId = GetCompanyId();
+            var account = await _context.ChartOfAccounts
+                .Where(a => a.AccountId == id && (companyId == null || a.CompanyId == companyId))
+                .FirstOrDefaultAsync();
+
+            if (account == null) return NotFound(new { success = false, message = "Account not found" });
+
+            return Ok(new { success = true, data = account });
+        }
+
+        [HttpPost]
+        [Route("api/chart-of-accounts")]
+        public async Task<IActionResult> CreateChartOfAccount([FromBody] ChartOfAccount account)
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                account.CompanyId = companyId ?? 1;
+                account.CreatedAt = DateTime.UtcNow;
+                account.UpdatedAt = DateTime.UtcNow;
+                account.CreatedBy = HttpContext.Session.GetInt32("UserId");
+
+                _context.ChartOfAccounts.Add(account);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Account created successfully", data = account });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut]
+        [Route("api/chart-of-accounts/{id}")]
+        public async Task<IActionResult> UpdateChartOfAccount(int id, [FromBody] ChartOfAccount account)
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                var existing = await _context.ChartOfAccounts
+                    .FirstOrDefaultAsync(a => a.AccountId == id && (companyId == null || a.CompanyId == companyId));
+
+                if (existing == null) return NotFound(new { success = false, message = "Account not found" });
+
+                existing.AccountCode = account.AccountCode;
+                existing.AccountName = account.AccountName;
+                existing.AccountType = account.AccountType;
+                existing.ParentAccountId = account.ParentAccountId;
+                existing.Description = account.Description;
+                existing.NormalBalance = account.NormalBalance;
+                existing.IsActive = account.IsActive;
+                existing.UpdatedAt = DateTime.UtcNow;
+                existing.UpdatedBy = HttpContext.Session.GetInt32("UserId");
+
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true, message = "Account updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut]
+        [Route("api/chart-of-accounts/{id}/archive")]
+        public async Task<IActionResult> ArchiveChartOfAccount(int id)
+        {
+            var companyId = GetCompanyId();
+            var account = await _context.ChartOfAccounts
+                .FirstOrDefaultAsync(a => a.AccountId == id && (companyId == null || a.CompanyId == companyId));
+
+            if (account == null) return NotFound(new { success = false, message = "Account not found" });
+
+            account.IsArchived = !account.IsArchived;
+            account.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = account.IsArchived ? "Account archived" : "Account restored" });
+        }
+
+        #endregion
+
+        #region ===== JOURNAL ENTRIES =====
+
+        [HttpGet]
+        [Route("api/journal-entries")]
+        public async Task<IActionResult> GetJournalEntries()
+        {
+            var companyId = GetCompanyId();
+
+            // 1) Manual journal entries
+            var manualEntries = await _context.JournalEntries
+                .Include(j => j.Lines).ThenInclude(l => l.Account)
+                .Where(j => !j.IsArchived && (companyId == null || j.CompanyId == companyId))
+                .OrderByDescending(j => j.EntryDate)
+                .Select(j => new
+                {
+                    j.EntryId,
+                    j.EntryNumber,
+                    j.EntryDate,
+                    j.Description,
+                    j.Reference,
+                    j.Status,
+                    j.TotalDebit,
+                    j.TotalCredit,
+                    j.IsArchived,
+                    j.Notes,
+                    j.PostedAt,
+                    j.CreatedAt,
+                    Source = "Manual",
+                    SourceType = "Journal Entry",
+                    Lines = j.Lines.Select(l => new
+                    {
+                        l.LineId,
+                        l.AccountId,
+                        AccountCode = l.Account.AccountCode,
+                        AccountName = l.Account.AccountName,
+                        l.Description,
+                        l.DebitAmount,
+                        l.CreditAmount
+                    })
+                })
+                .ToListAsync();
+
+            // 2) System-derived entries from Invoices (non-cancelled, non-draft)
+            var map = await GetAccountCodeMap(companyId);
+            int Acct(string code) => map.ContainsKey(code) ? map[code] : 0;
+
+            var invoiceEntries = await _context.Invoices
+                .Include(i => i.Customer)
+                .Where(i => (companyId == null || i.CompanyId == companyId) && i.Status != "Cancelled" && i.Status != "Void" && i.Status != "Draft")
+                .OrderByDescending(i => i.InvoiceDate)
+                .Select(i => new
+                {
+                    i.InvoiceId,
+                    i.InvoiceNumber,
+                    i.InvoiceDate,
+                    CustomerName = i.Customer != null ? i.Customer.FirstName + " " + i.Customer.LastName : "N/A",
+                    i.Subtotal,
+                    i.TaxAmount,
+                    i.DiscountAmount,
+                    i.ShippingAmount,
+                    i.TotalAmount,
+                    i.Status,
+                    i.CreatedAt
+                })
+                .ToListAsync();
+
+            var invoiceDerived = invoiceEntries.Select(inv => new
+            {
+                EntryId = -inv.InvoiceId,
+                EntryNumber = $"SYS-INV-{inv.InvoiceNumber}",
+                EntryDate = inv.InvoiceDate,
+                Description = $"Invoice {inv.InvoiceNumber} - {inv.CustomerName}",
+                Reference = inv.InvoiceNumber,
+                Status = "Posted",
+                TotalDebit = inv.TotalAmount,
+                TotalCredit = inv.TotalAmount,
+                IsArchived = false,
+                Notes = $"Auto-generated from Invoice. Status: {inv.Status}",
+                PostedAt = (DateTime?)inv.InvoiceDate,
+                CreatedAt = inv.CreatedAt,
+                Source = "System",
+                SourceType = "Invoice",
+                Lines = new[]
+                {
+                    new { LineId = 0, AccountId = Acct("1010"), AccountCode = "1010", AccountName = "Accounts Receivable", Description = $"Invoice {inv.InvoiceNumber}", DebitAmount = inv.TotalAmount, CreditAmount = 0m },
+                    new { LineId = 0, AccountId = Acct("4000"), AccountCode = "4000", AccountName = "Sales Revenue", Description = $"Revenue from {inv.InvoiceNumber}", DebitAmount = 0m, CreditAmount = inv.Subtotal - inv.DiscountAmount + inv.ShippingAmount },
+                    new { LineId = 0, AccountId = Acct("2020"), AccountCode = "2020", AccountName = "Sales Tax Payable", Description = $"Tax on {inv.InvoiceNumber}", DebitAmount = 0m, CreditAmount = inv.TaxAmount }
+                }.Where(l => l.AccountId > 0 && (l.DebitAmount > 0 || l.CreditAmount > 0)).ToList()
+            }).ToList();
+
+            // 3) System-derived from Payments (Completed)
+            var paymentEntries = await _context.Payments
+                .Include(p => p.Customer)
+                .Where(p => (companyId == null || p.CompanyId == companyId) && p.Status == "Completed")
+                .OrderByDescending(p => p.PaymentDate)
+                .Select(p => new
+                {
+                    p.PaymentId,
+                    p.PaymentNumber,
+                    p.PaymentDate,
+                    p.Amount,
+                    p.PaymentMethodType,
+                    CustomerName = p.Customer != null ? p.Customer.FirstName + " " + p.Customer.LastName : "N/A",
+                    p.ReferenceNumber,
+                    p.CreatedAt
+                })
+                .ToListAsync();
+
+            var paymentDerived = paymentEntries.Select(pay => new
+            {
+                EntryId = -(100000 + pay.PaymentId),
+                EntryNumber = $"SYS-PAY-{pay.PaymentNumber}",
+                EntryDate = pay.PaymentDate,
+                Description = $"Payment {pay.PaymentNumber} from {pay.CustomerName} ({pay.PaymentMethodType})",
+                Reference = pay.PaymentNumber,
+                Status = "Posted",
+                TotalDebit = pay.Amount,
+                TotalCredit = pay.Amount,
+                IsArchived = false,
+                Notes = $"Auto-generated from Payment. Method: {pay.PaymentMethodType}",
+                PostedAt = (DateTime?)pay.PaymentDate,
+                CreatedAt = pay.CreatedAt,
+                Source = "System",
+                SourceType = "Payment",
+                Lines = new[]
+                {
+                    new { LineId = 0, AccountId = Acct("1000"), AccountCode = "1000", AccountName = "Cash", Description = $"Payment {pay.PaymentNumber}", DebitAmount = pay.Amount, CreditAmount = 0m },
+                    new { LineId = 0, AccountId = Acct("1010"), AccountCode = "1010", AccountName = "Accounts Receivable", Description = $"Payment received {pay.PaymentNumber}", DebitAmount = 0m, CreditAmount = pay.Amount }
+                }.Where(l => l.AccountId > 0).ToList()
+            }).ToList();
+
+            // 4) System-derived from Refunds (Processed)
+            var refundEntries = await _context.Refunds
+                .Include(r => r.Customer)
+                .Where(r => (companyId == null || r.CompanyId == companyId) && r.Status == "Processed")
+                .OrderByDescending(r => r.ProcessedAt)
+                .Select(r => new
+                {
+                    r.RefundId,
+                    r.RefundNumber,
+                    r.Amount,
+                    r.Reason,
+                    r.ProcessedAt,
+                    CustomerName = r.Customer != null ? r.Customer.FirstName + " " + r.Customer.LastName : "N/A",
+                    r.RequestedAt
+                })
+                .ToListAsync();
+
+            var refundDerived = refundEntries.Select(ref_ => new
+            {
+                EntryId = -(200000 + ref_.RefundId),
+                EntryNumber = $"SYS-REF-{ref_.RefundNumber}",
+                EntryDate = ref_.ProcessedAt ?? ref_.RequestedAt,
+                Description = $"Refund {ref_.RefundNumber} to {ref_.CustomerName}",
+                Reference = ref_.RefundNumber,
+                Status = "Posted",
+                TotalDebit = ref_.Amount,
+                TotalCredit = ref_.Amount,
+                IsArchived = false,
+                Notes = $"Auto-generated from Refund. Reason: {ref_.Reason}",
+                PostedAt = ref_.ProcessedAt,
+                CreatedAt = ref_.RequestedAt,
+                Source = "System",
+                SourceType = "Refund",
+                Lines = new[]
+                {
+                    new { LineId = 0, AccountId = Acct("4000"), AccountCode = "4000", AccountName = "Sales Revenue", Description = $"Refund {ref_.RefundNumber}", DebitAmount = ref_.Amount, CreditAmount = 0m },
+                    new { LineId = 0, AccountId = Acct("1000"), AccountCode = "1000", AccountName = "Cash", Description = $"Refund payment {ref_.RefundNumber}", DebitAmount = 0m, CreditAmount = ref_.Amount }
+                }.Where(l => l.AccountId > 0).ToList()
+            }).ToList();
+
+            // 5) System-derived from Orders COGS (Confirmed/Delivered/Shipped)
+            var ordersWithCogs = await _context.Orders
+                .Include(o => o.Customer)
+                .Include(o => o.OrderItems).ThenInclude(oi => oi.Product)
+                .Where(o => (companyId == null || o.CompanyId == companyId)
+                    && (o.OrderStatus == "Confirmed" || o.OrderStatus == "Delivered" || o.OrderStatus == "Shipped"))
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+
+            var cogsDerived = ordersWithCogs
+                .Where(o => o.OrderItems.Any(oi => oi.Product != null && oi.Product.CostPrice > 0))
+                .Select(o =>
+                {
+                    var totalCost = o.OrderItems.Where(oi => oi.Product != null).Sum(oi => oi.Product!.CostPrice * oi.Quantity);
+                    return new
+                    {
+                        EntryId = -(300000 + o.OrderId),
+                        EntryNumber = $"SYS-COGS-{o.OrderNumber}",
+                        EntryDate = o.ConfirmedAt ?? o.OrderDate,
+                        Description = $"COGS for Order {o.OrderNumber} - {(o.Customer != null ? o.Customer.FirstName + " " + o.Customer.LastName : "N/A")}",
+                        Reference = o.OrderNumber,
+                        Status = "Posted",
+                        TotalDebit = totalCost,
+                        TotalCredit = totalCost,
+                        IsArchived = false,
+                        Notes = $"Auto-generated COGS from Order. Items: {o.OrderItems.Count}",
+                        PostedAt = (DateTime?)(o.ConfirmedAt ?? o.OrderDate),
+                        CreatedAt = o.CreatedAt,
+                        Source = "System",
+                        SourceType = "COGS",
+                        Lines = new[]
+                        {
+                            new { LineId = 0, AccountId = Acct("5000"), AccountCode = "5000", AccountName = "Cost of Goods Sold", Description = $"COGS Order {o.OrderNumber}", DebitAmount = totalCost, CreditAmount = 0m },
+                            new { LineId = 0, AccountId = Acct("1020"), AccountCode = "1020", AccountName = "Inventory", Description = $"Inventory reduction {o.OrderNumber}", DebitAmount = 0m, CreditAmount = totalCost }
+                        }.Where(l => l.AccountId > 0).ToList()
+                    };
+                })
+                .Where(e => e.TotalDebit > 0)
+                .ToList();
+
+            // 6) System-derived from Tax Calculations
+            var taxCalcs = await _context.TaxCalculations
+                .Include(t => t.Invoice)
+                .Include(t => t.TaxRate)
+                .Where(t => (companyId == null || t.CompanyId == companyId) && t.TaxAmount > 0)
+                .OrderByDescending(t => t.CalculatedAt)
+                .ToListAsync();
+
+            var taxDerived = taxCalcs
+                .GroupBy(t => t.InvoiceId ?? 0)
+                .Where(g => g.Key > 0)
+                .Select(g =>
+                {
+                    var first = g.First();
+                    var totalTax = g.Sum(t => t.TaxAmount);
+                    var totalTaxable = g.Sum(t => t.TaxableAmount);
+                    var invNum = first.Invoice?.InvoiceNumber ?? $"INV-{first.InvoiceId}";
+                    return new
+                    {
+                        EntryId = -(400000 + (first.InvoiceId ?? first.CalculationId)),
+                        EntryNumber = $"SYS-TAX-{invNum}",
+                        EntryDate = first.CalculatedAt,
+                        Description = $"Tax on {invNum} ({first.TaxRate?.TaxName ?? "Tax"} @ {first.AppliedRate}%)",
+                        Reference = invNum,
+                        Status = "Posted",
+                        TotalDebit = totalTax,
+                        TotalCredit = totalTax,
+                        IsArchived = false,
+                        Notes = $"Auto-generated tax entry. Taxable: ₱{totalTaxable:N2}, Rate: {first.AppliedRate}%",
+                        PostedAt = (DateTime?)first.CalculatedAt,
+                        CreatedAt = first.CalculatedAt,
+                        Source = "System",
+                        SourceType = "Tax",
+                        Lines = new[]
+                        {
+                            new { LineId = 0, AccountId = Acct("1010"), AccountCode = "1010", AccountName = "Accounts Receivable", Description = $"Tax collected {invNum}", DebitAmount = totalTax, CreditAmount = 0m },
+                            new { LineId = 0, AccountId = Acct("2020"), AccountCode = "2020", AccountName = "Sales Tax Payable", Description = $"Tax payable {invNum}", DebitAmount = 0m, CreditAmount = totalTax }
+                        }.Where(l => l.AccountId > 0).ToList()
+                    };
+                })
+                .Where(e => e.TotalDebit > 0)
+                .ToList();
+
+            // Merge all entries
+            var allEntries = manualEntries.Cast<object>()
+                .Concat(invoiceDerived.Cast<object>())
+                .Concat(paymentDerived.Cast<object>())
+                .Concat(refundDerived.Cast<object>())
+                .Concat(cogsDerived.Cast<object>())
+                .Concat(taxDerived.Cast<object>())
+                .ToList();
+
+            return Ok(new { success = true, data = allEntries });
+        }
+
+        [HttpGet]
+        [Route("api/journal-entries/{id}")]
+        public async Task<IActionResult> GetJournalEntry(int id)
+        {
+            // System-derived entries have negative IDs - reconstruct them
+            if (id < 0)
+            {
+                var companyId = GetCompanyId();
+                var map = await GetAccountCodeMap(companyId);
+                int Acct(string code) => map.ContainsKey(code) ? map[code] : 0;
+
+                var absId = -id;
+
+                // Invoice-derived (id = -InvoiceId)
+                if (absId < 100000)
+                {
+                    var inv = await _context.Invoices.Include(i => i.Customer)
+                        .FirstOrDefaultAsync(i => i.InvoiceId == absId && (companyId == null || i.CompanyId == companyId));
+                    if (inv == null) return NotFound(new { success = false, message = "Entry not found" });
+
+                    return Ok(new
+                    {
+                        success = true,
+                        data = new
+                        {
+                            EntryId = id,
+                            EntryNumber = $"SYS-INV-{inv.InvoiceNumber}",
+                            EntryDate = inv.InvoiceDate,
+                            Description = $"Invoice {inv.InvoiceNumber} - {(inv.Customer != null ? inv.Customer.FirstName + " " + inv.Customer.LastName : "N/A")}",
+                            Reference = inv.InvoiceNumber,
+                            Status = "Posted",
+                            TotalDebit = inv.TotalAmount,
+                            TotalCredit = inv.TotalAmount,
+                            Notes = $"System-generated from Invoice. Subtotal: ₱{inv.Subtotal:N2}, Tax: ₱{inv.TaxAmount:N2}, Discount: ₱{inv.DiscountAmount:N2}",
+                            PostedAt = (DateTime?)inv.InvoiceDate,
+                            CreatedAt = inv.CreatedAt,
+                            Source = "System",
+                            SourceType = "Invoice",
+                            Lines = new[]
+                            {
+                                new { LineId = 0, AccountId = Acct("1010"), AccountCode = "1010", AccountName = "Accounts Receivable", Description = $"Invoice {inv.InvoiceNumber}", DebitAmount = inv.TotalAmount, CreditAmount = 0m },
+                                new { LineId = 0, AccountId = Acct("4000"), AccountCode = "4000", AccountName = "Sales Revenue", Description = $"Revenue from {inv.InvoiceNumber}", DebitAmount = 0m, CreditAmount = inv.Subtotal - inv.DiscountAmount + inv.ShippingAmount },
+                                new { LineId = 0, AccountId = Acct("2020"), AccountCode = "2020", AccountName = "Sales Tax Payable", Description = $"Tax on {inv.InvoiceNumber}", DebitAmount = 0m, CreditAmount = inv.TaxAmount }
+                            }.Where(l => l.AccountId > 0 && (l.DebitAmount > 0 || l.CreditAmount > 0)).ToArray()
+                        }
+                    });
+                }
+
+                // Payment-derived (absId = 100000 + PaymentId)
+                if (absId >= 100000 && absId < 200000)
+                {
+                    var payId = absId - 100000;
+                    var pay = await _context.Payments.Include(p => p.Customer)
+                        .FirstOrDefaultAsync(p => p.PaymentId == payId && (companyId == null || p.CompanyId == companyId));
+                    if (pay == null) return NotFound(new { success = false, message = "Entry not found" });
+
+                    return Ok(new
+                    {
+                        success = true,
+                        data = new
+                        {
+                            EntryId = id,
+                            EntryNumber = $"SYS-PAY-{pay.PaymentNumber}",
+                            EntryDate = pay.PaymentDate,
+                            Description = $"Payment {pay.PaymentNumber} from {(pay.Customer != null ? pay.Customer.FirstName + " " + pay.Customer.LastName : "N/A")}",
+                            Reference = pay.PaymentNumber,
+                            Status = "Posted",
+                            TotalDebit = pay.Amount,
+                            TotalCredit = pay.Amount,
+                            Notes = $"System-generated from Payment. Method: {pay.PaymentMethodType}, Ref: {pay.ReferenceNumber}",
+                            PostedAt = (DateTime?)pay.PaymentDate,
+                            CreatedAt = pay.CreatedAt,
+                            Source = "System",
+                            SourceType = "Payment",
+                            Lines = new[]
+                            {
+                                new { LineId = 0, AccountId = Acct("1000"), AccountCode = "1000", AccountName = "Cash", Description = $"Payment {pay.PaymentNumber}", DebitAmount = pay.Amount, CreditAmount = 0m },
+                                new { LineId = 0, AccountId = Acct("1010"), AccountCode = "1010", AccountName = "Accounts Receivable", Description = $"Payment received", DebitAmount = 0m, CreditAmount = pay.Amount }
+                            }.Where(l => l.AccountId > 0).ToArray()
+                        }
+                    });
+                }
+
+                // Refund-derived (absId = 200000 + RefundId)
+                if (absId >= 200000 && absId < 300000)
+                {
+                    var refId = absId - 200000;
+                    var ref_ = await _context.Refunds.Include(r => r.Customer)
+                        .FirstOrDefaultAsync(r => r.RefundId == refId && (companyId == null || r.CompanyId == companyId));
+                    if (ref_ == null) return NotFound(new { success = false, message = "Entry not found" });
+
+                    return Ok(new
+                    {
+                        success = true,
+                        data = new
+                        {
+                            EntryId = id,
+                            EntryNumber = $"SYS-REF-{ref_.RefundNumber}",
+                            EntryDate = ref_.ProcessedAt ?? ref_.RequestedAt,
+                            Description = $"Refund {ref_.RefundNumber} to {(ref_.Customer != null ? ref_.Customer.FirstName + " " + ref_.Customer.LastName : "N/A")}",
+                            Reference = ref_.RefundNumber,
+                            Status = "Posted",
+                            TotalDebit = ref_.Amount,
+                            TotalCredit = ref_.Amount,
+                            Notes = $"System-generated from Refund. Reason: {ref_.Reason}",
+                            PostedAt = ref_.ProcessedAt,
+                            CreatedAt = ref_.RequestedAt,
+                            Source = "System",
+                            SourceType = "Refund",
+                            Lines = new[]
+                            {
+                                new { LineId = 0, AccountId = Acct("4000"), AccountCode = "4000", AccountName = "Sales Revenue", Description = $"Refund reversal", DebitAmount = ref_.Amount, CreditAmount = 0m },
+                                new { LineId = 0, AccountId = Acct("1000"), AccountCode = "1000", AccountName = "Cash", Description = $"Refund payment", DebitAmount = 0m, CreditAmount = ref_.Amount }
+                            }.Where(l => l.AccountId > 0).ToArray()
+                        }
+                    });
+                }
+
+                // COGS-derived (absId = 300000 + OrderId)
+                if (absId >= 300000 && absId < 400000)
+                {
+                    var ordId = absId - 300000;
+                    var ord = await _context.Orders
+                        .Include(o => o.Customer).Include(o => o.OrderItems).ThenInclude(oi => oi.Product)
+                        .FirstOrDefaultAsync(o => o.OrderId == ordId && (companyId == null || o.CompanyId == companyId));
+                    if (ord == null) return NotFound(new { success = false, message = "Entry not found" });
+
+                    var totalCost = ord.OrderItems.Where(oi => oi.Product != null).Sum(oi => oi.Product!.CostPrice * oi.Quantity);
+                    return Ok(new
+                    {
+                        success = true,
+                        data = new
+                        {
+                            EntryId = id,
+                            EntryNumber = $"SYS-COGS-{ord.OrderNumber}",
+                            EntryDate = ord.ConfirmedAt ?? ord.OrderDate,
+                            Description = $"COGS for Order {ord.OrderNumber}",
+                            Reference = ord.OrderNumber,
+                            Status = "Posted",
+                            TotalDebit = totalCost,
+                            TotalCredit = totalCost,
+                            Notes = $"System-generated COGS. Items: {ord.OrderItems.Count}, Total cost: ₱{totalCost:N2}",
+                            PostedAt = (DateTime?)(ord.ConfirmedAt ?? ord.OrderDate),
+                            CreatedAt = ord.CreatedAt,
+                            Source = "System",
+                            SourceType = "COGS",
+                            Lines = new[]
+                            {
+                                new { LineId = 0, AccountId = Acct("5000"), AccountCode = "5000", AccountName = "Cost of Goods Sold", Description = $"COGS Order {ord.OrderNumber}", DebitAmount = totalCost, CreditAmount = 0m },
+                                new { LineId = 0, AccountId = Acct("1020"), AccountCode = "1020", AccountName = "Inventory", Description = $"Inventory reduction", DebitAmount = 0m, CreditAmount = totalCost }
+                            }.Where(l => l.AccountId > 0).ToArray()
+                        }
+                    });
+                }
+
+                return NotFound(new { success = false, message = "Entry not found" });
+            }
+
+            // Standard manual entry lookup
+            {
+                var companyId = GetCompanyId();
+                var entry = await _context.JournalEntries
+                    .Include(j => j.Lines).ThenInclude(l => l.Account)
+                    .Where(j => j.EntryId == id && (companyId == null || j.CompanyId == companyId))
+                    .Select(j => new
+                    {
+                        j.EntryId,
+                        j.EntryNumber,
+                        j.EntryDate,
+                        j.Description,
+                        j.Reference,
+                        j.Status,
+                        j.TotalDebit,
+                        j.TotalCredit,
+                        j.Notes,
+                        j.PostedAt,
+                        j.CreatedAt,
+                        Source = "Manual",
+                        SourceType = "Journal Entry",
+                        Lines = j.Lines.Select(l => new
+                        {
+                            l.LineId,
+                            l.AccountId,
+                            AccountCode = l.Account.AccountCode,
+                            AccountName = l.Account.AccountName,
+                            l.Description,
+                            l.DebitAmount,
+                            l.CreditAmount
+                        })
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (entry == null) return NotFound(new { success = false, message = "Journal entry not found" });
+
+                return Ok(new { success = true, data = entry });
+            }
+        }
+
+        [HttpPost]
+        [Route("api/journal-entries")]
+        public async Task<IActionResult> CreateJournalEntry([FromBody] JournalEntry entry)
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                entry.CompanyId = companyId ?? 1;
+                entry.EntryNumber = $"JE-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
+                entry.CreatedAt = DateTime.UtcNow;
+                entry.UpdatedAt = DateTime.UtcNow;
+                entry.CreatedBy = HttpContext.Session.GetInt32("UserId");
+
+                // Calculate totals from lines
+                entry.TotalDebit = entry.Lines.Sum(l => l.DebitAmount);
+                entry.TotalCredit = entry.Lines.Sum(l => l.CreditAmount);
+
+                _context.JournalEntries.Add(entry);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Journal entry created", data = new { entry.EntryId, entry.EntryNumber } });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut]
+        [Route("api/journal-entries/{id}")]
+        public async Task<IActionResult> UpdateJournalEntry(int id, [FromBody] JournalEntry entry)
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                var existing = await _context.JournalEntries
+                    .Include(j => j.Lines)
+                    .FirstOrDefaultAsync(j => j.EntryId == id && (companyId == null || j.CompanyId == companyId));
+
+                if (existing == null) return NotFound(new { success = false, message = "Entry not found" });
+                if (existing.Status == "Posted") return BadRequest(new { success = false, message = "Cannot edit a posted entry" });
+
+                existing.EntryDate = entry.EntryDate;
+                existing.Description = entry.Description;
+                existing.Reference = entry.Reference;
+                existing.Notes = entry.Notes;
+                existing.UpdatedAt = DateTime.UtcNow;
+                existing.UpdatedBy = HttpContext.Session.GetInt32("UserId");
+
+                // Replace lines
+                _context.JournalEntryLines.RemoveRange(existing.Lines);
+                foreach (var line in entry.Lines)
+                {
+                    line.EntryId = id;
+                    _context.JournalEntryLines.Add(line);
+                }
+
+                existing.TotalDebit = entry.Lines.Sum(l => l.DebitAmount);
+                existing.TotalCredit = entry.Lines.Sum(l => l.CreditAmount);
+
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true, message = "Journal entry updated" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut]
+        [Route("api/journal-entries/{id}/post")]
+        public async Task<IActionResult> PostJournalEntry(int id)
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                var entry = await _context.JournalEntries
+                    .Include(j => j.Lines)
+                    .FirstOrDefaultAsync(j => j.EntryId == id && (companyId == null || j.CompanyId == companyId));
+
+                if (entry == null) return NotFound(new { success = false, message = "Entry not found" });
+                if (entry.Status == "Posted") return BadRequest(new { success = false, message = "Already posted" });
+                if (entry.TotalDebit != entry.TotalCredit) return BadRequest(new { success = false, message = "Debits must equal credits" });
+                if (!entry.Lines.Any()) return BadRequest(new { success = false, message = "Entry must have at least one line" });
+
+                entry.Status = "Posted";
+                entry.PostedAt = DateTime.UtcNow;
+                entry.PostedBy = HttpContext.Session.GetInt32("UserId");
+                entry.UpdatedAt = DateTime.UtcNow;
+
+                // Post to General Ledger
+                foreach (var line in entry.Lines)
+                {
+                    _context.GeneralLedger.Add(new GeneralLedgerEntry
+                    {
+                        CompanyId = entry.CompanyId,
+                        AccountId = line.AccountId,
+                        EntryId = entry.EntryId,
+                        TransactionDate = entry.EntryDate,
+                        Description = line.Description ?? entry.Description,
+                        DebitAmount = line.DebitAmount,
+                        CreditAmount = line.CreditAmount,
+                        Reference = entry.Reference,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true, message = "Journal entry posted to General Ledger" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut]
+        [Route("api/journal-entries/{id}/void")]
+        public async Task<IActionResult> VoidJournalEntry(int id)
+        {
+            var companyId = GetCompanyId();
+            var entry = await _context.JournalEntries
+                .FirstOrDefaultAsync(j => j.EntryId == id && (companyId == null || j.CompanyId == companyId));
+
+            if (entry == null) return NotFound(new { success = false, message = "Entry not found" });
+
+            entry.Status = "Void";
+            entry.UpdatedAt = DateTime.UtcNow;
+
+            // Remove from general ledger
+            var ledgerEntries = await _context.GeneralLedger.Where(g => g.EntryId == id).ToListAsync();
+            _context.GeneralLedger.RemoveRange(ledgerEntries);
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true, message = "Journal entry voided" });
+        }
+
+        [HttpPut]
+        [Route("api/journal-entries/{id}/archive")]
+        public async Task<IActionResult> ArchiveJournalEntry(int id)
+        {
+            var companyId = GetCompanyId();
+            var entry = await _context.JournalEntries
+                .FirstOrDefaultAsync(j => j.EntryId == id && (companyId == null || j.CompanyId == companyId));
+
+            if (entry == null) return NotFound(new { success = false, message = "Entry not found" });
+
+            entry.IsArchived = !entry.IsArchived;
+            entry.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = entry.IsArchived ? "Entry archived" : "Entry restored" });
+        }
+
+        #endregion
+
+        #region ===== GENERAL LEDGER =====
+
+        [HttpGet]
+        [Route("api/general-ledger")]
+        public async Task<IActionResult> GetGeneralLedger(int? accountId = null, string? dateFrom = null, string? dateTo = null, string? source = null)
+        {
+            var companyId = GetCompanyId();
+
+            DateTime? parsedFrom = null, parsedTo = null;
+            if (!string.IsNullOrEmpty(dateFrom) && DateTime.TryParse(dateFrom, out var dfrom)) parsedFrom = dfrom;
+            if (!string.IsNullOrEmpty(dateTo) && DateTime.TryParse(dateTo, out var dto)) parsedTo = dto.AddDays(1);
+
+            // 1) Manual GL entries (from posted journal entries)
+            var glQuery = _context.GeneralLedger
+                .Include(g => g.Account)
+                .Include(g => g.JournalEntry)
+                .Where(g => !g.IsArchived && (companyId == null || g.CompanyId == companyId));
+
+            if (accountId.HasValue) glQuery = glQuery.Where(g => g.AccountId == accountId.Value);
+            if (parsedFrom.HasValue) glQuery = glQuery.Where(g => g.TransactionDate >= parsedFrom.Value);
+            if (parsedTo.HasValue) glQuery = glQuery.Where(g => g.TransactionDate <= parsedTo.Value);
+
+            var manualEntries = await glQuery
+                .OrderByDescending(g => g.TransactionDate)
+                .ThenBy(g => g.LedgerId)
+                .Select(g => new
+                {
+                    g.LedgerId,
+                    g.AccountId,
+                    AccountCode = g.Account.AccountCode,
+                    AccountName = g.Account.AccountName,
+                    AccountType = g.Account.AccountType,
+                    g.EntryId,
+                    EntryNumber = g.JournalEntry != null ? g.JournalEntry.EntryNumber : null,
+                    g.TransactionDate,
+                    g.Description,
+                    g.DebitAmount,
+                    g.CreditAmount,
+                    g.RunningBalance,
+                    g.Reference,
+                    g.IsArchived,
+                    g.CreatedAt,
+                    Source = "Manual",
+                    SourceType = "Journal Entry"
+                })
+                .ToListAsync();
+
+            // ---- System-derived ledger transactions ----
+            var map = await GetAccountCodeMap(companyId);
+            int Acct(string code) => map.ContainsKey(code) ? map[code] : 0;
+
+            // Helper for account filter
+            bool MatchesAccountFilter(int acctId) => !accountId.HasValue || acctId == accountId.Value;
+            bool MatchesDateFilter(DateTime date) =>
+                (!parsedFrom.HasValue || date >= parsedFrom.Value) &&
+                (!parsedTo.HasValue || date <= parsedTo.Value);
+
+            var systemEntries = new List<object>();
+
+            // 2) Invoice transactions → DR Accounts Receivable, CR Sales Revenue, CR Tax Payable
+            var invoices = await _context.Invoices
+                .Include(i => i.Customer)
+                .Where(i => (companyId == null || i.CompanyId == companyId)
+                    && i.Status != "Cancelled" && i.Status != "Void" && i.Status != "Draft")
+                .ToListAsync();
+
+            foreach (var inv in invoices)
+            {
+                if (!MatchesDateFilter(inv.InvoiceDate)) continue;
+                var custName = inv.Customer != null ? inv.Customer.FirstName + " " + inv.Customer.LastName : "N/A";
+
+                var arId = Acct("1010"); var revId = Acct("4000"); var taxId = Acct("2020"); var othId = Acct("4020");
+
+                if (arId > 0 && MatchesAccountFilter(arId))
+                    systemEntries.Add(new { LedgerId = -(inv.InvoiceId * 10 + 1), AccountId = arId, AccountCode = "1010", AccountName = "Accounts Receivable", AccountType = "Asset", EntryId = (int?)null, EntryNumber = $"SYS-INV-{inv.InvoiceNumber}", TransactionDate = inv.InvoiceDate, Description = $"Invoice {inv.InvoiceNumber} - {custName}", DebitAmount = inv.TotalAmount, CreditAmount = 0m, RunningBalance = 0m, Reference = inv.InvoiceNumber, IsArchived = false, CreatedAt = inv.CreatedAt, Source = "System", SourceType = "Invoice" });
+
+                var netRevenue = inv.Subtotal - inv.DiscountAmount + inv.ShippingAmount;
+                if (revId > 0 && netRevenue > 0 && MatchesAccountFilter(revId))
+                    systemEntries.Add(new { LedgerId = -(inv.InvoiceId * 10 + 2), AccountId = revId, AccountCode = "4000", AccountName = "Sales Revenue", AccountType = "Revenue", EntryId = (int?)null, EntryNumber = $"SYS-INV-{inv.InvoiceNumber}", TransactionDate = inv.InvoiceDate, Description = $"Revenue from {inv.InvoiceNumber} - {custName}", DebitAmount = 0m, CreditAmount = netRevenue, RunningBalance = 0m, Reference = inv.InvoiceNumber, IsArchived = false, CreatedAt = inv.CreatedAt, Source = "System", SourceType = "Sales Revenue" });
+
+                if (taxId > 0 && inv.TaxAmount > 0 && MatchesAccountFilter(taxId))
+                    systemEntries.Add(new { LedgerId = -(inv.InvoiceId * 10 + 3), AccountId = taxId, AccountCode = "2020", AccountName = "Sales Tax Payable", AccountType = "Liability", EntryId = (int?)null, EntryNumber = $"SYS-INV-{inv.InvoiceNumber}", TransactionDate = inv.InvoiceDate, Description = $"Tax on {inv.InvoiceNumber}", DebitAmount = 0m, CreditAmount = inv.TaxAmount, RunningBalance = 0m, Reference = inv.InvoiceNumber, IsArchived = false, CreatedAt = inv.CreatedAt, Source = "System", SourceType = "Tax" });
+            }
+
+            // 3) Payments → DR Cash, CR Accounts Receivable
+            var payments = await _context.Payments
+                .Include(p => p.Customer)
+                .Where(p => (companyId == null || p.CompanyId == companyId) && p.Status == "Completed")
+                .ToListAsync();
+
+            foreach (var pay in payments)
+            {
+                if (!MatchesDateFilter(pay.PaymentDate)) continue;
+                var custName = pay.Customer != null ? pay.Customer.FirstName + " " + pay.Customer.LastName : "N/A";
+                var cashId = Acct("1000"); var arId = Acct("1010");
+
+                if (cashId > 0 && MatchesAccountFilter(cashId))
+                    systemEntries.Add(new { LedgerId = -(500000 + pay.PaymentId * 10 + 1), AccountId = cashId, AccountCode = "1000", AccountName = "Cash", AccountType = "Asset", EntryId = (int?)null, EntryNumber = $"SYS-PAY-{pay.PaymentNumber}", TransactionDate = pay.PaymentDate, Description = $"Payment {pay.PaymentNumber} from {custName} ({pay.PaymentMethodType})", DebitAmount = pay.Amount, CreditAmount = 0m, RunningBalance = 0m, Reference = pay.PaymentNumber, IsArchived = false, CreatedAt = pay.CreatedAt, Source = "System", SourceType = "Payment" });
+
+                if (arId > 0 && MatchesAccountFilter(arId))
+                    systemEntries.Add(new { LedgerId = -(500000 + pay.PaymentId * 10 + 2), AccountId = arId, AccountCode = "1010", AccountName = "Accounts Receivable", AccountType = "Asset", EntryId = (int?)null, EntryNumber = $"SYS-PAY-{pay.PaymentNumber}", TransactionDate = pay.PaymentDate, Description = $"Received from {custName}", DebitAmount = 0m, CreditAmount = pay.Amount, RunningBalance = 0m, Reference = pay.PaymentNumber, IsArchived = false, CreatedAt = pay.CreatedAt, Source = "System", SourceType = "Payment" });
+            }
+
+            // 4) Refunds → DR Sales Revenue, CR Cash
+            var refunds = await _context.Refunds
+                .Include(r => r.Customer)
+                .Where(r => (companyId == null || r.CompanyId == companyId) && r.Status == "Processed")
+                .ToListAsync();
+
+            foreach (var ref_ in refunds)
+            {
+                var refDate = ref_.ProcessedAt ?? ref_.RequestedAt;
+                if (!MatchesDateFilter(refDate)) continue;
+                var custName = ref_.Customer != null ? ref_.Customer.FirstName + " " + ref_.Customer.LastName : "N/A";
+                var revId = Acct("4000"); var cashId = Acct("1000");
+
+                if (revId > 0 && MatchesAccountFilter(revId))
+                    systemEntries.Add(new { LedgerId = -(600000 + ref_.RefundId * 10 + 1), AccountId = revId, AccountCode = "4000", AccountName = "Sales Revenue", AccountType = "Revenue", EntryId = (int?)null, EntryNumber = $"SYS-REF-{ref_.RefundNumber}", TransactionDate = refDate, Description = $"Refund {ref_.RefundNumber} to {custName}", DebitAmount = ref_.Amount, CreditAmount = 0m, RunningBalance = 0m, Reference = ref_.RefundNumber, IsArchived = false, CreatedAt = ref_.RequestedAt, Source = "System", SourceType = "Refund" });
+
+                if (cashId > 0 && MatchesAccountFilter(cashId))
+                    systemEntries.Add(new { LedgerId = -(600000 + ref_.RefundId * 10 + 2), AccountId = cashId, AccountCode = "1000", AccountName = "Cash", AccountType = "Asset", EntryId = (int?)null, EntryNumber = $"SYS-REF-{ref_.RefundNumber}", TransactionDate = refDate, Description = $"Refund payment {ref_.RefundNumber}", DebitAmount = 0m, CreditAmount = ref_.Amount, RunningBalance = 0m, Reference = ref_.RefundNumber, IsArchived = false, CreatedAt = ref_.RequestedAt, Source = "System", SourceType = "Refund" });
+            }
+
+            // 5) COGS from Orders → DR COGS, CR Inventory
+            var orders = await _context.Orders
+                .Include(o => o.Customer)
+                .Include(o => o.OrderItems).ThenInclude(oi => oi.Product)
+                .Where(o => (companyId == null || o.CompanyId == companyId)
+                    && (o.OrderStatus == "Confirmed" || o.OrderStatus == "Delivered" || o.OrderStatus == "Shipped"))
+                .ToListAsync();
+
+            foreach (var ord in orders)
+            {
+                var ordDate = ord.ConfirmedAt ?? ord.OrderDate;
+                if (!MatchesDateFilter(ordDate)) continue;
+                var totalCost = ord.OrderItems.Where(oi => oi.Product != null).Sum(oi => oi.Product!.CostPrice * oi.Quantity);
+                if (totalCost <= 0) continue;
+
+                var cogsId = Acct("5000"); var invId = Acct("1020");
+                var custName = ord.Customer != null ? ord.Customer.FirstName + " " + ord.Customer.LastName : "N/A";
+
+                if (cogsId > 0 && MatchesAccountFilter(cogsId))
+                    systemEntries.Add(new { LedgerId = -(700000 + ord.OrderId * 10 + 1), AccountId = cogsId, AccountCode = "5000", AccountName = "Cost of Goods Sold", AccountType = "Expense", EntryId = (int?)null, EntryNumber = $"SYS-COGS-{ord.OrderNumber}", TransactionDate = ordDate, Description = $"COGS for Order {ord.OrderNumber} - {custName}", DebitAmount = totalCost, CreditAmount = 0m, RunningBalance = 0m, Reference = ord.OrderNumber, IsArchived = false, CreatedAt = ord.CreatedAt, Source = "System", SourceType = "COGS" });
+
+                if (invId > 0 && MatchesAccountFilter(invId))
+                    systemEntries.Add(new { LedgerId = -(700000 + ord.OrderId * 10 + 2), AccountId = invId, AccountCode = "1020", AccountName = "Inventory", AccountType = "Asset", EntryId = (int?)null, EntryNumber = $"SYS-COGS-{ord.OrderNumber}", TransactionDate = ordDate, Description = $"Inventory reduction {ord.OrderNumber}", DebitAmount = 0m, CreditAmount = totalCost, RunningBalance = 0m, Reference = ord.OrderNumber, IsArchived = false, CreatedAt = ord.CreatedAt, Source = "System", SourceType = "COGS" });
+            }
+
+            // Filter by source if requested
+            var allEntries = manualEntries.Cast<object>().Concat(systemEntries).ToList();
+            // source filter is applied client-side via JS, but if passed we filter here too
+            if (!string.IsNullOrEmpty(source) && source != "All")
+            {
+                // We cannot easily filter anonymous objects by property, so we keep all and let JS do it
+            }
+
+            // Calculate account summaries from BOTH manual + system
+            var summaryDict = new Dictionary<int, (string code, string name, string type, decimal dr, decimal cr)>();
+
+            void AddToSummary(int acctId, string code, string name, string type, decimal dr, decimal cr)
+            {
+                if (summaryDict.ContainsKey(acctId))
+                {
+                    var existing = summaryDict[acctId];
+                    summaryDict[acctId] = (existing.code, existing.name, existing.type, existing.dr + dr, existing.cr + cr);
+                }
+                else
+                {
+                    summaryDict[acctId] = (code, name, type, dr, cr);
+                }
+            }
+
+            // Summary from manual GL
+            var manualSummary = await _context.GeneralLedger
+                .Include(g => g.Account)
+                .Where(g => !g.IsArchived && (companyId == null || g.CompanyId == companyId))
+                .GroupBy(g => new { g.AccountId, g.Account.AccountCode, g.Account.AccountName, g.Account.AccountType })
+                .Select(g => new { g.Key.AccountId, g.Key.AccountCode, g.Key.AccountName, g.Key.AccountType, Debit = g.Sum(x => x.DebitAmount), Credit = g.Sum(x => x.CreditAmount) })
+                .ToListAsync();
+
+            foreach (var s in manualSummary) AddToSummary(s.AccountId, s.AccountCode, s.AccountName, s.AccountType, s.Debit, s.Credit);
+
+            // Summary from system-derived: reconstruct from invoices, payments, etc.
+            var balances = await ComputeAccountBalances(companyId);
+            var accountLookup = await _context.ChartOfAccounts
+                .Where(a => !a.IsArchived && (companyId == null || a.CompanyId == companyId))
+                .ToDictionaryAsync(a => a.AccountId, a => new { a.AccountCode, a.AccountName, a.AccountType });
+
+            foreach (var kvp in balances)
+            {
+                if (!accountLookup.ContainsKey(kvp.Key)) continue;
+                var acct = accountLookup[kvp.Key];
+                // Don't double-count manual GL (already in manualSummary). System balances include manual GL, so just use system totals
+                if (summaryDict.ContainsKey(kvp.Key))
+                {
+                    // Replace with full system balance (which includes manual GL + system transactions)
+                    summaryDict[kvp.Key] = (acct.AccountCode, acct.AccountName, acct.AccountType, kvp.Value.debit, kvp.Value.credit);
+                }
+                else
+                {
+                    AddToSummary(kvp.Key, acct.AccountCode, acct.AccountName, acct.AccountType, kvp.Value.debit, kvp.Value.credit);
+                }
+            }
+
+            var accountSummary = summaryDict
+                .OrderBy(s => s.Value.code)
+                .Select(s => new
+                {
+                    AccountId = s.Key,
+                    AccountCode = s.Value.code,
+                    AccountName = s.Value.name,
+                    AccountType = s.Value.type,
+                    TotalDebit = s.Value.dr,
+                    TotalCredit = s.Value.cr,
+                    Balance = s.Value.dr - s.Value.cr
+                })
+                .ToList();
+
+            return Ok(new { success = true, data = allEntries, summary = accountSummary });
+        }
+
+        [HttpPut]
+        [Route("api/general-ledger/{id}/archive")]
+        public async Task<IActionResult> ArchiveGeneralLedgerEntry(int id)
+        {
+            if (id < 0) return BadRequest(new { success = false, message = "System-generated entries cannot be archived" });
+
+            var companyId = GetCompanyId();
+            var entry = await _context.GeneralLedger
+                .FirstOrDefaultAsync(g => g.LedgerId == id && (companyId == null || g.CompanyId == companyId));
+
+            if (entry == null) return NotFound(new { success = false, message = "Entry not found" });
+
+            entry.IsArchived = !entry.IsArchived;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = entry.IsArchived ? "Entry archived" : "Entry restored" });
         }
 
         #endregion
