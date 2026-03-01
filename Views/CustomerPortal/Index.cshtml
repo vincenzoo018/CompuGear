@@ -191,10 +191,11 @@
     .stat-icon {
         width: 48px;
         height: 48px;
-        border-radius: var(--radius-sm);
+        border-radius: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
+        flex-shrink: 0;
     }
     .stat-icon svg { width: 24px; height: 24px; }
     .stat-icon.blue { background: var(--info-fg); color: #ffffff; }
@@ -205,8 +206,8 @@
     .stat-trend.up { background: var(--success-light); color: var(--success-fg); }
     .stat-trend.down { background: var(--error-light); color: var(--error-fg); }
     .stat-trend svg { width: 12px; height: 12px; }
-    .stat-value { font-size: 2rem; font-weight: 700; color: var(--foreground); line-height: 1; letter-spacing: -0.02em; }
-    .stat-label { font-size: 0.85rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted-foreground); margin-top: 6px; }
+    .stat-value { font-size: 1.65rem; font-weight: 700; color: var(--foreground); line-height: 1.2; letter-spacing: -0.02em; }
+    .stat-label { font-size: 0.8rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted-foreground); margin-top: 4px; }
 
     /* ========== CHARTS SECTION ========== */
     .charts-section { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 40px; }
@@ -321,7 +322,7 @@
         .hero-side { flex-direction: column; }
         .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
         .stat-card { padding: 18px; }
-        .stat-value { font-size: 1.6rem; }
+        .stat-value { font-size: 1.35rem; }
         .products-grid { grid-template-columns: 1fr 1fr; }
         .category-strip { grid-template-columns: repeat(4, 1fr); gap: 10px; }
         .pie-wrapper { flex-direction: column; }

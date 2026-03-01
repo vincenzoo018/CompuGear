@@ -482,20 +482,21 @@
     .stat-card {
         background: var(--card);
         border-radius: 12px;
-        padding: 20px;
+        padding: 1.25rem 1.35rem;
         display: flex;
         align-items: center;
-        gap: 15px;
+        gap: 1rem;
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
     
     .stat-card .stat-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 12px;
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
         display: flex;
         align-items: center;
         justify-content: center;
+        flex-shrink: 0;
     }
     
     .stat-card .stat-icon svg {
@@ -509,14 +510,20 @@
     .stat-card-info .stat-icon { background: #2563eb; color: #ffffff; }
     
     .stat-card .stat-content .stat-value {
-        font-size: 1.5rem;
+        font-size: 1.65rem;
         font-weight: 700;
         color: var(--foreground);
+        line-height: 1.2;
+        letter-spacing: -0.02em;
     }
     
     .stat-card .stat-content .stat-label {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
         color: var(--muted-foreground);
+        margin-bottom: 4px;
     }
     
     @@media (max-width: 992px) {
