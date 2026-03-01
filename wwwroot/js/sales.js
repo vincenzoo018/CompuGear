@@ -881,6 +881,7 @@ const SalesProducts = {
                 </td>
             </tr>
         `).join('');
+        if (typeof initPagination === 'function') initPagination('productsTableBody', 'salesProductsPagination', 10);
     },
 
     updateStats() {
@@ -929,6 +930,7 @@ const SalesProducts = {
     },
 
     filter(search = '', status = '') {
+        if (typeof resetPagination === 'function') resetPagination('salesProductsPagination');
         let filtered = this.data;
         if (search) {
             const s = search.toLowerCase();
@@ -964,6 +966,7 @@ const SalesProducts = {
                 <td class="text-center"><button class="btn btn-sm btn-outline-primary" onclick="SalesProducts.view(${p.productId})">${Icons.view}</button></td>
             </tr>
         `).join('');
+        if (typeof initPagination === 'function') initPagination('productsTableBody', 'salesProductsPagination', 10);
     }
 };
 

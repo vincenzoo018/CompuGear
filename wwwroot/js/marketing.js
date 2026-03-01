@@ -437,6 +437,7 @@ const Promotions = {
             </tr>
         `).join('');
         this.applyCurrentFilters();
+        if (typeof initPagination === 'function') initPagination('promotionsTableBody', 'mktPromotionsPagination', 10);
     },
 
     updateStats() {
@@ -574,6 +575,7 @@ const Promotions = {
     },
 
     filter(search = '', status = '') {
+        if (typeof resetPagination === 'function') resetPagination('mktPromotionsPagination');
         let filtered = this.data;
         
         if (search) {
@@ -621,6 +623,7 @@ const Promotions = {
                 </td>
             </tr>
         `).join('');
+        if (typeof initPagination === 'function') initPagination('promotionsTableBody', 'mktPromotionsPagination', 10);
     }
 };
 

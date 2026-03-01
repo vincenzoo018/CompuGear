@@ -43,9 +43,8 @@
             </table>
         </div>
     </div>
+    <div class="card-footer d-flex justify-content-between align-items-center" id="superAdminUserArchivePagination"></div>
 </div>
-
-@section Scripts {
     <script>
         let archivedUsers = [];
 
@@ -98,6 +97,7 @@
                     </td>
                 </tr>
             `).join('');
+            if (typeof initPagination === 'function') initPagination('archiveTableBody', 'superAdminUserArchivePagination', 10);
         }
 
         async function restoreUser(id) {

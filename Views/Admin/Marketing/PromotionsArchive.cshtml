@@ -31,9 +31,8 @@
             </table>
         </div>
     </div>
+    <div class="card-footer d-flex justify-content-between align-items-center" id="promotionsArchivePagination"></div>
 </div>
-
-@section Scripts {
 <script src="~/js/admin.js"></script>
 <script>
     let archivedPromotions = [];
@@ -73,6 +72,7 @@
                 <td><button class="btn btn-sm btn-success" onclick="restorePromotion(${p.promotionId})">Activate</button></td>
             </tr>
         `).join('');
+        if (typeof initPagination === 'function') initPagination('archiveTableBody', 'promotionsArchivePagination', 10);
     }
 
     async function restorePromotion(id) {

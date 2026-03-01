@@ -31,6 +31,7 @@
             </table>
         </div>
     </div>
+    <div class="card-footer d-flex justify-content-between align-items-center" id="userArchivePagination"></div>
 </div>
 
 @section Scripts {
@@ -68,6 +69,7 @@
                 <td><button class="btn btn-sm btn-success" onclick="restoreUser(${u.userId})">Activate</button></td>
             </tr>
         `).join('');
+        if (typeof initPagination === 'function') initPagination('archiveTableBody', 'userArchivePagination', 10);
     }
 
     async function restoreUser(id) {

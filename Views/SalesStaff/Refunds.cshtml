@@ -115,6 +115,7 @@
             </table>
         </div>
     </div>
+    <div class="card-footer d-flex justify-content-between align-items-center" id="refundsPagination"></div>
 </div>
 
 <!-- Refund Request Modal -->
@@ -261,9 +262,11 @@
                 </tr>
             `;
         }).join('');
+        if (typeof initPagination === 'function') initPagination('requestsTableBody', 'refundsPagination', 10);
     }
 
     function filterRequests() {
+        if (typeof resetPagination === 'function') resetPagination('refundsPagination');
         renderRequests();
     }
 

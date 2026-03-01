@@ -73,6 +73,7 @@
             </table>
         </div>
     </div>
+    <div class="card-footer d-flex justify-content-between align-items-center" id="subsPagination"></div>
 </div>
 
 <style>
@@ -329,6 +330,7 @@
         }
 
         function filterSubs() {
+            if (typeof resetPagination === 'function') resetPagination('subsPagination');
             const search = document.getElementById('searchSubs').value.toLowerCase();
             const status = document.getElementById('statusFilterSub').value;
             const plan = document.getElementById('planFilter').value;
@@ -364,6 +366,7 @@
                     </td>
                 </tr>
             `).join('');
+            if (typeof initPagination === 'function') initPagination('subsTableBody', 'subsPagination', 10);
         }
 
         function openCreateSubModal() {

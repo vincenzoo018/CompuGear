@@ -117,6 +117,34 @@
                     </a>
                 </div>
 
+                <!-- Accounting -->
+                @{
+                    var accountingActions = new[] { "ChartOfAccounts", "JournalEntries", "GeneralLedger" };
+                    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+                    var isAccountingOpen = accountingActions.Contains(currentAction);
+                }
+                <div class="nav-item @(isAccountingOpen ? "expanded" : "")">
+                    <a href="#" class="nav-link nav-link-toggle">
+                        <span class="nav-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="1" x2="12" y2="23"/>
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                            </svg>
+                        </span>
+                        <span class="nav-item-text">Accounting</span>
+                        <span class="nav-item-arrow">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </span>
+                    </a>
+                    <div class="nav-submenu">
+                        <a href="/SuperAdmin/ChartOfAccounts" class="nav-link @(currentAction == "ChartOfAccounts" ? "active" : "")">Chart of Accounts</a>
+                        <a href="/SuperAdmin/JournalEntries" class="nav-link @(currentAction == "JournalEntries" ? "active" : "")">Journal Entries</a>
+                        <a href="/SuperAdmin/GeneralLedger" class="nav-link @(currentAction == "GeneralLedger" ? "active" : "")">General Ledger</a>
+                    </div>
+                </div>
+
                 <!-- User Management -->
                 <div class="nav-item">
                     <a href="/SuperAdmin/Users" class="nav-link @(ViewContext.RouteData.Values["action"]?.ToString() == "Users" ? "active" : "")">

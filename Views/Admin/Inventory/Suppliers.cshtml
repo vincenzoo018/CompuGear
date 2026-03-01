@@ -98,6 +98,7 @@
             </table>
         </div>
     </div>
+    <div class="card-footer d-flex justify-content-between align-items-center" id="suppliersPagination"></div>
 </div>
 
 <!-- Add/Edit Supplier Modal -->
@@ -241,8 +242,8 @@
             <tr>
                 <td>
                     <div class="d-flex align-items-center gap-2">
-                        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--bs-primary-bg-subtle); display: flex; align-items: center; justify-content: center;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--bs-primary)" stroke-width="2">
+                        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--bs-primary); display: flex; align-items: center; justify-content: center; color: #ffffff;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                             </svg>
                         </div>
@@ -286,10 +287,12 @@
                 </td>
             </tr>
         `).join('');
+        if (typeof initPagination === 'function') initPagination('tableBody', 'suppliersPagination', 10);
     }
 
     // Filter table
     function filterTable() {
+        if (typeof resetPagination === 'function') resetPagination('suppliersPagination');
         const search = document.getElementById('searchInput').value.toLowerCase();
         const filtered = suppliers.filter(s => 
             (s.supplierName || '').toLowerCase().includes(search) ||

@@ -208,6 +208,7 @@ const Invoices = {
                 </td>
             </tr>
         `).join('');
+        if (typeof initPagination === 'function') initPagination('invoicesTableBody', 'invoicesPagination', 10);
     },
 
     updateStats() {
@@ -558,6 +559,7 @@ const Invoices = {
     },
 
     filter(search = '', status = '') {
+        if (typeof resetPagination === 'function') resetPagination('invoicesPagination');
         let filtered = this.data;
         if (search) { const s = search.toLowerCase(); filtered = filtered.filter(i => i.invoiceNumber?.toLowerCase().includes(s) || i.customerName?.toLowerCase().includes(s)); }
         if (status) { filtered = filtered.filter(i => i.status === status); }
@@ -580,6 +582,7 @@ const Invoices = {
                 <button class="btn btn-sm btn-outline-info" onclick="Invoices.print(${i.invoiceId})" title="Print">${Icons.print}</button>
                 </div></td>
         </tr>`).join('');
+        if (typeof initPagination === 'function') initPagination('invoicesTableBody', 'invoicesPagination', 10);
     }
 };
 

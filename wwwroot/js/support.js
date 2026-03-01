@@ -435,6 +435,7 @@ const SupportCustomers = {
                 </td>
             </tr>
         `).join('');
+        if (typeof initPagination === 'function') initPagination('customersTableBody', 'supportCustomersPagination', 10);
     },
 
     view(id) {
@@ -491,6 +492,7 @@ const SupportCustomers = {
     },
 
     filter(search = '') {
+        if (typeof resetPagination === 'function') resetPagination('supportCustomersPagination');
         let filtered = this.data;
         
         if (search) {
@@ -529,6 +531,7 @@ const SupportCustomers = {
                 </td>
             </tr>
         `).join('');
+        if (typeof initPagination === 'function') initPagination('customersTableBody', 'supportCustomersPagination', 10);
     }
 };
 

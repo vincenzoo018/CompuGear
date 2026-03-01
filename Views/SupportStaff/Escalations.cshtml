@@ -79,6 +79,7 @@
             </table>
         </div>
     </div>
+    <div class="card-footer d-flex justify-content-between align-items-center" id="escalationsPagination"></div>
 </div>
 
 <!-- Escalation Modal -->
@@ -219,6 +220,7 @@
                 </tr>
             `;
         }).join('');
+        if (typeof initPagination === 'function') initPagination('escalationsTableBody', 'escalationsPagination', 10);
     }
 
     function updateStats() {

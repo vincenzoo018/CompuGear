@@ -37,6 +37,7 @@
             </table>
         </div>
     </div>
+    <div class="card-footer d-flex justify-content-between align-items-center" id="modulesPagination"></div>
 </div>
 
 <!-- Create/Edit Module Modal -->
@@ -174,6 +175,7 @@
                     </td>
                 </tr>
             `).join('');
+            if (typeof initPagination === 'function') initPagination('modulesTableBody', 'modulesPagination', 10);
         }
 
         function openCreateModuleModal() {

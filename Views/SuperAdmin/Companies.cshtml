@@ -76,6 +76,7 @@
             </table>
         </div>
     </div>
+    <div class="card-footer d-flex justify-content-between align-items-center" id="companiesPagination"></div>
 </div>
 
 <!-- Create/Edit Company Modal -->
@@ -243,6 +244,7 @@
         }
 
         function filterCompanies() {
+            if (typeof resetPagination === 'function') resetPagination('companiesPagination');
             const search = document.getElementById('searchInput').value.toLowerCase();
             const status = document.getElementById('statusFilter').value;
             let filtered = allCompanies;
@@ -282,6 +284,7 @@
                     </td>
                 </tr>
             `).join('');
+            if (typeof initPagination === 'function') initPagination('companiesTableBody', 'companiesPagination', 10);
         }
 
         function openCreateCompanyModal() {

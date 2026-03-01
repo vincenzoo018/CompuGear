@@ -85,7 +85,7 @@
                 <span>Critical</span>
             </div>
         </div>
-        <div class="stat-icon" style="background: var(--error-bg); color: var(--error);">
+        <div class="stat-icon" style="background: var(--error); color: #ffffff;">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="15" y1="9" x2="9" y2="15"/>
@@ -141,6 +141,7 @@
             </div>
         </div>
     </div>
+    <div class="card-footer d-flex justify-content-between align-items-center" id="inventoryPagination"></div>
 </div>
 
 <!-- Category & Quick Actions -->
@@ -294,6 +295,7 @@
                     '<td><span class="badge ' + badgeClass + '">' + statusText + '</span></td>' +
                 '</tr>';
             }).join('');
+            if (typeof initPagination === 'function') initPagination('alertsTable', 'inventoryPagination', 10);
         }
 
         function renderStockChart(products) {

@@ -101,6 +101,128 @@ body.dark-mode .stat-card {
     border-color: #334155 !important;
 }
 
+/* Dark mode stat-card: dark bg, visible text & colored icons */
+body.dark-mode .stat-card .stat-value,
+body.dark-mode .stat-card .stat-content .stat-value {
+    color: #f1f5f9 !important;
+}
+
+body.dark-mode .stat-card .stat-label,
+body.dark-mode .stat-card .stat-content .stat-label {
+    color: #94a3b8 !important;
+}
+
+body.dark-mode .stat-card-primary .stat-icon {
+    background: #2dd4bf !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .stat-card-success .stat-icon {
+    background: #34d399 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .stat-card-warning .stat-icon {
+    background: #fbbf24 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .stat-card-danger .stat-icon {
+    background: #f87171 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .stat-card-info .stat-icon {
+    background: #60a5fa !important;
+    color: #ffffff !important;
+}
+
+/* Dark mode staff-stat-card */
+body.dark-mode .staff-stat-card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+body.dark-mode .staff-stat-card .stat-value {
+    color: #f1f5f9 !important;
+}
+
+body.dark-mode .staff-stat-card .stat-label {
+    color: #94a3b8 !important;
+}
+
+body.dark-mode .staff-stat-card .stat-icon.primary {
+    background: #2dd4bf !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .staff-stat-card .stat-icon.success {
+    background: #34d399 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .staff-stat-card .stat-icon.warning {
+    background: #fbbf24 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .staff-stat-card .stat-icon.danger {
+    background: #f87171 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .staff-stat-card .stat-icon.info {
+    background: #60a5fa !important;
+    color: #ffffff !important;
+}
+
+/* Dark mode base stat-icon color variants */
+body.dark-mode .stat-icon.teal {
+    background: #2dd4bf !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .stat-icon.green {
+    background: #34d399 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .stat-icon.blue {
+    background: #60a5fa !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .stat-icon.orange {
+    background: #fbbf24 !important;
+    color: #ffffff !important;
+}
+
+/* Dark mode - All SVG / icon containers: colored bg + white SVG */
+body.dark-mode .message-avatar,
+body.dark-mode .agent-avatar,
+body.dark-mode .option-icon,
+body.dark-mode .order-icon,
+body.dark-mode .category-item-icon,
+body.dark-mode .icon-sales,
+body.dark-mode .icon-inventory,
+body.dark-mode .icon-billing,
+body.dark-mode .icon-support,
+body.dark-mode .icon-marketing,
+body.dark-mode .icon-admin,
+body.dark-mode .why-icon,
+body.dark-mode .int-icon,
+body.dark-mode .val-icon,
+body.dark-mode .ci-icon,
+body.dark-mode .feat-icon,
+body.dark-mode .payment-icon,
+body.dark-mode .cancelled-icon,
+body.dark-mode .toast-icon,
+body.dark-mode .success-icon,
+body.dark-mode .failed-icon,
+body.dark-mode .segment-icon {
+    color: #ffffff !important;
+}
+
 body.dark-mode .card-header,
 body.dark-mode .card-footer,
 body.dark-mode .table thead,
@@ -174,6 +296,46 @@ body.dark-mode .table th,
 body.dark-mode .data-table td,
 body.dark-mode .data-table th {
     border-color: #334155 !important;
+    color: #e2e8f0;
+}
+
+/* Dark mode font & text consistency */
+body.dark-mode .modal-header,
+body.dark-mode .modal-footer {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .modal-body,
+body.dark-mode .modal-body strong,
+body.dark-mode .modal-body label,
+body.dark-mode .modal-body span,
+body.dark-mode .modal-title {
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode strong,
+body.dark-mode b,
+body.dark-mode label,
+body.dark-mode .form-label {
+    color: #f1f5f9 !important;
+}
+
+body.dark-mode p,
+body.dark-mode span,
+body.dark-mode li,
+body.dark-mode .page-subtitle,
+body.dark-mode .text-dark {
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .card-footer {
+    color: #cbd5e1 !important;
+}
+
+body.dark-mode .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
 }
 
 body.dark-mode .badge.bg-light,
@@ -758,26 +920,27 @@ body.no-sidebar-transition .nav-submenu {
     display: flex;
     align-items: center;
     justify-content: center;
+    color: #ffffff;
 }
 
 .stat-icon.teal {
-    background: var(--primary-light);
-    color: var(--primary);
+    background: var(--primary);
+    color: #ffffff;
 }
 
 .stat-icon.green {
-    background: var(--success-bg);
-    color: var(--success);
+    background: var(--success);
+    color: #ffffff;
 }
 
 .stat-icon.blue {
-    background: var(--info-bg);
-    color: var(--info);
+    background: var(--info);
+    color: #ffffff;
 }
 
 .stat-icon.orange {
-    background: var(--warning-bg);
-    color: var(--warning);
+    background: var(--warning);
+    color: #ffffff;
 }
 
 /* =====================================================
@@ -1653,11 +1816,11 @@ body.no-sidebar-transition .nav-submenu {
     margin-bottom: 1rem;
 }
 
-.staff-stat-card .stat-icon.primary { background: var(--primary-light); color: var(--primary); }
-.staff-stat-card .stat-icon.success { background: var(--success-bg); color: var(--success); }
-.staff-stat-card .stat-icon.warning { background: var(--warning-bg); color: var(--warning); }
-.staff-stat-card .stat-icon.danger { background: var(--error-bg); color: var(--error); }
-.staff-stat-card .stat-icon.info { background: var(--info-bg); color: var(--info); }
+.staff-stat-card .stat-icon.primary { background: var(--primary); color: #ffffff; }
+.staff-stat-card .stat-icon.success { background: var(--success); color: #ffffff; }
+.staff-stat-card .stat-icon.warning { background: var(--warning); color: #ffffff; }
+.staff-stat-card .stat-icon.danger { background: var(--error); color: #ffffff; }
+.staff-stat-card .stat-icon.info { background: var(--info); color: #ffffff; }
 
 .staff-stat-card .stat-value {
     font-size: 1.75rem;
@@ -2004,124 +2167,63 @@ body.no-sidebar-transition .nav-submenu {
    Stat Cards Enhancement
    ===================================================== */
 
-.stat-card-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
-    color: white;
+/* All stat card variants: white background, colored icons */
+.stat-card-primary,
+.stat-card-success,
+.stat-card-warning,
+.stat-card-danger,
+.stat-card-info {
+    background: var(--white);
+    color: var(--gray-800);
+    border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.stat-card-primary .stat-label {
-    color: rgba(255, 255, 255, 0.85);
+.stat-card-primary .stat-label,
+.stat-card-success .stat-label,
+.stat-card-warning .stat-label,
+.stat-card-danger .stat-label,
+.stat-card-info .stat-label {
+    color: var(--gray-500);
     font-size: 0.78rem;
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
 
-.stat-card-primary .stat-value {
-    color: white;
+.stat-card-primary .stat-value,
+.stat-card-success .stat-value,
+.stat-card-warning .stat-value,
+.stat-card-danger .stat-value,
+.stat-card-info .stat-value {
+    color: var(--gray-800);
     font-weight: 700;
     letter-spacing: -0.02em;
 }
 
+/* Individual icon colors */
 .stat-card-primary .stat-icon {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-}
-
-.stat-card-success {
-    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
-    color: white;
-}
-
-.stat-card-success .stat-label {
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 0.78rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.stat-card-success .stat-value {
-    color: white;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    background: var(--primary);
+    color: #ffffff;
 }
 
 .stat-card-success .stat-icon {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-}
-
-.stat-card-warning {
-    background: linear-gradient(135deg, var(--warning) 0%, #D97706 100%);
-    color: white;
-}
-
-.stat-card-warning .stat-label {
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 0.78rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.stat-card-warning .stat-value {
-    color: white;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    background: var(--success);
+    color: #ffffff;
 }
 
 .stat-card-warning .stat-icon {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-}
-
-.stat-card-danger {
-    background: linear-gradient(135deg, var(--error) 0%, #DC2626 100%);
-    color: white;
-}
-
-.stat-card-danger .stat-label {
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 0.78rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.stat-card-danger .stat-value {
-    color: white;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    background: var(--warning);
+    color: #ffffff;
 }
 
 .stat-card-danger .stat-icon {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-}
-
-.stat-card-info {
-    background: linear-gradient(135deg, var(--info) 0%, #2563EB 100%);
-    color: white;
-}
-
-.stat-card-info .stat-label {
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 0.78rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.stat-card-info .stat-value {
-    color: white;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    background: var(--error);
+    color: #ffffff;
 }
 
 .stat-card-info .stat-icon {
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
+    background: var(--info);
+    color: #ffffff;
 }
 
 .stat-content {
@@ -2133,7 +2235,7 @@ body.no-sidebar-transition .nav-submenu {
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--gray-500);
     margin-bottom: 0.15rem;
 }
 

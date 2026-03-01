@@ -93,6 +93,7 @@
                 </table>
             </div>
         </div>
+        <div class="card-footer d-flex justify-content-between align-items-center" id="mktRequestsPagination"></div>
     </div>
 
     <!-- Existing Promotions Table -->
@@ -143,6 +144,7 @@
                 </table>
             </div>
         </div>
+        <div class="card-footer d-flex justify-content-between align-items-center" id="mktPromotionsPagination"></div>
     </div>
 </div>
 
@@ -300,6 +302,7 @@
                     </tr>
                 `;
             }).join('');
+            if (typeof initPagination === 'function') initPagination('requestsTableBody', 'mktRequestsPagination', 10);
         }
 
         document.getElementById('promotionForm').addEventListener('submit', async function(e) {

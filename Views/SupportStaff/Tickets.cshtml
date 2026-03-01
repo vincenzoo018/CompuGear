@@ -59,12 +59,12 @@
         justify-content: center;
     }
 
-    .stat-icon-mini.primary { background: linear-gradient(135deg, #cffafe, #a5f3fc); color: #0d9488; }
-    .stat-icon-mini.warning { background: linear-gradient(135deg, #fef3cd, #fde68a); color: #d97706; }
-    .stat-icon-mini.info { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #2563eb; }
-    .stat-icon-mini.success { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #16a34a; }
-    .stat-icon-mini.danger { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626; }
-    .stat-icon-mini.secondary { background: linear-gradient(135deg, #f3f4f6, #e5e7eb); color: #6b7280; }
+    .stat-icon-mini.primary { background: #0d9488; color: #ffffff; }
+    .stat-icon-mini.warning { background: #d97706; color: #ffffff; }
+    .stat-icon-mini.info { background: #2563eb; color: #ffffff; }
+    .stat-icon-mini.success { background: #16a34a; color: #ffffff; }
+    .stat-icon-mini.danger { background: #dc2626; color: #ffffff; }
+    .stat-icon-mini.secondary { background: #6b7280; color: #ffffff; }
 
     .stat-icon-mini svg { width: 20px; height: 20px; }
 
@@ -383,6 +383,7 @@
             </tbody>
         </table>
     </div>
+    <div class="card-footer d-flex justify-content-between align-items-center" id="ticketsPagination"></div>
 </div>
 
 <!-- View Ticket Modal -->
@@ -618,6 +619,7 @@
                 </tr>
             `;
         }).join('');
+        if (typeof initPagination === 'function') initPagination('ticketsTableBody', 'ticketsPagination', 10);
     }
 
     function getStatusClass(status) {
@@ -643,6 +645,7 @@
     }
 
     function filterTickets() {
+        if (typeof resetPagination === 'function') resetPagination('ticketsPagination');
         const search = document.getElementById('searchTickets').value.toLowerCase();
         const status = document.getElementById('filterStatus').value;
         const priority = document.getElementById('filterPriority').value;

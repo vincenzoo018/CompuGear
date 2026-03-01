@@ -78,5 +78,23 @@ namespace CompuGear.Controllers
         {
             return View("~/Views/SuperAdmin/UsersArchive.cshtml");
         }
+
+        // Platform Accounting - Chart of Accounts
+        public IActionResult ChartOfAccounts()
+        {
+            return View("~/Views/SuperAdmin/ChartOfAccounts.cshtml");
+        }
+
+        // Platform Accounting - Journal Entries
+        public IActionResult JournalEntries()
+        {
+            return View("~/Views/SuperAdmin/JournalEntries.cshtml");
+        }
+
+        // Platform Accounting - General Ledger
+        public IActionResult GeneralLedger()
+        {
+            return View("~/Views/SuperAdmin/GeneralLedger.cshtml");
+        }
     }
 }

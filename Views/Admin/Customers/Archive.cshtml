@@ -32,6 +32,7 @@
             </table>
         </div>
     </div>
+    <div class="card-footer d-flex justify-content-between align-items-center" id="customerArchivePagination"></div>
 </div>
 
 @section Scripts {
@@ -72,6 +73,7 @@
                 </td>
             </tr>
         `).join('');
+        if (typeof initPagination === 'function') initPagination('archiveTableBody', 'customerArchivePagination', 10);
     }
 
     async function restoreCustomer(id) {

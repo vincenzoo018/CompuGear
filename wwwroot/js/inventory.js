@@ -464,6 +464,7 @@ const StockLevels = {
                 <td>${Format.stockStatus(p.stockQuantity, p.reorderLevel || 10)}</td>
             </tr>
         `}).join('');
+        if (typeof initPagination === 'function') initPagination('stockTableBody', 'invStockPagination', 10);
     },
 
     renderChart() {
@@ -493,6 +494,7 @@ const StockLevels = {
     },
 
     filter(search = '', stockLevel = '') {
+        if (typeof resetPagination === 'function') resetPagination('invStockPagination');
         let filtered = this.data;
         
         if (search) {
@@ -540,6 +542,7 @@ const StockLevels = {
                 <td>${Format.stockStatus(p.stockQuantity, p.reorderLevel || 10)}</td>
             </tr>
         `}).join('');
+        if (typeof initPagination === 'function') initPagination('stockTableBody', 'invStockPagination', 10);
     }
 };
 
@@ -583,6 +586,7 @@ const StockAlerts = {
                 </td>
             </tr>
         `).join('');
+        if (typeof initPagination === 'function') initPagination('alertsTableBody', 'invAlertsPagination', 10);
     },
 
     updateStats() {

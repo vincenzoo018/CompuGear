@@ -79,6 +79,7 @@ const COA = {
 
         if (this.filtered.length === 0) {
             tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">No accounts found</td></tr>';
+            if (typeof initPagination === 'function') initPagination('coaTableBody', 'coaPagination', 10);
             return;
         }
 
@@ -110,6 +111,7 @@ const COA = {
                 </td>
             </tr>`;
         }).join('');
+        if (typeof initPagination === 'function') initPagination('coaTableBody', 'coaPagination', 10);
     },
 
     updateStats() {
@@ -135,6 +137,7 @@ const COA = {
     },
 
     applyFilters() {
+        if (typeof resetPagination === 'function') resetPagination('coaPagination');
         const search = (document.getElementById('coaSearch')?.value || '').toLowerCase();
         const type = document.getElementById('coaTypeFilter')?.value || '';
         const status = document.getElementById('coaStatusFilter')?.value || '';
@@ -348,6 +351,7 @@ const JE = {
 
         if (this.filtered.length === 0) {
             tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">No journal entries found</td></tr>';
+            if (typeof initPagination === 'function') initPagination('jeTableBody', 'jePagination', 10);
             return;
         }
 
@@ -388,6 +392,7 @@ const JE = {
                 </td>
             </tr>`;
         }).join('');
+        if (typeof initPagination === 'function') initPagination('jeTableBody', 'jePagination', 10);
     },
 
     updateStats() {
@@ -404,6 +409,7 @@ const JE = {
     },
 
     applyFilters() {
+        if (typeof resetPagination === 'function') resetPagination('jePagination');
         const search = (document.getElementById('jeSearch')?.value || '').toLowerCase();
         const status = document.getElementById('jeStatusFilter')?.value || '';
         const source = document.getElementById('jeSourceFilter')?.value || '';
@@ -780,6 +786,7 @@ const GL = {
 
         if (this.filtered.length === 0) {
             tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">No ledger transactions found</td></tr>';
+            if (typeof initPagination === 'function') initPagination('glTableBody', 'glPagination', 10);
             return;
         }
 
@@ -804,6 +811,7 @@ const GL = {
                 </td>
             </tr>`;
         }).join('');
+        if (typeof initPagination === 'function') initPagination('glTableBody', 'glPagination', 10);
     },
 
     renderSummary() {
@@ -861,6 +869,7 @@ const GL = {
     },
 
     async applyFilters() {
+        if (typeof resetPagination === 'function') resetPagination('glPagination');
         const accountId = document.getElementById('glAccountFilter')?.value || '';
         const dateFrom = document.getElementById('glDateFrom')?.value || '';
         const dateTo = document.getElementById('glDateTo')?.value || '';

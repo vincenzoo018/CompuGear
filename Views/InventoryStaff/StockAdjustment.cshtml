@@ -150,6 +150,7 @@
             </table>
         </div>
     </div>
+    <div class="card-footer d-flex justify-content-between align-items-center" id="stockAdjustmentPagination"></div>
 </div>
 
 <!-- Stock Adjustment Request Modal -->
@@ -631,6 +632,7 @@
                 </tr>
             `;
         }).join('');
+        if (typeof initPagination === 'function') initPagination('requestsTableBody', 'stockAdjustmentPagination', 10);
 
         document.getElementById('requestCount').textContent = `${myRequests.length} records`;
     }
@@ -657,6 +659,7 @@
     }
 
     function filterRequests() {
+        if (typeof resetPagination === 'function') resetPagination('stockAdjustmentPagination');
         const searchTerm = document.getElementById('searchRequests').value.toLowerCase();
         const statusFilter = document.getElementById('filterStatus').value;
         const dateFilter = document.getElementById('filterDate').value;

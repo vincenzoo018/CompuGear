@@ -32,9 +32,8 @@
             </table>
         </div>
     </div>
+    <div class="card-footer d-flex justify-content-between align-items-center" id="leadsArchivePagination"></div>
 </div>
-
-@section Scripts {
 <script src="~/js/admin.js"></script>
 <script>
     let archivedLeads = [];
@@ -78,6 +77,7 @@
                 </td>
             </tr>
         `).join('');
+        if (typeof initPagination === 'function') initPagination('archiveTableBody', 'leadsArchivePagination', 10);
     }
 
     async function restoreLead(id) {

@@ -75,6 +75,7 @@
             </table>
         </div>
     </div>
+    <div class="card-footer d-flex justify-content-between align-items-center" id="categoriesPagination"></div>
 </div>
 
 <!-- My Requests -->
@@ -103,6 +104,7 @@
             </table>
         </div>
     </div>
+    <div class="card-footer d-flex justify-content-between align-items-center" id="catRequestsPagination"></div>
 </div>
 
 <!-- Request Modal -->
@@ -180,6 +182,7 @@
                     </td>
                 </tr>
             `).join('');
+            if (typeof initPagination === 'function') initPagination('categoriesTableBody', 'categoriesPagination', 10);
         } catch (error) {
             console.error('Error:', error);
         }
@@ -216,6 +219,7 @@
                     <td>${r.approvalNotes || '-'}</td>
                 </tr>
             `).join('');
+            if (typeof initPagination === 'function') initPagination('requestsTableBody', 'catRequestsPagination', 10);
         } catch (error) {
             console.error('Error:', error);
         }

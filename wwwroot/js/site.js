@@ -389,3 +389,79 @@ function showToast(message, type = 'info') {
         console.log(`[${type.toUpperCase()}] ${message}`);
     }
 }
+
+// =====================================================
+// Universal Table Pagination
+// =====================================================
+// Usage: call initPagination(tbodyId, footerId, pageSize) after rendering rows
+// It reads all <tr> in the tbody, shows only `pageSize` at a time, and renders
+// Prev/Next controls into the footer container.  Call it again after re-rendering.
+
+function initPagination(tbodyId, footerId, pageSize) {
+    pageSize = pageSize || 10;
+    var tbody = document.getElementById(tbodyId);
+    var footer = document.getElementById(footerId);
+    if (!tbody || !footer) return;
+
+    var rows = Array.from(tbody.querySelectorAll('tr'));
+    var total = rows.length;
+
+    // If only 1 row and it has a colspan (empty-state row), hide pagination
+    if (total <= 1 && rows[0] && rows[0].querySelector('td[colspan]')) {
+        footer.innerHTML = '';
+        return;
+    }
+
+    var totalPages = Math.ceil(total / pageSize);
+    var currentPage = parseInt(footer.dataset.currentPage) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+    footer.dataset.currentPage = currentPage;
+
+    // Show / hide rows
+    rows.forEach(function(tr, i) {
+        var start = (currentPage - 1) * pageSize;
+        tr.style.display = (i >= start && i < start + pageSize) ? '' : 'none';
+    });
+
+    // Render controls
+    var startItem = (currentPage - 1) * pageSize + 1;
+    var endItem = Math.min(currentPage * pageSize, total);
+
+    if (total <= pageSize) {
+        footer.innerHTML = '<span class="text-muted" style="font-size:0.85rem;">Showing ' + total + ' of ' + total + ' entries</span>';
+        return;
+    }
+
+    footer.innerHTML =
+        '<span class="text-muted" style="font-size:0.85rem;">Showing ' + startItem + '–' + endItem + ' of ' + total + ' entries</span>' +
+        '<div class="d-flex gap-2">' +
+            '<button class="btn btn-sm btn-outline-secondary pg-prev"' + (currentPage <= 1 ? ' disabled' : '') + '>← Prev</button>' +
+            '<button class="btn btn-sm btn-outline-secondary pg-next"' + (currentPage >= totalPages ? ' disabled' : '') + '>Next →</button>' +
+        '</div>';
+
+    var prevBtn = footer.querySelector('.pg-prev');
+    var nextBtn = footer.querySelector('.pg-next');
+    if (prevBtn) prevBtn.onclick = function() { footer.dataset.currentPage = currentPage - 1; initPagination(tbodyId, footerId, pageSize); };
+    if (nextBtn) nextBtn.onclick = function() { footer.dataset.currentPage = currentPage + 1; initPagination(tbodyId, footerId, pageSize); };
+}
+
+// Reset pagination to page 1 (call before re-rendering rows)
+function resetPagination(footerId) {
+    var footer = document.getElementById(footerId);
+    if (footer) footer.dataset.currentPage = '1';
+}
+
+// Auto-paginate: watch a tbody for content changes and apply pagination automatically
+// Usage: autoPaginate('myTableBody', 'myPagination', 10)
+function autoPaginate(tbodyId, footerId, pageSize) {
+    pageSize = pageSize || 10;
+    var tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    var observer = new MutationObserver(function() {
+        initPagination(tbodyId, footerId, pageSize);
+    });
+    observer.observe(tbody, { childList: true });
+    // Run once immediately if tbody already has content
+    if (tbody.children.length > 0) initPagination(tbodyId, footerId, pageSize);
+}
