@@ -553,6 +553,8 @@ body.dark-mode .bg-light {
 }
 
 /* Suppress ALL sidebar transitions on initial page load until JS marks ready */
+body.sidebar-loading .sidebar,
+body.sidebar-loading .main-content,
 body.sidebar-loading .nav-submenu,
 body.sidebar-loading .nav-item-arrow {
     transition: none !important;

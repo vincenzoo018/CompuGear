@@ -927,7 +927,7 @@
 </div>
 
 @section Scripts {
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAppyyZwTguVFsOgqXF8PPjBg4uoGvtnCs&callback=initMapsReady" async defer></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAppyyZwTguVFsOgqXF8PPjBg4uoGvtnCs&v=weekly&libraries=geometry,places&callback=initMapsReady" async defer></script>
 <script>
     const productIcons = ['🖥️', '⌨️', '🖱️', '🎧', '💾', '🎮', '📱', '🔌', '💻', '🖨️'];
     let allOrders = [];
@@ -1422,18 +1422,15 @@
 
     function initTrackingMap(tracking) {
         if (!googleMapsReady || typeof google === 'undefined') {
-            // Retry after a delay if Google Maps isn't loaded yet
             setTimeout(() => initTrackingMap(tracking), 500);
             return;
         }
 
         const mapEl = document.getElementById('trackingMap');
-        
         const origin = tracking.origin;
         const dest = tracking.destination;
         const current = tracking.currentLocation;
 
-        // Center map between origin and destination
         const centerLat = (origin.lat + dest.lat) / 2;
         const centerLng = (origin.lng + dest.lng) / 2;
 
@@ -1445,146 +1442,170 @@
             mapTypeControl: false,
             streetViewControl: false,
             fullscreenControl: true,
+            gestureHandling: 'cooperative',
             styles: [
                 { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#e9e9e9' }] },
                 { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#9e9e9e' }] },
                 { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+                { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#f0f0f0' }] },
                 { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#616161' }] },
                 { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+                { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
                 { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-                { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] }
+                { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#f5f5f5' }] },
+                { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#c9c9c9' }] }
             ]
         });
 
-        // Warehouse marker (origin)
-        new google.maps.Marker({
-            position: { lat: origin.lat, lng: origin.lng },
-            map: trackingMap,
-            title: origin.label,
-            icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 10,
-                fillColor: '#008080',
-                fillOpacity: 1,
-                strokeColor: '#FFFFFF',
-                strokeWeight: 3
-            },
-            label: { text: '📦', fontSize: '16px' }
-        });
-
-        // Add info window for origin
+        // Origin marker (warehouse)
         const originInfo = new google.maps.InfoWindow({
-            content: `<div style="padding:6px; font-family:Segoe UI,sans-serif;"><strong style="color:#008080;">📦 ${origin.label}</strong><br><span style="font-size:12px; color:#666;">Origin</span></div>`
+            content: `<div style="padding:8px 12px; font-family:'Segoe UI',sans-serif;">
+                <strong style="color:#008080; font-size:14px;">📦 ${origin.label}</strong><br>
+                <span style="font-size:12px; color:#666;">Origin / Warehouse</span>
+            </div>`
         });
-
         const originMarker = new google.maps.Marker({
             position: { lat: origin.lat, lng: origin.lng },
             map: trackingMap,
             title: origin.label,
             icon: {
-                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-                        <circle cx="20" cy="20" r="18" fill="#008080" stroke="white" stroke-width="3"/>
-                        <text x="20" y="26" text-anchor="middle" font-size="18">📦</text>
-                    </svg>`),
-                scaledSize: new google.maps.Size(40, 40),
-                anchor: new google.maps.Point(20, 20)
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">' +
+                    '<circle cx="22" cy="22" r="20" fill="#008080" stroke="white" stroke-width="3"/>' +
+                    '<text x="22" y="28" text-anchor="middle" font-size="20">📦</text></svg>'),
+                scaledSize: new google.maps.Size(44, 44),
+                anchor: new google.maps.Point(22, 22)
             }
         });
         originMarker.addListener('click', () => originInfo.open(trackingMap, originMarker));
 
         // Destination marker
+        const destInfo = new google.maps.InfoWindow({
+            content: `<div style="padding:8px 12px; font-family:'Segoe UI',sans-serif;">
+                <strong style="color:#10B981; font-size:14px;">🏠 ${dest.label}</strong><br>
+                <span style="font-size:12px; color:#666;">Delivery Address</span>
+            </div>`
+        });
         const destMarker = new google.maps.Marker({
             position: { lat: dest.lat, lng: dest.lng },
             map: trackingMap,
             title: dest.label,
             icon: {
-                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-                        <circle cx="20" cy="20" r="18" fill="#10B981" stroke="white" stroke-width="3"/>
-                        <text x="20" y="26" text-anchor="middle" font-size="18">🏠</text>
-                    </svg>`),
-                scaledSize: new google.maps.Size(40, 40),
-                anchor: new google.maps.Point(20, 20)
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">' +
+                    '<circle cx="22" cy="22" r="20" fill="#10B981" stroke="white" stroke-width="3"/>' +
+                    '<text x="22" y="28" text-anchor="middle" font-size="20">🏠</text></svg>'),
+                scaledSize: new google.maps.Size(44, 44),
+                anchor: new google.maps.Point(22, 22)
             }
-        });
-
-        const destInfo = new google.maps.InfoWindow({
-            content: `<div style="padding:6px; font-family:Segoe UI,sans-serif;"><strong style="color:#10B981;">🏠 ${dest.label}</strong><br><span style="font-size:12px; color:#666;">Destination</span></div>`
         });
         destMarker.addListener('click', () => destInfo.open(trackingMap, destMarker));
 
-        // Draw route line (completed path)
-        const routePath = tracking.waypoints.map(wp => ({ lat: wp.lat, lng: wp.lng }));
-        
-        // Full route (gray)
-        new google.maps.Polyline({
-            path: routePath,
-            geodesic: true,
-            strokeColor: '#CBD5E1',
-            strokeOpacity: 0.8,
-            strokeWeight: 4,
-            map: trackingMap
+        // Use Google Directions Service for real road-based route
+        const directionsService = new google.maps.DirectionsService();
+        const directionsRenderer = new google.maps.DirectionsRenderer({
+            map: trackingMap,
+            suppressMarkers: true,  // We use custom markers
+            preserveViewport: false,
+            polylineOptions: {
+                strokeColor: '#CBD5E1',
+                strokeOpacity: 0.9,
+                strokeWeight: 5
+            }
         });
 
-        // Completed route (teal)
-        const completedPath = tracking.waypoints.filter(wp => wp.reached).map(wp => ({ lat: wp.lat, lng: wp.lng }));
-        if (current) {
-            completedPath.push({ lat: current.lat, lng: current.lng });
-        }
-        
-        new google.maps.Polyline({
-            path: completedPath,
-            geodesic: true,
-            strokeColor: '#008080',
-            strokeOpacity: 1,
-            strokeWeight: 5,
-            map: trackingMap
+        // Build waypoints for Directions API (intermediate stops)
+        const dirWaypoints = tracking.waypoints
+            .filter((wp, i) => i > 0 && i < tracking.waypoints.length - 1)
+            .map(wp => ({
+                location: new google.maps.LatLng(wp.lat, wp.lng),
+                stopover: false
+            }));
+
+        directionsService.route({
+            origin: new google.maps.LatLng(origin.lat, origin.lng),
+            destination: new google.maps.LatLng(dest.lat, dest.lng),
+            waypoints: dirWaypoints,
+            travelMode: google.maps.TravelMode.DRIVING,
+            optimizeWaypoints: false
+        }, function(result, status) {
+            if (status === google.maps.DirectionsStatus.OK) {
+                // Render full route in gray
+                directionsRenderer.setDirections(result);
+
+                // Overlay completed portion in teal if package is in transit
+                if (tracking.progress > 0 && tracking.progress < 1 && result.routes[0]) {
+                    const routeOverview = result.routes[0].overview_path;
+                    const completedCount = Math.floor(routeOverview.length * tracking.progress);
+                    const completedPath = routeOverview.slice(0, completedCount + 1);
+
+                    new google.maps.Polyline({
+                        path: completedPath,
+                        geodesic: true,
+                        strokeColor: '#008080',
+                        strokeOpacity: 1,
+                        strokeWeight: 6,
+                        map: trackingMap
+                    });
+                } else if (tracking.progress >= 1) {
+                    // Delivered — show entire route in teal
+                    directionsRenderer.setOptions({
+                        polylineOptions: {
+                            strokeColor: '#008080',
+                            strokeOpacity: 1,
+                            strokeWeight: 6
+                        }
+                    });
+                    directionsRenderer.setDirections(result);
+                }
+            } else {
+                // Fallback to polylines if Directions API fails
+                console.warn('Directions API failed, using polyline fallback:', status);
+                drawFallbackRoute(tracking, current);
+            }
         });
 
         // Current location marker (package in transit)
-        if (tracking.progress > 0 && tracking.progress < 1) {
+        if (tracking.progress > 0 && tracking.progress < 1 && current) {
             const packageMarker = new google.maps.Marker({
                 position: { lat: current.lat, lng: current.lng },
                 map: trackingMap,
                 title: 'Current Package Location',
+                zIndex: 999,
                 icon: {
-                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-                        <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50">
-                            <circle cx="25" cy="25" r="22" fill="#FF6B35" stroke="white" stroke-width="3">
-                                <animate attributeName="r" from="20" to="24" dur="1.5s" repeatCount="indefinite" />
-                            </circle>
-                            <text x="25" y="32" text-anchor="middle" font-size="22">🚚</text>
-                        </svg>`),
-                    scaledSize: new google.maps.Size(50, 50),
-                    anchor: new google.maps.Point(25, 25)
+                    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 52 52">' +
+                        '<circle cx="26" cy="26" r="23" fill="#FF6B35" stroke="white" stroke-width="3">' +
+                        '<animate attributeName="r" from="21" to="25" dur="1.5s" repeatCount="indefinite"/>' +
+                        '</circle>' +
+                        '<text x="26" y="33" text-anchor="middle" font-size="22">🚚</text></svg>'),
+                    scaledSize: new google.maps.Size(52, 52),
+                    anchor: new google.maps.Point(26, 26)
                 },
                 animation: google.maps.Animation.BOUNCE
             });
 
             const packageInfo = new google.maps.InfoWindow({
-                content: `<div style="padding:8px; font-family:Segoe UI,sans-serif;">
-                    <strong style="color:#FF6B35;">🚚 Your Package</strong><br>
+                content: `<div style="padding:8px 12px; font-family:'Segoe UI',sans-serif;">
+                    <strong style="color:#FF6B35; font-size:14px;">🚚 Your Package</strong><br>
                     <span style="font-size:12px; color:#666;">Currently in transit</span><br>
-                    <span style="font-size:12px; color:#008080; font-weight:600;">${Math.round(tracking.progress * 100)}% of the way there</span>
+                    <span style="font-size:12px; color:#008080; font-weight:700;">${Math.round(tracking.progress * 100)}% of the way there</span>
                 </div>`
             });
             packageMarker.addListener('click', () => packageInfo.open(trackingMap, packageMarker));
-
-            // Stop bounce after 3 seconds for a cleaner look
             setTimeout(() => packageMarker.setAnimation(null), 3000);
         }
 
         // Waypoint markers (small dots)
         tracking.waypoints.forEach((wp, i) => {
-            if (i === 0 || i === tracking.waypoints.length - 1) return; // Skip origin/dest
+            if (i === 0 || i === tracking.waypoints.length - 1) return;
             new google.maps.Marker({
                 position: { lat: wp.lat, lng: wp.lng },
                 map: trackingMap,
                 title: wp.label,
                 icon: {
                     path: google.maps.SymbolPath.CIRCLE,
-                    scale: 5,
+                    scale: 6,
                     fillColor: wp.reached ? '#008080' : '#CBD5E1',
                     fillOpacity: 1,
                     strokeColor: '#FFFFFF',
@@ -1593,12 +1614,35 @@
             });
         });
 
-        // Fit bounds to show full route
+        // Fit bounds
         const bounds = new google.maps.LatLngBounds();
         bounds.extend({ lat: origin.lat, lng: origin.lng });
         bounds.extend({ lat: dest.lat, lng: dest.lng });
         if (current) bounds.extend({ lat: current.lat, lng: current.lng });
         trackingMap.fitBounds(bounds, { padding: 60 });
+    }
+
+    // Fallback polyline route if Directions API is unavailable
+    function drawFallbackRoute(tracking, current) {
+        const routePath = tracking.waypoints.map(wp => ({ lat: wp.lat, lng: wp.lng }));
+        new google.maps.Polyline({
+            path: routePath,
+            geodesic: true,
+            strokeColor: '#CBD5E1',
+            strokeOpacity: 0.8,
+            strokeWeight: 4,
+            map: trackingMap
+        });
+        const completedPath = tracking.waypoints.filter(wp => wp.reached).map(wp => ({ lat: wp.lat, lng: wp.lng }));
+        if (current) completedPath.push({ lat: current.lat, lng: current.lng });
+        new google.maps.Polyline({
+            path: completedPath,
+            geodesic: true,
+            strokeColor: '#008080',
+            strokeOpacity: 1,
+            strokeWeight: 5,
+            map: trackingMap
+        });
     }
 
     function closeTrackingModal() {

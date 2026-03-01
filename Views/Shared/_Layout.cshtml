@@ -10,17 +10,18 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <style id="sidebar-preload-style">
-        /* Inline backup: suppress submenu transitions until JS marks ready */
+        /* Suppress ALL sidebar transitions until JS marks ready */
+        body.sidebar-loading .sidebar,
+        body.sidebar-loading .main-content,
         body.sidebar-loading .nav-submenu,
         body.sidebar-loading .nav-item-arrow { transition: none !important; }
     </style>
     <script>
-        // Pre-load sidebar open sections into memory so the IIFE in site.js
-        // can apply them before the first paint.
         (function() {
             try {
                 window.__sidebarOpenSections = JSON.parse(localStorage.getItem('sidebarOpenSections') || '{}');
             } catch(e) { window.__sidebarOpenSections = {}; }
+            window.__sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
         })();
     </script>
 </head>

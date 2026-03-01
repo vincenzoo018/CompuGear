@@ -4,8 +4,9 @@
 // Sidebar State Restoration (runs immediately, no flicker)
 // =====================================================
 (function () {
-    // Read stored open sections (set by inline <script> in layout)
+    // Read pre-cached state from inline <script> in layout head
     var openSections = window.__sidebarOpenSections || {};
+    var wasCollapsed = window.__sidebarCollapsed || false;
 
     function applySidebarState() {
         var sidebar = document.getElementById('sidebar');
@@ -15,8 +16,8 @@
             return;
         }
 
-        // Restore collapsed state
-        if (localStorage.getItem('sidebarCollapsed') === 'true') {
+        // Restore collapsed state instantly (transitions suppressed by sidebar-loading)
+        if (wasCollapsed) {
             sidebar.classList.add('collapsed');
         }
 
@@ -34,7 +35,7 @@
             }
         });
 
-        // Double-rAF: wait for the browser to paint the expanded state,
+        // Double-rAF: wait for the browser to paint the restored state,
         // THEN re-enable CSS transitions by removing sidebar-loading.
         requestAnimationFrame(function () {
             requestAnimationFrame(function () {
@@ -63,10 +64,6 @@ document.addEventListener('DOMContentLoaded', function () {
             sidebar.classList.toggle('collapsed');
             localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
         });
-
-        if (localStorage.getItem('sidebarCollapsed') === 'true') {
-            sidebar.classList.add('collapsed');
-        }
     }
 
     // ---- Submenu Toggle with localStorage ----
