@@ -783,6 +783,71 @@ namespace CompuGear.Controllers
             if (order == null)
                 return Json(new { success = false, message = "Order not found" });
 
+            // ===== COD (Cash on Delivery) — skip PayMongo, keep order as Confirmed/Unpaid =====
+            if (string.Equals(model.PaymentMethod, "cod", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var strategy = _context.Database.CreateExecutionStrategy();
+                    await strategy.ExecuteAsync(async () =>
+                    {
+                        order.PaymentStatus = "Unpaid";
+                        order.OrderStatus = "Confirmed";
+                        order.ConfirmedAt = DateTime.UtcNow;
+                        order.PaymentMethod = "COD";
+                        order.PaymentReference = $"COD-{DateTime.Now:yyyyMMddHHmmss}-{order.OrderId}";
+                        order.UpdatedAt = DateTime.UtcNow;
+
+                        // Update customer stats
+                        var cust = await _context.Customers.AsTracking().FirstOrDefaultAsync(c => c.CustomerId == order.CustomerId);
+                        if (cust != null)
+                        {
+                            cust.TotalOrders += 1;
+                        }
+
+                        // Update linked invoice to Unpaid/COD
+                        var invoice = await _context.Invoices.AsTracking().FirstOrDefaultAsync(i => i.OrderId == order.OrderId);
+                        if (invoice != null)
+                        {
+                            invoice.Status = "Unpaid";
+                            invoice.UpdatedAt = DateTime.UtcNow;
+                        }
+
+                        // Create a notification for the customer
+                        var userId = HttpContext.Session.GetInt32("UserId") ?? customer.UserId ?? 0;
+                        if (userId > 0)
+                        {
+                            _context.Notifications.Add(new Notification
+                            {
+                                UserId = userId,
+                                Type = "order",
+                                Title = $"Order {order.OrderNumber} Confirmed (COD)",
+                                Message = $"Your COD order for ₱{order.TotalAmount:N2} has been confirmed. Please prepare the exact amount for the courier.",
+                                Link = "/CustomerPortal/Orders",
+                                IsRead = false,
+                                CreatedAt = DateTime.UtcNow
+                            });
+                        }
+
+                        await _context.SaveChangesAsync();
+                    });
+
+                    return Json(new
+                    {
+                        success = true,
+                        paymentIntentId = order.PaymentReference,
+                        orderNumber = order.OrderNumber,
+                        totalAmount = order.TotalAmount,
+                        message = "Order confirmed! Pay when your order arrives."
+                    });
+                }
+                catch (Exception ex)
+                {
+                    return Json(new { success = false, message = "Error processing COD order: " + ex.Message });
+                }
+            }
+
+            // ===== Online payment (card, gcash, grab_pay, paymaya) via PayMongo =====
             var paymongoSecretKey = _configuration["PayMongo:SecretKey"] ?? "sk_test_SakyRyg4R6hXeni4x5EaNUow";
             string? paymentIntentId = null;
 
@@ -885,6 +950,22 @@ namespace CompuGear.Controllers
                             UpdatedAt = DateTime.UtcNow
                         };
                         _context.Payments.Add(paymentRecord);
+                    }
+
+                    // Create a notification for the customer
+                    var userId2 = HttpContext.Session.GetInt32("UserId") ?? customer.UserId ?? 0;
+                    if (userId2 > 0)
+                    {
+                        _context.Notifications.Add(new Notification
+                        {
+                            UserId = userId2,
+                            Type = "order",
+                            Title = $"Payment Confirmed — {order.OrderNumber}",
+                            Message = $"Your payment of ₱{order.TotalAmount:N2} via {model.PaymentMethod ?? "card"} was successful!",
+                            Link = "/CustomerPortal/Orders",
+                            IsRead = false,
+                            CreatedAt = DateTime.UtcNow
+                        });
                     }
 
                     await _context.SaveChangesAsync();
@@ -1282,72 +1363,88 @@ namespace CompuGear.Controllers
         [HttpPost]
         public async Task<IActionResult> SendChatMessage([FromBody] ChatMessageModel model)
         {
-            var customer = await GetCurrentCustomerAsync();
-            var customerId = customer?.CustomerId ?? 0;
-            var companyId = GetPortalCompanyId();
-
-            // Find or create chat session for this customer and company
-            var sessionQuery = _context.ChatSessions
-                .Where(s => s.CustomerId == customerId && s.Status == "Active");
-
-            var session = await sessionQuery.FirstOrDefaultAsync();
-
-            if (session == null)
+            try
             {
-                session = new ChatSession
+                var customer = await GetCurrentCustomerAsync();
+                var customerId = customer?.CustomerId ?? 0;
+
+                // Find or create chat session
+                var session = await _context.ChatSessions
+                    .Where(s => s.CustomerId == customerId && s.Status == "Active")
+                    .FirstOrDefaultAsync();
+
+                if (session == null)
                 {
-                    CustomerId = customer?.CustomerId,
-                    VisitorId = model.VisitorId ?? Guid.NewGuid().ToString(),
-                    SessionToken = Guid.NewGuid().ToString(),
-                    Status = "Active",
-                    StartedAt = DateTime.UtcNow,
-                    Source = "Website"
-                };
-                _context.ChatSessions.Add(session);
-                await _context.SaveChangesAsync();
-            }
-
-            // Save customer message
-            var customerMessage = new ChatMessage
-            {
-                SessionId = session.SessionId,
-                SenderType = "Customer",
-                Message = model.Message,
-                MessageType = "Text",
-                CreatedAt = DateTime.UtcNow
-            };
-            _context.ChatMessages.Add(customerMessage);
-
-            // Generate AI response based on message content
-            var aiResponse = GenerateAIResponse(model.Message);
-
-            var botMessage = new ChatMessage
-            {
-                SessionId = session.SessionId,
-                SenderType = "Bot",
-                Message = aiResponse.Response,
-                MessageType = "Text",
-                Intent = aiResponse.Intent,
-                Confidence = aiResponse.Confidence,
-                CreatedAt = DateTime.UtcNow.AddMilliseconds(100)
-            };
-            _context.ChatMessages.Add(botMessage);
-
-            session.TotalMessages += 2;
-            await _context.SaveChangesAsync();
-
-            return Json(new
-            {
-                success = true,
-                data = new
-                {
-                    sessionId = session.SessionId,
-                    response = aiResponse.Response,
-                    intent = aiResponse.Intent,
-                    quickReplies = aiResponse.QuickReplies,
-                    shouldTransferToAgent = aiResponse.ShouldTransferToAgent
+                    session = new ChatSession
+                    {
+                        CustomerId = customer?.CustomerId,
+                        VisitorId = model.VisitorId ?? Guid.NewGuid().ToString(),
+                        SessionToken = Guid.NewGuid().ToString(),
+                        Status = "Active",
+                        StartedAt = DateTime.UtcNow,
+                        Source = "Website"
+                    };
+                    _context.ChatSessions.Add(session);
+                    await _context.SaveChangesAsync();
                 }
-            });
+
+                // Save customer message
+                _context.ChatMessages.Add(new ChatMessage
+                {
+                    SessionId = session.SessionId,
+                    SenderType = "Customer",
+                    Message = model.Message,
+                    MessageType = "Text",
+                    CreatedAt = DateTime.UtcNow
+                });
+
+                // Generate AI response
+                var aiResponse = GenerateAIResponse(model.Message);
+
+                _context.ChatMessages.Add(new ChatMessage
+                {
+                    SessionId = session.SessionId,
+                    SenderType = "Bot",
+                    Message = aiResponse.Response,
+                    MessageType = "Text",
+                    Intent = aiResponse.Intent,
+                    Confidence = aiResponse.Confidence,
+                    CreatedAt = DateTime.UtcNow.AddMilliseconds(100)
+                });
+
+                session.TotalMessages += 2;
+                await _context.SaveChangesAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        sessionId = session.SessionId,
+                        response = aiResponse.Response,
+                        intent = aiResponse.Intent,
+                        quickReplies = aiResponse.QuickReplies,
+                        shouldTransferToAgent = aiResponse.ShouldTransferToAgent
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"SendChatMessage error: {ex.Message}");
+                var fallback = GenerateAIResponse(model?.Message ?? "");
+                return Json(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        sessionId = (int?)null,
+                        response = fallback.Response,
+                        intent = fallback.Intent,
+                        quickReplies = fallback.QuickReplies,
+                        shouldTransferToAgent = fallback.ShouldTransferToAgent
+                    }
+                });
+            }
         }
 
         // POST: /CustomerPortal/TransferToAgent
@@ -1654,115 +1751,325 @@ namespace CompuGear.Controllers
             return Json(new { success = true, data = chats });
         }
 
+        private static readonly Random _rand = new();
+
         private (string Response, string Intent, decimal Confidence, string[] QuickReplies, bool ShouldTransferToAgent) GenerateAIResponse(string message)
         {
-            var lowerMessage = message.ToLower();
+            if (string.IsNullOrWhiteSpace(message))
+                return ("I didn't catch that. Could you type your question again? 😊", "empty", 0.50m, new[] { "📦 Track Order", "🛒 Browse Products", "👤 Live Agent" }, false);
 
-            // Order related queries
-            if (lowerMessage.Contains("order") || lowerMessage.Contains("delivery") || lowerMessage.Contains("shipping") || lowerMessage.Contains("track"))
+            var msg = message.ToLower().Trim();
+
+            // ========== GREETINGS ==========
+            if (IsMatch(msg, "^(hi|hello|hey|hola|yo|sup|kumusta|musta|magandang|good morning|good afternoon|good evening|gandang|uy|bro|sis|pre|pare|mars|boss|idol)"))
             {
-                return (
-                    "I can help you with your order! You can track your orders from the 'My Orders' section in your dashboard. If you have a specific order number, please share it and I'll look up the details for you. Would you like me to connect you with a support agent for more assistance?",
-                    "order_inquiry",
-                    0.92m,
-                    new[] { "View My Orders", "Track an Order", "Talk to Agent" },
-                    false
-                );
+                var greetings = new[]
+                {
+                    "Hello! 👋 Welcome to CompuGear! I'm your AI assistant and I'm here to make your experience awesome. What can I help you with today?",
+                    "Hey there! 😊 Welcome to CompuGear Support! Whether it's orders, products, payments, or tech questions — I've got you covered! How can I help?",
+                    "Hi! 👋 Great to see you! I'm the CompuGear AI assistant. Ask me anything — from order tracking to product recommendations. What do you need?",
+                    "Kumusta! 👋 Welcome sa CompuGear! I'm here to help you with anything — orders, products, payments, at marami pa. Ano ang maitutulong ko? 😊"
+                };
+                return (Pick(greetings), "greeting", 0.95m, new[] { "🛒 Browse Products", "📦 Track Order", "🏷️ View Promotions", "❓ Get Help" }, false);
             }
 
-            // Return/Refund queries
-            if (lowerMessage.Contains("return") || lowerMessage.Contains("refund") || lowerMessage.Contains("exchange"))
+            // ========== FILIPINO/BISAYA LANGUAGE DETECTION ==========
+            if (IsMatch(msg, "(ano|paano|saan|magkano|pwede|puwede|bakit|kailan|mayroon|meron|gusto|kailangan|salamat|maraming salamat|opo|oo|hindi|wala|yung|yun|dito|doon|lang|naman|po|ba|nga|pala|talaga|sige|tubag|palihug|unsaon|asa|pila|unsa|nganong|kanus-a|aduna|naa|ganahan|kinahanglan|daghang salamat|bitaw|dili|walay|diha|didto|ra|man|ug|gyud|lagi|sigi)"))
             {
-                return (
-                    "I understand you'd like to process a return or refund. Our return policy allows returns within 7 days of delivery for most products. For warranty claims, you can initiate a return from your order details page. Would you like me to explain the process or connect you with our support team?",
-                    "return_refund",
-                    0.89m,
-                    new[] { "Return Policy", "Start Return", "Talk to Agent" },
-                    false
-                );
+                // Check specific Filipino intents first before giving generic Filipino response
+                if (IsMatch(msg, "(order|deliver|ship|track|padala|bili|binili|order ko|pinadala|nasaan|san na|saan na|asa na)"))
+                {
+                    var responses = new[]
+                    {
+                        "Pwede ko i-check ang order mo! 📦 Punta ka lang sa 'My Orders' section sa dashboard mo at makikita mo ang status ng lahat ng orders mo. Kung may specific order number ka, i-share mo lang! 😊",
+                        "Sige, tulungan kita sa order mo! 📦 Sa 'My Orders' page mo makikita ang tracking info at delivery status. May order number ka ba na gusto mong i-track?"
+                    };
+                    return (Pick(responses), "order_inquiry", 0.90m, new[] { "📦 View My Orders", "🔍 Track an Order", "👤 Talk to Agent" }, false);
+                }
+                if (IsMatch(msg, "(bayad|payment|magbayad|pambayad|gcash|maya|card|pera|singil|bayaran)"))
+                {
+                    return ("Maraming payment methods ang CompuGear! 💳 Pwede kang magbayad gamit ang:\n\n• Credit/Debit Card (Visa, Mastercard, JCB)\n• GCash\n• GrabPay\n• Maya (PayMaya)\n• Bank Transfer\n• Cash on Delivery (COD)\n\nLahat ng transactions ay secure at encrypted sa PayMongo. Ano ang preferred payment method mo? 😊",
+                        "payment_inquiry", 0.92m, new[] { "💳 Payment Methods", "🛒 Go to Checkout", "👤 Talk to Agent" }, false);
+                }
+                if (IsMatch(msg, "(ibalik|refund|return|palitan|sira|broken|defect|nasira|exchange)"))
+                {
+                    return ("Pwede kang mag-return ng item within 7 days of delivery! 🔄 Para sa warranty claims, pumunta ka sa Support → Create Ticket → piliin ang 'Warranty Claims'. Kung may sira ang product, mag-attach ka ng photos para mas mabilis ang process. Gusto mo bang tulungan ka namin? 😊",
+                        "return_refund", 0.90m, new[] { "📋 Return Policy", "📝 Submit Ticket", "👤 Talk to Agent" }, false);
+                }
+                if (IsMatch(msg, "(promo|discount|sale|mura|barat|libre|free|tawad|tipid)"))
+                {
+                    return ("May mga hot deals ang CompuGear ngayon! 🔥\n\n🏷️ SUMMER10 — 10% off sa orders over ₱10,000\n🎮 GAMER2026 — ₱2,000 off sa gaming bundles\n🚚 FREESHIP — Free shipping sa orders over ₱5,000\n🎉 WELCOME500 — ₱500 off sa first order (min ₱3,000)\n\nTingnan mo ang Promotions page para sa latest deals! 😊",
+                        "promo_inquiry", 0.93m, new[] { "🏷️ View Promotions", "🔥 Current Deals", "🛒 Shop Now" }, false);
+                }
+                if (IsMatch(msg, "(product|laptop|computer|pc|gaming|mouse|keyboard|monitor|ram|gpu|ssd|bili|bilhin|bibilhin|recommend)"))
+                {
+                    return ("Maraming magagandang products ang CompuGear! 🖥️ Meron kaming:\n\n• 💻 Laptops & Desktops\n• 🎮 Gaming Gear (Razer, Logitech)\n• ⚡ Components (Intel, AMD, NVIDIA)\n• 🖱️ Peripherals (keyboard, mouse, headset)\n• 💾 Storage (Samsung, WD SSDs)\n\nPumunta ka sa Products page para ma-browse ang full catalog. Ano ang hanap mo specifically? 😊",
+                        "product_inquiry", 0.88m, new[] { "🛒 Browse Products", "🎮 Gaming Gear", "💻 Components" }, false);
+                }
+
+                // Generic Filipino response
+                var filipinoResponses = new[]
+                {
+                    "Sige, tulungan kita! 😊 Pwede akong mag-assist sa orders, products, payments, returns, at iba pa. Ano specifically ang kailangan mo?",
+                    "Oo naman! 😊 Nandito ako para tumulong. Ano ang gusto mong malaman — order status, product info, payment options, o promotions?",
+                    "Syempre! 😊 I'm here to help. Sabihin mo lang kung ano ang kailangan mo — mula sa order tracking hanggang product recommendations!"
+                };
+                return (Pick(filipinoResponses), "filipino_general", 0.85m, new[] { "📦 Track Order", "🛒 Products", "💳 Payments", "🏷️ Promos" }, false);
             }
 
-            // Product queries
-            if (lowerMessage.Contains("product") || lowerMessage.Contains("price") || lowerMessage.Contains("stock") || lowerMessage.Contains("available"))
+            // ========== ORDER / DELIVERY / SHIPPING / TRACKING ==========
+            if (IsMatch(msg, "(order|delivery|deliver|shipping|shipped|ship|track|tracking|package|parcel|dispatch|courier|status|where.*(my|order|package)|eta|estimated|when.*arrive|when.*get|when.*deliver|asan.*order|nasaan.*order)"))
             {
-                return (
-                    "I'd be happy to help you find products! You can browse our catalog in the Products section. We have a wide range of computer accessories, gaming gear, and components. Is there a specific product category or brand you're looking for?",
-                    "product_inquiry",
-                    0.88m,
-                    new[] { "Browse Products", "Gaming Gear", "Components", "Accessories" },
-                    false
-                );
+                if (IsMatch(msg, "(cancel|cancell)"))
+                {
+                    return ("You can cancel an order before it's shipped! 🚫 Go to 'My Orders', click on the order, and select 'Cancel Order'. If it's already shipped, you'll need to process a return after delivery. Need help with a specific order?",
+                        "order_cancel", 0.92m, new[] { "📦 View My Orders", "📝 Submit Ticket", "👤 Talk to Agent" }, false);
+                }
+                if (IsMatch(msg, "(how long|how many days|when|eta|gaano|ilang araw|kailan)"))
+                {
+                    return ("Here are our delivery timelines! 🚚\n\n📍 Metro Manila: 1–3 business days\n🏘️ Provincial: 3–7 business days\n🏔️ Remote areas: 7–14 business days\n\nOnce shipped, you'll get a tracking number via email and can track it in real-time from your 'My Orders' page with our Google Maps tracker! 📍",
+                        "delivery_time", 0.94m, new[] { "📦 View My Orders", "🔍 Track Order", "👤 Talk to Agent" }, false);
+                }
+                var orderResponses = new[]
+                {
+                    "I can help with your order! 📦 To check your order status:\n\n1️⃣ Go to 'My Orders' in your dashboard\n2️⃣ Click on any order to see full details\n3️⃣ Use the '📍 Track My Order' button for real-time GPS tracking\n\nIf you have a specific order number, feel free to share it!",
+                    "Let me help you with your order! 📦 You can view all your orders and track them in real-time from the 'My Orders' section. We even have live Google Maps tracking for shipped orders! Would you like to go there now?"
+                };
+                return (Pick(orderResponses), "order_inquiry", 0.92m, new[] { "📦 View My Orders", "🔍 Track an Order", "👤 Talk to Agent" }, false);
             }
 
-            // Payment queries
-            if (lowerMessage.Contains("payment") || lowerMessage.Contains("pay") || lowerMessage.Contains("gcash") || lowerMessage.Contains("card"))
+            // ========== RETURNS / REFUNDS / WARRANTY ==========
+            if (IsMatch(msg, "(return|refund|exchange|warranty|broken|defective|defect|damaged|damage|not working|doesn't work|doesn.t work|malfunction|replace|replacement|sira|basag|di gumagana)"))
             {
-                return (
-                    "We accept multiple payment methods including Credit/Debit Cards, GCash, Maya (PayMaya), GrabPay, and Bank Transfer through PayMongo. All transactions are secure and encrypted. Is there a specific payment method you'd like to use?",
-                    "payment_inquiry",
-                    0.91m,
-                    new[] { "Payment Methods", "Checkout", "Talk to Agent" },
-                    false
-                );
+                if (IsMatch(msg, "(warranty|how long.*warranty|warranty.*period|covered)"))
+                {
+                    return ("Here are our warranty periods! 🛡️\n\n• 🖥️ Processors (Intel/AMD): 3 years\n• 🎮 Graphics Cards: 3 years\n• 💾 RAM: Lifetime warranty\n• 💿 Storage/SSD: 5 years\n• ⌨️ Peripherals: 1–2 years\n\n❌ Not covered: physical/water damage, unauthorized modifications, normal wear & tear.\n\nTo file a claim: Support → Create Ticket → 'Warranty Claims'. Attach photos of the issue! 📸",
+                        "warranty_inquiry", 0.93m, new[] { "📝 Submit Ticket", "📋 My Tickets", "👤 Talk to Agent" }, false);
+                }
+                if (IsMatch(msg, "(how.*return|process|step|procedure|paano.*ibalik)"))
+                {
+                    return ("Here's how to return an item! 🔄\n\n1️⃣ Make sure it's within 7 days of delivery\n2️⃣ Go to Support → Submit Ticket\n3️⃣ Select 'Returns & Refunds' category\n4️⃣ Provide your order number and reason\n5️⃣ Attach photos if the item is damaged\n\n💰 Refunds are processed via original payment method (GCash, Card, etc.). Need help starting a return?",
+                        "return_process", 0.91m, new[] { "📝 Submit Ticket", "📦 View Orders", "👤 Talk to Agent" }, false);
+                }
+                var returnResponses = new[]
+                {
+                    "I can help with returns and refunds! 🔄 Our policy allows returns within 7 days of delivery for unopened items. For defective products, you can file a warranty claim anytime within the warranty period. Would you like me to guide you through the process?",
+                    "Sure, let me help with that! 🔄 You can return items within 7 days of delivery. For defects and warranty issues, submit a support ticket with photos and we'll process it quickly. What's the issue with your item?"
+                };
+                return (Pick(returnResponses), "return_refund", 0.89m, new[] { "📋 Return Policy", "📝 Submit Ticket", "👤 Talk to Agent" }, false);
             }
 
-            // Promo/Discount queries
-            if (lowerMessage.Contains("promo") || lowerMessage.Contains("discount") || lowerMessage.Contains("sale") || lowerMessage.Contains("deal"))
+            // ========== PRODUCTS / RECOMMENDATIONS ==========
+            if (IsMatch(msg, "(product|laptop|desktop|computer|pc|gaming|mouse|keyboard|monitor|headset|headphone|ram|gpu|graphics card|cpu|processor|motherboard|ssd|hard drive|storage|component|peripheral|accessory|recommend|suggestion|suggest|what.*buy|best|top|good|budget|cheap|affordable|mahal|mura)"))
             {
-                return (
-                    "Great timing! We have several active promotions right now including Gaming Week Sale with up to 30% off! Check out our Promotions page for all current deals and discount codes. Don't miss out on these limited-time offers!",
-                    "promo_inquiry",
-                    0.93m,
-                    new[] { "View Promotions", "Current Deals", "Gaming Sale" },
-                    false
-                );
+                if (IsMatch(msg, "(gaming|game|gamer|play|fps|esport)"))
+                {
+                    return ("Looking for gaming gear? 🎮 We've got you covered!\n\n🖥️ **GPUs:** NVIDIA RTX 4090, RTX 4070, AMD RX 7900\n⌨️ **Keyboards:** Razer BlackWidow V4 Pro (₱11,000)\n🖱️ **Mice:** Logitech G502 X Plus (₱6,500)\n🎧 **Headsets:** Top brands from Razer, Corsair, HyperX\n\nVisit our Products page and filter by 'Gaming' category. We also have gaming bundles with special discounts! 🔥",
+                        "gaming_products", 0.91m, new[] { "🎮 Gaming Gear", "🛒 Browse Products", "🏷️ View Deals" }, false);
+                }
+                if (IsMatch(msg, "(laptop|notebook)"))
+                {
+                    return ("We have great laptops for every need! 💻\n\n• 🎮 Gaming Laptops — ASUS ROG, MSI, Acer Predator\n• 💼 Business Laptops — HP, Dell, Lenovo ThinkPad\n• 📚 Budget-friendly — Acer Aspire, Lenovo IdeaPad\n\nBrowse our Products page and filter by 'Computer Systems' to find the perfect one. What's your budget range? 😊",
+                        "laptop_inquiry", 0.90m, new[] { "💻 Browse Laptops", "🛒 All Products", "🎮 Gaming Laptops" }, false);
+                }
+                if (IsMatch(msg, "(gpu|graphics|video card|rtx|rx |nvidia|amd.*gpu|radeon)"))
+                {
+                    return ("Great choice! 🎮 Here are our popular GPUs:\n\n🔥 NVIDIA GeForce RTX 4090 — ₱120,000 (Beast mode!)\n⚡ NVIDIA RTX 4070 Ti — Great for 1440p gaming\n💰 AMD RX 7800 XT — Best value for gamers\n\nAll GPUs come with 3-year warranty. Check the Products page → filter by 'Components' for the full lineup! Want a recommendation based on your budget?",
+                        "gpu_inquiry", 0.91m, new[] { "🛒 Browse GPUs", "🎮 Gaming Setup", "💰 Budget Options" }, false);
+                }
+                if (IsMatch(msg, "(cpu|processor|intel|amd|ryzen|core i)"))
+                {
+                    return ("Looking for a processor? ⚡ Top picks:\n\n🏆 Intel Core i7-13700K — ₱22,500 (Great all-rounder)\n🔥 AMD Ryzen 7 7800X3D — Best for gaming\n💰 Intel Core i5-13600K — Best value\n\nAll processors come with 3-year warranty. Check our Components section for the full range. What's your use case — gaming, work, or content creation? 🤔",
+                        "cpu_inquiry", 0.91m, new[] { "⚡ Browse CPUs", "🛒 All Components", "🎮 Gaming Build" }, false);
+                }
+                if (IsMatch(msg, "(cheap|budget|affordable|mura|tipid|under.*(5|10|15|20).*(k|thousand|000))"))
+                {
+                    return ("Great news — we have awesome budget options! 💰\n\n⌨️ Quality keyboards from ₱1,500\n🖱️ Gaming mice from ₱2,000\n🎧 Headsets from ₱1,800\n💾 SSDs from ₱2,500\n\n🏷️ Plus use promo code WELCOME500 for ₱500 off your first order (min ₱3,000)! Check our Products page and sort by 'Price: Low to High'. 😊",
+                        "budget_inquiry", 0.88m, new[] { "🛒 Browse Products", "🏷️ View Promos", "💰 Best Deals" }, false);
+                }
+                var productResponses = new[]
+                {
+                    "We have a huge selection of tech products! 🖥️\n\n• 💻 Computer Systems — Desktops & Laptops\n• ⚡ Components — CPUs, GPUs, RAM, Motherboards, SSDs\n• ⌨️ Peripherals — Keyboards, Mice, Monitors, Headsets\n• 🎮 Gaming — Full gaming gear lineup\n• 📡 Networking — Routers, Switches\n\nTop brands: Intel, AMD, NVIDIA, ASUS, Razer, Logitech, Corsair, Samsung & more. Browse our Products page to explore! 😊",
+                    "I'd love to help you find the right product! 🛒 We carry all major brands — Intel, AMD, NVIDIA, ASUS, MSI, Razer, Logitech, and more. What are you looking for? Tell me your needs (gaming, work, budget) and I'll point you in the right direction! 😊"
+                };
+                return (Pick(productResponses), "product_inquiry", 0.88m, new[] { "🛒 Browse Products", "🎮 Gaming Gear", "⚡ Components", "💰 Budget Picks" }, false);
             }
 
-            // Technical support
-            if (lowerMessage.Contains("help") || lowerMessage.Contains("support") || lowerMessage.Contains("issue") || lowerMessage.Contains("problem"))
+            // ========== PAYMENT ==========
+            if (IsMatch(msg, "(payment|pay|checkout|gcash|grabpay|grab pay|maya|paymaya|credit card|debit card|visa|mastercard|jcb|bank transfer|cod|cash on delivery|bayad|how.*pay|can i pay|pambayad|installment)"))
             {
-                return (
-                    "I'm here to help! Could you please describe the issue you're experiencing? I'll do my best to assist you. If you need specialized technical support, I can also connect you with our support team who can provide more detailed assistance.",
-                    "support_request",
-                    0.85m,
-                    new[] { "Technical Support", "Submit Ticket", "Talk to Agent" },
-                    false
-                );
+                if (IsMatch(msg, "(installment|monthly|hulugan)"))
+                {
+                    return ("Currently, we process payments in full through our PayMongo gateway. 💳 However, if your credit card supports installment plans, you may be able to convert the transaction through your bank. For large orders, you can contact our support team to discuss options! 😊",
+                        "installment_inquiry", 0.85m, new[] { "💳 Payment Methods", "👤 Talk to Agent", "🛒 Checkout" }, false);
+                }
+                if (IsMatch(msg, "(failed|error|declined|rejected|not working|di pumasa|hindi pumasok|problem)"))
+                {
+                    return ("Sorry to hear about the payment issue! 😣 Here are some things to try:\n\n1️⃣ Check your balance/credit limit\n2️⃣ Make sure your card isn't expired\n3️⃣ Try a different payment method (GCash, Maya, etc.)\n4️⃣ Clear your browser cache and try again\n\nIf it still doesn't work, our support team can help! 🔧",
+                        "payment_failed", 0.90m, new[] { "💳 Try Again", "📝 Submit Ticket", "👤 Talk to Agent" }, false);
+                }
+                return ("We accept multiple secure payment methods! 💳\n\n• 💳 Credit/Debit Cards (Visa, Mastercard, JCB)\n• 📱 GCash\n• 🟢 GrabPay\n• 💜 Maya (PayMaya)\n• 🏦 Bank Transfer\n• 💵 Cash on Delivery (COD)\n\nAll transactions are processed securely through PayMongo with encryption. You can choose your preferred method at checkout! 😊",
+                    "payment_inquiry", 0.91m, new[] { "💳 Payment Methods", "🛒 Go to Checkout", "👤 Talk to Agent" }, false);
             }
 
-            // Greeting
-            if (lowerMessage.Contains("hi") || lowerMessage.Contains("hello") || lowerMessage.Contains("hey") || lowerMessage.Contains("good"))
+            // ========== PROMOTIONS / DISCOUNTS ==========
+            if (IsMatch(msg, "(promo|promotion|discount|coupon|code|voucher|sale|deal|offer|free shipping|flash sale|mega sale|percent off|% off|tipid|barat|libre|tawad)"))
             {
-                return (
-                    "Hello! 👋 Welcome to CompuGear Support! I'm your AI assistant and I'm here to help you with orders, products, payments, returns, and more. How can I assist you today?",
-                    "greeting",
-                    0.95m,
-                    new[] { "Browse Products", "Track Order", "View Promotions", "Get Support" },
-                    false
-                );
+                return ("Hot deals happening now! 🔥\n\n🏷️ **SUMMER10** — 10% off orders over ₱10,000 (max ₱15,000 discount)\n🎮 **GAMER2026** — ₱2,000 off gaming bundles over ₱15,000\n🚚 **FREESHIP** — Free shipping on orders over ₱5,000\n🎉 **WELCOME500** — ₱500 off your first order (min ₱3,000)\n⚡ **FLASH25** — 25% off on Flash Fridays!\n\n💡 Enter your promo code in the cart before checkout. Visit our Promotions page for all active deals! 😊",
+                    "promo_inquiry", 0.93m, new[] { "🏷️ View Promotions", "🔥 Flash Deals", "🛒 Shop Now" }, false);
             }
 
-            // Agent request
-            if (lowerMessage.Contains("agent") || lowerMessage.Contains("human") || lowerMessage.Contains("person") || lowerMessage.Contains("representative"))
+            // ========== SUPPORT / TICKETS ==========
+            if (IsMatch(msg, "(help|support|assist|issue|problem|trouble|bug|error|not working|broken|ticket|submit.*ticket|create.*ticket|file.*complaint|complaint|concern|tulong|saklolo)"))
             {
-                return (
-                    "I'll connect you with a customer support representative right away. Please hold on while I transfer your chat.",
-                    "agent_request",
-                    0.98m,
-                    new string[] { },
-                    true
-                );
+                if (IsMatch(msg, "(ticket|submit|create|file|how.*ticket)"))
+                {
+                    return ("To submit a support ticket: 📝\n\n1️⃣ Go to Support → Submit Ticket\n2️⃣ Choose a category (Order Issue, Technical Support, Returns, etc.)\n3️⃣ Describe your issue in detail\n4️⃣ Attach any relevant screenshots or photos\n5️⃣ Submit and you'll get a ticket number!\n\nOur team will respond based on priority — urgent orders within 12 hours, general inquiries within 48–72 hours. 😊",
+                        "ticket_info", 0.92m, new[] { "📝 Submit Ticket", "📋 My Tickets", "👤 Talk to Agent" }, false);
+                }
+                var supportResponses = new[]
+                {
+                    "I'm here to help! 🙋 What issue are you experiencing? I can assist with:\n\n• 📦 Order problems\n• 💳 Payment issues\n• 🔄 Returns & refunds\n• 🛡️ Warranty claims\n• 🖥️ Product questions\n• 🔧 Technical issues\n\nDescribe your problem and I'll do my best to help, or I can connect you with a live agent! 😊",
+                    "No worries, I'll help you out! 🔧 Tell me what's going on and I'll guide you to a solution. If it's something I can't handle, I can instantly connect you with our support team or help you submit a ticket."
+                };
+                return (Pick(supportResponses), "support_request", 0.85m, new[] { "📝 Submit Ticket", "📋 My Tickets", "👤 Talk to Agent" }, false);
             }
 
-            // Default response
-            return (
-                "Thank you for your message! I'm still learning, but I want to make sure you get the help you need. Could you please rephrase your question, or would you like me to connect you with a support agent for personalized assistance?",
-                "unknown",
-                0.60m,
-                new[] { "Browse Products", "View Orders", "Talk to Agent" },
-                false
-            );
+            // ========== ACCOUNT / PROFILE ==========
+            if (IsMatch(msg, "(account|profile|password|login|log in|sign in|sign up|register|email|address|update.*info|change.*password|forgot.*password|edit profile|my account|settings)"))
+            {
+                if (IsMatch(msg, "(password|forgot|reset)"))
+                {
+                    return ("Need to reset your password? 🔐\n\nYou can update your password from your Profile page. If you're locked out, contact our support team and they'll help you regain access. For security, we recommend using a strong password with at least 8 characters, numbers, and special characters! 😊",
+                        "password_reset", 0.90m, new[] { "👤 Go to Profile", "📝 Submit Ticket", "👤 Talk to Agent" }, false);
+                }
+                return ("You can manage your account from the Profile section! 👤\n\n• ✏️ Edit name, email, phone number\n• 📍 Add/update shipping addresses\n• 🔐 Change your password\n• 🏠 Set default shipping address\n\nGo to your Profile page to update your info. Need help with something specific? 😊",
+                    "account_inquiry", 0.88m, new[] { "👤 Go to Profile", "📍 Manage Addresses", "👤 Talk to Agent" }, false);
+            }
+
+            // ========== AGENT REQUEST ==========
+            if (IsMatch(msg, "(agent|human|person|representative|real person|live.*chat|talk.*someone|speak.*someone|customer service|operator|staff|tao|kausapin)"))
+            {
+                return ("I'll connect you with a live support agent right away! 👨‍💼 Please hold on while I transfer your chat. An agent will be with you shortly. 🔔",
+                    "agent_request", 0.98m, new string[] { }, true);
+            }
+
+            // ========== GRATITUDE ==========
+            if (IsMatch(msg, "(thank|thanks|thankyou|thank you|salamat|maraming salamat|appreciate|helpful|great help|nice|awesome|perfect|daghang salamat|cool)"))
+            {
+                var thankResponses = new[]
+                {
+                    "You're welcome! 😊 Happy to help! Is there anything else I can assist you with?",
+                    "Glad I could help! 🎉 Don't hesitate to ask if you need anything else. Enjoy your CompuGear experience! 😊",
+                    "Walang anuman! 😊 If you ever need help again, I'm always here. Have a great day! 🌟",
+                    "My pleasure! 😊 Feel free to come back anytime. Happy shopping at CompuGear! 🛒"
+                };
+                return (Pick(thankResponses), "gratitude", 0.95m, new[] { "🛒 Browse Products", "📦 My Orders", "👋 Goodbye" }, false);
+            }
+
+            // ========== GOODBYE ==========
+            if (IsMatch(msg, "(bye|goodbye|good bye|see you|take care|later|paalam|ingat|sige|bye bye|ciao)"))
+            {
+                var byeResponses = new[]
+                {
+                    "Goodbye! 👋 Thanks for chatting with CompuGear. Have a great day and happy shopping! 🛒😊",
+                    "See you soon! 👋 Remember, I'm here 24/7 whenever you need help. Take care! 😊",
+                    "Paalam! 👋 Ingat ka! Come back anytime you need assistance. Enjoy your CompuGear experience! 😊"
+                };
+                return (Pick(byeResponses), "goodbye", 0.95m, new[] { "🛒 Browse Products", "🏷️ View Deals" }, false);
+            }
+
+            // ========== ERP / BUSINESS / SUBSCRIPTION ==========
+            if (IsMatch(msg, "(erp|subscription|plan|business|enterprise|saas|crm|module|pricing|basic plan|pro plan|inventory management|sales management|billing module|marketing module)"))
+            {
+                return ("CompuGear also offers cloud ERP solutions for businesses! 🏢\n\n📊 **Basic Plan** — ₱2,499/mo\n• Up to 50 users, 3 admins\n• Sales + Inventory modules\n\n⚡ **Pro Plan** — ₱4,999/mo\n• Up to 200 users, 10 admins\n• All modules (Sales, Inventory, Billing, Support, Marketing)\n• Advanced analytics + Priority support\n\n🏢 **Enterprise** — Custom pricing\n• Unlimited users, dedicated support, SLA guarantees\n\n✨ 14-day free trial on Pro plan! Annual billing saves 2 months. Visit our ERP Website for details! 😊",
+                    "erp_inquiry", 0.90m, new[] { "📊 View Plans", "💼 Pro Plan", "👤 Talk to Sales" }, false);
+            }
+
+            // ========== ABOUT COMPUGEAR ==========
+            if (IsMatch(msg, "(who are you|what is compugear|what.*compugear|about|company|sino ka|ano.*compugear|tell me about|what do you sell|what.*you.*sell|saan.*located|where.*located|location|branch|store)"))
+            {
+                return ("CompuGear is a Philippines-based online tech retailer and ERP platform! 🇵🇭\n\n🖥️ **What we sell:** Computer parts, laptops, gaming gear, peripherals, components, and accessories from top brands like Intel, AMD, NVIDIA, ASUS, Razer, Logitech, Corsair, Samsung, and more.\n\n💼 **For businesses:** We also offer a cloud-based ERP/CRM platform with Sales, Inventory, Billing, Support, and Marketing modules.\n\n🚚 We deliver nationwide across the Philippines! Founded in 2024, our mission is to be your one-stop tech shop. 😊",
+                    "about_compugear", 0.92m, new[] { "🛒 Browse Products", "📊 ERP Plans", "📞 Contact Us" }, false);
+            }
+
+            // ========== GENERAL TECH QUESTIONS ==========
+            if (IsMatch(msg, "(how much ram|what.*ram|upgrade|build.*pc|pc build|gaming.*pc|fps|performance|benchmark|overclock|how.*choose|difference between|vs |versus|compare|which.*better|spec|specification|compatible|compatibility)"))
+            {
+                if (IsMatch(msg, "(build.*pc|pc build|gaming.*pc|gaming.*build|gaming.*setup)"))
+                {
+                    return ("Building a PC? Awesome! 🖥️ Here's a quick guide:\n\n1️⃣ **CPU** — Intel i5/i7 or AMD Ryzen 5/7\n2️⃣ **GPU** — RTX 4070 for 1440p, RTX 4090 for 4K\n3️⃣ **RAM** — 16GB DDR5 minimum (32GB for futureproofing)\n4️⃣ **Storage** — 1TB NVMe SSD (Samsung 990 Pro recommended)\n5️⃣ **Motherboard** — Match your CPU socket (LGA1700/AM5)\n6️⃣ **PSU** — 750W–850W 80+ Gold\n\nWe carry all these components! Check our Products → Components section. Need a specific build recommendation? 💪",
+                        "pc_build", 0.90m, new[] { "⚡ Browse Components", "🎮 Gaming Setup", "👤 Get Advice" }, false);
+                }
+                if (IsMatch(msg, "(ram|memory|how much ram|ddr4|ddr5)"))
+                {
+                    return ("Here's a quick RAM guide! 💾\n\n• 🏢 Basic tasks (Office, browsing): 8GB is enough\n• 🎮 Gaming: 16GB is the sweet spot\n• 🎬 Content creation/streaming: 32GB recommended\n• 🔬 Professional workloads: 64GB+\n\n💡 Tip: DDR5 is the latest standard with better speeds. We carry Corsair Vengeance, Kingston Fury, and more — all with lifetime warranty! Check our Products page. 😊",
+                        "ram_guide", 0.88m, new[] { "💾 Browse RAM", "🛒 All Products", "🎮 Gaming Setup" }, false);
+                }
+                return ("Great tech question! 🤓 I can help with general recommendations, but for very specific technical advice, I'd recommend connecting with our support team who are hardware experts. In the meantime, check our Products page where you can filter by specs, compare items, and read details. What specifically are you looking for? 😊",
+                    "tech_question", 0.80m, new[] { "🛒 Browse Products", "📝 Ask Support", "👤 Talk to Expert" }, false);
+            }
+
+            // ========== HOW TO / NAVIGATION ==========
+            if (IsMatch(msg, "(how to|how do i|how can i|where.*find|where is|where.*i go|where do|navigate|find|look for|paano|saan|asan)"))
+            {
+                if (IsMatch(msg, "(checkout|buy|purchase|order|bili|bumili)"))
+                {
+                    return ("Here's how to place an order! 🛒\n\n1️⃣ Browse Products and add items to your cart\n2️⃣ Go to Cart → Review items\n3️⃣ Click 'Proceed to Checkout'\n4️⃣ Enter/confirm your shipping address\n5️⃣ Choose payment method and complete payment\n6️⃣ Done! You'll get a confirmation email 📧\n\n💡 Don't forget to apply a promo code before checkout for extra savings! 🏷️",
+                        "how_to_order", 0.92m, new[] { "🛒 Go to Cart", "🛍️ Browse Products", "🏷️ Promo Codes" }, false);
+                }
+                return ("I can help you navigate CompuGear! 🗺️ Here are the main sections:\n\n• 🛒 **Products** — Browse and search our catalog\n• 📦 **My Orders** — Track all your orders\n• ❤️ **Wishlist** — Items you saved for later\n• 🏷️ **Promotions** — Current deals and discounts\n• 👤 **Profile** — Manage your account & addresses\n• 💬 **Support** — Chat, tickets, and FAQ\n\nWhat are you trying to find? 😊",
+                    "navigation", 0.85m, new[] { "🛒 Products", "📦 Orders", "🏷️ Promos", "👤 Profile" }, false);
+            }
+
+            // ========== GENERAL CONVERSATION (catch-all with smart responses) ==========
+            if (IsMatch(msg, "(what.*your name|who.*you|name|are you.*bot|are you.*ai|are you.*real|robot|artificial)"))
+            {
+                return ("I'm the CompuGear AI Assistant! 🤖 I'm an intelligent chatbot designed to help you with anything related to CompuGear — from product browsing to order tracking to tech advice. While I'm not a human, I'm pretty smart! 😊 And if you need a real person, I can connect you to a live agent anytime. How can I help you today?",
+                    "identity", 0.95m, new[] { "🛒 Browse Products", "📦 Track Order", "👤 Live Agent" }, false);
+            }
+
+            if (IsMatch(msg, "(weather|time|date|news|joke|funny|bored|lonely|sad|happy|love|hate|angry|lol|haha|😂|🤣|cute|pretty|ganda)"))
+            {
+                var funResponses = new[]
+                {
+                    "Haha, I appreciate the chat! 😄 While I'm best at helping with CompuGear stuff — orders, products, tech advice — I'm always happy to keep you company. Anything I can actually help you with today? 😊",
+                    "Ha! You're fun to talk to! 😄 But hey, while we're here — have you checked out our latest deals? We've got some amazing promos running right now! 🔥 Or is there something else I can help with?",
+                    "LOL 😂 I love a good conversation! But I'm at my best when helping with tech and orders. Anything on your mind that I can assist with? Or feel free to browse our Products — you might find something cool! 🛒"
+                };
+                return (Pick(funResponses), "casual", 0.70m, new[] { "🛒 Browse Products", "🏷️ View Deals", "🎮 Gaming Gear" }, false);
+            }
+
+            // ========== SMART DEFAULT (pattern: questions vs statements) ==========
+            if (msg.Contains("?") || IsMatch(msg, "^(what|how|when|where|why|which|can|do|does|is|are|will|would|could|should|did)"))
+            {
+                var questionDefaults = new[]
+                {
+                    "That's a great question! 🤔 I may not have the specific answer, but I can help with:\n\n📦 Order tracking and delivery info\n🛒 Product browsing and recommendations\n💳 Payment methods and checkout\n🔄 Returns, refunds, and warranties\n🏷️ Promotions and discount codes\n👤 Account management\n\nCould you rephrase your question related to one of these? Or I can connect you with a live agent who can help! 😊",
+                    "Hmm, I want to make sure I give you the right answer! 🤔 Could you give me a bit more detail? I'm great at helping with orders, products, payments, returns, and promotions. If your question is more complex, I can connect you with our support team! 😊"
+                };
+                return (Pick(questionDefaults), "unknown_question", 0.60m, new[] { "📦 Track Order", "🛒 Products", "🏷️ Promos", "👤 Talk to Agent" }, false);
+            }
+
+            // ========== ABSOLUTE DEFAULT ==========
+            var defaults = new[]
+            {
+                "Thanks for your message! 😊 I can help you with orders, products, payments, promotions, returns, and more. What would you like to know? Just ask or pick one of the options below!",
+                "I'm here to assist! 😊 Whether you need help with your orders, want product recommendations, or have questions about payments and returns — just let me know! You can also pick from the quick options below.",
+                "Got it! 😊 I'm your CompuGear assistant and I can help with:\n\n📦 Orders & shipping\n🛒 Products & recommendations\n💳 Payments\n🔄 Returns & warranties\n🏷️ Promotions\n\nWhat interests you? Or type your question and I'll do my best to help!"
+            };
+            return (Pick(defaults), "general", 0.55m, new[] { "🛒 Browse Products", "📦 View Orders", "🏷️ Promotions", "👤 Talk to Agent" }, false);
         }
+
+        // Helper: Regex matching
+        private static bool IsMatch(string input, string pattern)
+        {
+            try { return System.Text.RegularExpressions.Regex.IsMatch(input, pattern); }
+            catch { return false; }
+        }
+
+        // Helper: Random pick from array for natural variation
+        private static string Pick(string[] items) => items[_rand.Next(items.Length)];
 
         #endregion
 
@@ -2701,6 +3008,121 @@ namespace CompuGear.Controllers
         }
 
         #endregion
+
+        // ========== NOTIFICATIONS ==========
+        #region Notifications
+
+        // GET: /CustomerPortal/GetNotifications — returns latest notifications for current user
+        [HttpGet]
+        public async Task<IActionResult> GetNotifications(int page = 1, int pageSize = 20)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+            {
+                var customer = await GetCurrentCustomerAsync();
+                userId = customer?.UserId;
+            }
+            if (userId == null || userId <= 0)
+                return Json(new { success = false, message = "Not logged in" });
+
+            var query = _context.Notifications
+                .Where(n => n.UserId == userId.Value)
+                .OrderByDescending(n => n.CreatedAt);
+
+            var total = await query.CountAsync();
+            var unreadCount = await query.CountAsync(n => !n.IsRead);
+
+            var notifications = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(n => new
+                {
+                    n.NotificationId,
+                    n.Type,
+                    n.Title,
+                    n.Message,
+                    n.Link,
+                    n.IsRead,
+                    n.CreatedAt
+                })
+                .ToListAsync();
+
+            return Json(new { success = true, data = notifications, unreadCount, total });
+        }
+
+        // GET: /CustomerPortal/GetUnreadNotificationCount
+        [HttpGet]
+        public async Task<IActionResult> GetUnreadNotificationCount()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+            {
+                var customer = await GetCurrentCustomerAsync();
+                userId = customer?.UserId;
+            }
+            if (userId == null || userId <= 0)
+                return Json(new { count = 0 });
+
+            var count = await _context.Notifications.CountAsync(n => n.UserId == userId.Value && !n.IsRead);
+            return Json(new { count });
+        }
+
+        // POST: /CustomerPortal/MarkNotificationRead
+        [HttpPost]
+        public async Task<IActionResult> MarkNotificationRead([FromBody] MarkNotificationModel model)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+            {
+                var customer = await GetCurrentCustomerAsync();
+                userId = customer?.UserId;
+            }
+            if (userId == null || userId <= 0)
+                return Json(new { success = false });
+
+            if (model.NotificationId > 0)
+            {
+                var notif = await _context.Notifications
+                    .FirstOrDefaultAsync(n => n.NotificationId == model.NotificationId && n.UserId == userId.Value);
+                if (notif != null)
+                {
+                    notif.IsRead = true;
+                    notif.ReadAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            return Json(new { success = true });
+        }
+
+        // POST: /CustomerPortal/MarkAllNotificationsRead
+        [HttpPost]
+        public async Task<IActionResult> MarkAllNotificationsRead()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+            {
+                var customer = await GetCurrentCustomerAsync();
+                userId = customer?.UserId;
+            }
+            if (userId == null || userId <= 0)
+                return Json(new { success = false });
+
+            var unread = await _context.Notifications
+                .Where(n => n.UserId == userId.Value && !n.IsRead)
+                .ToListAsync();
+
+            foreach (var n in unread)
+            {
+                n.IsRead = true;
+                n.ReadAt = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, markedCount = unread.Count });
+        }
+
+        #endregion
     }
 
     public class CustomerProfileUpdateModel
@@ -2905,5 +3327,10 @@ namespace CompuGear.Controllers
     public class CancelSubscriptionModel
     {
         public int SubscriptionId { get; set; }
+    }
+
+    public class MarkNotificationModel
+    {
+        public int NotificationId { get; set; }
     }
 }

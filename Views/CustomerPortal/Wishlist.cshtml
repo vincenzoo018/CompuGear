@@ -449,14 +449,15 @@
             if (result.success && result.data.length > 0) {
                 wishlistItems = result.data.map(p => ({
                     productId: p.productId,
-                    productName: p.name,
-                    sellingPrice: p.price,
+                    productName: p.productName,
+                    sellingPrice: p.sellingPrice,
                     compareAtPrice: p.compareAtPrice || null,
                     categoryName: p.categoryName || 'Accessories',
                     brandName: p.brandName || 'Generic',
-                    sku: p.sku || '',
-                    stockQuantity: p.stock || 0,
-                    discountPercent: p.compareAtPrice ? Math.round((1 - p.price / p.compareAtPrice) * 100) : 0
+                    sku: p.sku || p.productCode || '',
+                    stockQuantity: p.stockQuantity || 0,
+                    mainImageUrl: p.mainImageUrl || null,
+                    discountPercent: p.compareAtPrice ? Math.round((1 - p.sellingPrice / p.compareAtPrice) * 100) : 0
                 }));
 
                 // Remove wishlist items that no longer exist in DB
@@ -529,7 +530,9 @@
                             <span class="out-of-stock-text">OUT OF STOCK</span>
                         </div>` : ''}
                     <div class="card-image">
-                        ${productIcons[index % productIcons.length]}
+                        ${product.mainImageUrl
+                            ? `<img src="${product.mainImageUrl}" alt="${product.productName}" style="width:100%;height:100%;object-fit:cover;">`
+                            : productIcons[index % productIcons.length]}
                         <button class="remove-btn" onclick="removeFromWishlist(${product.productId})" title="Remove from wishlist">✕</button>
                         ${product.discountPercent > 0 ? `<span class="discount-badge">-${product.discountPercent}%</span>` : ''}
                     </div>

@@ -580,7 +580,7 @@
     });
 
     function initChat() {
-        addMessage('bot', "👋 Hi there! I'm your AI assistant. I can help you with:\n\n• Order tracking and status\n• Returns and refunds\n• Product information\n• Payment inquiries\n• Promotions and discounts\n\nHow can I assist you today?");
+        addMessage('bot', "👋 Hi there! I'm your CompuGear AI Assistant! I can help you with:\n\n📦 Order tracking & delivery status\n🛒 Product info & recommendations\n💳 Payment methods & checkout\n🔄 Returns, refunds & warranties\n🏷️ Promotions & discount codes\n🖥️ Tech advice & PC building tips\n\nAsk me anything — I understand English, Filipino, and Bisaya! 😊");
     }
 
     function handleKeyPress(event) {
@@ -622,11 +622,20 @@
             if (result.success) {
                 chatSessionId = result.sessionId || result.data?.sessionId || chatSessionId;
                 
-                if (!agentConnected && result.response) {
-                    addMessage('bot', result.response);
+                if (!agentConnected) {
+                    const responseText = result.response || result.data?.response;
+                    if (responseText) {
+                        addMessage('bot', responseText);
+                    }
                     
-                    if (result.quickReplies && result.quickReplies.length > 0) {
-                        updateQuickReplies(result.quickReplies);
+                    const replies = result.quickReplies || result.data?.quickReplies;
+                    if (replies && replies.length > 0) {
+                        updateQuickReplies(replies);
+                    }
+
+                    // Auto-transfer to agent if AI suggests it
+                    if (result.data?.shouldTransferToAgent) {
+                        requestAgent();
                     }
                 }
             } else {
@@ -640,8 +649,8 @@
             }
         } catch (error) {
             showTyping(false);
-            console.error('Error:', error);
-            addMessage('bot', "Sorry, there was an error connecting. Please try again.");
+            console.error('Chat error:', error);
+            addMessage('bot', "I'm having a brief connection issue. Please try sending your message again in a moment, or click 👤 Live Agent to connect with our support team.");
         }
     }
 

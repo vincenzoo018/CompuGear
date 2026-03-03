@@ -422,6 +422,16 @@
                                     <p>Pay with Maya wallet</p>
                                 </div>
                             </label>
+                            
+                            <label class="payment-option" onclick="selectPayment('cod')">
+                                <input type="radio" name="payment" value="cod">
+                                <span class="payment-radio"></span>
+                                <span class="payment-icon">🚚</span>
+                                <div class="payment-info">
+                                    <h4>Cash on Delivery (COD)</h4>
+                                    <p>Pay when your order arrives at your doorstep</p>
+                                </div>
+                            </label>
                         </div>
                         
                         <div class="paymongo-badge">
@@ -465,6 +475,7 @@
                         <button class="checkout-btn" id="placeOrderBtn" onclick="placeOrder()">
                             🔒 Place Order & Pay
                         </button>
+                        <p class="cod-notice" id="codNotice" style="display:none; text-align:center; margin-top:12px; color:#6b7280; font-size:0.85rem;">💡 You will pay the courier in cash when your order is delivered.</p>
                         
                         <div class="secure-badge">
                             🔐 Your payment is secure and encrypted
@@ -557,6 +568,17 @@
         selectedPayment = method;
         document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
         document.querySelector(`input[value="${method}"]`).closest('.payment-option').classList.add('selected');
+        
+        // Update button text and COD notice
+        const btn = document.getElementById('placeOrderBtn');
+        const codNotice = document.getElementById('codNotice');
+        if (method === 'cod') {
+            btn.innerHTML = '🚚 Place Order (Cash on Delivery)';
+            codNotice.style.display = 'block';
+        } else {
+            btn.innerHTML = '🔒 Place Order & Pay';
+            codNotice.style.display = 'none';
+        }
     }
 
     async function placeOrder() {
