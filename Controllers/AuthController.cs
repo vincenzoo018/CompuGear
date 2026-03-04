@@ -152,6 +152,7 @@ namespace CompuGear.Controllers
                 // First, try to authenticate as a User (staff member)
                 var user = await _context.Users
                     .Include(u => u.Role)
+                    .Include(u => u.Company)
                     .FirstOrDefaultAsync(u => u.Email == request.Email && u.IsActive);
 
                 if (user != null)
@@ -176,6 +177,10 @@ namespace CompuGear.Controllers
                         if (user.CompanyId.HasValue)
                         {
                             HttpContext.Session.SetInt32("CompanyId", user.CompanyId.Value);
+                            if (user.Company != null)
+                            {
+                                HttpContext.Session.SetString("CompanyName", user.Company.CompanyName);
+                            }
                         }
 
                         // If user is a Customer (RoleId = 7), also set customer session

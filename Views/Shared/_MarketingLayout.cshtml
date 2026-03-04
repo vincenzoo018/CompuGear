@@ -22,7 +22,7 @@
                         <img src="/images/compugearlogo.png" alt="CompuGear" style="height: 32px; width: auto;" onerror="this.onerror=null; this.parentElement.innerHTML='<svg viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' style=\'width:24px;height:24px;color:#008080\'><polygon points=\'12 2 2 7 12 12 22 7 12 2\'/><polyline points=\'2 17 12 22 22 17\'/><polyline points=\'2 12 12 17 22 12\'/></svg>';">
                     </div>
                     <div class="sidebar-brand-text">
-                        <span class="sidebar-brand-name">CompuGear</span>
+                        <span class="sidebar-brand-name">@(Context.Session.GetString("CompanyName") ?? "CompuGear")</span>
                         <span class="sidebar-brand-subtitle">Marketing Portal</span>
                     </div>
                 </a>

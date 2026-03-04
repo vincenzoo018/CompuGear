@@ -22,7 +22,7 @@
                         <img src="/images/compugearlogo.png" alt="CompuGear" style="height: 32px; width: auto;" onerror="this.onerror=null; this.parentElement.innerHTML='<svg viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' style=\'width:24px;height:24px;color:#008080\'><path d=\'M3 18v-6a9 9 0 0 1 18 0v6\'/><path d=\'M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z\'/></svg>';">
                     </div>
                     <div class="sidebar-brand-text">
-                        <span class="sidebar-brand-name">CompuGear</span>
+                        <span class="sidebar-brand-name">@(Context.Session.GetString("CompanyName") ?? "CompuGear")</span>
                         <span class="sidebar-brand-subtitle">Support Portal</span>
                     </div>
                 </a>
