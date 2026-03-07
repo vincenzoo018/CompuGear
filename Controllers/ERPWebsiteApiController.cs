@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using CompuGear.Data;
@@ -56,8 +56,10 @@ namespace CompuGear.Controllers
                 if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 8)
                     return Ok(new { success = false, message = "Password must be at least 8 characters." });
 
-                if (request.PlanName != "Basic" && request.PlanName != "Pro")
-                    return Ok(new { success = false, message = "Invalid plan selected." });
+                // Normalize plan name - accept Starter, Pro, Enterprise (case-insensitive)
+                var validPlans = new[] { "Starter", "Pro", "Enterprise" };
+                var matchedPlan = validPlans.FirstOrDefault(p => string.Equals(p, request.PlanName?.Trim(), StringComparison.OrdinalIgnoreCase));
+                request.PlanName = matchedPlan ?? "Starter";
 
                 var selectedModuleCodes = ResolveSelectedModuleCodes(request);
                 if (!selectedModuleCodes.Any())
@@ -236,8 +238,10 @@ namespace CompuGear.Controllers
                 if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 8)
                     return Ok(new { success = false, message = "Password must be at least 8 characters." });
 
-                if (request.PlanName != "Basic" && request.PlanName != "Pro")
-                    return Ok(new { success = false, message = "Invalid plan selected." });
+                // Normalize plan name - accept Starter, Pro, Enterprise (case-insensitive)
+                var validPlans2 = new[] { "Starter", "Pro", "Enterprise" };
+                var matchedPlan2 = validPlans2.FirstOrDefault(p => string.Equals(p, request.PlanName?.Trim(), StringComparison.OrdinalIgnoreCase));
+                request.PlanName = matchedPlan2 ?? "Starter";
 
                 var selectedModuleCodes = ResolveSelectedModuleCodes(request);
                 if (!selectedModuleCodes.Any())
@@ -264,7 +268,7 @@ namespace CompuGear.Controllers
                 if (billingCycle == "Annual")
                 {
                     amount = planConfig.MonthlyFee * 10; // Annual = 10 months (save 2)
-                    description = $"CompuGear ERP {request.PlanName} Plan - Annual Subscription (₱{planConfig.MonthlyFee:N0}/mo × 10 months)";
+                    description = $"CompuGear ERP {request.PlanName} Plan - Annual Subscription (â‚±{planConfig.MonthlyFee:N0}/mo Ã— 10 months)";
                 }
                 else
                 {
@@ -555,23 +559,33 @@ namespace CompuGear.Controllers
             {
                 new
                 {
-                    name = "Basic",
-                    monthlyPrice = 2499m,
-                    annualPrice = 29988m,
-                    maxUsers = 50,
-                    maxAdmins = 3,
+                    name = "Starter",
+                    monthlyPrice = 999m,
+                    annualPrice = 11988m,
+                    maxUsers = 15,
+                    maxAdmins = 1,
                     modules = new[] { "SALES", "INVENTORY" },
-                    features = new[] { "Up to 50 Users", "Up to 3 Admin Users", "Sales Module", "Inventory Module" }
+                    features = new[] { "Up to 15 Users", "1 Admin User", "Sales Module", "Inventory Module" }
                 },
                 new
                 {
                     name = "Pro",
+                    monthlyPrice = 2499m,
+                    annualPrice = 29988m,
+                    maxUsers = 50,
+                    maxAdmins = 5,
+                    modules = new[] { "SALES", "CUSTOMERS", "INVENTORY", "BILLING", "SUPPORT", "MARKETING" },
+                    features = new[] { "Up to 50 Users", "Up to 5 Admin Users", "All ERP Modules", "Billing & Invoicing", "Advanced Analytics", "Priority Email Support" }
+                },
+                new
+                {
+                    name = "Enterprise",
                     monthlyPrice = 4999m,
                     annualPrice = 59988m,
                     maxUsers = 200,
                     maxAdmins = 10,
                     modules = new[] { "SALES", "CUSTOMERS", "INVENTORY", "BILLING", "SUPPORT", "MARKETING" },
-                    features = new[] { "Up to 200 Users", "Up to 10 Admin Users", "All ERP Modules", "Billing & Invoicing", "Advanced Analytics", "Priority Email Support" }
+                    features = new[] { "Up to 200 Users", "Up to 10 Admin Users", "All ERP Modules", "Dedicated Account Manager", "Advanced Analytics", "Priority Support" }
                 }
             };
 
@@ -608,13 +622,19 @@ namespace CompuGear.Controllers
         {
             return planName switch
             {
-                "Basic" => new PlanConfig
+                "Starter" => new PlanConfig
                 {
-                    MonthlyFee = 2499m,
-                    MaxUsers = 50,
+                    MonthlyFee = 999m,
+                    MaxUsers = 15,
                     ModuleCodes = new[] { "SALES", "INVENTORY" }
                 },
                 "Pro" => new PlanConfig
+                {
+                    MonthlyFee = 2499m,
+                    MaxUsers = 50,
+                    ModuleCodes = new[] { "SALES", "CUSTOMERS", "INVENTORY", "BILLING", "SUPPORT", "MARKETING" }
+                },
+                "Enterprise" => new PlanConfig
                 {
                     MonthlyFee = 4999m,
                     MaxUsers = 200,
@@ -622,8 +642,8 @@ namespace CompuGear.Controllers
                 },
                 _ => new PlanConfig
                 {
-                    MonthlyFee = 2499m,
-                    MaxUsers = 50,
+                    MonthlyFee = 999m,
+                    MaxUsers = 15,
                     ModuleCodes = new[] { "SALES", "INVENTORY" }
                 }
             };
@@ -730,7 +750,7 @@ namespace CompuGear.Controllers
         public string Password { get; set; } = string.Empty;
 
         // Subscription
-        public string PlanName { get; set; } = "Basic";
+        public string PlanName { get; set; } = "Starter";
         public string? BillingCycle { get; set; } = "Monthly";
         public List<string>? SelectedModuleCodes { get; set; }
     }

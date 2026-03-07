@@ -7,21 +7,21 @@
 @section Styles {
     .subscribe-page { padding: 60px 24px 80px; background: #f8f9fc; min-height: 80vh; }
     .subscribe-container {
-        max-width: 1060px; margin: 0 auto;
+        max-width: 1000px; margin: 0 auto;
         display: grid; grid-template-columns: 1fr 380px; gap: 40px;
         align-items: start;
     }
 
     /* Form Card */
     .form-card {
-        background: #fff; border-radius: 20px; padding: 44px;
-        border: 1px solid #eee; box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        background: #fff; border-radius: 16px; padding: 40px;
+        border: 1px solid #eee; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
     }
     .form-card h2 { font-size: 1.6rem; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
     .form-card .form-subtitle { font-size: 0.95rem; color: #888; margin-bottom: 32px; }
 
     .form-section-title {
-        font-size: 0.82rem; font-weight: 600; color: #008080;
+        font-size: 0.85rem; font-weight: 600; color: #008080;
         text-transform: uppercase; letter-spacing: 1px;
         margin-bottom: 16px; margin-top: 28px;
         padding-bottom: 8px; border-bottom: 1px solid #f0f0f0;
@@ -36,13 +36,13 @@
     }
     .form-group label .required { color: #ef4444; }
     .form-group input, .form-group select, .form-group textarea {
-        width: 100%; padding: 11px 14px; border: 1.5px solid #e0e0e0;
-        border-radius: 10px; font-size: 0.95rem; font-family: 'Poppins', sans-serif;
-        color: #333; transition: border-color 0.2s, box-shadow 0.2s; background: #fff;
+        width: 100%; padding: 10px 14px; border: 1.5px solid #e0e0e0;
+        border-radius: 8px; font-size: 0.95rem; font-family: 'Poppins', sans-serif;
+        color: #333; transition: border-color 0.2s; background: #fff;
     }
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
         outline: none; border-color: #008080;
-        box-shadow: 0 0 0 3px rgba(0,128,128,0.1);
+        box-shadow: 0 0 0 3px rgba(0,128,128,0.08);
     }
     .form-group textarea { resize: vertical; min-height: 80px; }
     .form-group .input-error { border-color: #ef4444 !important; }
@@ -59,39 +59,40 @@
 
     .module-selector {
         border: 1.5px solid #e0e0e0;
-        border-radius: 12px;
+        border-radius: 10px;
         padding: 12px;
         background: #fff;
-        transition:border-color 0.2s;
     }
-    .module-selector:focus-within { border-color:#008080; box-shadow:0 0 0 3px rgba(0,128,128,0.1); }
     .module-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
     }
     .module-item {
-        display: flex; align-items: center; gap: 8px;
-        padding: 10px 12px; border: 1px solid #e6e6e6;
-        border-radius: 10px; background: #fafafa;
-        font-size: 0.9rem; color: #444;
-        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border: 1px solid #e6e6e6;
+        border-radius: 8px;
+        background: #fafafa;
+        font-size: 0.9rem;
+        color: #444;
     }
-    .module-item:hover { border-color:rgba(0,128,128,0.3); background:#f0fafa; }
     .module-item input[type="checkbox"] {
-        width: 16px; height: 16px; accent-color: #008080;
+        width: 16px;
+        height: 16px;
+        accent-color: #008080;
     }
 
     .btn-subscribe {
-        width: 100%; padding: 15px 0;
-        background: linear-gradient(135deg, #008080, #00a5a5); color: #fff;
-        border: none; border-radius: 12px; font-size: 1rem; font-weight: 600;
-        cursor: pointer; transition: all 0.3s cubic-bezier(.4,0,.2,1);
+        width: 100%; padding: 14px 0; background: #008080; color: #fff;
+        border: none; border-radius: 10px; font-size: 1rem; font-weight: 600;
+        cursor: pointer; transition: all 0.3s;
         font-family: 'Poppins', sans-serif;
-        box-shadow: 0 4px 14px rgba(0,128,128,0.2);
     }
-    .btn-subscribe:hover { box-shadow: 0 8px 24px rgba(0,128,128,0.3); transform:translateY(-1px); }
-    .btn-subscribe:disabled { background: #ccc; cursor: not-allowed; box-shadow:none; transform:none; }
+    .btn-subscribe:hover { background: #006666; }
+    .btn-subscribe:disabled { background: #ccc; cursor: not-allowed; }
     .btn-subscribe .spinner {
         display: none; width: 20px; height: 20px;
         border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
@@ -102,31 +103,15 @@
 
     /* Order Summary Card */
     .summary-card {
-        background: #fff; border-radius: 20px; padding: 32px;
+        background: #fff; border-radius: 16px; padding: 32px;
         border: 2px solid #008080; position: sticky; top: 96px;
-        box-shadow: 0 8px 30px rgba(0,128,128,0.08);
     }
     .summary-card h3 { font-size: 1.15rem; font-weight: 700; color: #1a1a2e; margin-bottom: 24px; }
-
-    /* Plan card images inside summary */
-    .summary-plan-visual {
-        display:flex; align-items:center; gap:14px;
-        background:linear-gradient(135deg, rgba(0,128,128,0.06), rgba(0,128,128,0.02));
-        border-radius:14px; padding:16px; margin-bottom:20px;
-        border:1px solid rgba(0,128,128,0.1);
+    .summary-card .plan-badge {
+        display: inline-block; background: rgba(0,128,128,0.1);
+        color: #008080; font-weight: 600; font-size: 0.85rem;
+        padding: 4px 14px; border-radius: 20px; margin-bottom: 16px;
     }
-    .summary-plan-icon {
-        width:52px; height:52px; border-radius:14px;
-        display:flex; align-items:center; justify-content:center;
-        flex-shrink:0;
-    }
-    .summary-plan-icon svg { width:26px; height:26px; }
-    .summary-plan-icon.starter-icon { background:rgba(59,130,246,0.12); color:#3B82F6; }
-    .summary-plan-icon.pro-icon { background:rgba(0,128,128,0.12); color:#008080; }
-    .summary-plan-icon.enterprise-icon { background:rgba(139,92,246,0.12); color:#8B5CF6; }
-    .summary-plan-info .plan-badge-label { font-weight:700; font-size:1.05rem; color:#1a1a2e; }
-    .summary-plan-info .plan-badge-desc { font-size:0.82rem; color:#888; margin-top:2px; }
-
     .summary-card .plan-price {
         font-size: 2.4rem; font-weight: 800; color: #1a1a2e; margin-bottom: 4px;
     }
@@ -141,16 +126,9 @@
     .summary-card .summary-features li svg { color: #10B981; flex-shrink: 0; }
     .summary-card .summary-total {
         display: flex; justify-content: space-between; align-items: center;
-        margin-top: 16px; padding-top: 16px; border-top: 2px solid #e0e0e0;
+        margin-top: 16px; padding-top: 16px; border-top: 1px solid #e0e0e0;
         font-weight: 700; font-size: 1.05rem; color: #1a1a2e;
     }
-
-    /* Secure badge */
-    .secure-badge {
-        display:flex; align-items:center; justify-content:center; gap:6px;
-        margin-top:16px; font-size:0.82rem; color:#888;
-    }
-    .secure-badge svg { color:#10B981; }
 
     /* Toast notification */
     .toast-container {
@@ -161,7 +139,7 @@
     .toast-card {
         pointer-events: auto;
         display: flex; align-items: flex-start; gap: 14px;
-        background: #fff; border-radius: 16px; padding: 20px 24px;
+        background: #fff; border-radius: 14px; padding: 20px 24px;
         box-shadow: 0 12px 40px rgba(0,0,0,0.15);
         border-left: 5px solid #10B981;
         max-width: 440px; width: 100%;
@@ -205,7 +183,7 @@
 <section class="subscribe-page">
     <div class="subscribe-container">
         <!-- Registration Form -->
-        <div class="form-card anim-fade-up">
+        <div class="form-card">
             <h2>Create Your Account</h2>
             <p class="form-subtitle">Fill in your details to subscribe and get started with CompuGear ERP.</p>
 
@@ -286,16 +264,15 @@
                     <div class="form-group">
                         <label>Plan <span class="required">*</span></label>
                         <select id="planName" onchange="updateSummary()">
-                            <option value="Starter">Starter - &#8369;999/mo</option>
-                            <option value="Pro">Pro - &#8369;2,499/mo</option>
-                            <option value="Enterprise">Enterprise - &#8369;4,999/mo</option>
+                            <option value="Basic">Basic - ₱2,499/mo</option>
+                            <option value="Pro">Pro - ₱4,999/mo</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Billing Cycle</label>
                         <select id="billingCycle" onchange="updateSummary()">
                             <option value="Monthly">Monthly</option>
-                            <option value="Annual">Annual (Save 17%)</option>
+                            <option value="Annual">Annual (Save 2 months)</option>
                         </select>
                     </div>
                 </div>
@@ -321,33 +298,22 @@
         </div>
 
         <!-- Order Summary -->
-        <div class="summary-card anim-fade-up anim-d2">
+        <div class="summary-card">
             <h3>Order Summary</h3>
-
-            <!-- Plan Visual Card -->
-            <div class="summary-plan-visual" id="summaryPlanVisual">
-                <div class="summary-plan-icon starter-icon" id="summaryPlanIcon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                </div>
-                <div class="summary-plan-info">
-                    <div class="plan-badge-label" id="summaryPlanBadge">Starter Plan</div>
-                    <div class="plan-badge-desc" id="summaryPlanDesc">For small teams getting started</div>
-                </div>
-            </div>
-
-            <div class="plan-price" id="summaryPrice">&#8369;999<span class="per">/month</span></div>
-            <div class="annual-note" id="summaryAnnual">Billed monthly</div>
+            <div class="plan-badge" id="summaryPlanBadge">Basic Plan</div>
+            <div class="plan-price" id="summaryPrice">₱2,499<span class="per">/month</span></div>
+            <div class="annual-note" id="summaryAnnual">Billed annually at ₱29,988</div>
 
             <hr class="summary-divider">
 
             <ul class="summary-features" id="summaryFeatures">
                 <li>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    Up to 15 Users
+                    Up to 50 Users
                 </li>
                 <li>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    1 Admin User
+                    Up to 3 Admin Users
                 </li>
                 <li>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -361,12 +327,7 @@
 
             <div class="summary-total">
                 <span>Total Due Today</span>
-                <span id="summaryTotal">&#8369;999</span>
-            </div>
-
-            <div class="secure-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                Secure 256-bit SSL Encryption
+                <span id="summaryTotal">₱2,499</span>
             </div>
         </div>
     </div>
@@ -377,33 +338,18 @@
 
 @section Scripts {
     <script>
-        // Plan data — 3 plans
+        // Plan data
         const plans = {
-            Starter: {
-                monthly: 999, annual: 9988,
-                maxUsers: 15, maxAdmins: 1,
-                desc: 'For small teams getting started',
-                iconClass: 'starter-icon',
-                iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
-                features: ['Up to 15 Users', '1 Admin User', 'Sales Module', 'Inventory Module'],
+            Basic: {
+                monthly: 2499, annual: 29988,
+                maxUsers: 50, maxAdmins: 3,
+                features: ['Up to 50 Users', 'Up to 3 Admin Users', 'Sales Module', 'Inventory Module'],
                 modules: ['SALES', 'INVENTORY']
             },
             Pro: {
-                monthly: 2499, annual: 24988,
-                maxUsers: 50, maxAdmins: 5,
-                desc: 'For growing enterprises',
-                iconClass: 'pro-icon',
-                iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
-                features: ['Up to 50 Users', 'Up to 5 Admin Users', 'All ERP Modules', 'Billing & Invoicing', 'Advanced Analytics', 'Priority Email Support'],
-                modules: ['SALES', 'CUSTOMERS', 'INVENTORY', 'BILLING', 'SUPPORT', 'MARKETING']
-            },
-            Enterprise: {
-                monthly: 4999, annual: 49988,
+                monthly: 4999, annual: 59988,
                 maxUsers: 200, maxAdmins: 10,
-                desc: 'For large-scale operations',
-                iconClass: 'enterprise-icon',
-                iconSvg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
-                features: ['Up to 200 Users', 'Up to 10 Admin Users', 'All ERP Modules', 'Advanced Billing & Reports', 'Dedicated Account Manager', 'Priority Phone & Email Support'],
+                features: ['Up to 200 Users', 'Up to 10 Admin Users', 'All ERP Modules', 'Billing & Invoicing', 'Advanced Analytics', 'Priority Email Support'],
                 modules: ['SALES', 'CUSTOMERS', 'INVENTORY', 'BILLING', 'SUPPORT', 'MARKETING']
             }
         };
@@ -438,20 +384,14 @@
             const price = billing === 'Annual' ? Math.round(data.annual / 12) : data.monthly;
             const total = billing === 'Annual' ? data.annual : data.monthly;
 
-            // Update plan visual
-            const iconEl = document.getElementById('summaryPlanIcon');
-            iconEl.className = 'summary-plan-icon ' + data.iconClass;
-            iconEl.innerHTML = data.iconSvg;
             document.getElementById('summaryPlanBadge').textContent = plan + ' Plan';
-            document.getElementById('summaryPlanDesc').textContent = data.desc;
-
-            document.getElementById('summaryPrice').innerHTML = `&#8369;${price.toLocaleString()}<span class="per">/month</span>`;
+            document.getElementById('summaryPrice').innerHTML = `₱${price.toLocaleString()}<span class="per">/${billing === 'Annual' ? 'month' : 'month'}</span>`;
             document.getElementById('summaryAnnual').textContent = billing === 'Annual'
-                ? `Billed annually at \u20B1${data.annual.toLocaleString()}`
+                ? `Billed annually at ₱${data.annual.toLocaleString()}`
                 : `Billed monthly`;
             document.getElementById('summaryTotal').textContent = billing === 'Annual'
-                ? `\u20B1${data.annual.toLocaleString()}`
-                : `\u20B1${data.monthly.toLocaleString()}`;
+                ? `₱${data.annual.toLocaleString()}`
+                : `₱${data.monthly.toLocaleString()}`;
 
             // Features
             const featList = document.getElementById('summaryFeatures');
@@ -525,6 +465,7 @@
 
             container.insertAdjacentHTML('beforeend', html);
 
+            // Auto-remove after 15s for non-success toasts
             if (type !== 'success') {
                 setTimeout(() => { document.getElementById(id)?.remove(); }, 15000);
             }
@@ -534,6 +475,7 @@
             clearErrors();
             let valid = true;
 
+            // Validate
             const companyName = document.getElementById('companyName').value.trim();
             const companyEmail = document.getElementById('companyEmail').value.trim();
             const companyPhone = document.getElementById('companyPhone').value.trim();
@@ -558,6 +500,7 @@
 
             if (!valid) return;
 
+            // Disable button, show spinner
             const btn = document.getElementById('btnSubscribe');
             const btnText = btn.querySelector('.btn-text');
             const spinner = document.getElementById('btnSpinner');
@@ -594,6 +537,7 @@
                         'Account Created Successfully!',
                         `Welcome, ${result.companyName}! Your ${result.planName} subscription is active. Login with <strong>${result.adminEmail}</strong> to access your admin dashboard.`,
                         true);
+                    // Reset form
                     document.getElementById('subscribeForm').reset();
                     updateSummary();
                 } else {

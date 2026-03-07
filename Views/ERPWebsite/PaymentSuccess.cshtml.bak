@@ -7,126 +7,130 @@
 @section Styles {
     .payment-page {
         padding: 80px 24px 120px;
-        background: linear-gradient(180deg, #f0f9f9 0%, #f8f9fc 100%);
+        background: #f8f9fc;
         min-height: 80vh;
-        display: flex; align-items: center; justify-content: center;
-        position: relative; overflow: hidden;
-    }
-    .payment-page::before {
-        content:''; position:absolute; top:-120px; right:-120px;
-        width:400px; height:400px;
-        background:radial-gradient(circle,rgba(0,128,128,0.06) 0%,transparent 70%);
-        border-radius:50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .payment-card {
-        background: #fff; border-radius: 22px;
-        padding: 56px 56px; max-width: 700px; width: 100%;
+        background: #fff;
+        border-radius: 30px;
+        padding: 56px 56px;
+        max-width: 700px;
+        width: 100%;
         text-align: center;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+        box-shadow: 0 24px 64px rgba(0,0,0,0.12);
         border: 1px solid #eef0f3;
-        position: relative;
     }
 
     .payment-icon {
-        width: 92px; height: 92px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
+        width: 98px; height: 98px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         margin: 0 auto 24px;
-        transition: transform 0.4s cubic-bezier(.4,0,.2,1);
     }
-    .payment-icon.success { background: linear-gradient(135deg, #10B981, #059669); color: #fff; }
-    .payment-icon.loading { background: linear-gradient(135deg, #008080, #006666); color: #fff; }
-    .payment-icon.error { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+    .payment-icon.success { background: #10B981; color: #ffffff; }
+    .payment-icon.loading { background: #008080; color: #ffffff; }
+    .payment-icon.error { background: #ef4444; color: #ffffff; }
 
     .payment-card h2 {
-        font-size: 2.4rem; font-weight: 800; color: #059669; margin-bottom: 14px; line-height: 1.1;
+        font-size: 2.8rem; font-weight: 800; color: #059669; margin-bottom: 14px;
+        line-height: 1.05;
     }
     .payment-card p {
         font-size: 0.95rem; color: #6b7280; line-height: 1.7; margin-bottom: 8px;
     }
 
-    #successState p, #errorState p, #verifyingState p {
-        font-size: 1.08rem; max-width: 560px;
-        margin-left: auto; margin-right: auto;
-    }
-    #errorState h2 { color: #dc2626; }
-    #verifyingState h2 { color: #0f766e; font-size: 2rem; }
-
     .success-note {
-        margin-top: 16px; font-size: 0.95rem; color: #475569;
+        margin-top: 16px;
+        font-size: 0.95rem;
+        color: #475569;
     }
+
+    .success-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 18px;
+    }
+
+    #successState p,
+    #errorState p,
+    #verifyingState p {
+        font-size: 1.12rem;
+        max-width: 560px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    #errorState h2 { color: #dc2626; }
+    #verifyingState h2 { color: #0f766e; font-size: 2.1rem; }
 
     .payment-details {
-        background: #f8f9fc; border-radius: 16px; padding: 24px 28px;
-        margin: 28px auto 10px; text-align: left; max-width: 560px;
-        border: 1px solid #eee;
+        background: #f8f9fc; border-radius: 18px; padding: 24px 28px;
+        margin: 28px auto 10px; text-align: left;
+        max-width: 560px;
     }
     .payment-details .detail-row {
         display: flex; justify-content: space-between;
-        padding: 12px 0; font-size: 1rem;
+        padding: 12px 0; font-size: 1.05rem;
         border-bottom: 1px solid #eee;
-        transition: background 0.2s;
     }
     .payment-details .detail-row:last-child { border-bottom: none; }
-    .payment-details .detail-row:hover { background: rgba(0,128,128,0.03); }
     .payment-details .detail-label { color: #94a3b8; }
     .payment-details .detail-value { font-weight: 700; color: #1f2937; }
 
-    .success-actions {
-        display: flex; gap: 12px; justify-content: center;
-        flex-wrap: wrap; margin-top: 20px;
-    }
-
     .btn-login {
-        display: inline-block; padding: 16px 48px;
-        background: linear-gradient(135deg, #008080, #006666);
-        color: #fff; border-radius: 14px; font-weight: 700; font-size: 1.05rem;
-        transition: all 0.3s cubic-bezier(.4,0,.2,1);
-        cursor: pointer; border: none; font-family: 'Poppins', sans-serif;
-        box-shadow: 0 8px 24px rgba(0,128,128,0.22);
+        display: inline-block; padding: 16px 50px;
+        background: #007a79; color: #fff;
+        border-radius: 16px; font-weight: 700; font-size: 1.1rem;
+        transition: all 0.3s; margin-top: 24px;
+        cursor: pointer; border: none;
+        font-family: 'Poppins', sans-serif;
+        box-shadow: 0 10px 26px rgba(0,122,121,0.22);
     }
-    .btn-login:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,128,128,0.3); }
+    .btn-login:hover { background: #006666; transform: translateY(-2px); }
 
     .btn-retry {
         display: inline-block; padding: 14px 30px;
         background: #fff; color: #008080;
-        border: 2px solid #e2e8f0; border-radius: 14px;
-        font-weight: 700; font-size: 0.95rem;
-        transition: all 0.3s; cursor: pointer; font-family: 'Poppins', sans-serif;
+        border: 2px solid #e2e8f0;
+        border-radius: 14px; font-weight: 700; font-size: 1rem;
+        transition: all 0.3s; margin-top: 16px;
+        cursor: pointer;
+        font-family: 'Poppins', sans-serif;
     }
-    .btn-retry:hover { background: rgba(0,128,128,0.04); border-color: #008080; transform: translateY(-2px); }
+    .btn-retry:hover { background: rgba(0,128,128,0.05); border-color: #008080; }
 
     .spinner-verify {
         width: 36px; height: 36px;
-        border: 3px solid rgba(255,255,255,0.3);
-        border-top-color: #fff;
+        border: 3px solid rgba(0,128,128,0.2);
+        border-top-color: #008080;
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
         margin: 0 auto;
     }
     @@keyframes spin { to { transform: rotate(360deg); } }
 
-    @@keyframes iconPop {
-        0% { transform: scale(0.5); opacity: 0; }
-        70% { transform: scale(1.1); }
-        100% { transform: scale(1); opacity: 1; }
-    }
-    .icon-animate { animation: iconPop 0.5s cubic-bezier(.4,0,.2,1) forwards; }
-
     #verifyingState, #successState, #errorState { display: none; }
     #verifyingState.active, #successState.active, #errorState.active { display: block; }
 
     @@media (max-width: 768px) {
-        .payment-card { padding: 36px 24px; border-radius: 18px; }
-        .payment-card h2 { font-size: 1.8rem; }
+        .payment-card { padding: 36px 24px; border-radius: 22px; }
+        .payment-card h2 { font-size: 2.1rem; }
         .payment-details { padding: 18px 16px; }
-        .payment-details .detail-row { font-size: 0.9rem; }
-        #successState p, #errorState p, #verifyingState p { font-size: 0.95rem; }
+        .payment-details .detail-row { font-size: 0.95rem; }
+        #successState p, #errorState p, #verifyingState p { font-size: 0.98rem; }
     }
 }
 
 <section class="payment-page">
-    <div class="payment-card anim-fade-up">
+    <div class="payment-card">
 
         <!-- Verifying State -->
         <div id="verifyingState" class="active">
@@ -139,8 +143,8 @@
 
         <!-- Success State -->
         <div id="successState">
-            <div class="payment-icon success icon-animate">
-                <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <div class="payment-icon success">
+                <svg width="58" height="58" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"/>
                     <polyline points="8 12 11 15 16 9"/>
                 </svg>
@@ -176,14 +180,14 @@
             </p>
             <div class="success-actions">
                 <a href="/Auth/Login" class="btn-login">Go to Login</a>
-                <a href="/ERPWebsite/Pricing" class="btn-retry">View Plans</a>
+                <a href="/ERPWebsite/Pricing" class="btn-retry" style="margin-top: 0;">View Plans</a>
             </div>
         </div>
 
         <!-- Error State -->
         <div id="errorState">
-            <div class="payment-icon error icon-animate">
-                <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <div class="payment-icon error">
+                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="15" y1="9" x2="9" y2="15"/>
                     <line x1="9" y1="9" x2="15" y2="15"/>
@@ -204,6 +208,7 @@
         const registrationId = '@ViewData["RegistrationId"]';
         const sessionId = '@ViewData["SessionId"]';
 
+        // Auto-verify on page load
         document.addEventListener('DOMContentLoaded', () => {
             if (registrationId) {
                 verifyPayment();
@@ -214,19 +219,27 @@
 
         async function verifyPayment() {
             showState('verifying');
+
             try {
                 const response = await fetch('/api/erpwebsite/verify-payment', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ registrationId, sessionId })
+                    body: JSON.stringify({
+                        registrationId: registrationId,
+                        sessionId: sessionId
+                    })
                 });
+
                 const result = await response.json();
+
                 if (result.success) {
+                    // Show success with details
                     document.getElementById('detailCompany').textContent = result.companyName || '-';
                     document.getElementById('detailPlan').textContent = (result.planName || '-') + ' Plan';
                     document.getElementById('detailEmail').textContent = result.adminEmail || '-';
                     document.getElementById('detailPayment').textContent = result.paymentId
-                        ? result.paymentId.substring(0, 16) + '...' : '-';
+                        ? result.paymentId.substring(0, 16) + '...'
+                        : '-';
                     showState('success');
                     startRedirectCountdown();
                 } else {
@@ -239,27 +252,42 @@
         }
 
         function startRedirectCountdown() {
-            const el = document.getElementById('redirectSeconds');
-            if (!el) return;
-            let s = 10;
-            el.textContent = s;
-            const t = setInterval(() => {
-                s -= 1; el.textContent = s;
-                if (s <= 0) { clearInterval(t); window.location.href = '/Auth/Login'; }
+            const secondsEl = document.getElementById('redirectSeconds');
+            if (!secondsEl) return;
+
+            let seconds = 10;
+            secondsEl.textContent = seconds;
+
+            const timer = setInterval(() => {
+                seconds -= 1;
+                secondsEl.textContent = seconds;
+                if (seconds <= 0) {
+                    clearInterval(timer);
+                    window.location.href = '/Auth/Login';
+                }
             }, 1000);
         }
 
-        function retryVerification() { verifyPayment(); }
+        function retryVerification() {
+            verifyPayment();
+        }
 
         function showState(state, errorMsg) {
-            ['verifyingState', 'successState', 'errorState'].forEach(id =>
-                document.getElementById(id).classList.remove('active'));
-            if (state === 'verifying') document.getElementById('verifyingState').classList.add('active');
-            else if (state === 'success') document.getElementById('successState').classList.add('active');
-            else if (state === 'error') {
-                if (errorMsg) document.getElementById('errorMessage').textContent = errorMsg;
+            document.getElementById('verifyingState').classList.remove('active');
+            document.getElementById('successState').classList.remove('active');
+            document.getElementById('errorState').classList.remove('active');
+
+            if (state === 'verifying') {
+                document.getElementById('verifyingState').classList.add('active');
+            } else if (state === 'success') {
+                document.getElementById('successState').classList.add('active');
+            } else if (state === 'error') {
+                if (errorMsg) {
+                    document.getElementById('errorMessage').textContent = errorMsg;
+                }
                 document.getElementById('errorState').classList.add('active');
             }
         }
+
     </script>
 }

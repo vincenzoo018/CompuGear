@@ -7,33 +7,38 @@
 @section Styles {
     .cancelled-page {
         padding: 80px 24px 120px;
-        background: #f8f9fc;
+        background: linear-gradient(180deg, #f0f9f9 0%, #f8f9fc 100%);
         min-height: 80vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: flex; align-items: center; justify-content: center;
+        position: relative; overflow: hidden;
+    }
+    .cancelled-page::before {
+        content:''; position:absolute; bottom:-100px; left:-100px;
+        width:350px; height:350px;
+        background:radial-gradient(circle,rgba(245,158,11,0.06) 0%,transparent 70%);
+        border-radius:50%;
     }
 
     .cancelled-card {
-        background: #fff;
-        border-radius: 20px;
-        padding: 56px 48px;
-        max-width: 500px;
-        width: 100%;
+        background: #fff; border-radius: 22px;
+        padding: 56px 48px; max-width: 500px; width: 100%;
         text-align: center;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-        border: 1px solid #eee;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+        border: 1px solid #eef0f3;
     }
 
     .cancelled-icon {
-        width: 80px; height: 80px;
-        border-radius: 50%;
-        background: #f59e0b;
-        color: #ffffff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        width: 88px; height: 88px; border-radius: 50%;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: #fff;
+        display: flex; align-items: center; justify-content: center;
         margin: 0 auto 24px;
+        animation: iconPop 0.5s cubic-bezier(.4,0,.2,1) forwards;
+    }
+    @@keyframes iconPop {
+        0% { transform: scale(0.5); opacity: 0; }
+        70% { transform: scale(1.1); }
+        100% { transform: scale(1); opacity: 1; }
     }
 
     .cancelled-card h2 {
@@ -43,30 +48,35 @@
         font-size: 0.95rem; color: #777; line-height: 1.7; margin-bottom: 28px;
     }
 
+    .cancelled-actions {
+        display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+
     .btn-back {
         display: inline-block; padding: 14px 48px;
-        background: #008080; color: #fff;
-        border-radius: 10px; font-weight: 600; font-size: 1rem;
-        transition: all 0.3s;
+        background: linear-gradient(135deg, #008080, #006666);
+        color: #fff; border-radius: 14px; font-weight: 600; font-size: 1rem;
+        transition: all 0.3s cubic-bezier(.4,0,.2,1);
+        box-shadow: 0 8px 24px rgba(0,128,128,0.18);
     }
-    .btn-back:hover { background: #006666; transform: translateY(-1px); }
+    .btn-back:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,128,128,0.28); }
 
     .btn-pricing {
         display: inline-block; padding: 12px 36px;
         background: #fff; color: #008080;
-        border: 2px solid #008080;
-        border-radius: 10px; font-weight: 600; font-size: 0.95rem;
-        transition: all 0.3s; margin-top: 12px;
+        border: 2px solid #e2e8f0; border-radius: 14px;
+        font-weight: 600; font-size: 0.95rem;
+        transition: all 0.3s;
     }
-    .btn-pricing:hover { background: rgba(0,128,128,0.05); }
+    .btn-pricing:hover { border-color: #008080; background: rgba(0,128,128,0.04); transform: translateY(-2px); }
 
     @@media (max-width: 768px) {
-        .cancelled-card { padding: 40px 24px; }
+        .cancelled-card { padding: 40px 24px; border-radius: 18px; }
     }
 }
 
 <section class="cancelled-page">
-    <div class="cancelled-card">
+    <div class="cancelled-card anim-fade-up">
         <div class="cancelled-icon">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"/>
@@ -76,8 +86,9 @@
         </div>
         <h2>Payment Cancelled</h2>
         <p>Your payment was not completed. No charges have been made to your account. You can try again whenever you're ready.</p>
-        <a href="/ERPWebsite/Subscribe?plan=@ViewData["SelectedPlan"]" class="btn-back">Try Again</a>
-        <br>
-        <a href="/ERPWebsite/Pricing" class="btn-pricing">View Plans</a>
+        <div class="cancelled-actions">
+            <a href="/ERPWebsite/Subscribe?plan=@ViewData["SelectedPlan"]" class="btn-back">Try Again</a>
+            <a href="/ERPWebsite/Pricing" class="btn-pricing">View Plans</a>
+        </div>
     </div>
 </section>

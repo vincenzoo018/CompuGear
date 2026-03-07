@@ -1,0 +1,248 @@
+@{
+    Layout = "~/Views/ERPWebsite/_ERPWebsiteLayout.cshtml";
+    ViewData["Title"] = "Pricing";
+    ViewData["ActivePage"] = "Pricing";
+}
+
+@section Styles {
+    .pricing-hero {
+        background: linear-gradient(180deg, #f0f9f9 0%, #f8f9fc 100%);
+        padding: 80px 24px 40px; text-align: center;
+    }
+    .pricing-hero h1 { font-size: 2.8rem; font-weight: 800; color: #1a1a2e; margin-bottom: 16px; }
+    .pricing-hero p { font-size: 1.1rem; color: #666; max-width: 550px; margin: 0 auto; }
+
+    .pricing-section { padding: 40px 24px 80px; }
+    .pricing-grid {
+        max-width: 900px; margin: 0 auto;
+        display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
+        align-items: start;
+    }
+
+    .price-card {
+        background: #fff; border-radius: 16px; padding: 40px 36px;
+        border: 2px solid #eee; position: relative; transition: all 0.3s;
+    }
+    .price-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
+    .price-card.popular { border-color: #008080; }
+    .price-card .popular-badge {
+        position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+        background: #008080; color: #fff; padding: 4px 20px;
+        border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .price-card .plan-name { font-size: 1.4rem; font-weight: 700; color: #1a1a2e; text-align: center; }
+    .price-card .plan-desc { font-size: 0.9rem; color: #888; text-align: center; margin-top: 4px; margin-bottom: 24px; }
+
+    .price-card .plan-price { text-align: center; margin-bottom: 8px; }
+    .price-card .plan-price .currency { font-size: 1.4rem; font-weight: 700; color: #1a1a2e; vertical-align: top; line-height: 2; }
+    .price-card .plan-price .amount { font-size: 3.2rem; font-weight: 800; color: #1a1a2e; }
+    .price-card .plan-price .period { font-size: 1rem; color: #999; margin-left: 4px; }
+    .price-card .annual-note { text-align: center; font-size: 0.85rem; color: #aaa; margin-bottom: 28px; }
+
+    .price-card .features-list { list-style: none; margin-bottom: 32px; }
+    .price-card .features-list li {
+        display: flex; align-items: center; gap: 10px;
+        padding: 8px 0; font-size: 0.95rem; color: #555;
+    }
+    .price-card .features-list li.included svg { color: #10B981; }
+    .price-card .features-list li.excluded { color: #ccc; }
+    .price-card .features-list li.excluded svg { color: #ddd; }
+
+    .price-card .btn-plan {
+        display: block; width: 100%; padding: 14px 0; text-align: center;
+        border-radius: 10px; font-weight: 600; font-size: 1rem;
+        transition: all 0.3s; cursor: pointer; border: 2px solid;
+    }
+    .price-card .btn-plan.btn-outline {
+        background: #fff; color: #008080; border-color: #008080;
+    }
+    .price-card .btn-plan.btn-outline:hover { background: rgba(0,128,128,0.05); }
+    .price-card .btn-plan.btn-solid {
+        background: #008080; color: #fff; border-color: #008080;
+    }
+    .price-card .btn-plan.btn-solid:hover { background: #006666; }
+
+    /* Enterprise Section */
+    .enterprise-section {
+        max-width: 900px; margin: 0 auto 60px; padding: 40px 36px;
+        background: linear-gradient(135deg, #1a1a2e 0%, #2d2d4e 100%);
+        border-radius: 16px; color: #fff;
+        display: flex; align-items: center; justify-content: space-between; gap: 40px;
+    }
+    .enterprise-section h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
+    .enterprise-section p { font-size: 0.95rem; opacity: 0.8; max-width: 500px; }
+    .enterprise-section .btn-contact {
+        flex-shrink: 0; background: #fff; color: #1a1a2e;
+        padding: 12px 32px; border-radius: 10px; font-weight: 600;
+        transition: all 0.3s; white-space: nowrap;
+    }
+    .enterprise-section .btn-contact:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+
+    /* FAQ */
+    .faq-section { max-width: 700px; margin: 0 auto; padding: 0 24px 80px; }
+    .faq-section h2 { text-align: center; font-size: 2rem; font-weight: 700; color: #1a1a2e; margin-bottom: 40px; }
+    .faq-item {
+        border-bottom: 1px solid #eee; padding: 20px 0; cursor: pointer;
+    }
+    .faq-item .faq-q {
+        display: flex; justify-content: space-between; align-items: center;
+        font-weight: 600; font-size: 1rem; color: #1a1a2e;
+    }
+    .faq-item .faq-q svg { transition: transform 0.3s; flex-shrink: 0; color: #008080; }
+    .faq-item.open .faq-q svg { transform: rotate(180deg); }
+    .faq-item .faq-a {
+        max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
+        font-size: 0.9rem; color: #777; line-height: 1.7;
+    }
+    .faq-item.open .faq-a { max-height: 200px; padding-top: 12px; }
+
+    @@media (max-width: 768px) {
+        .pricing-hero h1 { font-size: 2rem; }
+        .pricing-grid { grid-template-columns: 1fr; max-width: 450px; }
+        .enterprise-section { flex-direction: column; text-align: center; }
+    }
+}
+
+<!-- Hero -->
+<section class="pricing-hero">
+    <h1>Simple, Transparent Pricing</h1>
+    <p>Choose the plan that fits your business. Start with Basic or scale up with Pro.</p>
+</section>
+
+<!-- Pricing Cards -->
+<section class="pricing-section">
+    <div class="pricing-grid">
+        <!-- Basic Plan -->
+        <div class="price-card">
+            <div class="plan-name">Basic</div>
+            <div class="plan-desc">For small to medium businesses</div>
+            <div class="plan-price">
+                <span class="currency">₱</span><span class="amount">2,499</span><span class="period">/month</span>
+            </div>
+            <div class="annual-note">Billed annually at ₱29,988</div>
+            <ul class="features-list">
+                <li class="included">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Up to 50 Users
+                </li>
+                <li class="included">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Up to 3 Admin Users
+                </li>
+                <li class="included">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Sales Module
+                </li>
+                <li class="included">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Inventory Module
+                </li>
+                <li class="excluded">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    Advanced Billing & Invoicing
+                </li>
+                <li class="excluded">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    Priority Support
+                </li>
+            </ul>
+            <a href="/ERPWebsite/Subscribe?plan=Basic" class="btn-plan btn-outline">Get Started</a>
+        </div>
+
+        <!-- Pro Plan -->
+        <div class="price-card popular">
+            <div class="popular-badge">Most Popular</div>
+            <div class="plan-name">Pro</div>
+            <div class="plan-desc">For growing enterprises</div>
+            <div class="plan-price">
+                <span class="currency">₱</span><span class="amount">4,999</span><span class="period">/month</span>
+            </div>
+            <div class="annual-note">Billed annually at ₱59,988</div>
+            <ul class="features-list">
+                <li class="included">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Up to 200 Users
+                </li>
+                <li class="included">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Up to 10 Admin Users
+                </li>
+                <li class="included">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    All ERP Modules
+                </li>
+                <li class="included">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Billing & Invoicing
+                </li>
+                <li class="included">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Advanced Analytics
+                </li>
+                <li class="included">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Priority Email Support
+                </li>
+            </ul>
+            <a href="/ERPWebsite/Subscribe?plan=Pro" class="btn-plan btn-solid">Get Started</a>
+        </div>
+    </div>
+</section>
+
+<!-- Enterprise CTA -->
+<section style="padding: 0 24px;">
+    <div class="enterprise-section">
+        <div>
+            <h3>Need a Custom Enterprise Plan?</h3>
+            <p>Get a tailored solution with unlimited users, custom modules, dedicated support, and SLA guarantees.</p>
+        </div>
+        <a href="/ERPWebsite/Contact" class="btn-contact">Contact Sales</a>
+    </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section">
+    <h2>Frequently Asked Questions</h2>
+
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">
+            What modules are included in each plan?
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">The Basic plan includes Sales and Inventory modules. The Pro plan includes all modules: Sales, Inventory, Billing & Invoicing, Customer Support, Marketing, and the Admin Dashboard.</div>
+    </div>
+
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">
+            Can I upgrade my plan later?
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">Yes! You can upgrade from Basic to Pro at any time. Your data and settings will be preserved, and the new modules will be activated immediately.</div>
+    </div>
+
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">
+            Is there a free trial available?
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">We offer a 14-day free trial on the Pro plan so you can explore all features before committing. No credit card required to start your trial.</div>
+    </div>
+
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">
+            How does billing work?
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">You can choose monthly or annual billing. Annual billing gives you a discount equivalent to 2 months free. Payment is processed securely through our platform.</div>
+    </div>
+
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">
+            What happens after I subscribe?
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">After subscribing, you'll receive login credentials. Once logged in, you'll be redirected to your dashboard with access to the modules included in your plan.</div>
+    </div>
+</section>

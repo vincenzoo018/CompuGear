@@ -5,46 +5,112 @@
 }
 
 @section Styles {
+    /* ===== HERO ===== */
     .pricing-hero {
         background: linear-gradient(180deg, #f0f9f9 0%, #f8f9fc 100%);
-        padding: 80px 24px 40px; text-align: center;
+        padding: 90px 24px 50px; text-align: center;
+        position: relative; overflow: hidden;
     }
-    .pricing-hero h1 { font-size: 2.8rem; font-weight: 800; color: #1a1a2e; margin-bottom: 16px; }
-    .pricing-hero p { font-size: 1.1rem; color: #666; max-width: 550px; margin: 0 auto; }
+    .pricing-hero::before {
+        content:''; position:absolute; top:-180px; right:-180px;
+        width:500px; height:500px;
+        background:radial-gradient(circle,rgba(0,128,128,0.07) 0%,transparent 70%);
+        border-radius:50%;
+    }
+    .pricing-hero .badge-tag {
+        display:inline-flex; align-items:center; gap:6px;
+        background:rgba(0,128,128,0.08); border:1px solid rgba(0,128,128,0.15);
+        padding:8px 20px; border-radius:50px;
+        font-size:0.88rem; font-weight:500; color:#008080; margin-bottom:22px;
+    }
+    .pricing-hero h1 {
+        font-size: 2.8rem; font-weight: 800; color: #1a1a2e; margin-bottom: 16px;
+    }
+    .pricing-hero p {
+        font-size: 1.1rem; color: #666; max-width: 580px; margin: 0 auto;
+    }
 
-    .pricing-section { padding: 40px 24px 80px; }
+    /* Toggle */
+    .billing-toggle {
+        display:flex; align-items:center; justify-content:center;
+        gap:14px; margin-top:32px;
+    }
+    .billing-toggle span { font-size:0.95rem; font-weight:500; color:#888; transition:color 0.3s; }
+    .billing-toggle span.active { color:#1a1a2e; font-weight:600; }
+    .billing-toggle .toggle-track {
+        width:52px; height:28px; border-radius:14px;
+        background:#ccc; position:relative; cursor:pointer;
+        transition:background 0.3s;
+    }
+    .billing-toggle .toggle-track.annual { background:#008080; }
+    .billing-toggle .toggle-track .toggle-thumb {
+        position:absolute; top:3px; left:3px;
+        width:22px; height:22px; border-radius:50%;
+        background:#fff; transition:transform 0.3s;
+        box-shadow:0 2px 6px rgba(0,0,0,0.15);
+    }
+    .billing-toggle .toggle-track.annual .toggle-thumb { transform:translateX(24px); }
+    .billing-toggle .save-badge {
+        background:#10B981; color:#fff; font-size:0.75rem;
+        font-weight:600; padding:3px 10px; border-radius:20px;
+    }
+
+    /* ===== CARDS ===== */
+    .pricing-section { padding: 50px 24px 80px; }
     .pricing-grid {
-        max-width: 900px; margin: 0 auto;
-        display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
+        max-width: 1120px; margin: 0 auto;
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px;
         align-items: start;
     }
 
     .price-card {
-        background: #fff; border-radius: 16px; padding: 40px 36px;
-        border: 2px solid #eee; position: relative; transition: all 0.3s;
+        background: #fff; border-radius: 20px; padding: 40px 32px;
+        border: 2px solid #eee; position: relative;
+        transition: all 0.4s cubic-bezier(.4,0,.2,1);
     }
-    .price-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
-    .price-card.popular { border-color: #008080; }
+    .price-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.10);
+        border-color: rgba(0,128,128,0.25);
+    }
+    .price-card.popular {
+        border-color: #008080;
+        box-shadow: 0 12px 40px rgba(0,128,128,0.12);
+    }
+    .price-card.popular:hover {
+        box-shadow: 0 24px 56px rgba(0,128,128,0.18);
+    }
     .price-card .popular-badge {
         position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
-        background: #008080; color: #fff; padding: 4px 20px;
-        border-radius: 20px; font-size: 0.8rem; font-weight: 600;
-        white-space: nowrap;
+        background: linear-gradient(135deg, #008080, #00a5a5); color: #fff;
+        padding: 5px 22px; border-radius: 20px;
+        font-size: 0.78rem; font-weight: 600; white-space: nowrap;
+        box-shadow: 0 4px 12px rgba(0,128,128,0.25);
     }
 
-    .price-card .plan-name { font-size: 1.4rem; font-weight: 700; color: #1a1a2e; text-align: center; }
-    .price-card .plan-desc { font-size: 0.9rem; color: #888; text-align: center; margin-top: 4px; margin-bottom: 24px; }
+    .price-card .plan-icon {
+        width:52px; height:52px; border-radius:14px;
+        display:flex; align-items:center; justify-content:center;
+        margin-bottom:18px;
+    }
+    .price-card .plan-icon svg { width:26px; height:26px; }
+    .icon-starter { background:rgba(59,130,246,0.1); color:#3B82F6; }
+    .icon-pro { background:rgba(0,128,128,0.1); color:#008080; }
+    .icon-enterprise { background:rgba(139,92,246,0.1); color:#8B5CF6; }
 
-    .price-card .plan-price { text-align: center; margin-bottom: 8px; }
-    .price-card .plan-price .currency { font-size: 1.4rem; font-weight: 700; color: #1a1a2e; vertical-align: top; line-height: 2; }
-    .price-card .plan-price .amount { font-size: 3.2rem; font-weight: 800; color: #1a1a2e; }
-    .price-card .plan-price .period { font-size: 1rem; color: #999; margin-left: 4px; }
-    .price-card .annual-note { text-align: center; font-size: 0.85rem; color: #aaa; margin-bottom: 28px; }
+    .price-card .plan-name { font-size: 1.35rem; font-weight: 700; color: #1a1a2e; }
+    .price-card .plan-desc { font-size: 0.88rem; color: #888; margin-top: 4px; margin-bottom: 24px; }
 
-    .price-card .features-list { list-style: none; margin-bottom: 32px; }
+    .price-card .plan-price { margin-bottom: 6px; }
+    .price-card .plan-price .currency { font-size: 1.3rem; font-weight: 700; color: #1a1a2e; vertical-align: top; line-height: 2; }
+    .price-card .plan-price .amount { font-size: 3rem; font-weight: 800; color: #1a1a2e; transition: all 0.3s; }
+    .price-card .plan-price .period { font-size: 0.95rem; color: #999; margin-left: 4px; }
+    .price-card .annual-note { font-size: 0.82rem; color: #aaa; margin-bottom: 26px; min-height:20px; }
+
+    .price-card .features-list { list-style: none; margin-bottom: 30px; }
     .price-card .features-list li {
         display: flex; align-items: center; gap: 10px;
-        padding: 8px 0; font-size: 0.95rem; color: #555;
+        padding: 7px 0; font-size: 0.92rem; color: #555;
     }
     .price-card .features-list li.included svg { color: #10B981; }
     .price-card .features-list li.excluded { color: #ccc; }
@@ -52,84 +118,143 @@
 
     .price-card .btn-plan {
         display: block; width: 100%; padding: 14px 0; text-align: center;
-        border-radius: 10px; font-weight: 600; font-size: 1rem;
-        transition: all 0.3s; cursor: pointer; border: 2px solid;
+        border-radius: 12px; font-weight: 600; font-size: 1rem;
+        transition: all 0.3s cubic-bezier(.4,0,.2,1); cursor: pointer; border: 2px solid;
     }
     .price-card .btn-plan.btn-outline {
         background: #fff; color: #008080; border-color: #008080;
     }
-    .price-card .btn-plan.btn-outline:hover { background: rgba(0,128,128,0.05); }
+    .price-card .btn-plan.btn-outline:hover { background: rgba(0,128,128,0.06); transform:translateY(-1px); }
     .price-card .btn-plan.btn-solid {
-        background: #008080; color: #fff; border-color: #008080;
+        background: linear-gradient(135deg, #008080, #00a5a5); color: #fff; border-color: transparent;
+        box-shadow: 0 4px 14px rgba(0,128,128,0.25);
     }
-    .price-card .btn-plan.btn-solid:hover { background: #006666; }
+    .price-card .btn-plan.btn-solid:hover { box-shadow: 0 8px 22px rgba(0,128,128,0.35); transform:translateY(-1px); }
+    .price-card .btn-plan.btn-dark {
+        background: linear-gradient(135deg, #1a1a2e, #2d2d4e); color: #fff; border-color: transparent;
+        box-shadow: 0 4px 14px rgba(26,26,46,0.25);
+    }
+    .price-card .btn-plan.btn-dark:hover { box-shadow: 0 8px 22px rgba(26,26,46,0.35); transform:translateY(-1px); }
 
-    /* Enterprise Section */
+    /* ===== ENTERPRISE CTA ===== */
     .enterprise-section {
-        max-width: 900px; margin: 0 auto 60px; padding: 40px 36px;
+        max-width: 1120px; margin: 0 auto 60px; padding: 48px 44px;
         background: linear-gradient(135deg, #1a1a2e 0%, #2d2d4e 100%);
-        border-radius: 16px; color: #fff;
+        border-radius: 20px; color: #fff;
         display: flex; align-items: center; justify-content: space-between; gap: 40px;
+        position:relative; overflow:hidden;
+    }
+    .enterprise-section::before {
+        content:''; position:absolute; top:-60px; right:-60px;
+        width:200px; height:200px;
+        background:radial-gradient(circle,rgba(0,128,128,0.2) 0%,transparent 70%);
+        border-radius:50%;
     }
     .enterprise-section h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
-    .enterprise-section p { font-size: 0.95rem; opacity: 0.8; max-width: 500px; }
+    .enterprise-section p { font-size: 0.95rem; opacity: 0.8; max-width: 520px; }
     .enterprise-section .btn-contact {
         flex-shrink: 0; background: #fff; color: #1a1a2e;
-        padding: 12px 32px; border-radius: 10px; font-weight: 600;
+        padding: 14px 36px; border-radius: 12px; font-weight: 600;
         transition: all 0.3s; white-space: nowrap;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.1);
     }
-    .enterprise-section .btn-contact:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .enterprise-section .btn-contact:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
 
-    /* FAQ */
-    .faq-section { max-width: 700px; margin: 0 auto; padding: 0 24px 80px; }
+    /* ===== COMPARISON TABLE ===== */
+    .comparison-section { max-width: 1120px; margin: 0 auto; padding: 0 24px 60px; }
+    .comparison-section h2 { text-align:center; font-size:2rem; font-weight:700; color:#1a1a2e; margin-bottom:36px; }
+    .comparison-table {
+        width:100%; border-collapse:collapse; background:#fff;
+        border-radius:16px; overflow:hidden;
+        box-shadow:0 4px 20px rgba(0,0,0,0.05);
+    }
+    .comparison-table thead th {
+        background:#f8f9fc; padding:16px 20px; text-align:center;
+        font-size:0.9rem; font-weight:600; color:#1a1a2e; border-bottom:2px solid #eee;
+    }
+    .comparison-table thead th:first-child { text-align:left; }
+    .comparison-table thead th.highlight { color:#008080; background:rgba(0,128,128,0.04); }
+    .comparison-table tbody td {
+        padding:14px 20px; text-align:center; font-size:0.9rem; color:#555;
+        border-bottom:1px solid #f0f0f0;
+    }
+    .comparison-table tbody td:first-child { text-align:left; font-weight:500; color:#333; }
+    .comparison-table tbody td.highlight { background:rgba(0,128,128,0.02); }
+    .comparison-table tbody tr:last-child td { border-bottom:none; }
+    .comparison-table .check-icon { color:#10B981; font-weight:700; }
+    .comparison-table .cross-icon { color:#ddd; }
+
+    /* ===== FAQ ===== */
+    .faq-section { max-width: 740px; margin: 0 auto; padding: 0 24px 80px; }
     .faq-section h2 { text-align: center; font-size: 2rem; font-weight: 700; color: #1a1a2e; margin-bottom: 40px; }
     .faq-item {
-        border-bottom: 1px solid #eee; padding: 20px 0; cursor: pointer;
+        border: 1px solid #eee; border-radius: 12px; margin-bottom: 12px;
+        overflow:hidden; transition: all 0.3s; background:#fff;
     }
+    .faq-item:hover { border-color:rgba(0,128,128,0.2); }
     .faq-item .faq-q {
         display: flex; justify-content: space-between; align-items: center;
-        font-weight: 600; font-size: 1rem; color: #1a1a2e;
+        font-weight: 600; font-size: 0.95rem; color: #1a1a2e;
+        padding:18px 24px; cursor:pointer;
     }
     .faq-item .faq-q svg { transition: transform 0.3s; flex-shrink: 0; color: #008080; }
     .faq-item.open .faq-q svg { transform: rotate(180deg); }
     .faq-item .faq-a {
-        max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
-        font-size: 0.9rem; color: #777; line-height: 1.7;
+        max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s ease;
+        font-size: 0.9rem; color: #777; line-height: 1.7; padding:0 24px;
     }
-    .faq-item.open .faq-a { max-height: 200px; padding-top: 12px; }
+    .faq-item.open .faq-a { max-height: 200px; padding: 0 24px 18px; }
 
+    @@media (max-width: 900px) {
+        .pricing-grid { grid-template-columns: 1fr; max-width: 420px; margin:0 auto; }
+        .price-card.popular { order:-1; }
+    }
     @@media (max-width: 768px) {
         .pricing-hero h1 { font-size: 2rem; }
-        .pricing-grid { grid-template-columns: 1fr; max-width: 450px; }
-        .enterprise-section { flex-direction: column; text-align: center; }
+        .enterprise-section { flex-direction: column; text-align: center; padding:36px 28px; }
+        .comparison-table { font-size:0.82rem; }
+        .comparison-table thead th, .comparison-table tbody td { padding:10px 12px; }
     }
 }
 
 <!-- Hero -->
 <section class="pricing-hero">
-    <h1>Simple, Transparent Pricing</h1>
-    <p>Choose the plan that fits your business. Start with Basic or scale up with Pro.</p>
+    <div class="badge-tag anim-fade-up">Flexible Plans for Every Business</div>
+    <h1 class="anim-fade-up anim-d1">Simple, Transparent Pricing</h1>
+    <p class="anim-fade-up anim-d2">Choose the plan that fits your business. Start small and scale as you grow.</p>
+
+    <div class="billing-toggle anim-fade-up anim-d3">
+        <span id="lblMonthly" class="active">Monthly</span>
+        <div class="toggle-track" id="billingToggle" onclick="toggleBilling()">
+            <div class="toggle-thumb"></div>
+        </div>
+        <span id="lblAnnual">Annual</span>
+        <span class="save-badge">Save 17%</span>
+    </div>
 </section>
 
 <!-- Pricing Cards -->
 <section class="pricing-section">
     <div class="pricing-grid">
-        <!-- Basic Plan -->
-        <div class="price-card">
-            <div class="plan-name">Basic</div>
-            <div class="plan-desc">For small to medium businesses</div>
-            <div class="plan-price">
-                <span class="currency">₱</span><span class="amount">2,499</span><span class="period">/month</span>
+        <!-- Starter Plan -->
+        <div class="price-card reveal">
+            <div class="plan-icon icon-starter">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
             </div>
-            <div class="annual-note">Billed annually at ₱29,988</div>
+            <div class="plan-name">Starter</div>
+            <div class="plan-desc">For small teams getting started</div>
+            <div class="plan-price">
+                <span class="currency">&#8369;</span><span class="amount" data-monthly="999" data-annual="833">999</span><span class="period">/month</span>
+            </div>
+            <div class="annual-note" data-monthly="" data-annual="Billed annually at &#8369;9,988">&nbsp;</div>
             <ul class="features-list">
                 <li class="included">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    Up to 50 Users
+                    Up to 15 Users
                 </li>
                 <li class="included">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    Up to 3 Admin Users
+                    1 Admin User
                 </li>
                 <li class="included">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -141,33 +266,36 @@
                 </li>
                 <li class="excluded">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                    Advanced Billing & Invoicing
+                    Billing & Invoicing
                 </li>
                 <li class="excluded">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     Priority Support
                 </li>
             </ul>
-            <a href="/ERPWebsite/Subscribe?plan=Basic" class="btn-plan btn-outline">Get Started</a>
+            <a href="/ERPWebsite/Subscribe?plan=Starter" class="btn-plan btn-outline">Get Started</a>
         </div>
 
-        <!-- Pro Plan -->
-        <div class="price-card popular">
+        <!-- Pro Plan (Most Popular) -->
+        <div class="price-card popular reveal">
             <div class="popular-badge">Most Popular</div>
+            <div class="plan-icon icon-pro">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
             <div class="plan-name">Pro</div>
             <div class="plan-desc">For growing enterprises</div>
             <div class="plan-price">
-                <span class="currency">₱</span><span class="amount">4,999</span><span class="period">/month</span>
+                <span class="currency">&#8369;</span><span class="amount" data-monthly="2,499" data-annual="2,083">2,499</span><span class="period">/month</span>
             </div>
-            <div class="annual-note">Billed annually at ₱59,988</div>
+            <div class="annual-note" data-monthly="" data-annual="Billed annually at &#8369;24,988">&nbsp;</div>
             <ul class="features-list">
                 <li class="included">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    Up to 200 Users
+                    Up to 50 Users
                 </li>
                 <li class="included">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    Up to 10 Admin Users
+                    Up to 5 Admin Users
                 </li>
                 <li class="included">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -188,22 +316,145 @@
             </ul>
             <a href="/ERPWebsite/Subscribe?plan=Pro" class="btn-plan btn-solid">Get Started</a>
         </div>
+
+        <!-- Enterprise Plan -->
+        <div class="price-card reveal">
+            <div class="plan-icon icon-enterprise">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </div>
+            <div class="plan-name">Enterprise</div>
+            <div class="plan-desc">For large-scale operations</div>
+            <div class="plan-price">
+                <span class="currency">&#8369;</span><span class="amount" data-monthly="4,999" data-annual="4,166">4,999</span><span class="period">/month</span>
+            </div>
+            <div class="annual-note" data-monthly="" data-annual="Billed annually at &#8369;49,988">&nbsp;</div>
+            <ul class="features-list">
+                <li class="included">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Up to 200 Users
+                </li>
+                <li class="included">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Up to 10 Admin Users
+                </li>
+                <li class="included">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    All ERP Modules
+                </li>
+                <li class="included">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Advanced Billing & Reports
+                </li>
+                <li class="included">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Dedicated Account Manager
+                </li>
+                <li class="included">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Priority Phone & Email Support
+                </li>
+            </ul>
+            <a href="/ERPWebsite/Subscribe?plan=Enterprise" class="btn-plan btn-dark">Get Started</a>
+        </div>
     </div>
 </section>
 
-<!-- Enterprise CTA -->
-<section style="padding: 0 24px;">
+<!-- Custom Enterprise CTA -->
+<section style="padding: 0 24px;" class="reveal">
     <div class="enterprise-section">
         <div>
-            <h3>Need a Custom Enterprise Plan?</h3>
-            <p>Get a tailored solution with unlimited users, custom modules, dedicated support, and SLA guarantees.</p>
+            <h3>Need a Custom Solution?</h3>
+            <p>Get a fully tailored plan with unlimited users, custom modules, dedicated on-site support, SLA guarantees, and white-label options.</p>
         </div>
         <a href="/ERPWebsite/Contact" class="btn-contact">Contact Sales</a>
     </div>
 </section>
 
+<!-- Comparison Table -->
+<section class="comparison-section reveal">
+    <h2>Compare Plans</h2>
+    <table class="comparison-table">
+        <thead>
+            <tr>
+                <th>Feature</th>
+                <th>Starter</th>
+                <th class="highlight">Pro</th>
+                <th>Enterprise</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Users</td>
+                <td>Up to 15</td>
+                <td class="highlight">Up to 50</td>
+                <td>Up to 200</td>
+            </tr>
+            <tr>
+                <td>Admin Users</td>
+                <td>1</td>
+                <td class="highlight">5</td>
+                <td>10</td>
+            </tr>
+            <tr>
+                <td>Sales Module</td>
+                <td><span class="check-icon">&#10003;</span></td>
+                <td class="highlight"><span class="check-icon">&#10003;</span></td>
+                <td><span class="check-icon">&#10003;</span></td>
+            </tr>
+            <tr>
+                <td>Inventory Module</td>
+                <td><span class="check-icon">&#10003;</span></td>
+                <td class="highlight"><span class="check-icon">&#10003;</span></td>
+                <td><span class="check-icon">&#10003;</span></td>
+            </tr>
+            <tr>
+                <td>Customer Module</td>
+                <td><span class="cross-icon">&#10007;</span></td>
+                <td class="highlight"><span class="check-icon">&#10003;</span></td>
+                <td><span class="check-icon">&#10003;</span></td>
+            </tr>
+            <tr>
+                <td>Billing & Invoicing</td>
+                <td><span class="cross-icon">&#10007;</span></td>
+                <td class="highlight"><span class="check-icon">&#10003;</span></td>
+                <td><span class="check-icon">&#10003;</span></td>
+            </tr>
+            <tr>
+                <td>Support Module</td>
+                <td><span class="cross-icon">&#10007;</span></td>
+                <td class="highlight"><span class="check-icon">&#10003;</span></td>
+                <td><span class="check-icon">&#10003;</span></td>
+            </tr>
+            <tr>
+                <td>Marketing Module</td>
+                <td><span class="cross-icon">&#10007;</span></td>
+                <td class="highlight"><span class="check-icon">&#10003;</span></td>
+                <td><span class="check-icon">&#10003;</span></td>
+            </tr>
+            <tr>
+                <td>Advanced Analytics</td>
+                <td><span class="cross-icon">&#10007;</span></td>
+                <td class="highlight"><span class="check-icon">&#10003;</span></td>
+                <td><span class="check-icon">&#10003;</span></td>
+            </tr>
+            <tr>
+                <td>Dedicated Account Manager</td>
+                <td><span class="cross-icon">&#10007;</span></td>
+                <td class="highlight"><span class="cross-icon">&#10007;</span></td>
+                <td><span class="check-icon">&#10003;</span></td>
+            </tr>
+            <tr>
+                <td>Priority Support</td>
+                <td>Email</td>
+                <td class="highlight">Email</td>
+                <td>Phone & Email</td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+
 <!-- FAQ -->
-<section class="faq-section">
+<section class="faq-section reveal">
     <h2>Frequently Asked Questions</h2>
 
     <div class="faq-item" onclick="this.classList.toggle('open')">
@@ -211,7 +462,7 @@
             What modules are included in each plan?
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <div class="faq-a">The Basic plan includes Sales and Inventory modules. The Pro plan includes all modules: Sales, Inventory, Billing & Invoicing, Customer Support, Marketing, and the Admin Dashboard.</div>
+        <div class="faq-a">Starter includes Sales and Inventory. Pro includes all modules: Sales, Inventory, Billing, Customer, Support, and Marketing. Enterprise includes everything in Pro plus a dedicated account manager and phone support.</div>
     </div>
 
     <div class="faq-item" onclick="this.classList.toggle('open')">
@@ -219,7 +470,7 @@
             Can I upgrade my plan later?
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <div class="faq-a">Yes! You can upgrade from Basic to Pro at any time. Your data and settings will be preserved, and the new modules will be activated immediately.</div>
+        <div class="faq-a">Yes! You can upgrade at any time. Your data and settings will be preserved, and the new modules will be activated immediately.</div>
     </div>
 
     <div class="faq-item" onclick="this.classList.toggle('open')">
@@ -235,7 +486,7 @@
             How does billing work?
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <div class="faq-a">You can choose monthly or annual billing. Annual billing gives you a discount equivalent to 2 months free. Payment is processed securely through our platform.</div>
+        <div class="faq-a">Choose monthly or annual billing. Annual billing saves you 17% (roughly 2 months free). Payment is processed securely through our platform.</div>
     </div>
 
     <div class="faq-item" onclick="this.classList.toggle('open')">
@@ -246,3 +497,34 @@
         <div class="faq-a">After subscribing, you'll receive login credentials. Once logged in, you'll be redirected to your dashboard with access to the modules included in your plan.</div>
     </div>
 </section>
+
+@section Scripts {
+    <script>
+        let isAnnual = false;
+
+        function toggleBilling() {
+            isAnnual = !isAnnual;
+            const track = document.getElementById('billingToggle');
+            const lblM = document.getElementById('lblMonthly');
+            const lblA = document.getElementById('lblAnnual');
+
+            track.classList.toggle('annual', isAnnual);
+            lblM.classList.toggle('active', !isAnnual);
+            lblA.classList.toggle('active', isAnnual);
+
+            // Update prices with a subtle transition
+            document.querySelectorAll('.plan-price .amount').forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-8px)';
+                setTimeout(() => {
+                    el.textContent = isAnnual ? el.dataset.annual : el.dataset.monthly;
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, 150);
+            });
+            document.querySelectorAll('.annual-note').forEach(el => {
+                el.innerHTML = isAnnual ? (el.dataset.annual || '&nbsp;') : '&nbsp;';
+            });
+        }
+    </script>
+}

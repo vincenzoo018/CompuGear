@@ -7,115 +7,66 @@
 @section Styles {
     .features-hero {
         background: linear-gradient(180deg, #f0f9f9 0%, #f8f9fc 100%);
-        padding: 90px 24px 60px; text-align: center;
-        position:relative; overflow:hidden;
-    }
-    .features-hero::before {
-        content:''; position:absolute; top:-160px; right:-160px;
-        width:500px; height:500px;
-        background:radial-gradient(circle,rgba(0,128,128,0.06) 0%,transparent 70%);
-        border-radius:50%;
-    }
-    .features-hero .badge-tag {
-        display:inline-flex; align-items:center; gap:6px;
-        background:rgba(0,128,128,0.08); border:1px solid rgba(0,128,128,0.15);
-        padding:8px 20px; border-radius:50px;
-        font-size:0.88rem; font-weight:500; color:#008080; margin-bottom:20px;
+        padding: 80px 24px 60px; text-align: center;
     }
     .features-hero h1 { font-size: 2.8rem; font-weight: 800; color: #1a1a2e; margin-bottom: 16px; }
     .features-hero p { font-size: 1.1rem; color: #666; max-width: 600px; margin: 0 auto; }
 
-    .features-section { padding: 70px 24px; }
+    .features-section { padding: 60px 24px; }
     .feature-block {
-        max-width: 1020px; margin: 0 auto 70px;
-        display: grid; grid-template-columns: 1fr 1fr; gap: 52px;
+        max-width: 1000px; margin: 0 auto 60px;
+        display: grid; grid-template-columns: 1fr 1fr; gap: 48px;
         align-items: center;
     }
     .feature-block:nth-child(even) { direction: rtl; }
     .feature-block:nth-child(even) > * { direction: ltr; }
 
     .feature-visual {
-        background: #f8f9fc; border-radius: 22px; padding: 44px;
+        background: #f8f9fc; border-radius: 20px; padding: 40px;
         display: flex; align-items: center; justify-content: center;
-        min-height: 280px; border: 1px solid #eee;
-        transition: all 0.4s cubic-bezier(.4,0,.2,1);
-        position:relative; overflow:hidden;
+        min-height: 260px; border: 1px solid #eee;
     }
-    .feature-visual::before {
-        content:''; position:absolute; bottom:-40px; right:-40px;
-        width:120px; height:120px;
-        background:radial-gradient(circle,rgba(0,128,128,0.08) 0%,transparent 70%);
-        border-radius:50%;
-    }
-    .feature-visual:hover { transform: scale(1.02); box-shadow: 0 12px 32px rgba(0,0,0,0.06); }
     .feature-visual .feat-icon {
-        width: 84px; height: 84px; border-radius: 22px;
+        width: 80px; height: 80px; border-radius: 20px;
         display: flex; align-items: center; justify-content: center;
-        transition: transform 0.3s;
     }
-    .feature-visual:hover .feat-icon { transform: scale(1.1); }
-    .feature-visual .feat-icon svg { width: 42px; height: 42px; }
+    .feature-visual .feat-icon svg { width: 40px; height: 40px; }
 
     .feature-content h2 { font-size: 1.6rem; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; }
     .feature-content p { font-size: 0.95rem; color: #777; line-height: 1.7; margin-bottom: 20px; }
     .feature-content .feat-list { list-style: none; }
     .feature-content .feat-list li {
         display: flex; align-items: center; gap: 10px;
-        font-size: 0.9rem; color: #555; padding: 7px 0;
-        transition: transform 0.2s;
+        font-size: 0.9rem; color: #555; padding: 6px 0;
     }
-    .feature-content .feat-list li:hover { transform: translateX(4px); }
     .feature-content .feat-list li svg { color: #008080; flex-shrink: 0; }
 
     .integration-section {
-        background: #fff; padding: 70px 24px; text-align: center;
+        background: #fff; padding: 60px 24px; text-align: center;
         border-top: 1px solid #f0f0f0;
     }
     .integration-section h2 { font-size: 2rem; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; }
-    .integration-section p { font-size: 1rem; color: #666; margin-bottom: 44px; }
+    .integration-section p { font-size: 1rem; color: #666; margin-bottom: 40px; }
     .integration-grid {
         max-width: 800px; margin: 0 auto;
         display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
     }
     .integration-item {
-        background: #f8f9fc; border-radius: 14px; padding: 28px;
-        border: 1px solid #eee; transition: all 0.35s cubic-bezier(.4,0,.2,1);
+        background: #f8f9fc; border-radius: 12px; padding: 24px;
+        border: 1px solid #eee; transition: all 0.3s;
     }
-    .integration-item:hover { border-color: rgba(0,128,128,0.25); transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+    .integration-item:hover { border-color: rgba(0,128,128,0.2); transform: translateY(-2px); }
     .integration-item .int-icon {
         width: 48px; height: 48px; border-radius: 12px;
         background: #008080; color: #ffffff;
         display: flex; align-items: center; justify-content: center;
         margin: 0 auto 12px;
-        transition: transform 0.3s;
     }
-    .integration-item:hover .int-icon { transform: scale(1.1); }
     .integration-item p { font-size: 0.85rem; font-weight: 600; color: #555; }
-
-    .features-cta {
-        padding:70px 24px; text-align:center;
-        background:linear-gradient(135deg,#008080,#006666); color:#fff;
-        position:relative; overflow:hidden;
-    }
-    .features-cta::before {
-        content:''; position:absolute; top:-80px; left:-80px;
-        width:250px; height:250px;
-        background:radial-gradient(circle,rgba(255,255,255,0.06) 0%,transparent 70%);
-        border-radius:50%;
-    }
-    .features-cta h2 { font-size:2rem; font-weight:700; margin-bottom:12px; }
-    .features-cta p { font-size:1rem; opacity:0.9; margin-bottom:28px; }
-    .features-cta .btn-cta {
-        display:inline-block; background:#fff; color:#008080;
-        padding:14px 36px; border-radius:12px; font-weight:600;
-        transition:all 0.3s cubic-bezier(.4,0,.2,1);
-        box-shadow:0 4px 14px rgba(0,0,0,0.1);
-    }
-    .features-cta .btn-cta:hover { transform:translateY(-3px); box-shadow:0 8px 22px rgba(0,0,0,0.18); }
 
     @@media (max-width: 768px) {
         .features-hero h1 { font-size: 2rem; }
-        .feature-block { grid-template-columns: 1fr; gap: 28px; }
+        .feature-block { grid-template-columns: 1fr; gap: 24px; }
         .feature-block:nth-child(even) { direction: ltr; }
         .integration-grid { grid-template-columns: repeat(2, 1fr); }
     }
@@ -123,15 +74,14 @@
 
 <!-- Hero -->
 <section class="features-hero">
-    <div class="badge-tag anim-fade-up">Explore Our Platform</div>
-    <h1 class="anim-fade-up anim-d1">Powerful Features for Your Business</h1>
-    <p class="anim-fade-up anim-d2">Explore the modules and tools that make CompuGear the all-in-one ERP solution for enterprises.</p>
+    <h1>Powerful Features for Your Business</h1>
+    <p>Explore the modules and tools that make CompuGear the all-in-one ERP solution for enterprises.</p>
 </section>
 
 <!-- Features -->
 <section class="features-section">
     <!-- Sales -->
-    <div class="feature-block reveal" id="sales">
+    <div class="feature-block" id="sales">
         <div class="feature-visual">
             <div class="feat-icon" style="background:#3B82F6;color:#ffffff;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -152,7 +102,7 @@
     </div>
 
     <!-- Inventory -->
-    <div class="feature-block reveal" id="inventory">
+    <div class="feature-block" id="inventory">
         <div class="feature-visual">
             <div class="feat-icon" style="background:#10B981;color:#ffffff;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -174,7 +124,7 @@
     </div>
 
     <!-- Billing -->
-    <div class="feature-block reveal" id="billing">
+    <div class="feature-block" id="billing">
         <div class="feature-visual">
             <div class="feat-icon" style="background:#F59E0B;color:#ffffff;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -195,7 +145,7 @@
     </div>
 
     <!-- Support -->
-    <div class="feature-block reveal" id="support">
+    <div class="feature-block" id="support">
         <div class="feature-visual">
             <div class="feat-icon" style="background:#8B5CF6;color:#ffffff;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -216,7 +166,7 @@
     </div>
 
     <!-- Marketing -->
-    <div class="feature-block reveal" id="marketing">
+    <div class="feature-block" id="marketing">
         <div class="feature-visual">
             <div class="feat-icon" style="background:#EC4899;color:#ffffff;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -239,24 +189,22 @@
 
 <!-- Integrations -->
 <section class="integration-section">
-    <div class="reveal">
-        <h2>Built-In Integrations</h2>
-        <p>All modules work together seamlessly — no third-party connectors needed.</p>
-    </div>
+    <h2>Built-In Integrations</h2>
+    <p>All modules work together seamlessly — no third-party connectors needed.</p>
     <div class="integration-grid">
-        <div class="integration-item reveal">
+        <div class="integration-item">
             <div class="int-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
             <p>Dashboard</p>
         </div>
-        <div class="integration-item reveal">
+        <div class="integration-item">
             <div class="int-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
             <p>Reports</p>
         </div>
-        <div class="integration-item reveal">
+        <div class="integration-item">
             <div class="int-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
             <p>Security</p>
         </div>
-        <div class="integration-item reveal">
+        <div class="integration-item">
             <div class="int-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
             <p>User Roles</p>
         </div>
@@ -264,10 +212,8 @@
 </section>
 
 <!-- CTA -->
-<section class="features-cta">
-    <div class="reveal">
-        <h2>Ready to Get Started?</h2>
-        <p>Choose a plan and start streamlining your business today.</p>
-        <a href="/ERPWebsite/Pricing" class="btn-cta">View Pricing</a>
-    </div>
+<section style="padding:60px 24px;text-align:center;background:linear-gradient(135deg,#008080,#006666);color:#fff;">
+    <h2 style="font-size:2rem;font-weight:700;margin-bottom:12px;">Ready to Get Started?</h2>
+    <p style="font-size:1rem;opacity:0.9;margin-bottom:28px;">Choose a plan and start streamlining your business today.</p>
+    <a href="/ERPWebsite/Pricing" style="display:inline-block;background:#fff;color:#008080;padding:14px 36px;border-radius:10px;font-weight:600;transition:all 0.3s;">View Pricing</a>
 </section>

@@ -142,6 +142,7 @@
             border: 1px solid var(--erp-border);
             border-radius: var(--erp-radius-md);
             box-shadow: var(--erp-shadow-sm);
+            transition: all 0.35s cubic-bezier(.4,0,.2,1);
         }
         .erp-card:hover {
             box-shadow: var(--erp-shadow-md);
@@ -163,6 +164,71 @@
             background: var(--erp-primary-dark);
             transform: translateY(-1px);
             box-shadow: 0 10px 20px rgba(0,128,128,0.2);
+        }
+
+        /* ========== GLOBAL ANIMATIONS ========== */
+        @@keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(32px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @@keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        @@keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+        @@keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-40px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @@keyframes slideInRight {
+            from { opacity: 0; transform: translateX(40px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        @@keyframes countPulse {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.08); }
+        }
+        .anim-fade-up {
+            opacity: 0;
+            animation: fadeInUp 0.7s cubic-bezier(.4,0,.2,1) forwards;
+        }
+        .anim-fade-scale {
+            opacity: 0;
+            animation: fadeInScale 0.6s cubic-bezier(.4,0,.2,1) forwards;
+        }
+        .anim-fade {
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards;
+        }
+        .anim-slide-left {
+            opacity: 0;
+            animation: slideInLeft 0.7s cubic-bezier(.4,0,.2,1) forwards;
+        }
+        .anim-slide-right {
+            opacity: 0;
+            animation: slideInRight 0.7s cubic-bezier(.4,0,.2,1) forwards;
+        }
+        .anim-d1 { animation-delay: 0.1s; }
+        .anim-d2 { animation-delay: 0.2s; }
+        .anim-d3 { animation-delay: 0.3s; }
+        .anim-d4 { animation-delay: 0.4s; }
+        .anim-d5 { animation-delay: 0.5s; }
+        .anim-d6 { animation-delay: 0.6s; }
+        .anim-d7 { animation-delay: 0.7s; }
+        .anim-d8 { animation-delay: 0.8s; }
+
+        /* Scroll reveal – elements start hidden, JS adds .revealed */
+        .reveal {
+            opacity: 0;
+            transform: translateY(28px);
+            transition: opacity 0.65s cubic-bezier(.4,0,.2,1), transform 0.65s cubic-bezier(.4,0,.2,1);
+        }
+        .reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         @RenderSection("Styles", required: false)
@@ -256,6 +322,18 @@
             if (window.scrollY > 50) { navbar.classList.add('scrolled'); } else { navbar.classList.remove('scrolled'); }
             if (window.scrollY > 300) { scrollTop.classList.add('visible'); } else { scrollTop.classList.remove('visible'); }
         });
+
+        // Scroll-reveal observer
+        (function() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); observer.unobserve(e.target); } });
+            }, { threshold: 0.12 });
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+            // Re-observe after dynamic content loads
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('.reveal:not(.revealed)').forEach(el => observer.observe(el));
+            });
+        })();
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
