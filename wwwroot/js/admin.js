@@ -1,11 +1,11 @@
-/**
+﻿/**
  * CompuGear Admin JavaScript - Comprehensive CRUD Operations
  * Handles all admin module functionality with database integration
  */
 
 // Global Configuration
 const CONFIG = {
-    currency: '₱',
+    currency: 'â‚±',
     dateFormat: 'en-PH',
     apiBase: '/api'
 };
@@ -693,7 +693,7 @@ const Marketing = {
                         <div>${Format.date(p.startDate)}</div>
                         <small class="text-muted">to ${Format.date(p.endDate)}</small>
                     </td>
-                    <td class="text-center">${p.timesUsed || 0} / ${p.usageLimit || '∞'}</td>
+                    <td class="text-center">${p.timesUsed || 0} / ${p.usageLimit || 'âˆž'}</td>
                     <td class="text-center">
                         <button class="btn btn-sm deploy-btn ${p.isActive ? 'deployed' : 'not-deployed'}" 
                                 onclick="Marketing.promotions.toggleVisibility(${p.promotionId})"
@@ -848,7 +848,7 @@ const Marketing = {
                     </div>
                     <div class="col-md-6">
                         <h6 class="text-muted mb-1">Usage</h6>
-                        <p>${p.timesUsed || 0} / ${p.usageLimit || '∞'}</p>
+                        <p>${p.timesUsed || 0} / ${p.usageLimit || 'âˆž'}</p>
                     </div>
                 </div>
             `;
@@ -946,7 +946,7 @@ const Marketing = {
                         <div>${Format.date(p.startDate)}</div>
                         <small class="text-muted">to ${Format.date(p.endDate)}</small>
                     </td>
-                    <td class="text-center">${p.timesUsed || 0} / ${p.usageLimit || '∞'}</td>
+                    <td class="text-center">${p.timesUsed || 0} / ${p.usageLimit || 'âˆž'}</td>
                     <td class="text-center">
                         <button class="btn btn-sm deploy-btn ${p.isActive ? 'deployed' : 'not-deployed'}" 
                                 onclick="Marketing.promotions.toggleVisibility(${p.promotionId})"
@@ -1405,7 +1405,7 @@ const Inventory = {
                     imagePreviewArea.innerHTML = `
                         <div class="image-preview-container">
                             <img src="${product.mainImageUrl}" class="image-preview" alt="Product Image">
-                            <button type="button" class="image-preview-remove" onclick="removeImage(event)">×</button>
+                            <button type="button" class="image-preview-remove" onclick="removeImage(event)">Ã—</button>
                         </div>
                         <p class="mt-2 mb-0 text-muted small">Click to change image</p>
                     `;
@@ -1940,7 +1940,7 @@ const Sales = {
                 <style>body{font-family:'Segoe UI',Arial,sans-serif;margin:40px;color:#333}.header{display:flex;justify-content:space-between;border-bottom:3px solid #008080;padding-bottom:20px;margin-bottom:30px}.company-logo img{height:60px;width:auto;}.badge{background:#008080;color:white;padding:8px 20px;border-radius:5px;font-size:18px}table{width:100%;border-collapse:collapse;margin-bottom:20px}th{background:#008080;color:white;padding:10px;text-align:left}td{padding:10px;border-bottom:1px solid #eee}.total-row td{font-weight:bold;font-size:18px;color:#008080;border-top:2px solid #008080}</style></head><body>
                 <div class="header">
                     <div class="company-logo">
-                        <img src="${window.location.origin}/images/compugearlogo.png" alt="CompuGear" onerror="this.onerror=null;this.src='${window.location.origin}/images/compugearlogo.png';">
+                        <img src="${window.location.origin}/images/compugear-logo-v7.png" alt="CompuGear" onerror="this.onerror=null;this.src='${window.location.origin}/images/compugear-logo-v7.png';">
                         <div style="font-size: 1.2rem; font-weight: bold; color: #008080; margin-top: 5px;">CompuGear</div>
                     </div>
                     <div><span class="badge">${o.orderNumber}</span></div>
@@ -2422,7 +2422,7 @@ const Sales = {
                             y: { 
                                 beginAtZero: true, 
                                 ticks: { 
-                                    callback: function(v) { return '₱' + (v / 1000).toFixed(0) + 'k'; } 
+                                    callback: function(v) { return 'â‚±' + (v / 1000).toFixed(0) + 'k'; } 
                                 } 
                             } 
                         }
@@ -3577,15 +3577,15 @@ const Billing = {
                             ${items.map(item => `<tr>
                                 <td>${item.description || item.productName || '-'}</td>
                                 <td style="text-align:center">${item.quantity}</td>
-                                <td style="text-align:right">₱${(item.unitPrice || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
-                                <td style="text-align:right">₱${((item.totalPrice || item.unitPrice * item.quantity) || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
+                                <td style="text-align:right">â‚±${(item.unitPrice || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
+                                <td style="text-align:right">â‚±${((item.totalPrice || item.unitPrice * item.quantity) || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
                             </tr>`).join('')}
                         </tbody>
                     </table>
                     <table class="totals"><tbody>
-                        <tr><td></td><td>Subtotal:</td><td>₱${subtotal.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td></tr>
-                        <tr><td></td><td>VAT (12%):</td><td>₱${tax.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td></tr>
-                        <tr class="total-row"><td></td><td>Total:</td><td>₱${inv.totalAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td></tr>
+                        <tr><td></td><td>Subtotal:</td><td>â‚±${subtotal.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td></tr>
+                        <tr><td></td><td>VAT (12%):</td><td>â‚±${tax.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td></tr>
+                        <tr class="total-row"><td></td><td>Total:</td><td>â‚±${inv.totalAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}</td></tr>
                     </tbody></table>
                     ${payments.length > 0 ? `
                     <div class="payments">
@@ -3596,7 +3596,7 @@ const Billing = {
                                 <td>${Format.date(p.paymentDate)}</td>
                                 <td>${p.paymentMethodType || '-'}</td>
                                 <td>${p.referenceNumber || '-'}</td>
-                                <td style="text-align:right">₱${(p.amount || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
+                                <td style="text-align:right">â‚±${(p.amount || 0).toLocaleString('en-PH', {minimumFractionDigits: 2})}</td>
                             </tr>`).join('')}</tbody>
                         </table>
                     </div>` : ''}

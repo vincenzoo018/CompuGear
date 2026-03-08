@@ -24,6 +24,15 @@
     }
     .features-hero h1 { font-size: 2.8rem; font-weight: 800; color: #1a1a2e; margin-bottom: 16px; }
     .features-hero p { font-size: 1.1rem; color: #666; max-width: 600px; margin: 0 auto; }
+    .hero-logo {
+        display: block; width: 280px; margin: 0 auto 28px; object-fit: contain;
+        filter: drop-shadow(0 6px 20px rgba(0,128,128,0.25));
+        animation: heroLogoFloat 5s ease-in-out infinite;
+    }
+    @@keyframes heroLogoFloat {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-8px) scale(1.02); }
+    }
 
     .features-section { padding: 70px 24px; }
     .feature-block {
@@ -124,6 +133,7 @@
 <!-- Hero -->
 <section class="features-hero">
     <div class="badge-tag anim-fade-up">Explore Our Platform</div>
+    <img src="/images/compugear-logo-v7.png" class="hero-logo anim-fade-up" alt="CompuGear Logo">
     <h1 class="anim-fade-up anim-d1">Powerful Features for Your Business</h1>
     <p class="anim-fade-up anim-d2">Explore the modules and tools that make CompuGear the all-in-one ERP solution for enterprises.</p>
 </section>

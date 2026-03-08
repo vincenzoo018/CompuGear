@@ -344,6 +344,13 @@ body.dark-mode .bg-light {
     color: #e2e8f0 !important;
 }
 
+/* Ensure all badge variants in dark mode remain text-only */
+body.dark-mode .badge {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
 /* =====================================================
    Layout Structure
    ===================================================== */
@@ -372,95 +379,139 @@ body.dark-mode .bg-light {
     width: var(--sidebar-collapsed-width);
 }
 
+/* ---- Sidebar Header ---- */
 .sidebar-header {
-    padding: 1rem 1.25rem;
+    padding: 0.75rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    min-height: 72px;
+    min-height: 68px;
     background: rgba(0, 0, 0, 0.1);
+    gap: 0.5rem;
 }
 
 .sidebar-brand {
     display: flex;
     align-items: center;
-    gap: 0.85rem;
+    gap: 0.65rem;
     text-decoration: none;
     color: var(--white);
+    overflow: hidden;
+    min-width: 0;
 }
 
 .sidebar-brand-icon {
-    width: 44px;
-    height: 44px;
-    background: var(--white);
-    border-radius: 12px;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    background: transparent;
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--primary);
-    font-weight: 700;
-    font-size: 1.1rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     overflow: hidden;
+    transition: width 0.3s ease, height 0.3s ease;
 }
 
 .sidebar-brand-icon img {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    padding: 4px;
+    padding: 0;
 }
 
 .sidebar-brand-text {
     display: flex;
     flex-direction: column;
     line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    opacity: 1;
+    transition: opacity 0.2s ease;
 }
 
 .sidebar-brand-name {
     font-weight: 700;
-    font-size: 1.25rem;
-    letter-spacing: -0.5px;
+    font-size: 0.95rem;
+    letter-spacing: -0.3px;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-brand-subtitle {
-    font-size: 0.7rem;
-    opacity: 0.8;
+    font-size: 0.65rem;
+    opacity: 0.7;
 }
 
+/* ---- Collapsed: hide text, keep icons, show expand btn ---- */
 .sidebar.collapsed .sidebar-brand-text,
 .sidebar.collapsed .nav-item-text,
 .sidebar.collapsed .nav-submenu,
-.sidebar.collapsed .nav-item-arrow {
+.sidebar.collapsed .nav-item-arrow,
+.sidebar.collapsed .nav-section-title,
+.sidebar.collapsed .sidebar-footer .nav-item-text {
     display: none;
 }
 
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+    padding: 0.75rem 0.5rem;
+}
+
+.sidebar.collapsed .sidebar-brand {
+    justify-content: center;
+}
+
+.sidebar.collapsed .sidebar-brand-icon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+}
+
+/* Toggle button */
 .sidebar-toggle {
     background: rgba(255, 255, 255, 0.1);
     border: none;
     color: var(--white);
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    border-radius: 8px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: var(--transition-fast);
+    transition: all 0.2s ease;
 }
 
 .sidebar-toggle:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
 }
 
-/* Navigation */
+/* Rotate arrow when collapsed */
+.sidebar-toggle svg {
+    transition: transform 0.3s ease;
+}
+
+.sidebar.collapsed .sidebar-toggle svg {
+    transform: rotate(180deg);
+}
+
+/* Collapsed: center the toggle */
+.sidebar.collapsed .sidebar-toggle {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* ---- Navigation ---- */
 .sidebar-nav {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 0.75rem 0;
+    padding: 0.5rem 0;
 }
 
 .sidebar-nav::-webkit-scrollbar {
@@ -478,10 +529,11 @@ body.dark-mode .bg-light {
 
 .nav-item {
     margin: 2px 0.5rem;
+    position: relative;
 }
 
 .nav-section-title {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: rgba(255, 255, 255, 0.45);
@@ -492,26 +544,28 @@ body.dark-mode .bg-light {
 .nav-link {
     display: flex;
     align-items: center;
-    padding: 0.6rem 0.85rem;
+    padding: 0.55rem 0.75rem;
     color: rgba(255, 255, 255, 0.85);
     text-decoration: none;
     border-radius: 8px;
-    transition: var(--transition-fast);
-    gap: 0.75rem;
+    transition: all 0.15s ease;
+    gap: 0.7rem;
     position: relative;
-    font-size: 0.875rem;
+    font-size: 0.85rem;
     font-weight: 450;
     letter-spacing: -0.005em;
+    cursor: pointer;
 }
 
 .nav-link:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.12);
     color: var(--white);
 }
 
 .nav-link.active {
     background: rgba(255, 255, 255, 0.2);
     color: var(--white);
+    font-weight: 550;
 }
 
 .nav-link.active::before {
@@ -529,6 +583,7 @@ body.dark-mode .bg-light {
 .nav-icon {
     width: 20px;
     height: 20px;
+    min-width: 20px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -542,19 +597,62 @@ body.dark-mode .bg-light {
 
 .nav-item-text {
     flex: 1;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .nav-item-arrow {
     transition: transform 0.25s ease;
+    flex-shrink: 0;
 }
 
 .nav-item.expanded .nav-item-arrow {
     transform: rotate(180deg);
 }
 
-/* Submenu */
+/* ---- Collapsed: icons clickable as nav links ---- */
+.sidebar.collapsed .nav-link {
+    justify-content: center;
+    padding: 0.6rem;
+    border-radius: 10px;
+}
+
+.sidebar.collapsed .nav-item {
+    margin: 2px 0.4rem;
+}
+
+/* Tooltip on hover when collapsed */
+.sidebar.collapsed .nav-item > .nav-link {
+    position: relative;
+}
+
+.sidebar.collapsed .nav-item > .nav-link::after {
+    content: attr(data-title);
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: #1e293b;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 9999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.sidebar.collapsed .nav-item > .nav-link:hover::after {
+    opacity: 1;
+}
+
+/* ---- Submenu ---- */
 .nav-submenu {
     max-height: 0;
     overflow: hidden;
@@ -574,13 +672,14 @@ body.sidebar-loading .nav-item-arrow {
 }
 
 .nav-submenu .nav-link {
-    padding: 0.5rem 0.85rem 0.5rem 2.75rem;
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.7);
+    padding: 0.45rem 0.75rem 0.45rem 2.6rem;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.65);
 }
 
 .nav-submenu .nav-link:hover {
     color: var(--white);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .nav-submenu .nav-link.active {
@@ -592,10 +691,40 @@ body.sidebar-loading .nav-item-arrow {
     display: none;
 }
 
-/* Sidebar Footer */
+/* ---- Sidebar Footer ---- */
 .sidebar-footer {
-    padding: 0.75rem 0.5rem;
+    padding: 0.5rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar.collapsed .sidebar-footer .nav-link {
+    justify-content: center;
+    padding: 0.6rem;
+    position: relative;
+}
+
+.sidebar.collapsed .sidebar-footer .nav-link::after {
+    content: attr(data-title);
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: #1e293b;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    z-index: 9999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.sidebar.collapsed .sidebar-footer .nav-link:hover::after {
+    opacity: 1;
 }
 
 /* =====================================================
@@ -965,48 +1094,92 @@ body.sidebar-loading .nav-item-arrow {
 }
 
 /* =====================================================
-   Status Badges
+   Status Badges — text-only (no pill/button look)
    ===================================================== */
 
 .badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    padding: 0.25rem 0.65rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 550;
+    gap: 0.35rem;
+    padding: 0;
+    border-radius: 0;
+    font-size: 0.8rem;
+    font-weight: 600;
     letter-spacing: 0;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 .badge-success {
-    background: var(--success-bg);
-    color: #065F46;
+    background: none !important;
+    color: #059669 !important;
 }
 
 .badge-warning {
-    background: var(--warning-bg);
-    color: #92400E;
+    background: none !important;
+    color: #D97706 !important;
 }
 
-.badge-error {
-    background: var(--error-bg);
-    color: #991B1B;
+.badge-error,
+.badge-danger {
+    background: none !important;
+    color: #DC2626 !important;
 }
 
 .badge-info {
-    background: var(--info-bg);
-    color: #1E40AF;
+    background: none !important;
+    color: #2563EB !important;
 }
 
 .badge-pending {
-    background: var(--pending-bg);
-    color: #9A3412;
+    background: none !important;
+    color: #EA580C !important;
 }
 
 .badge-neutral {
-    background: var(--gray-100);
-    color: var(--gray-600);
+    background: none !important;
+    color: var(--gray-500) !important;
+}
+
+/* Bootstrap bg-* badge overrides — text-only */
+.badge.bg-success,
+.badge.bg-success-subtle {
+    background: none !important;
+    color: #059669 !important;
+}
+
+.badge.bg-danger,
+.badge.bg-danger-subtle {
+    background: none !important;
+    color: #DC2626 !important;
+}
+
+.badge.bg-warning,
+.badge.bg-warning-subtle {
+    background: none !important;
+    color: #D97706 !important;
+}
+
+.badge.bg-info,
+.badge.bg-info-subtle {
+    background: none !important;
+    color: #2563EB !important;
+}
+
+.badge.bg-secondary {
+    background: none !important;
+    color: var(--gray-500) !important;
+}
+
+.badge.bg-primary {
+    background: none !important;
+    color: var(--primary) !important;
+}
+
+.badge.bg-light {
+    background: none !important;
+    color: var(--gray-600) !important;
 }
 
 .badge-dot {
@@ -1014,6 +1187,46 @@ body.sidebar-loading .nav-item-arrow {
     height: 6px;
     border-radius: 50%;
     background: currentColor;
+}
+
+/* Dark mode badge overrides */
+body.dark-mode .badge-success,
+body.dark-mode .badge.bg-success,
+body.dark-mode .badge.bg-success-subtle {
+    color: #34d399 !important;
+}
+
+body.dark-mode .badge-warning,
+body.dark-mode .badge.bg-warning,
+body.dark-mode .badge.bg-warning-subtle {
+    color: #fbbf24 !important;
+}
+
+body.dark-mode .badge-error,
+body.dark-mode .badge-danger,
+body.dark-mode .badge.bg-danger,
+body.dark-mode .badge.bg-danger-subtle {
+    color: #f87171 !important;
+}
+
+body.dark-mode .badge-info,
+body.dark-mode .badge.bg-info,
+body.dark-mode .badge.bg-info-subtle {
+    color: #60a5fa !important;
+}
+
+body.dark-mode .badge-pending {
+    color: #fb923c !important;
+}
+
+body.dark-mode .badge-neutral,
+body.dark-mode .badge.bg-secondary,
+body.dark-mode .badge.bg-light {
+    color: #94a3b8 !important;
+}
+
+body.dark-mode .badge.bg-primary {
+    color: #2dd4bf !important;
 }
 
 /* =====================================================
@@ -2416,4 +2629,413 @@ body.sidebar-loading .nav-item-arrow {
 ::selection {
     background: rgba(0, 128, 128, 0.15);
     color: var(--gray-900);
+}
+
+/* =====================================================
+   GLOBAL TABLE CONSISTENCY
+   All tables (.data-table, .table, .staff-table) use
+   the same font, size, weight, and spacing.
+   ===================================================== */
+
+.data-table,
+.data-table th,
+.data-table td,
+.table,
+.table th,
+.table td,
+.staff-table,
+.staff-table th,
+.staff-table td {
+    font-family: 'Poppins', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+}
+
+.data-table th,
+.table > thead > tr > th,
+.staff-table thead th {
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gray-500);
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid var(--gray-200);
+    background: var(--gray-50);
+    white-space: nowrap;
+    text-align: left;
+}
+
+.data-table td,
+.table > tbody > tr > td,
+.staff-table tbody td {
+    padding: 0.8rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--gray-700);
+    vertical-align: middle;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.data-table tbody tr,
+.table > tbody > tr,
+.staff-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.data-table tbody tr:hover,
+.table > tbody > tr:hover,
+.staff-table tbody tr:hover {
+    background: var(--primary-light);
+}
+
+/* =====================================================
+   DARK MODE — COMPREHENSIVE TABLE FIXES
+   ===================================================== */
+
+/* Table wrapper/container dark bg */
+body.dark-mode .table,
+body.dark-mode .data-table,
+body.dark-mode .staff-table {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+}
+
+/* Table header dark bg */
+body.dark-mode .table > thead,
+body.dark-mode .data-table thead,
+body.dark-mode .staff-table thead,
+body.dark-mode .table-light,
+body.dark-mode thead.table-light {
+    background-color: #0f172a !important;
+}
+
+body.dark-mode .table > thead > tr > th,
+body.dark-mode .data-table th,
+body.dark-mode .staff-table thead th {
+    background-color: #0f172a !important;
+    color: #94a3b8 !important;
+    border-color: #334155 !important;
+}
+
+/* Table body dark text */
+body.dark-mode .table > tbody > tr > td,
+body.dark-mode .data-table td,
+body.dark-mode .staff-table tbody td {
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+    background-color: transparent;
+}
+
+/* Table body row dark */
+body.dark-mode .table > tbody > tr,
+body.dark-mode .data-table tbody tr,
+body.dark-mode .staff-table tbody tr {
+    color: #e2e8f0;
+    border-color: #334155 !important;
+}
+
+/* DARK MODE – Table row hover (clearly visible) */
+body.dark-mode .table > tbody > tr:hover,
+body.dark-mode .data-table tbody tr:hover,
+body.dark-mode .staff-table tbody tr:hover,
+body.dark-mode .table-hover > tbody > tr:hover {
+    background-color: #334155 !important;
+}
+
+body.dark-mode .table > tbody > tr:hover > td,
+body.dark-mode .data-table tbody tr:hover td,
+body.dark-mode .staff-table tbody tr:hover td,
+body.dark-mode .table-hover > tbody > tr:hover > td {
+    background-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+/* table-responsive wrapper */
+body.dark-mode .table-responsive,
+body.dark-mode .data-table-wrapper {
+    background-color: #1e293b;
+    border-color: #334155 !important;
+}
+
+/* Bootstrap striped/bordered variants */
+body.dark-mode .table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .table-bordered,
+body.dark-mode .table-bordered th,
+body.dark-mode .table-bordered td {
+    border-color: #334155 !important;
+}
+
+/* table-primary, table-warning, etc. row highlights */
+body.dark-mode .table-primary,
+body.dark-mode .table-primary > td,
+body.dark-mode .table-primary > th {
+    background-color: rgba(0, 128, 128, 0.15) !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .table-warning,
+body.dark-mode .table-warning > td,
+body.dark-mode .table-warning > th {
+    background-color: rgba(251, 191, 36, 0.15) !important;
+    color: #fbbf24 !important;
+}
+
+body.dark-mode .table-success,
+body.dark-mode .table-success > td,
+body.dark-mode .table-success > th {
+    background-color: rgba(52, 211, 153, 0.15) !important;
+    color: #34d399 !important;
+}
+
+body.dark-mode .table-danger,
+body.dark-mode .table-danger > td,
+body.dark-mode .table-danger > th {
+    background-color: rgba(248, 113, 113, 0.15) !important;
+    color: #f87171 !important;
+}
+
+/* =====================================================
+   DARK MODE — GENERAL HOVER / INTERACTIVE FIXES
+   ===================================================== */
+
+/* Clickable items hover */
+body.dark-mode .list-group-item:hover,
+body.dark-mode .nav-link:not(.sidebar .nav-link):hover {
+    background-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+/* Card hover */
+body.dark-mode .card:hover {
+    border-color: #475569 !important;
+}
+
+/* Nav tabs active / hover */
+body.dark-mode .nav-tabs .nav-link.active {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+body.dark-mode .nav-tabs .nav-link:hover {
+    border-color: #475569 !important;
+    color: #f1f5f9 !important;
+}
+
+/* Pagination dark */
+body.dark-mode .page-item .page-link {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .page-item .page-link:hover {
+    background-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+body.dark-mode .page-item.active .page-link {
+    background-color: var(--primary) !important;
+    border-color: var(--primary) !important;
+    color: #fff !important;
+}
+
+/* List group dark */
+body.dark-mode .list-group-item {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+/* Dark mode filter/search card */
+body.dark-mode .filter-card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+/* Dark mode loading overlay */
+body.dark-mode .loading-overlay {
+    background: rgba(15, 23, 42, 0.85);
+}
+
+/* Dark mode scrollbar */
+body.dark-mode ::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+body.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Ensure text-success/text-danger etc. are bright in dark mode */
+body.dark-mode .text-success {
+    color: #34d399 !important;
+}
+
+body.dark-mode .text-danger {
+    color: #f87171 !important;
+}
+
+body.dark-mode .text-warning {
+    color: #fbbf24 !important;
+}
+
+body.dark-mode .text-info {
+    color: #60a5fa !important;
+}
+
+/* Dark mode accordions */
+body.dark-mode .accordion-item {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+body.dark-mode .accordion-button {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .accordion-button:not(.collapsed) {
+    background-color: #0f172a !important;
+    color: #2dd4bf !important;
+}
+
+body.dark-mode .accordion-body {
+    background-color: #1e293b !important;
+    color: #e2e8f0 !important;
+}
+
+/* =====================================================
+   GLOBAL DESIGN CONSISTENCY
+   Enforces Poppins font and consistent sizing on ALL 
+   UI elements: modals, forms, buttons, cards, dropdowns.
+   ===================================================== */
+
+/* Font consistency across all interactive elements */
+.modal,
+.modal-content,
+.modal-header,
+.modal-body,
+.modal-footer,
+.modal-title,
+.dropdown-menu,
+.dropdown-item,
+.card,
+.card-body,
+.card-header,
+.card-footer,
+.form-control,
+.form-select,
+.btn,
+input,
+select,
+textarea,
+label,
+.nav-link,
+.breadcrumb,
+.pagination,
+.alert,
+.toast,
+.tooltip-inner,
+.popover,
+.list-group-item {
+    font-family: 'Poppins', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+}
+
+/* Consistent form control sizing */
+.form-control,
+.form-select {
+    font-size: 0.875rem;
+    font-weight: 400;
+    border-radius: 8px;
+    border: 1.5px solid var(--gray-200);
+    padding: 0.6rem 0.85rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.1);
+}
+
+/* Consistent label sizing */
+.form-label,
+label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--gray-600);
+    margin-bottom: 0.35rem;
+}
+
+/* Consistent button sizing */
+.btn {
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+}
+
+/* Consistent card styling */
+.card {
+    border: 1px solid var(--gray-100);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.card-header {
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--gray-100);
+    background: var(--gray-50);
+}
+
+.card-body {
+    padding: 1.25rem;
+    font-size: 0.875rem;
+}
+
+/* Consistent modal font sizes */
+.modal-title {
+    font-size: 1.1rem;
+    font-weight: 650;
+}
+
+.modal-body {
+    font-size: 0.875rem;
+}
+
+/* Dark mode form / modal / card consistency */
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+    background-color: #0f172a;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+    border-color: #2dd4bf;
+    box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.15);
+}
+
+body.dark-mode .form-label,
+body.dark-mode label {
+    color: #94a3b8;
+}
+
+body.dark-mode .card {
+    border-color: #334155;
+}
+
+body.dark-mode .card-header {
+    background: #0f172a;
+    color: #e2e8f0;
+    border-color: #334155;
 }

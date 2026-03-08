@@ -90,7 +90,7 @@ app.UseMiddleware<ActivityAuditMiddleware>();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Auth}/{action=Login}/{id?}");
+    pattern: "{controller=ERPWebsite}/{action=Index}/{id?}");
 
 app.Run();
 

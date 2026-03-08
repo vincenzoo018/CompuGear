@@ -29,6 +29,15 @@
     .pricing-hero p {
         font-size: 1.1rem; color: #666; max-width: 580px; margin: 0 auto;
     }
+    .hero-logo {
+        display: block; width: 280px; margin: 0 auto 28px; object-fit: contain;
+        filter: drop-shadow(0 6px 20px rgba(0,128,128,0.25));
+        animation: heroLogoFloat 5s ease-in-out infinite;
+    }
+    @@keyframes heroLogoFloat {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-8px) scale(1.02); }
+    }
 
     /* Toggle */
     .billing-toggle {
@@ -220,6 +229,7 @@
 <!-- Hero -->
 <section class="pricing-hero">
     <div class="badge-tag anim-fade-up">Flexible Plans for Every Business</div>
+    <img src="/images/compugear-logo-v7.png" class="hero-logo anim-fade-up" alt="CompuGear Logo">
     <h1 class="anim-fade-up anim-d1">Simple, Transparent Pricing</h1>
     <p class="anim-fade-up anim-d2">Choose the plan that fits your business. Start small and scale as you grow.</p>
 

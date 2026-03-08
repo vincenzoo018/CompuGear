@@ -29,9 +29,9 @@ function sourceBadge(source, type) {
     if (source === 'System') {
         const colors = { Subscription: '#008080', Tax: '#e67e22', Revenue: '#27ae60' };
         const c = colors[type] || '#6c757d';
-        return `<span class="badge" style="background:${c};color:#fff;font-size:11px;padding:3px 8px;border-radius:4px;">${type || 'System'}</span>`;
+        return `<span class="badge" style="color:${c};font-size:0.8rem;font-weight:600;">${type || 'System'}</span>`;
     }
-    return '<span class="badge" style="background:#6c757d;color:#fff;font-size:11px;padding:3px 8px;border-radius:4px;">Manual</span>';
+    return '<span class="badge" style="color:#6c757d;font-size:0.8rem;font-weight:600;">Manual</span>';
 }
 
 function statusBadge(status) {
@@ -43,7 +43,7 @@ function statusBadge(status) {
 function typeBadge(type) {
     const map = { Asset: '#3498db', Liability: '#e74c3c', Equity: '#9b59b6', Revenue: '#27ae60', Expense: '#e67e22', 'Cost of Goods Sold': '#e67e22' };
     const c = map[type] || '#6c757d';
-    return `<span class="badge" style="background:${c};color:#fff;font-size:11px;padding:3px 8px;border-radius:4px;">${type}</span>`;
+    return `<span class="badge" style="color:${c};font-size:0.8rem;font-weight:600;">${type}</span>`;
 }
 
 async function saFetch(url, options = {}) {

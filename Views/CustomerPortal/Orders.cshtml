@@ -196,17 +196,18 @@
     .status-emoji { font-size: 1.2rem; }
 
     .status-badge {
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 0.75rem;
+        padding: 0;
+        border-radius: 0;
+        font-size: 0.8rem;
         font-weight: 600;
+        background: none !important;
     }
 
-    .badge-pending { background: var(--pending-light); color: var(--pending-fg); }
-    .badge-processing { background: var(--warning-light); color: var(--warning-fg); }
-    .badge-shipped { background: var(--info-light); color: var(--info-fg); }
-    .badge-delivered { background: var(--success-light); color: var(--success-fg); }
-    .badge-cancelled { background: var(--error-light); color: var(--error-fg); }
+    .badge-pending { background: none !important; color: var(--pending-fg); }
+    .badge-processing { background: none !important; color: var(--warning-fg); }
+    .badge-shipped { background: none !important; color: var(--info-fg); }
+    .badge-delivered { background: none !important; color: var(--success-fg); }
+    .badge-cancelled { background: none !important; color: var(--error-fg); }
 
     .order-amount {
         font-size: 1.1rem;

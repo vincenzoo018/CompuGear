@@ -38,17 +38,18 @@
     }
     
     .status-badge {
-        padding: 8px 18px;
-        border-radius: 25px;
+        padding: 0;
+        border-radius: 0;
         font-size: 0.85rem;
         font-weight: 600;
         display: inline-block;
+        background: none !important;
     }
     
-    .status-badge.Open { background: #dbeafe; color: #1d4ed8; }
-    .status-badge.InProgress { background: #fef3cd; color: #856404; }
-    .status-badge.Resolved { background: #d4edda; color: #155724; }
-    .status-badge.Closed { background: #e5e7eb; color: #6b7280; }
+    .status-badge.Open { background: none !important; color: #2563EB; }
+    .status-badge.InProgress { background: none !important; color: #D97706; }
+    .status-badge.Resolved { background: none !important; color: #059669; }
+    .status-badge.Closed { background: none !important; color: #6b7280; }
     
     .ticket-content {
         display: grid;
@@ -312,7 +313,7 @@
                         <h3 class="card-title">📋 Ticket Information</h3>
                         <div class="info-row">
                             <span class="info-label">Status</span>
-                            <span class="status-badge ${statusClass}" style="font-size: 0.75rem; padding: 4px 12px;">${ticket.status}</span>
+                            <span class="status-badge ${statusClass}" style="font-size: 0.8rem;">${ticket.status}</span>
                         </div>
                         <div class="info-row">
                             <span class="info-label">Priority</span>

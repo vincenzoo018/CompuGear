@@ -24,6 +24,15 @@
     }
     .contact-hero h1 { font-size: 2.8rem; font-weight: 800; color: #1a1a2e; margin-bottom: 16px; }
     .contact-hero p { font-size: 1.1rem; color: #666; max-width: 550px; margin: 0 auto; }
+    .hero-logo {
+        display: block; width: 280px; margin: 0 auto 28px; object-fit: contain;
+        filter: drop-shadow(0 6px 20px rgba(0,128,128,0.25));
+        animation: heroLogoFloat 5s ease-in-out infinite;
+    }
+    @@keyframes heroLogoFloat {
+        0%, 100% { transform: translateY(0) scale(1); }
+        50% { transform: translateY(-8px) scale(1.02); }
+    }
 
     .contact-section {
         max-width: 1000px; margin: 0 auto; padding: 70px 24px;
@@ -101,6 +110,7 @@
 <!-- Hero -->
 <section class="contact-hero">
     <div class="badge-tag anim-fade-up">We're Here to Help</div>
+    <img src="/images/compugear-logo-v7.png" class="hero-logo anim-fade-up" alt="CompuGear Logo">
     <h1 class="anim-fade-up anim-d1">Get In Touch</h1>
     <p class="anim-fade-up anim-d2">Have questions about CompuGear ERP? We're here to help. Reach out to our team anytime.</p>
 </section>

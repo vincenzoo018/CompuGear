@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/images/compugear-logo-v7.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/compugear-logo-v7.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/compugear-logo-v7.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - CompuGear</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -75,7 +78,7 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Poppins', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
             color: var(--gray-800);
             background: var(--white);
             line-height: 1.6;
@@ -167,18 +170,8 @@
             transition: transform var(--transition-fast);
         }
         .cg-navbar .brand:hover { transform: scale(1.02); }
-        .cg-navbar .brand-logo {
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--teal-600) 100%);
-            border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: var(--shadow-teal);
-            overflow: hidden;
-        }
-        .cg-navbar .brand-logo img { width: 32px; height: 32px; object-fit: contain; }
+        .cg-navbar .brand-logo { width: 120px; height: 120px; background: transparent; border-radius: 0; display: flex; align-items: center; justify-content: center; box-shadow: none; overflow: hidden; }
+        .cg-navbar .brand-logo img { width: 100%; height: 100%; object-fit: contain; }
         .cg-navbar .brand-text { letter-spacing: -0.02em; }
         .cg-navbar .brand-text span { color: var(--primary); }
 
@@ -1000,7 +993,7 @@
             <!-- Brand -->
             <a href="/CustomerPortal/Index" class="brand">
                 <div class="brand-logo">
-                    <img src="/images/compugearlogo.png" alt="CompuGear" onerror="this.style.display='none';">
+                    <img src="/images/compugear-logo-v7.png" alt="CompuGear" onerror="this.style.display='none';">
                 </div>
                 <span class="brand-text">Compu<span>Gear</span></span>
             </a>
@@ -1367,3 +1360,4 @@
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
+

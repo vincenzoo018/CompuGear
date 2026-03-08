@@ -63,8 +63,29 @@ document.addEventListener('DOMContentLoaded', function () {
         sidebarToggle.addEventListener('click', function () {
             sidebar.classList.toggle('collapsed');
             localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+            // Close all submenus when collapsing
+            if (sidebar.classList.contains('collapsed')) {
+                document.querySelectorAll('.nav-item.expanded').forEach(function(item) {
+                    item.classList.remove('expanded');
+                });
+            }
         });
     }
+
+    // Add data-title attributes for collapsed tooltips
+    document.querySelectorAll('.sidebar-nav .nav-item > .nav-link').forEach(function(link) {
+        var textEl = link.querySelector('.nav-item-text');
+        if (textEl) {
+            link.setAttribute('data-title', textEl.textContent.trim());
+        }
+    });
+    // Also add to sidebar-footer links
+    document.querySelectorAll('.sidebar-footer .nav-link').forEach(function(link) {
+        var textEl = link.querySelector('.nav-item-text');
+        if (textEl) {
+            link.setAttribute('data-title', textEl.textContent.trim());
+        }
+    });
 
     // ---- Submenu Toggle with localStorage ----
     function getOpenSections() {
@@ -92,10 +113,23 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     saveOpenSections(openSections);
 
-    // Handle toggle clicks (with smooth animation, since sidebar-loading is gone)
+    // Handle toggle clicks - when collapsed, navigate to first submenu link
     document.querySelectorAll('.nav-link-toggle').forEach(function (toggle) {
         toggle.addEventListener('click', function (e) {
             e.preventDefault();
+            
+            // If sidebar is collapsed, navigate to the first submenu item
+            if (sidebar && sidebar.classList.contains('collapsed')) {
+                var submenu = this.closest('.nav-item').querySelector('.nav-submenu');
+                if (submenu) {
+                    var firstLink = submenu.querySelector('.nav-link');
+                    if (firstLink && firstLink.href) {
+                        window.location.href = firstLink.href;
+                        return;
+                    }
+                }
+            }
+            
             var navItem = this.closest('.nav-item');
             navItem.classList.toggle('expanded');
 

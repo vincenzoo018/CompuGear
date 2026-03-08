@@ -667,7 +667,7 @@ const Segments = {
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h5 class="card-title mb-0">${s.name || s.segmentName || 'Segment'}</h5>
-                            <span class="badge" style="background-color: ${s.color || '#008080'}">${s.count || s.customerCount || 0} customers</span>
+                            <span class="badge" style="color: ${s.color || '#008080'}; font-weight: 600;">${s.count || s.customerCount || 0} customers</span>
                         </div>
                         <p class="card-text text-muted small">${s.description || 'Customer segment'}</p>
                         <button class="btn btn-sm btn-outline-primary" onclick="Segments.viewCustomers('${(s.name || s.segmentName || '').replace(/'/g, "\\'")}')">View Customers</button>

@@ -1,11 +1,11 @@
-/**
+﻿/**
  * CompuGear Sales Staff JavaScript - Full CRUD Operations
  * Consistent with Admin portal styling and functionality
  */
 
 // Global Configuration
 const CONFIG = {
-    currency: '₱',
+    currency: 'â‚±',
     dateFormat: 'en-PH',
     apiBase: '/api'
 };
@@ -560,7 +560,7 @@ const SalesOrders = {
             <style>body{font-family:'Segoe UI',Arial,sans-serif;margin:40px;color:#333}.header{display:flex;justify-content:space-between;border-bottom:3px solid #008080;padding-bottom:20px;margin-bottom:30px}.company-logo img{height:50px}.badge{background:#008080;color:white;padding:8px 20px;border-radius:5px;font-size:18px}table{width:100%;border-collapse:collapse;margin-bottom:20px}th{background:#008080;color:white;padding:10px;text-align:left}td{padding:10px;border-bottom:1px solid #eee}.total-row td{font-weight:bold;font-size:18px;color:#008080;border-top:2px solid #008080}</style></head><body>
             <div class="header">
                 <div class="company-logo">
-                    <img src="${window.location.origin}/images/compugearlogo.png" alt="CompuGear" onerror="this.style.display='none';document.getElementById('fallback-title').style.display='block'">
+                    <img src="${window.location.origin}/images/compugear-logo-v7.png" alt="CompuGear" onerror="this.style.display='none';document.getElementById('fallback-title').style.display='block'">
                     <h1 id="fallback-title" style="display:none;color:#008080;margin:0;">CompuGear</h1>
                     <p>Computer & Gear Solutions</p>
                 </div>
@@ -1009,7 +1009,7 @@ const SalesReportPDF = {
             <div class="header">
                 <div class="company">
                     <div class="company-logo">
-                        <img src="${window.location.origin}/images/compugearlogo.png" alt="CompuGear" onerror="this.outerHTML='<h1 style=\\'color:#008080;font-size:28px;margin-bottom:5px\\'>CompuGear</h1>'">
+                        <img src="${window.location.origin}/images/compugear-logo-v7.png" alt="CompuGear" onerror="this.outerHTML='<h1 style=\\'color:#008080;font-size:28px;margin-bottom:5px\\'>CompuGear</h1>'">
                     </div>
                     <p>Computer & Gear Solutions</p>
                 </div>
