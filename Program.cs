@@ -1,4 +1,5 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.ResponseCompression;
 using CompuGear.Models;
 using CompuGear.Data;
 using CompuGear.Services;
@@ -36,6 +37,13 @@ builder.Services.AddDbContext<CompuGearDbContext>(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
 
+// Add response compression
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/json" });
+});
+
 // Register Audit Service
 builder.Services.AddScoped<IAuditService, AuditService>();
 
@@ -71,6 +79,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseResponseCompression();
 app.UseStaticFiles();
 
 app.UseRouting();

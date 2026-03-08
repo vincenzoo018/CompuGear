@@ -56,7 +56,10 @@ namespace CompuGear.Controllers
                 if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 8)
                     return Ok(new { success = false, message = "Password must be at least 8 characters." });
 
-                // Normalize plan name - accept Starter, Pro, Enterprise (case-insensitive)
+                if (!request.ContractAgreed)
+                    return Ok(new { success = false, message = "You must agree to the Subscription Service Contract before proceeding." });
+
+                                // Normalize plan name - accept Starter, Pro, Enterprise (case-insensitive)
                 var validPlans = new[] { "Starter", "Pro", "Enterprise" };
                 var matchedPlan = validPlans.FirstOrDefault(p => string.Equals(p, request.PlanName?.Trim(), StringComparison.OrdinalIgnoreCase));
                 request.PlanName = matchedPlan ?? "Starter";
@@ -140,6 +143,8 @@ namespace CompuGear.Controllers
 
                     // ===== 3. CREATE SUBSCRIPTION =====
                     var planConfig = GetPlanConfig(request.PlanName);
+                    var contractTerm = request.PlanName == "Enterprise" ? 24 : request.PlanName == "Pro" ? 12 : 12;
+                    var nextDue = DateTime.UtcNow.AddMonths(request.BillingCycle == "Annual" ? 12 : 1);
                     var subscription = new CompanySubscription
                     {
                         CompanyId = company.CompanyId,
@@ -150,6 +155,13 @@ namespace CompuGear.Controllers
                         MonthlyFee = planConfig.MonthlyFee,
                         MaxUsers = planConfig.MaxUsers,
                         Notes = $"Subscribed via ERPWebsite on {DateTime.UtcNow:yyyy-MM-dd}",
+                        ContractAgreed = true,
+                        ContractAgreedAt = DateTime.UtcNow,
+                        ContractType = request.PlanName == "Enterprise" ? "Enterprise" : request.PlanName == "Pro" ? "Annual" : "Standard",
+                        ContractTermMonths = contractTerm,
+                        LastPaymentDate = DateTime.UtcNow,
+                        NextDueDate = nextDue,
+                        PaymentStatus = "Current",
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow,
                         CreatedBy = adminUser.UserId
@@ -191,6 +203,9 @@ namespace CompuGear.Controllers
                     _context.PlatformUsageLogs.Add(usageLog);
                     await _context.SaveChangesAsync();
 
+                    // ===== 6. CREATE ACCOUNTING ENTRIES (Journal + GL) =====
+                    await CreateSubscriptionAccountingEntries(subscription, company);
+
                     await tx.CommitAsync();
                 });
 
@@ -206,7 +221,8 @@ namespace CompuGear.Controllers
             }
             catch (Exception ex)
             {
-                return Ok(new { success = false, message = "An error occurred: " + ex.Message });
+                var msg = ex.InnerException?.Message ?? ex.Message;
+                return Ok(new { success = false, message = "An error occurred: " + msg });
             }
         }
 
@@ -473,6 +489,8 @@ namespace CompuGear.Controllers
 
                     // ===== 3. CREATE SUBSCRIPTION =====
                     var planConfig = GetPlanConfig(request.PlanName);
+                    var contractTerm = request.PlanName == "Enterprise" ? 24 : request.PlanName == "Pro" ? 12 : 12;
+                    var nextDue = DateTime.UtcNow.AddMonths(request.BillingCycle == "Annual" ? 12 : 1);
                     var subscription = new CompanySubscription
                     {
                         CompanyId = company.CompanyId,
@@ -483,6 +501,13 @@ namespace CompuGear.Controllers
                         MonthlyFee = planConfig.MonthlyFee,
                         MaxUsers = planConfig.MaxUsers,
                         Notes = $"Paid via PayMongo (Payment: {sessionStatus.PaymentId}) on {DateTime.UtcNow:yyyy-MM-dd}",
+                        ContractAgreed = true,
+                        ContractAgreedAt = DateTime.UtcNow,
+                        ContractType = request.PlanName == "Enterprise" ? "Enterprise" : request.PlanName == "Pro" ? "Annual" : "Standard",
+                        ContractTermMonths = contractTerm,
+                        LastPaymentDate = DateTime.UtcNow,
+                        NextDueDate = nextDue,
+                        PaymentStatus = "Current",
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow,
                         CreatedBy = adminUser.UserId
@@ -524,6 +549,9 @@ namespace CompuGear.Controllers
                     _context.PlatformUsageLogs.Add(usageLog);
                     await _context.SaveChangesAsync();
 
+                    // ===== 6. CREATE ACCOUNTING ENTRIES (Journal + GL) =====
+                    await CreateSubscriptionAccountingEntries(subscription, company, sessionStatus.PaymentId ?? "");
+
                     await tx.CommitAsync();
                 });
 
@@ -547,6 +575,43 @@ namespace CompuGear.Controllers
             {
                 return Ok(new { success = false, message = "An error occurred: " + ex.Message });
             }
+        }
+
+        /// <summary>
+        /// Get subscription contract terms and penalty schedule (public endpoint)
+        /// </summary>
+        [HttpGet("contract-terms")]
+        public IActionResult GetContractTerms()
+        {
+            var terms = new
+            {
+                vatRate = 12.0m,
+                vatName = "VAT",
+                penaltyRate = 3.0m, // 3% monthly penalty on overdue
+                gracePeriodDays = 15,
+                contractTerms = new[]
+                {
+                    new { plan = "Starter", termMonths = 12, earlyTerminationFee = 2997m, description = "12-month minimum contract" },
+                    new { plan = "Pro", termMonths = 12, earlyTerminationFee = 7497m, description = "12-month minimum contract" },
+                    new { plan = "Enterprise", termMonths = 24, earlyTerminationFee = 24995m, description = "24-month minimum contract" }
+                },
+                legalReferences = new[]
+                {
+                    new { code = "RA 8792", title = "Electronic Commerce Act of 2000", description = "Recognizes the validity of electronic contracts and digital signatures in the Philippines." },
+                    new { code = "RA 7394", title = "Consumer Act of the Philippines", description = "Protects consumer rights including transparency in pricing, penalties, and service agreements." },
+                    new { code = "RA 386 Art. 1159", title = "Civil Code of the Philippines - Obligations & Contracts", description = "Obligations arising from contracts have the force of law between parties and must be complied with in good faith." },
+                    new { code = "RA 386 Art. 1169", title = "Civil Code - Default/Delay", description = "Those obliged to deliver or do something incur delay from the time the obligee demands fulfillment. Demand is not necessary when the obligation expressly so provides." },
+                    new { code = "RA 386 Art. 2209", title = "Civil Code - Interest on Delay", description = "If the obligation consists in the payment of a sum of money and the debtor incurs delay, the indemnity for damages shall be the payment of legal interest." },
+                    new { code = "RA 3765", title = "Truth in Lending Act", description = "Requires full disclosure of all charges, fees, and penalties associated with any credit or service agreement." }
+                },
+                penaltySchedule = new[]
+                {
+                    new { months = "1", penalty = "3% of outstanding balance + service suspension warning", action = "Notice of Default" },
+                    new { months = "2", penalty = "6% cumulative + account suspension", action = "Service Suspension" },
+                    new { months = "3+", penalty = "9% cumulative + early termination fee + legal collection", action = "Account Termination & Legal Action" }
+                }
+            };
+            return Ok(new { success = true, data = terms });
         }
 
         /// <summary>
@@ -719,6 +784,141 @@ namespace CompuGear.Controllers
             return rows;
         }
 
+
+        /// <summary>
+        /// Creates accounting entries (Journal Entry + General Ledger) for a new subscription.
+        /// Debits Accounts Receivable for total (price + VAT), Credits Subscription Revenue for price, Credits Tax Payable for VAT.
+        /// Uses platform-level accounting (CompanyId = null).
+        /// </summary>
+        private async Task CreateSubscriptionAccountingEntries(CompanySubscription subscription, Company company, string paymentRef = "")
+        {
+            try
+            {
+                const decimal VAT_RATE = 0.12m;
+                var planAmount = subscription.MonthlyFee;
+                var vatAmount = Math.Round(planAmount * VAT_RATE, 2);
+                var totalAmount = planAmount + vatAmount;
+                var entryDate = subscription.StartDate;
+
+                // Get platform account IDs by code
+                var accountMap = await _context.ChartOfAccounts
+                    .Where(a => a.CompanyId == null && !a.IsArchived && a.IsActive)
+                    .ToDictionaryAsync(a => a.AccountCode, a => a.AccountId);
+
+                int GetAcctId(string code) => accountMap.ContainsKey(code) ? accountMap[code] : 0;
+
+                var arAcctId = GetAcctId("1100");   // Accounts Receivable
+                var revenueAcctId = GetAcctId("4000"); // Subscription Revenue
+                var taxAcctId = GetAcctId("2100");  // Tax Payable
+
+                if (arAcctId == 0 || revenueAcctId == 0 || taxAcctId == 0)
+                {
+                    // Accounts not set up yet - skip accounting but don't fail subscription
+                    return;
+                }
+
+                // Generate entry number
+                var entryCount = await _context.JournalEntries.CountAsync(e => e.CompanyId == null);
+                var entryNumber = $"SUB-{subscription.SubscriptionId:D5}";
+
+                // Create Journal Entry
+                var journalEntry = new JournalEntry
+                {
+                    CompanyId = null,
+                    EntryNumber = entryNumber,
+                    EntryDate = entryDate,
+                    Description = $"Subscription: {company.CompanyName} - {subscription.PlanName} ({subscription.BillingCycle})",
+                    Reference = $"SUB-{subscription.SubscriptionId}",
+                    Status = "Posted",
+                    TotalDebit = totalAmount,
+                    TotalCredit = totalAmount,
+                    Notes = $"Auto-generated from {subscription.PlanName} subscription. Plan: \u20B1{planAmount:N2}, VAT 12%: \u20B1{vatAmount:N2}, Total: \u20B1{totalAmount:N2}.{(string.IsNullOrEmpty(paymentRef) ? "" : $" Payment: {paymentRef}")}",
+                    PostedAt = entryDate,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    Lines = new List<JournalEntryLine>
+                    {
+                        new JournalEntryLine
+                        {
+                            AccountId = arAcctId,
+                            Description = $"{company.CompanyName} - {subscription.PlanName} (incl. VAT)",
+                            DebitAmount = totalAmount,
+                            CreditAmount = 0m
+                        },
+                        new JournalEntryLine
+                        {
+                            AccountId = revenueAcctId,
+                            Description = $"{subscription.PlanName} {subscription.BillingCycle} Revenue",
+                            DebitAmount = 0m,
+                            CreditAmount = planAmount
+                        },
+                        new JournalEntryLine
+                        {
+                            AccountId = taxAcctId,
+                            Description = $"VAT 12% on {subscription.PlanName} subscription",
+                            DebitAmount = 0m,
+                            CreditAmount = vatAmount
+                        }
+                    }
+                };
+
+                _context.JournalEntries.Add(journalEntry);
+                await _context.SaveChangesAsync();
+
+                // Create General Ledger entries (one per line)
+                var glEntries = new List<GeneralLedgerEntry>
+                {
+                    new GeneralLedgerEntry
+                    {
+                        CompanyId = null,
+                        AccountId = arAcctId,
+                        EntryId = journalEntry.EntryId,
+                        TransactionDate = entryDate,
+                        Description = $"{company.CompanyName} - {subscription.PlanName} (incl. VAT)",
+                        DebitAmount = totalAmount,
+                        CreditAmount = 0m,
+                        RunningBalance = 0m,
+                        Reference = $"SUB-{subscription.SubscriptionId}",
+                        CreatedAt = DateTime.UtcNow
+                    },
+                    new GeneralLedgerEntry
+                    {
+                        CompanyId = null,
+                        AccountId = revenueAcctId,
+                        EntryId = journalEntry.EntryId,
+                        TransactionDate = entryDate,
+                        Description = $"{subscription.PlanName} {subscription.BillingCycle} Revenue",
+                        DebitAmount = 0m,
+                        CreditAmount = planAmount,
+                        RunningBalance = 0m,
+                        Reference = $"SUB-{subscription.SubscriptionId}",
+                        CreatedAt = DateTime.UtcNow
+                    },
+                    new GeneralLedgerEntry
+                    {
+                        CompanyId = null,
+                        AccountId = taxAcctId,
+                        EntryId = journalEntry.EntryId,
+                        TransactionDate = entryDate,
+                        Description = $"VAT 12% on {subscription.PlanName} subscription",
+                        DebitAmount = 0m,
+                        CreditAmount = vatAmount,
+                        RunningBalance = 0m,
+                        Reference = $"TAX-SUB-{subscription.SubscriptionId}",
+                        CreatedAt = DateTime.UtcNow
+                    }
+                };
+
+                _context.GeneralLedger.AddRange(glEntries);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                // Don't fail the subscription if accounting entries fail
+                // The system-derived entries will still show in SuperAdmin
+            }
+        }
+
         private class PlanConfig
         {
             public decimal MonthlyFee { get; set; }
@@ -753,6 +953,9 @@ namespace CompuGear.Controllers
         public string PlanName { get; set; } = "Starter";
         public string? BillingCycle { get; set; } = "Monthly";
         public List<string>? SelectedModuleCodes { get; set; }
+
+        // Contract Agreement
+        public bool ContractAgreed { get; set; } = false;
     }
 
     /// <summary>

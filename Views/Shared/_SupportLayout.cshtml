@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -304,20 +304,25 @@
         function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
     </script>
 
-    <!-- Global Notification Loader for Low Stock Alerts -->
+    <!-- Global Notification Loader for Low Stock Alerts (Optimized) -->
     <script>
         (function() {
+            var _stockCache = null;
+            var _stockCacheTime = 0;
+
             async function loadGlobalNotifications() {
                 try {
-                    const response = await fetch('/api/products');
+                    // Client-side cache: don't re-fetch if less than 30s old
+                    var now = Date.now();
+                    if (_stockCache && (now - _stockCacheTime) < 30000) return;
+
+                    const response = await fetch('/api/stock-alerts');
                     if (!response.ok) return;
-                    const products = await response.json();
-                    const productsList = Array.isArray(products) ? products : (products.data || []);
-                    
-                    const LOW_STOCK_THRESHOLD = 15;
-                    const lowStockProducts = productsList.filter(function(p) { 
-                        return p.stockQuantity <= LOW_STOCK_THRESHOLD; 
-                    });
+                    const result = await response.json();
+                    _stockCache = result;
+                    _stockCacheTime = now;
+
+                    const lowStockProducts = result.data || [];
                     
                     const badge = document.getElementById('notificationBadge');
                     const notificationList = document.getElementById('notificationList');
@@ -325,8 +330,6 @@
                     if (lowStockProducts.length > 0 && badge) {
                         badge.textContent = lowStockProducts.length;
                         badge.style.display = 'flex';
-                        
-                        lowStockProducts.sort(function(a, b) { return a.stockQuantity - b.stockQuantity; });
                         
                         if (notificationList) {
                             var html = '';
@@ -355,15 +358,12 @@
                             if (lowStockProducts.length > maxShow) {
                                 html += '<div class="text-center py-2 text-muted small">+' + (lowStockProducts.length - maxShow) + ' more alerts</div>';
                             }
-                            
                             notificationList.innerHTML = html;
                         }
                     } else if (badge) {
                         badge.style.display = 'none';
                     }
-                } catch (e) {
-                    // Silently fail
-                }
+                } catch (e) { }
             }
             
             if (document.readyState === 'loading') {
@@ -372,7 +372,7 @@
                 loadGlobalNotifications();
             }
             
-            setInterval(loadGlobalNotifications, 60000);
+            setInterval(loadGlobalNotifications, 120000);
             
             window.markAllRead = function() {
                 var badge = document.getElementById('notificationBadge');

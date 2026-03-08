@@ -1,9 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CompuGear.Data;
 using CompuGear.Models;
 using CompuGear.Services;
 using System.Text;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace CompuGear.Controllers
 {
@@ -14,12 +15,14 @@ namespace CompuGear.Controllers
         private readonly CompuGearDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly IAuditService _auditService;
+        private readonly IMemoryCache _cache;
 
-        public ApiController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService)
+        public ApiController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService, IMemoryCache cache)
         {
             _context = context;
             _configuration = configuration;
             _auditService = auditService;
+            _cache = cache;
         }
 
         // Helper: returns CompanyId from session. Super Admin (RoleId=1) gets null → sees all data.
@@ -230,52 +233,116 @@ namespace CompuGear.Controllers
             try
             {
                 var roleId = HttpContext.Session.GetInt32("RoleId");
+
+                // Check if modules are cached in session
+                var cachedModules = HttpContext.Session.GetString("CachedModules");
+                if (!string.IsNullOrEmpty(cachedModules))
+                {
+                    var modules = System.Text.Json.JsonSerializer.Deserialize<List<string>>(cachedModules);
+                    return Ok(new { success = true, modules });
+                }
+
+                List<string> resultModules;
+
                 // Super Admin sees everything
                 if (roleId == 1)
                 {
-                    var allModules = await _context.ERPModules
+                    resultModules = await _context.ERPModules
+                        .AsNoTracking()
                         .Where(m => m.IsActive)
                         .Select(m => m.ModuleCode)
                         .ToListAsync();
-                    return Ok(new { success = true, modules = allModules });
                 }
-
-                var companyId = HttpContext.Session.GetInt32("CompanyId");
-                if (companyId == null)
+                else
                 {
-                    // No company → show nothing (or default set)
-                    return Ok(new { success = true, modules = new List<string>() });
-                }
+                    var companyId = HttpContext.Session.GetInt32("CompanyId");
+                    if (companyId == null)
+                    {
+                        return Ok(new { success = true, modules = new List<string>() });
+                    }
 
-                var subscribedModules = await _context.CompanyModuleAccess
-                    .Include(a => a.Module)
-                    .Where(a => a.CompanyId == companyId && a.IsEnabled)
-                    .Select(a => a.Module.ModuleCode)
-                    .ToListAsync();
-
-                // If explicit role-module access exists, return intersection of company subscription + role access
-                if (roleId.HasValue && roleId != 1 && roleId != 2)
-                {
-                    var roleAllowedModules = await _context.RoleModuleAccess
-                        .Where(r => r.CompanyId == companyId && r.RoleId == roleId.Value && r.HasAccess)
-                        .Select(r => r.ModuleCode)
-                        .Distinct()
+                    resultModules = await _context.CompanyModuleAccess
+                        .AsNoTracking()
+                        .Where(a => a.CompanyId == companyId && a.IsEnabled)
+                        .Select(a => a.Module.ModuleCode)
                         .ToListAsync();
 
-                    if (roleAllowedModules.Any())
+                    // If explicit role-module access exists, return intersection
+                    if (roleId.HasValue && roleId != 1 && roleId != 2)
                     {
-                        var allowedSet = roleAllowedModules.ToHashSet(StringComparer.OrdinalIgnoreCase);
-                        subscribedModules = subscribedModules
-                            .Where(m => allowedSet.Contains(m))
-                            .ToList();
+                        var roleAllowedModules = await _context.RoleModuleAccess
+                            .AsNoTracking()
+                            .Where(r => r.CompanyId == companyId && r.RoleId == roleId.Value && r.HasAccess)
+                            .Select(r => r.ModuleCode)
+                            .Distinct()
+                            .ToListAsync();
+
+                        if (roleAllowedModules.Any())
+                        {
+                            var allowedSet = roleAllowedModules.ToHashSet(StringComparer.OrdinalIgnoreCase);
+                            resultModules = resultModules
+                                .Where(m => allowedSet.Contains(m))
+                                .ToList();
+                        }
                     }
                 }
 
-                return Ok(new { success = true, modules = subscribedModules });
+                // Cache in session for the duration of the session
+                HttpContext.Session.SetString("CachedModules",
+                    System.Text.Json.JsonSerializer.Serialize(resultModules));
+
+                return Ok(new { success = true, modules = resultModules });
             }
             catch (Exception ex)
             {
                 return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        #endregion
+
+
+        #region Stock Alerts (Lightweight cached endpoint for notifications)
+
+        /// <summary>
+        /// Returns only low-stock products with minimal fields. Cached for 60 seconds.
+        /// Used by all layout notification badges instead of fetching ALL products.
+        /// </summary>
+        [HttpGet("stock-alerts")]
+        public async Task<IActionResult> GetStockAlerts()
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                var cacheKey = $"stock_alerts_{companyId ?? 0}";
+
+                if (_cache.TryGetValue(cacheKey, out object? cached))
+                    return Ok(cached);
+
+                const int LOW_STOCK_THRESHOLD = 15;
+                var alerts = await _context.Products
+                    .AsNoTracking()
+                    .Where(p => (companyId == null || p.CompanyId == companyId) 
+                             && p.Status == "Active"
+                             && p.StockQuantity <= LOW_STOCK_THRESHOLD)
+                    .OrderBy(p => p.StockQuantity)
+                    .Take(50)
+                    .Select(p => new
+                    {
+                        p.ProductId,
+                        p.ProductName,
+                        p.StockQuantity,
+                        p.ReorderLevel
+                    })
+                    .ToListAsync();
+
+                var result = new { success = true, data = alerts, count = alerts.Count };
+                _cache.Set(cacheKey, result, TimeSpan.FromSeconds(60));
+                return Ok(result);
+            }
+            catch
+            {
+                return Ok(new { success = true, data = new List<object>(), count = 0 });
             }
         }
 
@@ -288,6 +355,7 @@ namespace CompuGear.Controllers
         {
             var companyId = GetCompanyId();
             var orders = await _context.Orders
+                .AsNoTracking()
                 .Where(o => companyId == null || o.CompanyId == companyId)
                 .Include(o => o.Customer)
                 .Include(o => o.OrderItems)
@@ -579,6 +647,7 @@ namespace CompuGear.Controllers
 
                 // Search products
                 var products = await _context.Products
+                    .AsNoTracking()
                     .Where(p => (companyId == null || p.CompanyId == companyId) &&
                         (p.ProductName.ToLower().Contains(searchTerm) || 
                          (p.SKU != null && p.SKU.ToLower().Contains(searchTerm)) ||
@@ -589,6 +658,7 @@ namespace CompuGear.Controllers
 
                 // Search customers
                 var customers = await _context.Customers
+                    .AsNoTracking()
                     .Where(c => (companyId == null || c.CompanyId == companyId) &&
                         (c.FirstName.ToLower().Contains(searchTerm) ||
                          c.LastName.ToLower().Contains(searchTerm) ||
@@ -600,6 +670,7 @@ namespace CompuGear.Controllers
 
                 // Search orders
                 var orders = await _context.Orders
+                    .AsNoTracking()
                     .Where(o => (companyId == null || o.CompanyId == companyId) &&
                         (o.OrderNumber.ToLower().Contains(searchTerm)))
                     .Take(10)
@@ -628,8 +699,7 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var query = _context.Products
-                    .Include(p => p.Category)
-                    .Include(p => p.Brand)
+                    .AsNoTracking()
                     .Where(p => companyId == null || p.CompanyId == companyId);
 
                 // Apply filters

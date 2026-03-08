@@ -1,4 +1,4 @@
-// CompuGear CRM - JavaScript
+﻿// CompuGear CRM - JavaScript
 
 // =====================================================
 // Sidebar State Restoration (runs immediately, no flicker)
@@ -226,7 +226,7 @@ let notificationSocket = null;
 async function initNotifications() {
     await loadNotifications();
     // Refresh notifications every 15 seconds for real-time updates
-    setInterval(loadNotifications, 15000);
+    setInterval(loadNotifications, 120000);
     
     // Play notification sound for new alerts
     setupNotificationSound();
@@ -239,14 +239,14 @@ function setupNotificationSound() {
 
 async function loadNotifications() {
     try {
-        const response = await fetch('/api/products');
+        const response = await fetch('/api/stock-alerts');
         if (!response.ok) return;
         
         const result = await response.json();
-        const products = Array.isArray(result) ? result : (Array.isArray(result?.data) ? result.data : []);
+        const products = result.data || [];
         
         // Get low stock products (threshold 15)
-        const lowStockProducts = products.filter(p => p.stockQuantity <= LOW_STOCK_THRESHOLD);
+        const lowStockProducts = products; // Already filtered server-side
 
         const previousCount = notifications.length;
         const readMap = new Map((notifications || []).map(n => [n.productId, !!n.read]));

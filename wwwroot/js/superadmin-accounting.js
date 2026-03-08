@@ -88,8 +88,22 @@ const COAModule = {
 
     async load() {
         try {
+            // Show loading state immediately
+            const tbody = document.getElementById('coaTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Loading accounts...</td></tr>';
+
             const res = await saFetch('/chart-of-accounts');
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                console.error('COA API error:', res.status, err);
+                showError('Failed to load Chart of Accounts: ' + (err.error || res.statusText));
+                this.data = [];
+                this.updateStats();
+                this.render();
+                return;
+            }
             this.data = await res.json();
+            if (!Array.isArray(this.data)) this.data = [];
             this.currentPage = 1;
             this.updateStats();
             this.render();
@@ -237,12 +251,29 @@ const JEModule = {
 
     async load() {
         try {
+            // Show loading state immediately
+            const tbody = document.getElementById('jeTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Loading journal entries...</td></tr>';
+
             const [jeRes, coaRes] = await Promise.all([
                 saFetch('/journal-entries'),
-                saFetch('/chart-of-accounts')
+                saFetch('/chart-of-accounts/simple')
             ]);
-            this.data = await jeRes.json();
-            this.accounts = await coaRes.json();
+            if (!jeRes.ok) {
+                const err = await jeRes.json().catch(() => ({}));
+                console.error('JE API error:', jeRes.status, err);
+                showError('Failed to load journal entries: ' + (err.error || jeRes.statusText));
+                this.data = [];
+            } else {
+                this.data = await jeRes.json();
+                if (!Array.isArray(this.data)) this.data = [];
+            }
+            if (coaRes.ok) {
+                this.accounts = await coaRes.json();
+                if (!Array.isArray(this.accounts)) this.accounts = [];
+            } else {
+                this.accounts = [];
+            }
             this.currentPage = 1;
             this.updateStats();
             this.render();
@@ -256,22 +287,27 @@ const JEModule = {
         const posted = this.data.filter(e => e.status === 'Posted');
         const drafts = this.data.filter(e => e.status === 'Draft');
         const system = this.data.filter(e => e.source === 'System');
+        const taxEntries = this.data.filter(e => e.sourceType === 'Tax' || e.sourceType === 'Subscription');
         const totalDr = this.data.reduce((s, e) => s + (e.totalDebit || 0), 0);
 
         document.getElementById('totalEntries').textContent = this.data.length;
         document.getElementById('postedEntries').textContent = posted.length;
         document.getElementById('draftEntries').textContent = drafts.length;
         document.getElementById('systemEntries').textContent = system.length;
+        const taxEl = document.getElementById('taxEntries');
+        if (taxEl) taxEl.textContent = taxEntries.length;
     },
 
     getFiltered() {
         const search = (document.getElementById('jeSearch')?.value || '').toLowerCase();
         const statusFilter = document.getElementById('jeStatusFilter')?.value || '';
         const sourceFilter = document.getElementById('jeSourceFilter')?.value || '';
+        const typeFilter = document.getElementById('jeTypeFilter')?.value || '';
         let filtered = this.data;
         if (search) filtered = filtered.filter(e => (e.entryNumber || '').toLowerCase().includes(search) || (e.description || '').toLowerCase().includes(search));
         if (statusFilter) filtered = filtered.filter(e => e.status === statusFilter);
         if (sourceFilter) filtered = filtered.filter(e => e.source === sourceFilter);
+        if (typeFilter) filtered = filtered.filter(e => e.sourceType === typeFilter);
         return filtered;
     },
 
@@ -548,14 +584,31 @@ const GLModule = {
             if (from) params.set('dateFrom', from);
             if (to) params.set('dateTo', to);
 
+            // Show loading state immediately
+            const tbody = document.getElementById('glTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> Loading ledger data...</td></tr>';
+
             const [glRes, coaRes] = await Promise.all([
                 saFetch(`/general-ledger?${params}`),
-                saFetch('/chart-of-accounts')
+                saFetch('/chart-of-accounts/simple')
             ]);
-            const glData = await glRes.json();
-            this.data = glData.data || [];
-            this.summary = glData.summary || [];
-            this.accounts = await coaRes.json();
+            if (!glRes.ok) {
+                const err = await glRes.json().catch(() => ({}));
+                console.error('GL API error:', glRes.status, err);
+                showError('Failed to load general ledger: ' + (err.error || glRes.statusText));
+                this.data = [];
+                this.summary = [];
+            } else {
+                const glData = await glRes.json();
+                this.data = glData.data || [];
+                this.summary = glData.summary || [];
+            }
+            if (coaRes.ok) {
+                this.accounts = await coaRes.json();
+                if (!Array.isArray(this.accounts)) this.accounts = [];
+            } else {
+                this.accounts = [];
+            }
             this.currentPage = 1;
             this.populateAccountFilter();
             this.updateStats();
@@ -583,20 +636,25 @@ const GLModule = {
         const totalCr = this.data.reduce((s, g) => s + (g.creditAmount || 0), 0);
         const manualCount = this.data.filter(g => g.source === 'Manual').length;
         const systemCount = this.data.filter(g => g.source === 'System').length;
+        const taxAmount = this.data.filter(g => g.sourceType === 'Tax').reduce((s, g) => s + (g.creditAmount || 0), 0);
 
         document.getElementById('glTotalEntries').textContent = this.data.length;
         document.getElementById('glTotalDebits').textContent = formatCurrency(totalDr);
         document.getElementById('glTotalCredits').textContent = formatCurrency(totalCr);
         document.getElementById('glSystemEntries').textContent = systemCount;
+        const taxEl = document.getElementById('glTaxAmount');
+        if (taxEl) taxEl.textContent = formatCurrency(taxAmount);
     },
 
     render() {
         const search = (document.getElementById('glSearch')?.value || '').toLowerCase();
         const sourceFilter = document.getElementById('glSourceFilter')?.value || '';
+        const typeFilter = document.getElementById('glTypeFilter')?.value || '';
 
         let filtered = this.data;
         if (search) filtered = filtered.filter(g => (g.accountCode || '').toLowerCase().includes(search) || (g.accountName || '').toLowerCase().includes(search) || (g.description || '').toLowerCase().includes(search));
         if (sourceFilter) filtered = filtered.filter(g => g.source === sourceFilter);
+        if (typeFilter) filtered = filtered.filter(g => g.sourceType === typeFilter);
 
         const tbody = document.getElementById('glTableBody');
         if (!filtered.length) {

@@ -80,6 +80,32 @@ namespace CompuGear.Models
         [StringLength(500)]
         public string? Notes { get; set; }
 
+        // Contract & Compliance
+        public bool ContractAgreed { get; set; } = false;
+
+        public DateTime? ContractAgreedAt { get; set; }
+
+        [StringLength(20)]
+        public string ContractType { get; set; } = "Standard"; // Standard, Annual, Enterprise
+
+        public int ContractTermMonths { get; set; } = 12; // Minimum contract period
+
+        // Penalty & Overdue Tracking
+        public int OverdueMonths { get; set; } = 0;
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal PenaltyAmount { get; set; } = 0m;
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal TotalAmountDue { get; set; } = 0m;
+
+        public DateTime? LastPaymentDate { get; set; }
+
+        public DateTime? NextDueDate { get; set; }
+
+        [StringLength(20)]
+        public string PaymentStatus { get; set; } = "Current"; // Current, Overdue, Delinquent, Suspended, Terminated
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

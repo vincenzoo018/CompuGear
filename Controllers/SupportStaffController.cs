@@ -1,7 +1,8 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using CompuGear.Data;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace CompuGear.Controllers
 {
@@ -13,10 +14,12 @@ namespace CompuGear.Controllers
     public class SupportStaffController : Controller
     {
         private readonly CompuGearDbContext _context;
+        private readonly IMemoryCache _cache;
 
-        public SupportStaffController(CompuGearDbContext context)
+        public SupportStaffController(CompuGearDbContext context, IMemoryCache cache)
         {
             _context = context;
+            _cache = cache;
         }
 
         // Role-based authorization check
@@ -45,25 +48,31 @@ namespace CompuGear.Controllers
 
         private bool HasModuleAccess(int companyId, int roleId, string moduleCode)
         {
+            var cacheKey = $"module_access_{companyId}_{roleId}_{moduleCode}";
+            if (_cache.TryGetValue(cacheKey, out bool cachedResult))
+                return cachedResult;
+
             var companyHasModule = _context.CompanyModuleAccess
-                .Include(a => a.Module)
                 .Any(a => a.CompanyId == companyId && a.IsEnabled && a.Module.ModuleCode == moduleCode);
 
             if (!companyHasModule)
             {
+                _cache.Set(cacheKey, false, TimeSpan.FromMinutes(5));
                 return false;
             }
 
-            var roleAccessRows = _context.RoleModuleAccess
+            var roleHasExplicitAccess = _context.RoleModuleAccess
                 .Where(r => r.CompanyId == companyId && r.RoleId == roleId)
                 .ToList();
 
-            if (!roleAccessRows.Any())
-            {
-                return true;
-            }
+            bool result;
+            if (!roleHasExplicitAccess.Any())
+                result = true;
+            else
+                result = roleHasExplicitAccess.Any(r => r.ModuleCode == moduleCode && r.HasAccess);
 
-            return roleAccessRows.Any(r => r.ModuleCode == moduleCode && r.HasAccess);
+            _cache.Set(cacheKey, result, TimeSpan.FromMinutes(5));
+            return result;
         }
 
         // Dashboard

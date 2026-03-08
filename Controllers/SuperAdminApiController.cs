@@ -1,5 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using CompuGear.Data;
 using CompuGear.Models;
 
@@ -14,10 +15,12 @@ namespace CompuGear.Controllers
     public class SuperAdminApiController : ControllerBase
     {
         private readonly CompuGearDbContext _context;
+        private readonly IMemoryCache _cache;
 
-        public SuperAdminApiController(CompuGearDbContext context)
+        public SuperAdminApiController(CompuGearDbContext context, IMemoryCache cache)
         {
             _context = context;
+            _cache = cache;
         }
 
         private bool IsSuperAdmin()
@@ -33,28 +36,47 @@ namespace CompuGear.Controllers
         {
             if (!IsSuperAdmin()) return Unauthorized();
 
-            var totalCompanies = await _context.Companies.CountAsync();
-            var activeCompanies = await _context.Companies.CountAsync(c => c.IsActive);
-            var totalUsers = await _context.Users.CountAsync();
-            var activeUsers = await _context.Users.CountAsync(u => u.IsActive);
-            var totalSubscriptions = await _context.CompanySubscriptions.CountAsync();
-            var activeSubscriptions = await _context.CompanySubscriptions.CountAsync(s => s.Status == "Active");
-            var totalModules = await _context.ERPModules.CountAsync(m => m.IsActive);
-            var totalRevenue = await _context.CompanySubscriptions
-                .Where(s => s.Status == "Active")
-                .SumAsync(s => s.MonthlyFee);
+            // Use memory cache for dashboard stats (refresh every 30 seconds)
+            var cacheKey = "sa_dashboard_stats";
+            if (_cache.TryGetValue(cacheKey, out object? cached))
+                return Ok(cached);
 
-            return Ok(new
+            // Batch multiple counts into fewer queries using raw SQL or parallel-safe approach
+            var companyStats = await _context.Companies
+                .GroupBy(c => 1)
+                .Select(g => new { Total = g.Count(), Active = g.Count(c => c.IsActive) })
+                .FirstOrDefaultAsync();
+
+            var userStats = await _context.Users
+                .GroupBy(u => 1)
+                .Select(g => new { Total = g.Count(), Active = g.Count(u => u.IsActive) })
+                .FirstOrDefaultAsync();
+
+            var subStats = await _context.CompanySubscriptions
+                .GroupBy(s => 1)
+                .Select(g => new { 
+                    Total = g.Count(), 
+                    Active = g.Count(s => s.Status == "Active"),
+                    Revenue = g.Where(s => s.Status == "Active").Sum(s => s.MonthlyFee)
+                })
+                .FirstOrDefaultAsync();
+
+            var totalModules = await _context.ERPModules.CountAsync(m => m.IsActive);
+
+            var result = new
             {
-                totalCompanies,
-                activeCompanies,
-                totalUsers,
-                activeUsers,
-                totalSubscriptions,
-                activeSubscriptions,
+                totalCompanies = companyStats?.Total ?? 0,
+                activeCompanies = companyStats?.Active ?? 0,
+                totalUsers = userStats?.Total ?? 0,
+                activeUsers = userStats?.Active ?? 0,
+                totalSubscriptions = subStats?.Total ?? 0,
+                activeSubscriptions = subStats?.Active ?? 0,
                 totalModules,
-                monthlyRevenue = totalRevenue
-            });
+                monthlyRevenue = subStats?.Revenue ?? 0m
+            };
+
+            _cache.Set(cacheKey, result, TimeSpan.FromSeconds(30));
+            return Ok(result);
         }
 
         #endregion
@@ -67,6 +89,7 @@ namespace CompuGear.Controllers
             if (!IsSuperAdmin()) return Unauthorized();
 
             var companies = await _context.Companies
+                .AsNoTracking()
                 .Select(c => new
                 {
                     c.CompanyId,
@@ -582,8 +605,7 @@ namespace CompuGear.Controllers
             if (!IsSuperAdmin()) return Unauthorized();
 
             var users = await _context.Users
-                .Include(u => u.Role)
-                .Include(u => u.Company)
+                .AsNoTracking()
                 .Select(u => new
                 {
                     u.UserId,
@@ -692,10 +714,19 @@ namespace CompuGear.Controllers
         {
             if (!IsSuperAdmin()) return Unauthorized();
 
+            // Cache reports for 60 seconds
+            var cacheKey = "sa_reports_overview";
+            if (_cache.TryGetValue(cacheKey, out object? cachedReport))
+                return Ok(cachedReport);
+
             var companies = await _context.Companies.CountAsync();
             var users = await _context.Users.CountAsync();
-            var orders = await _context.Orders.CountAsync();
-            var revenue = await _context.Orders.SumAsync(o => o.TotalAmount);
+            var orderStats = await _context.Orders
+                .GroupBy(o => 1)
+                .Select(g => new { Count = g.Count(), Revenue = g.Sum(o => o.TotalAmount) })
+                .FirstOrDefaultAsync();
+            var orders = orderStats?.Count ?? 0;
+            var revenue = orderStats?.Revenue ?? 0m;
             var tickets = await _context.SupportTickets.CountAsync();
             var products = await _context.Products.CountAsync();
 
@@ -711,7 +742,7 @@ namespace CompuGear.Controllers
                 .Select(g => new { Role = g.Key, Count = g.Count() })
                 .ToListAsync();
 
-            return Ok(new
+            var reportResult = new
             {
                 companies,
                 users,
@@ -721,7 +752,10 @@ namespace CompuGear.Controllers
                 products,
                 subscriptionsByPlan,
                 usersByRole
-            });
+            };
+
+            _cache.Set(cacheKey, reportResult, TimeSpan.FromSeconds(60));
+            return Ok(reportResult);
         }
 
         #endregion
@@ -733,7 +767,7 @@ namespace CompuGear.Controllers
         {
             if (!IsSuperAdmin()) return Unauthorized();
 
-            var settings = await _context.SystemSettings.ToListAsync();
+            var settings = await _context.SystemSettings.AsNoTracking().ToListAsync();
             return Ok(settings);
         }
 
@@ -768,8 +802,134 @@ namespace CompuGear.Controllers
         public async Task<IActionResult> GetRoles()
         {
             if (!IsSuperAdmin()) return Unauthorized();
-            var roles = await _context.Roles.OrderBy(r => r.RoleId).ToListAsync();
+            var roles = await _context.Roles.AsNoTracking().OrderBy(r => r.RoleId).ToListAsync();
             return Ok(roles);
+        }
+
+        #endregion
+
+        #region Subscription Penalties & Overdue Management
+
+        /// <summary>
+        /// Get all subscriptions with their payment/penalty status
+        /// </summary>
+        [HttpGet("subscription-penalties")]
+        public async Task<IActionResult> GetSubscriptionPenalties()
+        {
+            if (!IsSuperAdmin()) return Unauthorized();
+            try
+            {
+                var subs = await _context.CompanySubscriptions
+                    .AsNoTracking()
+                    .Include(s => s.Company)
+                    .Where(s => s.Status != "Cancelled")
+                    .OrderByDescending(s => s.OverdueMonths)
+                    .ThenByDescending(s => s.PenaltyAmount)
+                    .Select(s => new
+                    {
+                        s.SubscriptionId, s.CompanyId,
+                        CompanyName = s.Company.CompanyName,
+                        CompanyEmail = s.Company.Email,
+                        s.PlanName, s.Status, s.BillingCycle, s.MonthlyFee,
+                        s.ContractAgreed, s.ContractAgreedAt, s.ContractType, s.ContractTermMonths,
+                        s.OverdueMonths, s.PenaltyAmount, s.TotalAmountDue,
+                        s.PaymentStatus, s.LastPaymentDate, s.NextDueDate,
+                        s.StartDate, s.CreatedAt
+                    }).ToListAsync();
+
+                var stats = new
+                {
+                    TotalSubscriptions = subs.Count,
+                    Current = subs.Count(s => s.PaymentStatus == "Current"),
+                    Overdue = subs.Count(s => s.PaymentStatus == "Overdue"),
+                    Delinquent = subs.Count(s => s.PaymentStatus == "Delinquent"),
+                    Suspended = subs.Count(s => s.PaymentStatus == "Suspended"),
+                    TotalPenalties = subs.Sum(s => s.PenaltyAmount),
+                    TotalOverdue = subs.Sum(s => s.TotalAmountDue)
+                };
+
+                return Ok(new { data = subs, stats });
+            }
+            catch (Exception ex) { return StatusCode(500, new { error = ex.Message, inner = ex.InnerException?.Message }); }
+        }
+
+        /// <summary>
+        /// Process overdue check for all active subscriptions.
+        /// Calculates penalties based on 3% monthly rate.
+        /// </summary>
+        [HttpPost("process-overdue")]
+        public async Task<IActionResult> ProcessOverdueSubscriptions()
+        {
+            if (!IsSuperAdmin()) return Unauthorized();
+            try
+            {
+                const decimal PENALTY_RATE = 0.03m; // 3% per month
+                var now = DateTime.UtcNow;
+                var processed = 0;
+
+                var subs = await _context.CompanySubscriptions
+                    .Where(s => s.Status == "Active" && s.NextDueDate.HasValue && s.NextDueDate.Value < now)
+                    .ToListAsync();
+
+                foreach (var sub in subs)
+                {
+                    var monthsOverdue = (int)Math.Floor((now - sub.NextDueDate!.Value).TotalDays / 30.0);
+                    if (monthsOverdue < 1) continue;
+
+                    sub.OverdueMonths = monthsOverdue;
+                    var outstanding = sub.MonthlyFee * monthsOverdue;
+                    sub.PenaltyAmount = Math.Round(outstanding * PENALTY_RATE * monthsOverdue, 2);
+                    sub.TotalAmountDue = outstanding + sub.PenaltyAmount;
+
+                    if (monthsOverdue >= 3)
+                    {
+                        sub.PaymentStatus = "Delinquent";
+                        sub.Status = "Suspended";
+                    }
+                    else if (monthsOverdue >= 2)
+                    {
+                        sub.PaymentStatus = "Suspended";
+                    }
+                    else
+                    {
+                        sub.PaymentStatus = "Overdue";
+                    }
+
+                    sub.UpdatedAt = now;
+                    processed++;
+                }
+
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true, message = $"Processed {processed} overdue subscriptions.", processedCount = processed });
+            }
+            catch (Exception ex) { return Ok(new { success = false, message = ex.Message }); }
+        }
+
+        /// <summary>
+        /// Record a payment for an overdue subscription, clearing penalties.
+        /// </summary>
+        [HttpPost("record-payment/{subscriptionId}")]
+        public async Task<IActionResult> RecordPayment(int subscriptionId)
+        {
+            if (!IsSuperAdmin()) return Unauthorized();
+            try
+            {
+                var sub = await _context.CompanySubscriptions.FirstOrDefaultAsync(s => s.SubscriptionId == subscriptionId);
+                if (sub == null) return NotFound(new { message = "Subscription not found" });
+
+                sub.OverdueMonths = 0;
+                sub.PenaltyAmount = 0;
+                sub.TotalAmountDue = 0;
+                sub.LastPaymentDate = DateTime.UtcNow;
+                sub.NextDueDate = sub.BillingCycle == "Annual" ? DateTime.UtcNow.AddYears(1) : DateTime.UtcNow.AddMonths(1);
+                sub.PaymentStatus = "Current";
+                sub.Status = "Active";
+                sub.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true, message = "Payment recorded. Account restored to current status." });
+            }
+            catch (Exception ex) { return Ok(new { success = false, message = ex.Message }); }
         }
 
         #endregion
@@ -813,7 +973,28 @@ namespace CompuGear.Controllers
 
                 return Ok(result);
             }
-            catch (Exception) { return Ok(new List<object>()); }
+            catch (Exception ex) { return StatusCode(500, new { error = ex.Message, inner = ex.InnerException?.Message }); }
+        }
+
+        /// <summary>
+        /// Lightweight COA list for dropdowns - cached for 2 minutes
+        /// </summary>
+        [HttpGet("chart-of-accounts/simple")]
+        public async Task<IActionResult> GetChartOfAccountsSimple()
+        {
+            if (!IsSuperAdmin()) return Unauthorized();
+            const string cacheKey = "coa_simple_list";
+            if (!_cache.TryGetValue(cacheKey, out object? cached))
+            {
+                var accounts = await _context.ChartOfAccounts
+                    .Where(a => a.CompanyId == null && !a.IsArchived && a.IsActive)
+                    .OrderBy(a => a.AccountCode)
+                    .Select(a => new { a.AccountId, a.AccountCode, a.AccountName, a.AccountType, a.NormalBalance })
+                    .ToListAsync();
+                cached = accounts;
+                _cache.Set(cacheKey, cached, TimeSpan.FromMinutes(2));
+            }
+            return Ok(cached);
         }
 
         [HttpGet("chart-of-accounts/{id}")]
@@ -842,6 +1023,7 @@ namespace CompuGear.Controllers
             account.UpdatedAt = DateTime.UtcNow;
             _context.ChartOfAccounts.Add(account);
             await _context.SaveChangesAsync();
+            _cache.Remove("coa_simple_list");
             return Ok(new { success = true, message = "Account created", data = account });
         }
 
@@ -861,6 +1043,7 @@ namespace CompuGear.Controllers
             existing.IsActive = account.IsActive;
             existing.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+            _cache.Remove("coa_simple_list");
             return Ok(new { success = true, message = "Account updated" });
         }
 
@@ -873,6 +1056,7 @@ namespace CompuGear.Controllers
             account.IsArchived = true;
             account.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
+            _cache.Remove("coa_simple_list");
             return Ok(new { success = true, message = "Account archived" });
         }
 
@@ -886,92 +1070,61 @@ namespace CompuGear.Controllers
             if (!IsSuperAdmin()) return Unauthorized();
             try
             {
-                // Manual entries
+                // Manual entries - no Line eager-loading for list view (loaded on detail only)
                 var manualEntries = await _context.JournalEntries
-                    .Include(e => e.Lines).ThenInclude(l => l.Account)
                     .Where(e => e.CompanyId == null && !e.IsArchived)
                     .OrderByDescending(e => e.EntryDate)
                     .Select(e => new
                     {
                         e.EntryId, e.EntryNumber, e.EntryDate, e.Description, e.Reference,
                         e.Status, e.TotalDebit, e.TotalCredit, e.Notes, e.PostedAt, e.CreatedAt,
-                        Source = "Manual", SourceType = "Journal Entry",
-                        Lines = e.Lines.Select(l => new { l.LineId, l.AccountId, AccountCode = l.Account.AccountCode, AccountName = l.Account.AccountName, l.Description, l.DebitAmount, l.CreditAmount })
+                        Source = (e.Reference != null && (e.Reference.StartsWith("SUB-") || e.Reference.StartsWith("TAX-"))) ? "System" : "Manual",
+                        SourceType = e.Reference != null && e.Reference.StartsWith("SUB-") ? "Subscription"
+                                   : e.Reference != null && e.Reference.StartsWith("TAX-") ? "Tax"
+                                   : "Journal Entry"
                     }).ToListAsync();
 
-                // System-derived: subscription revenue entries
-                var map = await GetPlatformAccountCodeMap();
-                int Acct(string code) => map.ContainsKey(code) ? map[code] : 0;
+                // System-derived entries: quick subscription summary (single optimized query)
+                var existingSubRefsSet = manualEntries
+                    .Where(e => e.Reference != null && e.Reference.StartsWith("SUB-"))
+                    .Select(e => e.Reference!)
+                    .ToHashSet();
 
-                var subscriptions = await _context.CompanySubscriptions
-                    .Include(s => s.Company)
+                var subEntries = await _context.CompanySubscriptions
                     .Where(s => s.Status == "Active" || s.Status == "Trial" || s.Status == "Cancelled")
                     .OrderByDescending(s => s.StartDate)
-                    .ToListAsync();
-
-                var subEntries = subscriptions.Select(s => new
-                {
-                    EntryId = -(s.SubscriptionId),
-                    EntryNumber = $"SYS-SUB-{s.SubscriptionId:D5}",
-                    EntryDate = s.StartDate,
-                    Description = $"Subscription: {s.Company?.CompanyName ?? "N/A"} - {s.PlanName} ({s.BillingCycle})",
-                    Reference = (string?)$"SUB-{s.SubscriptionId}",
-                    Status = "Posted",
-                    TotalDebit = s.MonthlyFee,
-                    TotalCredit = s.MonthlyFee,
-                    Notes = (string?)s.Notes,
-                    PostedAt = (DateTime?)s.StartDate,
-                    s.CreatedAt,
-                    Source = "System",
-                    SourceType = "Subscription",
-                    Lines = new[]
+                    .Select(s => new
                     {
-                        new { LineId = 0, AccountId = Acct("1100"), AccountCode = "1100", AccountName = "Accounts Receivable", Description = (string?)$"{s.Company?.CompanyName} - {s.PlanName}", DebitAmount = s.MonthlyFee, CreditAmount = 0m },
-                        new { LineId = 0, AccountId = Acct("4000"), AccountCode = "4000", AccountName = "Subscription Revenue", Description = (string?)$"{s.PlanName} {s.BillingCycle}", DebitAmount = 0m, CreditAmount = s.MonthlyFee }
-                    }.AsEnumerable()
-                }).ToList();
+                        s.SubscriptionId, CompanyName = s.Company != null ? s.Company.CompanyName : "N/A",
+                        s.PlanName, s.BillingCycle, s.MonthlyFee, s.StartDate, s.Notes, s.CreatedAt
+                    }).ToListAsync();
 
-                // System-derived: tax entries from company invoices (platform aggregated)
-                var taxTotal = await _context.Invoices
-                    .Where(i => i.Status != "Cancelled" && i.Status != "Void" && i.Status != "Draft" && i.TaxAmount > 0)
-                    .GroupBy(i => 1)
-                    .Select(g => new { TotalTax = g.Sum(i => i.TaxAmount), Count = g.Count(), LastDate = g.Max(i => i.InvoiceDate) })
-                    .FirstOrDefaultAsync();
-
-                var taxEntries = new List<object>();
-                if (taxTotal != null && taxTotal.TotalTax > 0)
-                {
-                    taxEntries.Add(new
+                var systemEntries = subEntries
+                    .Where(s => !existingSubRefsSet.Contains($"SUB-{s.SubscriptionId}"))
+                    .Select(s => (object)new
                     {
-                        EntryId = -900000,
-                        EntryNumber = "SYS-TAX-AGGR",
-                        EntryDate = taxTotal.LastDate,
-                        Description = $"Platform Tax Collected ({taxTotal.Count} invoices)",
-                        Reference = (string?)"TAX-AGGREGATE",
+                        EntryId = -(s.SubscriptionId),
+                        EntryNumber = $"SYS-SUB-{s.SubscriptionId:D5}",
+                        EntryDate = s.StartDate,
+                        Description = $"Subscription: {s.CompanyName} - {s.PlanName} ({s.BillingCycle})",
+                        Reference = (string?)$"SUB-{s.SubscriptionId}",
                         Status = "Posted",
-                        TotalDebit = taxTotal.TotalTax,
-                        TotalCredit = taxTotal.TotalTax,
-                        Notes = (string?)"Aggregated tax from all company invoices",
-                        PostedAt = (DateTime?)taxTotal.LastDate,
-                        CreatedAt = DateTime.UtcNow,
+                        TotalDebit = s.MonthlyFee,
+                        TotalCredit = s.MonthlyFee,
+                        Notes = (string?)s.Notes,
+                        PostedAt = (DateTime?)s.StartDate,
+                        s.CreatedAt,
                         Source = "System",
-                        SourceType = "Tax",
-                        Lines = new[]
-                        {
-                            new { LineId = 0, AccountId = Acct("1000"), AccountCode = "1000", AccountName = "Platform Cash", Description = (string?)"Tax collected", DebitAmount = taxTotal.TotalTax, CreditAmount = 0m },
-                            new { LineId = 0, AccountId = Acct("2100"), AccountCode = "2100", AccountName = "Tax Payable", Description = (string?)"Tax liability", DebitAmount = 0m, CreditAmount = taxTotal.TotalTax }
-                        }.AsEnumerable()
-                    });
-                }
+                        SourceType = "Subscription"
+                    }).ToList();
 
                 var all = manualEntries.Cast<object>()
-                    .Concat(subEntries.Cast<object>())
-                    .Concat(taxEntries)
+                    .Concat(systemEntries)
                     .ToList();
 
                 return Ok(all);
             }
-            catch (Exception) { return Ok(new List<object>()); }
+            catch (Exception ex) { return StatusCode(500, new { error = ex.Message, inner = ex.InnerException?.Message }); }
         }
 
         [HttpGet("journal-entries/{id}")]
@@ -1024,7 +1177,10 @@ namespace CompuGear.Controllers
                 entry.EntryId, entry.EntryNumber, entry.EntryDate, entry.Description,
                 entry.Reference, entry.Status, entry.TotalDebit, entry.TotalCredit,
                 entry.Notes, entry.PostedAt, entry.CreatedAt,
-                Source = "Manual", SourceType = "Journal Entry",
+                Source = (entry.Reference != null && (entry.Reference.StartsWith("SUB-") || entry.Reference.StartsWith("TAX-"))) ? "System" : "Manual",
+                SourceType = entry.Reference != null && entry.Reference.StartsWith("SUB-") ? "Subscription"
+                           : entry.Reference != null && entry.Reference.StartsWith("TAX-") ? "Tax"
+                           : "Journal Entry",
                 Lines = entry.Lines.Select(l => new { l.LineId, l.AccountId, AccountCode = l.Account.AccountCode, AccountName = l.Account.AccountName, l.Description, l.DebitAmount, l.CreditAmount })
             });
         }
@@ -1168,57 +1324,69 @@ namespace CompuGear.Controllers
                         AccountType = g.Account.AccountType, g.TransactionDate, g.Description,
                         g.DebitAmount, g.CreditAmount, g.RunningBalance, g.Reference,
                         EntryNumber = g.JournalEntry != null ? g.JournalEntry.EntryNumber : "",
-                        Source = "Manual", SourceType = "Journal Entry"
+                        Source = (g.Reference != null && (g.Reference.StartsWith("SUB-") || g.Reference.StartsWith("TAX-SUB-"))) ? "System" : "Manual",
+                        SourceType = g.Reference != null && g.Reference.StartsWith("TAX-SUB-") ? "Tax"
+                                   : g.Reference != null && g.Reference.StartsWith("SUB-") ? "Subscription"
+                                   : "Journal Entry"
                     }).ToListAsync();
 
-                // System-derived GL lines from subscriptions
-                var map = await GetPlatformAccountCodeMap();
-                int Acct(string code) => map.ContainsKey(code) ? map[code] : 0;
+                // System-derived GL from subscriptions - use dedup from manualGL refs
+                var existingGLRefs = manualGL
+                    .Where(g => g.Reference != null && g.Reference.StartsWith("SUB-"))
+                    .Select(g => g.Reference!)
+                    .ToHashSet();
 
-                var subs = await _context.CompanySubscriptions
-                    .Include(s => s.Company)
-                    .Where(s => s.Status == "Active" || s.Status == "Trial" || s.Status == "Cancelled")
+                // Build subscription filter query with date/account constraints
+                var subsQuery = _context.CompanySubscriptions
+                    .Where(s => s.Status == "Active" || s.Status == "Trial" || s.Status == "Cancelled");
+
+                if (!string.IsNullOrEmpty(dateFrom) && DateTime.TryParse(dateFrom, out var sdf2))
+                    subsQuery = subsQuery.Where(s => s.StartDate >= sdf2);
+                if (!string.IsNullOrEmpty(dateTo) && DateTime.TryParse(dateTo, out var sdt2))
+                    subsQuery = subsQuery.Where(s => s.StartDate <= sdt2.AddDays(1));
+
+                var subData = await subsQuery
+                    .Select(s => new { s.SubscriptionId, CompanyName = s.Company != null ? s.Company.CompanyName : "N/A", s.PlanName, s.MonthlyFee, s.StartDate })
                     .ToListAsync();
 
+                var map = await GetPlatformAccountCodeMap();
+                int Acct(string code) => map.ContainsKey(code) ? map[code] : 0;
+                var arId = Acct("1100"); var revId = Acct("4000");
+
                 var subGL = new List<object>();
-                foreach (var s in subs)
+                foreach (var s in subData.Where(s => !existingGLRefs.Contains($"SUB-{s.SubscriptionId}")))
                 {
-                    var matchDate = true;
-                    if (!string.IsNullOrEmpty(dateFrom) && DateTime.TryParse(dateFrom, out var sdf) && s.StartDate < sdf) matchDate = false;
-                    if (!string.IsNullOrEmpty(dateTo) && DateTime.TryParse(dateTo, out var sdt) && s.StartDate > sdt.AddDays(1)) matchDate = false;
-                    if (!matchDate) continue;
-
-                    var arId = Acct("1100"); var revId = Acct("4000");
                     if (accountId.HasValue && accountId.Value != arId && accountId.Value != revId) continue;
-
                     if (!accountId.HasValue || accountId.Value == arId)
-                    {
-                        subGL.Add(new { LedgerId = -(s.SubscriptionId), AccountId = arId, AccountCode = "1100", AccountName = "Accounts Receivable", AccountType = "Asset", TransactionDate = s.StartDate, Description = $"{s.Company?.CompanyName} - {s.PlanName}", DebitAmount = s.MonthlyFee, CreditAmount = 0m, RunningBalance = 0m, Reference = (string?)$"SUB-{s.SubscriptionId}", EntryNumber = $"SYS-SUB-{s.SubscriptionId:D5}", Source = "System", SourceType = "Subscription" });
-                    }
+                        subGL.Add(new { LedgerId = -(s.SubscriptionId), AccountId = arId, AccountCode = "1100", AccountName = "Accounts Receivable", AccountType = "Asset", TransactionDate = s.StartDate, Description = $"{s.CompanyName} - {s.PlanName}", DebitAmount = s.MonthlyFee, CreditAmount = 0m, RunningBalance = 0m, Reference = (string?)$"SUB-{s.SubscriptionId}", EntryNumber = $"SYS-SUB-{s.SubscriptionId:D5}", Source = "System", SourceType = "Subscription" });
                     if (!accountId.HasValue || accountId.Value == revId)
-                    {
-                        subGL.Add(new { LedgerId = -(100000 + s.SubscriptionId), AccountId = revId, AccountCode = "4000", AccountName = "Subscription Revenue", AccountType = "Revenue", TransactionDate = s.StartDate, Description = $"{s.Company?.CompanyName} - {s.PlanName} Revenue", DebitAmount = 0m, CreditAmount = s.MonthlyFee, RunningBalance = 0m, Reference = (string?)$"SUB-{s.SubscriptionId}", EntryNumber = $"SYS-SUB-{s.SubscriptionId:D5}", Source = "System", SourceType = "Subscription" });
-                    }
+                        subGL.Add(new { LedgerId = -(100000 + s.SubscriptionId), AccountId = revId, AccountCode = "4000", AccountName = "Subscription Revenue", AccountType = "Revenue", TransactionDate = s.StartDate, Description = $"{s.CompanyName} - {s.PlanName} Revenue", DebitAmount = 0m, CreditAmount = s.MonthlyFee, RunningBalance = 0m, Reference = (string?)$"SUB-{s.SubscriptionId}", EntryNumber = $"SYS-SUB-{s.SubscriptionId:D5}", Source = "System", SourceType = "Subscription" });
                 }
 
                 var allGL = manualGL.Cast<object>().Concat(subGL).ToList();
 
-                // Account summary (trial balance) from system balances
-                var balances = await ComputePlatformBalances();
-                var allAccounts = await _context.ChartOfAccounts
-                    .Where(a => a.CompanyId == null && !a.IsArchived && a.IsActive)
-                    .OrderBy(a => a.AccountCode)
+                // Lightweight trial balance summary using GL aggregation only (skip heavy ComputePlatformBalances)
+                var glSummary = await _context.GeneralLedger
+                    .Where(g => g.CompanyId == null && !g.IsArchived)
+                    .GroupBy(g => g.AccountId)
+                    .Select(g => new { AccountId = g.Key, Dr = g.Sum(x => x.DebitAmount), Cr = g.Sum(x => x.CreditAmount) })
                     .ToListAsync();
 
-                var summary = allAccounts.Where(a => balances.ContainsKey(a.AccountId) && (balances[a.AccountId].Item1 != 0 || balances[a.AccountId].Item2 != 0)).Select(a =>
-                {
-                    var b = balances[a.AccountId];
-                    return new { a.AccountId, a.AccountCode, a.AccountName, a.AccountType, TotalDebit = b.Item1, TotalCredit = b.Item2 };
-                }).ToList();
+                var summaryAccounts = await _context.ChartOfAccounts
+                    .Where(a => a.CompanyId == null && !a.IsArchived && a.IsActive)
+                    .OrderBy(a => a.AccountCode)
+                    .Select(a => new { a.AccountId, a.AccountCode, a.AccountName, a.AccountType })
+                    .ToListAsync();
+
+                var glSumMap = glSummary.ToDictionary(g => g.AccountId, g => (g.Dr, g.Cr));
+                var summary = summaryAccounts
+                    .Where(a => glSumMap.ContainsKey(a.AccountId) && (glSumMap[a.AccountId].Dr != 0 || glSumMap[a.AccountId].Cr != 0))
+                    .Select(a => { var b = glSumMap[a.AccountId]; return new { a.AccountId, a.AccountCode, a.AccountName, a.AccountType, TotalDebit = b.Dr, TotalCredit = b.Cr }; })
+                    .ToList();
 
                 return Ok(new { data = allGL, summary });
             }
-            catch (Exception) { return Ok(new { data = new List<object>(), summary = new List<object>() }); }
+            catch (Exception ex) { return StatusCode(500, new { error = ex.Message, inner = ex.InnerException?.Message }); }
         }
 
         [HttpPut("general-ledger/{id}/archive")]
@@ -1248,20 +1416,39 @@ namespace CompuGear.Controllers
         {
             var result = new Dictionary<int, (decimal Dr, decimal Cr)>();
 
-            // From manual GL entries
+            // Run queries sequentially (EF Core DbContext is not thread-safe)
             var glBalances = await _context.GeneralLedger
                 .Where(g => g.CompanyId == null && !g.IsArchived)
                 .GroupBy(g => g.AccountId)
                 .Select(g => new { AccountId = g.Key, Dr = g.Sum(x => x.DebitAmount), Cr = g.Sum(x => x.CreditAmount) })
                 .ToListAsync();
 
+            var mapList = await _context.ChartOfAccounts
+                .Where(a => a.CompanyId == null && !a.IsArchived)
+                .Select(a => new { a.AccountCode, a.AccountId })
+                .ToListAsync();
+
+            var existingBalSubRefs = await _context.JournalEntries
+                .Where(e => e.CompanyId == null && !e.IsArchived && e.Reference != null && e.Reference.StartsWith("SUB-"))
+                .Select(e => e.Reference)
+                .ToListAsync();
+
             foreach (var b in glBalances) result[b.AccountId] = (b.Dr, b.Cr);
 
-            // From subscriptions
-            var map = await GetPlatformAccountCodeMap();
+            var map = mapList.ToDictionary(a => a.AccountCode, a => a.AccountId);
+            var existingBalSubIds = existingBalSubRefs
+                .Where(r => r != null)
+                .Select(r => { int id; return int.TryParse(r!.Replace("SUB-", ""), out id) ? id : 0; })
+                .Where(id => id > 0)
+                .ToHashSet();
+
             var subTotal = await _context.CompanySubscriptions
-                .Where(s => s.Status == "Active" || s.Status == "Trial" || s.Status == "Cancelled")
+                .Where(s => (s.Status == "Active" || s.Status == "Trial" || s.Status == "Cancelled") && !existingBalSubIds.Contains(s.SubscriptionId))
                 .SumAsync(s => s.MonthlyFee);
+
+            var taxTotal = await _context.Invoices
+                .Where(i => i.Status != "Cancelled" && i.Status != "Void" && i.Status != "Draft" && i.TaxAmount > 0)
+                .SumAsync(i => i.TaxAmount);
 
             if (subTotal > 0)
             {
@@ -1278,11 +1465,6 @@ namespace CompuGear.Controllers
                     result[id] = (cur.Item1, cur.Item2 + subTotal);
                 }
             }
-
-            // From platform tax (aggregate of all company invoices tax)
-            var taxTotal = await _context.Invoices
-                .Where(i => i.Status != "Cancelled" && i.Status != "Void" && i.Status != "Draft" && i.TaxAmount > 0)
-                .SumAsync(i => i.TaxAmount);
 
             if (taxTotal > 0)
             {

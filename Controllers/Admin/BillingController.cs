@@ -1344,9 +1344,16 @@ namespace CompuGear.Controllers
         /// </summary>
         private async Task<Dictionary<string, int>> GetAccountCodeMap(int? companyId)
         {
-            return await _context.ChartOfAccounts
+            var accounts = await _context.ChartOfAccounts
                 .Where(a => !a.IsArchived && (companyId == null || a.CompanyId == companyId))
-                .ToDictionaryAsync(a => a.AccountCode, a => a.AccountId);
+                .Select(a => new { a.AccountCode, a.AccountId })
+                .ToListAsync();
+            // Use first found to avoid duplicate key exceptions
+            var map = new Dictionary<string, int>();
+            foreach (var a in accounts)
+                if (!map.ContainsKey(a.AccountCode))
+                    map[a.AccountCode] = a.AccountId;
+            return map;
         }
 
         /// <summary>
@@ -1439,6 +1446,74 @@ namespace CompuGear.Controllers
             return balances;
         }
 
+        [HttpPost]
+        [Route("api/chart-of-accounts/seed-defaults")]
+        public async Task<IActionResult> SeedDefaultAccounts()
+        {
+            try
+            {
+                var companyId = GetCompanyId();
+                var cid = companyId ?? 1;
+
+                // Check if company already has accounts
+                var existingCount = await _context.ChartOfAccounts
+                    .CountAsync(a => a.CompanyId == cid && !a.IsArchived);
+
+                if (existingCount > 0)
+                    return BadRequest(new { success = false, message = $"Company already has {existingCount} accounts. Seed is only for empty charts." });
+
+                var userId = HttpContext.Session.GetInt32("UserId");
+                var now = DateTime.UtcNow;
+
+                var defaults = new List<ChartOfAccount>
+                {
+                    // Assets (1xxx)
+                    new() { CompanyId = cid, AccountCode = "1000", AccountName = "Cash", AccountType = "Asset", NormalBalance = "Debit", Description = "Cash on hand and in bank", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "1010", AccountName = "Accounts Receivable", AccountType = "Asset", NormalBalance = "Debit", Description = "Amounts owed by customers", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "1020", AccountName = "Inventory", AccountType = "Asset", NormalBalance = "Debit", Description = "Merchandise inventory", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "1030", AccountName = "Prepaid Expenses", AccountType = "Asset", NormalBalance = "Debit", Description = "Payments made in advance", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "1500", AccountName = "Equipment", AccountType = "Asset", NormalBalance = "Debit", Description = "Office and computer equipment", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "1510", AccountName = "Accumulated Depreciation", AccountType = "Asset", NormalBalance = "Credit", Description = "Depreciation of equipment", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+
+                    // Liabilities (2xxx)
+                    new() { CompanyId = cid, AccountCode = "2000", AccountName = "Accounts Payable", AccountType = "Liability", NormalBalance = "Credit", Description = "Amounts owed to suppliers", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "2010", AccountName = "Accrued Expenses", AccountType = "Liability", NormalBalance = "Credit", Description = "Expenses incurred but not yet paid", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "2020", AccountName = "Sales Tax Payable", AccountType = "Liability", NormalBalance = "Credit", Description = "Tax collected from customers", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "2030", AccountName = "Withholding Tax Payable", AccountType = "Liability", NormalBalance = "Credit", Description = "Withholding taxes due to BIR", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+
+                    // Equity (3xxx)
+                    new() { CompanyId = cid, AccountCode = "3000", AccountName = "Owner's Equity", AccountType = "Equity", NormalBalance = "Credit", Description = "Owner's capital investment", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "3100", AccountName = "Retained Earnings", AccountType = "Equity", NormalBalance = "Credit", Description = "Accumulated net income", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+
+                    // Revenue (4xxx)
+                    new() { CompanyId = cid, AccountCode = "4000", AccountName = "Sales Revenue", AccountType = "Revenue", NormalBalance = "Credit", Description = "Revenue from product and service sales", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "4010", AccountName = "Service Revenue", AccountType = "Revenue", NormalBalance = "Credit", Description = "Revenue from services", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "4020", AccountName = "Other Income", AccountType = "Revenue", NormalBalance = "Credit", Description = "Shipping fees, discounts earned, etc.", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+
+                    // Expenses (5xxx-6xxx)
+                    new() { CompanyId = cid, AccountCode = "5000", AccountName = "Cost of Goods Sold", AccountType = "Expense", NormalBalance = "Debit", Description = "Direct cost of products sold", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "6000", AccountName = "Salaries & Wages", AccountType = "Expense", NormalBalance = "Debit", Description = "Employee compensation", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "6010", AccountName = "Rent Expense", AccountType = "Expense", NormalBalance = "Debit", Description = "Office and store rent", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "6020", AccountName = "Utilities Expense", AccountType = "Expense", NormalBalance = "Debit", Description = "Electricity, water, internet", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "6030", AccountName = "Office Supplies", AccountType = "Expense", NormalBalance = "Debit", Description = "Office supplies and materials", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "6040", AccountName = "Marketing Expense", AccountType = "Expense", NormalBalance = "Debit", Description = "Advertising and marketing costs", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "6050", AccountName = "Depreciation Expense", AccountType = "Expense", NormalBalance = "Debit", Description = "Depreciation of fixed assets", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "6060", AccountName = "Shipping Expense", AccountType = "Expense", NormalBalance = "Debit", Description = "Freight and delivery costs", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "6070", AccountName = "Insurance Expense", AccountType = "Expense", NormalBalance = "Debit", Description = "Business insurance", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                    new() { CompanyId = cid, AccountCode = "6080", AccountName = "Miscellaneous Expense", AccountType = "Expense", NormalBalance = "Debit", Description = "Other business expenses", IsActive = true, CreatedAt = now, UpdatedAt = now, CreatedBy = userId },
+                };
+
+                _context.ChartOfAccounts.AddRange(defaults);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = $"{defaults.Count} default accounts created successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
         [HttpGet]
         [Route("api/chart-of-accounts")]
         public async Task<IActionResult> GetChartOfAccounts()
@@ -1515,7 +1590,18 @@ namespace CompuGear.Controllers
             try
             {
                 var companyId = GetCompanyId();
-                account.CompanyId = companyId ?? 1;
+                var cid = companyId ?? 1;
+
+                if (string.IsNullOrWhiteSpace(account.AccountCode) || string.IsNullOrWhiteSpace(account.AccountName))
+                    return BadRequest(new { success = false, message = "Account code and name are required" });
+
+                // Check for duplicate account code within the company
+                var duplicate = await _context.ChartOfAccounts
+                    .AnyAsync(a => a.CompanyId == cid && a.AccountCode == account.AccountCode && !a.IsArchived);
+                if (duplicate)
+                    return BadRequest(new { success = false, message = $"Account code '{account.AccountCode}' already exists" });
+
+                account.CompanyId = cid;
                 account.CreatedAt = DateTime.UtcNow;
                 account.UpdatedAt = DateTime.UtcNow;
                 account.CreatedBy = HttpContext.Session.GetInt32("UserId");

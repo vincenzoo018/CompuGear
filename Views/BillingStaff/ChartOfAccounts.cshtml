@@ -9,6 +9,12 @@
         <p class="page-subtitle">Manage your financial account structure</p>
     </div>
     <div class="d-flex gap-2">
+        <button class="btn btn-outline-success" id="seedDefaultsBtn" onclick="seedDefaultAccounts()" style="display:none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 3v18m-9-9h18"/>
+            </svg>
+            Seed Default Accounts
+        </button>
         <button class="btn btn-outline-primary" onclick="exportCOA()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
@@ -194,6 +200,14 @@
     <script src="~/js/billing.js"></script>
     <script src="~/js/accounting.js"></script>
     <script>
+    // Override COA.load to show/hide seed button
+    const _originalCoaLoad = COA.load.bind(COA);
+    COA.load = async function() {
+        await _originalCoaLoad();
+        const seedBtn = document.getElementById('seedDefaultsBtn');
+        if (seedBtn) seedBtn.style.display = this.data.length === 0 ? '' : 'none';
+    };
+
     document.addEventListener('DOMContentLoaded', function() {
         COA.load();
         document.getElementById('coaSearch').addEventListener('input', () => COA.applyFilters());
@@ -205,6 +219,22 @@
             else nb.value = 'Credit';
         });
     });
+
+    async function seedDefaultAccounts() {
+        if (!confirm('This will create 25 default accounts (Assets, Liabilities, Equity, Revenue, Expenses). Continue?')) return;
+        try {
+            const btn = document.getElementById('seedDefaultsBtn');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Creating...'; }
+            await API.post('/chart-of-accounts/seed-defaults', {});
+            Toast.success('Default accounts created successfully!');
+            await COA.load();
+        } catch (error) {
+            Toast.error(error.message || 'Failed to seed default accounts');
+        } finally {
+            const btn = document.getElementById('seedDefaultsBtn');
+            if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18m-9-9h18"/></svg> Seed Default Accounts'; }
+        }
+    }
 
     function exportCOA() {
         const data = COA.data;

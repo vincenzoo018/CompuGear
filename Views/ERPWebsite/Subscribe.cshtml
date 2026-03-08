@@ -194,11 +194,92 @@
     .toast-card .toast-close:hover { color: #333; }
     @@keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
+    /* Contract Modal */
+    .contract-modal-overlay {
+        display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+        background:rgba(0,0,0,0.6); z-index:4000;
+        justify-content:center; align-items:center; padding:24px;
+    }
+    .contract-modal-overlay.active { display:flex; }
+    .contract-modal {
+        background:#fff; border-radius:20px; max-width:780px; width:100%;
+        max-height:85vh; display:flex; flex-direction:column;
+        box-shadow:0 24px 60px rgba(0,0,0,0.3);
+        animation: contractSlideUp 0.35s ease;
+    }
+    @@keyframes contractSlideUp { from { transform:translateY(40px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+    .contract-modal-header {
+        padding:28px 32px 20px; border-bottom:1px solid #eee;
+        display:flex; justify-content:space-between; align-items:flex-start;
+    }
+    .contract-modal-header h3 { font-size:1.3rem; font-weight:700; color:#1a1a2e; margin:0 0 4px; }
+    .contract-modal-header p { font-size:0.85rem; color:#888; margin:0; }
+    .contract-modal-header .close-btn {
+        background:none; border:none; cursor:pointer; color:#aaa; padding:4px;
+        transition:color 0.2s;
+    }
+    .contract-modal-header .close-btn:hover { color:#333; }
+    .contract-modal-body {
+        padding:24px 32px; overflow-y:auto; flex:1;
+        font-size:0.9rem; line-height:1.7; color:#444;
+    }
+    .contract-modal-body h4 { font-size:1rem; font-weight:700; color:#1a1a2e; margin:20px 0 10px; }
+    .contract-modal-body h4:first-child { margin-top:0; }
+    .contract-modal-body .legal-ref {
+        background:#f8f9fc; border-left:3px solid #008080;
+        padding:12px 16px; margin:10px 0; border-radius:0 10px 10px 0;
+    }
+    .contract-modal-body .legal-ref strong { color:#008080; }
+    .contract-modal-body .penalty-table {
+        width:100%; border-collapse:collapse; margin:12px 0;
+        border-radius:10px; overflow:hidden;
+    }
+    .contract-modal-body .penalty-table th {
+        background:#008080; color:#fff; padding:10px 14px;
+        font-size:0.82rem; font-weight:600; text-align:left;
+    }
+    .contract-modal-body .penalty-table td {
+        padding:10px 14px; border-bottom:1px solid #eee; font-size:0.85rem;
+    }
+    .contract-modal-body .penalty-table tr:last-child td { border-bottom:none; }
+    .contract-modal-body .penalty-table tr:nth-child(even) { background:#f8f9fc; }
+    .contract-modal-body .warning-box {
+        background:#fef3cd; border:1px solid #ffc107; border-radius:12px;
+        padding:16px; margin:16px 0; display:flex; gap:12px; align-items:flex-start;
+    }
+    .contract-modal-body .warning-box svg { flex-shrink:0; color:#e67e22; margin-top:2px; }
+    .contract-modal-footer {
+        padding:20px 32px; border-top:1px solid #eee;
+        display:flex; flex-direction:column; gap:14px;
+    }
+    .contract-agree-check {
+        display:flex; align-items:flex-start; gap:10px;
+        font-size:0.88rem; color:#555;
+    }
+    .contract-agree-check input { width:18px; height:18px; accent-color:#008080; margin-top:2px; cursor:pointer; flex-shrink:0; }
+    .contract-footer-btns { display:flex; gap:12px; justify-content:flex-end; }
+    .contract-footer-btns .btn-decline {
+        padding:12px 28px; border-radius:10px; border:1.5px solid #e0e0e0;
+        background:#fff; color:#666; font-weight:600; cursor:pointer; font-family:'Poppins',sans-serif;
+        transition:all 0.2s;
+    }
+    .contract-footer-btns .btn-decline:hover { background:#f5f5f5; }
+    .contract-footer-btns .btn-accept {
+        padding:12px 28px; border-radius:10px; border:none;
+        background:linear-gradient(135deg,#008080,#00a5a5); color:#fff;
+        font-weight:600; cursor:pointer; font-family:'Poppins',sans-serif;
+        box-shadow:0 4px 14px rgba(0,128,128,0.2); transition:all 0.2s;
+    }
+    .contract-footer-btns .btn-accept:hover { box-shadow:0 8px 24px rgba(0,128,128,0.3); }
+    .contract-footer-btns .btn-accept:disabled { background:#ccc; cursor:not-allowed; box-shadow:none; }
+
     @@media (max-width: 768px) {
         .subscribe-container { grid-template-columns: 1fr; }
         .form-row { grid-template-columns: 1fr; }
         .summary-card { position: static; order: -1; }
         .module-grid { grid-template-columns: 1fr; }
+        .contract-modal { max-height:95vh; margin:8px; }
+        .contract-modal-body { padding:16px; }
     }
 }
 
@@ -308,7 +389,28 @@
                     <div class="error-msg" id="modulesError">Please select at least one module</div>
                 </div>
 
+                <!-- Contract Agreement Section -->
+                <div class="form-section-title">Service Contract Agreement</div>
+                <div style="background:#f8f9fc;border-radius:14px;padding:20px;margin-bottom:16px;border:1px solid #e8e8e8;">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#008080" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        <span style="font-weight:600;color:#1a1a2e;font-size:0.95rem;">Subscription Service Contract</span>
+                    </div>
+                    <p style="font-size:0.85rem;color:#666;line-height:1.6;margin:0 0 14px;">
+                        By subscribing to CompuGear ERP, you enter into a binding service contract. This includes a minimum term commitment,
+                        tax obligations (12% VAT), and penalty provisions for non-payment as provided under Philippine law.
+                    </p>
+                    <button type="button" onclick="openContractModal()" style="background:none;border:1.5px solid #008080;color:#008080;padding:10px 22px;border-radius:10px;font-weight:600;font-size:0.88rem;cursor:pointer;font-family:'Poppins',sans-serif;transition:all 0.2s;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:6px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        Read Full Contract
+                    </button>
+                </div>
+
                 <div class="form-check">
+                    <input type="checkbox" id="agreeContract" required>
+                    <label for="agreeContract">I have read, understood, and agree to the <a href="javascript:openContractModal()">Subscription Service Contract</a>, including the minimum term commitment, 12% VAT on all charges, and the penalty provisions for non-payment under Philippine law (RA 386, RA 7394, RA 8792).</label>
+                </div>
+                <div class="form-check" style="margin-top:8px;">
                     <input type="checkbox" id="agreeTerms" required>
                     <label for="agreeTerms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. I understand that my subscription will begin immediately upon registration.</label>
                 </div>
@@ -359,9 +461,19 @@
                 </li>
             </ul>
 
+            <div class="summary-line-items">
+                <div class="summary-line" style="display:flex;justify-content:space-between;font-size:0.92rem;color:#555;margin-bottom:6px;">
+                    <span>Subtotal</span>
+                    <span id="summarySubtotal">&#8369;999</span>
+                </div>
+                <div class="summary-line" style="display:flex;justify-content:space-between;font-size:0.92rem;color:#555;margin-bottom:6px;">
+                    <span>VAT (12%)</span>
+                    <span id="summaryVat">&#8369;119.88</span>
+                </div>
+            </div>
             <div class="summary-total">
                 <span>Total Due Today</span>
-                <span id="summaryTotal">&#8369;999</span>
+                <span id="summaryTotal">&#8369;1,118.88</span>
             </div>
 
             <div class="secure-badge">
@@ -371,6 +483,123 @@
         </div>
     </div>
 </section>
+
+<!-- Contract Modal -->
+<div class="contract-modal-overlay" id="contractOverlay">
+    <div class="contract-modal">
+        <div class="contract-modal-header">
+            <div>
+                <h3>Subscription Service Contract</h3>
+                <p>CompuGear ERP Platform &mdash; Service Level Agreement</p>
+            </div>
+            <button class="close-btn" onclick="closeContractModal()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="contract-modal-body" id="contractBody">
+            <h4>1. Parties to This Agreement</h4>
+            <p>This Subscription Service Contract (&ldquo;Contract&rdquo;) is entered into between <strong>CompuGear ERP Solutions</strong> (&ldquo;Service Provider&rdquo;) and the subscribing company/individual (&ldquo;Client&rdquo;) identified in the registration form. By clicking &ldquo;I Agree&rdquo; and completing the subscription, the Client acknowledges and accepts all terms herein.</p>
+
+            <h4>2. Subscription Plans &amp; Tax Obligations</h4>
+            <p>All subscription plans are subject to <strong>12% Value-Added Tax (VAT)</strong> in accordance with the National Internal Revenue Code (NIRC) of the Philippines, as amended by the TRAIN Law (RA 10963).</p>
+            <table class="penalty-table">
+                <thead><tr><th>Plan</th><th>Monthly Fee</th><th>VAT (12%)</th><th>Total/Month</th><th>Min. Term</th></tr></thead>
+                <tbody>
+                    <tr><td>Starter</td><td>&#8369;999.00</td><td>&#8369;119.88</td><td><strong>&#8369;1,118.88</strong></td><td>12 months</td></tr>
+                    <tr><td>Pro</td><td>&#8369;2,499.00</td><td>&#8369;299.88</td><td><strong>&#8369;2,798.88</strong></td><td>12 months</td></tr>
+                    <tr><td>Enterprise</td><td>&#8369;4,999.00</td><td>&#8369;599.88</td><td><strong>&#8369;5,598.88</strong></td><td>24 months</td></tr>
+                </tbody>
+            </table>
+            <p>Per-user and per-transaction taxes are included in the plan pricing. Additional users beyond the plan limit, add-on modules, and overage charges are subject to the same 12% VAT.</p>
+
+            <h4>3. Payment Terms &amp; Due Dates</h4>
+            <p>Payment is due on the first day of each billing cycle (monthly or annually). A <strong>15-day grace period</strong> is provided after the due date. If payment is not received within the grace period, the account will be considered <strong>overdue</strong>.</p>
+
+            <h4>4. Penalties for Non-Payment</h4>
+            <p>In the event of non-payment beyond the grace period, the following penalties shall apply:</p>
+            <table class="penalty-table">
+                <thead><tr><th>Overdue Period</th><th>Penalty</th><th>Action Taken</th></tr></thead>
+                <tbody>
+                    <tr><td>1 month overdue</td><td>3% of outstanding balance</td><td>Notice of Default issued; written demand letter sent</td></tr>
+                    <tr><td>2 months overdue</td><td>6% cumulative penalty</td><td>Service suspension; account access restricted</td></tr>
+                    <tr><td>3+ months overdue</td><td>9%+ cumulative penalty + Early Termination Fee</td><td>Account terminated; referred to legal collection</td></tr>
+                </tbody>
+            </table>
+
+            <div class="warning-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <div>
+                    <strong style="color:#b45309;">Important Notice:</strong>
+                    <p style="margin:4px 0 0;font-size:0.85rem;color:#92400e;">Failure to settle outstanding balances may result in <strong>legal action</strong>, including but not limited to filing a civil case for collection of sum of money and damages. All legal costs and attorney&rsquo;s fees shall be borne by the defaulting Client.</p>
+                </div>
+            </div>
+
+            <h4>5. Early Termination</h4>
+            <p>If the Client terminates the subscription before the minimum contract term, an <strong>Early Termination Fee</strong> applies:</p>
+            <ul style="padding-left:20px;">
+                <li><strong>Starter:</strong> &#8369;2,997.00 (3 months&rsquo; subscription)</li>
+                <li><strong>Pro:</strong> &#8369;7,497.00 (3 months&rsquo; subscription)</li>
+                <li><strong>Enterprise:</strong> &#8369;24,995.00 (5 months&rsquo; subscription)</li>
+            </ul>
+
+            <h4>6. Legal Basis &amp; Governing Law</h4>
+            <p>This Contract is governed by the laws of the Republic of the Philippines. The following legal provisions apply:</p>
+
+            <div class="legal-ref">
+                <strong>Republic Act No. 386 (Civil Code of the Philippines)</strong><br>
+                <em>Article 1159:</em> &ldquo;Obligations arising from contracts have the force of law between the contracting parties and should be complied with in good faith.&rdquo;<br>
+                <em>Article 1169:</em> Establishes that delay in payment constitutes default, entitling the creditor to damages.<br>
+                <em>Article 2209:</em> Provides that interest shall be due for delay in payment of monetary obligations.
+            </div>
+
+            <div class="legal-ref">
+                <strong>Republic Act No. 8792 (Electronic Commerce Act of 2000)</strong><br>
+                Recognizes the legal validity and enforceability of electronic contracts, digital signatures, and online transactions. Your acceptance of this contract via electronic means is legally binding.
+            </div>
+
+            <div class="legal-ref">
+                <strong>Republic Act No. 7394 (Consumer Act of the Philippines)</strong><br>
+                Protects consumer rights including full transparency of pricing, fees, penalties, and service terms. All charges stated herein are disclosed in compliance with this Act.
+            </div>
+
+            <div class="legal-ref">
+                <strong>Republic Act No. 3765 (Truth in Lending Act)</strong><br>
+                Requires full disclosure of all finance charges, penalty fees, and other costs. All penalty calculations and fees in this contract are transparently disclosed above.
+            </div>
+
+            <div class="legal-ref">
+                <strong>Republic Act No. 10963 (TRAIN Law)</strong><br>
+                Provides the current VAT framework. All subscription fees are subject to 12% VAT as required by law.
+            </div>
+
+            <h4>7. Dispute Resolution</h4>
+            <p>Any dispute arising from this Contract shall first be settled through amicable negotiation. If unresolved within 30 days, the dispute shall be submitted to the appropriate court of competent jurisdiction in the Philippines. The prevailing party shall be entitled to recover reasonable attorney&rsquo;s fees and costs of litigation.</p>
+
+            <h4>8. Data Privacy</h4>
+            <p>The Service Provider shall process Client data in accordance with <strong>Republic Act No. 10173 (Data Privacy Act of 2012)</strong>. Personal and company information collected during registration and subscription shall be used solely for service delivery, billing, and compliance purposes.</p>
+
+            <h4>9. Acknowledgment</h4>
+            <p>By accepting this Contract, the Client confirms that:</p>
+            <ul style="padding-left:20px;">
+                <li>They have read and understood all terms, penalties, and legal references;</li>
+                <li>They are authorized to enter into this agreement on behalf of the subscribing company;</li>
+                <li>They acknowledge that non-payment may result in penalties, service suspension, and legal action;</li>
+                <li>They consent to 12% VAT on all subscription fees and transactions;</li>
+                <li>They agree to the minimum contract term for their selected plan.</li>
+            </ul>
+        </div>
+        <div class="contract-modal-footer">
+            <div class="contract-agree-check">
+                <input type="checkbox" id="contractModalAgree" onchange="toggleContractAccept()">
+                <label for="contractModalAgree">I have read, understood, and agree to all terms, penalties, legal obligations, and the minimum contract commitment stated in this Subscription Service Contract.</label>
+            </div>
+            <div class="contract-footer-btns">
+                <button class="btn-decline" onclick="closeContractModal()">Decline</button>
+                <button class="btn-accept" id="btnAcceptContract" disabled onclick="acceptContract()">Accept Contract</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
@@ -449,9 +678,15 @@
             document.getElementById('summaryAnnual').textContent = billing === 'Annual'
                 ? `Billed annually at \u20B1${data.annual.toLocaleString()}`
                 : `Billed monthly`;
-            document.getElementById('summaryTotal').textContent = billing === 'Annual'
-                ? `\u20B1${data.annual.toLocaleString()}`
-                : `\u20B1${data.monthly.toLocaleString()}`;
+            // VAT calculation (12%)
+            const subtotal = billing === 'Annual' ? data.annual : data.monthly;
+            const vatRate = 0.12;
+            const vatAmount = subtotal * vatRate;
+            const totalWithVat = subtotal + vatAmount;
+
+            document.getElementById('summarySubtotal').textContent = `\u20B1${subtotal.toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+            document.getElementById('summaryVat').textContent = `\u20B1${vatAmount.toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+            document.getElementById('summaryTotal').textContent = `\u20B1${totalWithVat.toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
 
             // Features
             const featList = document.getElementById('summaryFeatures');
@@ -554,6 +789,8 @@
             if (password.length < 8) { showError('passwordError', 'Password must be at least 8 characters'); valid = false; }
             if (password !== confirmPassword) { showError('confirmPasswordError', 'Passwords do not match'); valid = false; }
             if (!selectedModuleCodes.length) { showError('modulesError', 'Please select at least one module'); valid = false; }
+            const agreeContract = document.getElementById('agreeContract').checked;
+            if (!agreeContract) { showToast('error', 'Contract Required', 'Please read and agree to the Subscription Service Contract before continuing.'); return; }
             if (!agreeTerms) { showToast('error', 'Terms Required', 'Please agree to the Terms of Service before continuing.'); return; }
 
             if (!valid) return;
@@ -583,7 +820,8 @@
                         password,
                         planName: document.getElementById('planName').value,
                         billingCycle: document.getElementById('billingCycle').value,
-                        selectedModuleCodes
+                        selectedModuleCodes,
+                        contractAgreed: true
                     })
                 });
 
@@ -608,5 +846,35 @@
                 spinner.style.display = 'none';
             }
         }
+        // ===== Contract Modal Functions =====
+        function openContractModal() {
+            document.getElementById('contractOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeContractModal() {
+            document.getElementById('contractOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function toggleContractAccept() {
+            document.getElementById('btnAcceptContract').disabled = !document.getElementById('contractModalAgree').checked;
+        }
+
+        function acceptContract() {
+            document.getElementById('agreeContract').checked = true;
+            closeContractModal();
+            showToast('success', 'Contract Accepted', 'You have agreed to the Subscription Service Contract. You may now complete your registration.');
+        }
+
+        // Close modal on overlay click
+        document.getElementById('contractOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeContractModal();
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeContractModal();
+        });
     </script>
 }

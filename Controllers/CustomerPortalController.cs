@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CompuGear.Data;
 using CompuGear.Models;
@@ -163,16 +163,14 @@ namespace CompuGear.Controllers
         [HttpGet]
         public async Task<IActionResult> GetProfile()
         {
-            var customer = await GetCurrentCustomerAsync();
-            if (customer == null)
-            {
+            var sessionCustomerId = HttpContext.Session.GetInt32("CustomerId");
+            if (!sessionCustomerId.HasValue)
                 return Json(new { success = false, message = "Customer not found. Please log in." });
-            }
 
-            customer = await _context.Customers
+            var customer = await _context.Customers
                 .Include(c => c.Category)
                 .Include(c => c.Addresses)
-                .FirstOrDefaultAsync(c => c.CustomerId == customer.CustomerId);
+                .FirstOrDefaultAsync(c => c.CustomerId == sessionCustomerId.Value);
 
             if (customer == null)
                 return Json(new { success = false, message = "Customer not found" });
@@ -263,8 +261,7 @@ namespace CompuGear.Controllers
         {
             var companyId = GetPortalCompanyId();
             var query = _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.Brand)
+                .AsNoTracking()
                 .Where(p => p.Status == "Active");
 
             // Company isolation: only show products belonging to this company
@@ -349,8 +346,7 @@ namespace CompuGear.Controllers
         {
             var companyId = GetPortalCompanyId();
             var baseQuery = _context.Products
-                .Include(p => p.Category)
-                .Include(p => p.Brand)
+                .AsNoTracking()
                 .Where(p => p.Status == "Active");
 
             if (companyId.HasValue)
@@ -413,6 +409,7 @@ namespace CompuGear.Controllers
         public async Task<IActionResult> GetCategories()
         {
             var categories = await _context.ProductCategories
+                .AsNoTracking()
                 .Where(c => c.IsActive)
                 .OrderBy(c => c.DisplayOrder)
                 .Select(c => new
@@ -433,6 +430,7 @@ namespace CompuGear.Controllers
         public async Task<IActionResult> GetBrands()
         {
             var brands = await _context.Brands
+                .AsNoTracking()
                 .Where(b => b.IsActive)
                 .OrderBy(b => b.BrandName)
                 .Select(b => new
@@ -454,7 +452,7 @@ namespace CompuGear.Controllers
             var companyId = GetPortalCompanyId();
             var now = DateTime.UtcNow;
             var promoQuery = _context.Promotions
-                .Include(p => p.Campaign)
+                .AsNoTracking()
                 .Where(p => p.IsActive && p.StartDate <= now && p.EndDate >= now);
 
             if (companyId.HasValue)
@@ -519,6 +517,7 @@ namespace CompuGear.Controllers
             var companyId = GetPortalCompanyId();
 
             var query = _context.Orders
+                .AsNoTracking()
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
                 .Where(o => o.CustomerId == customerId);
@@ -560,13 +559,19 @@ namespace CompuGear.Controllers
                 })
                 .ToListAsync();
 
-            // Get stats
+            // Get stats in a single query using GroupBy
+            var statusCounts = await _context.Orders
+                .Where(o => o.CustomerId == customerId)
+                .GroupBy(o => o.OrderStatus)
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToListAsync();
+
             var stats = new
             {
-                total = await _context.Orders.CountAsync(o => o.CustomerId == customerId),
-                pending = await _context.Orders.CountAsync(o => o.CustomerId == customerId && (o.OrderStatus == "Pending" || o.OrderStatus == "Processing")),
-                delivered = await _context.Orders.CountAsync(o => o.CustomerId == customerId && o.OrderStatus == "Delivered"),
-                cancelled = await _context.Orders.CountAsync(o => o.CustomerId == customerId && o.OrderStatus == "Cancelled")
+                total = statusCounts.Sum(s => s.Count),
+                pending = statusCounts.Where(s => s.Status == "Pending" || s.Status == "Processing").Sum(s => s.Count),
+                delivered = statusCounts.Where(s => s.Status == "Delivered").Sum(s => s.Count),
+                cancelled = statusCounts.Where(s => s.Status == "Cancelled").Sum(s => s.Count)
             };
 
             return Json(new
@@ -1026,11 +1031,13 @@ namespace CompuGear.Controllers
                             order.ConfirmedAt = DateTime.UtcNow;
                             order.UpdatedAt = DateTime.UtcNow;
 
-                            // Deduct stock
+                            // Deduct stock (batch load to avoid N+1)
                             var orderItems = await _context.OrderItems.Where(oi => oi.OrderId == orderId).ToListAsync();
+                            var productIds = orderItems.Select(oi => oi.ProductId).Distinct().ToList();
+                            var products = await _context.Products.Where(p => productIds.Contains(p.ProductId)).ToListAsync();
                             foreach (var item in orderItems)
                             {
-                                var product = await _context.Products.FindAsync(item.ProductId);
+                                var product = products.FirstOrDefault(p => p.ProductId == item.ProductId);
                                 if (product != null)
                                 {
                                     product.StockQuantity -= item.Quantity;
