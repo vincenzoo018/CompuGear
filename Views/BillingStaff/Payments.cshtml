@@ -19,33 +19,36 @@
 <!-- Stats Cards -->
 <div class="row g-4 mb-4">
     <div class="col-md-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <h4 class="text-success mb-0" id="todayPayments">₱0</h4>
-                <small class="text-muted">Today's Payments</small>
+        <div class="stat-card stat-card-success fade-in stagger-1">
+            <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <div class="stat-content">
+                <div class="stat-value" id="todayPayments">₱0</div>
+                <div class="stat-label">Today's Payments</div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <h4 class="text-primary mb-0" id="totalPayments">₱0</h4>
-                <small class="text-muted">Total Payments</small>
+        <div class="stat-card stat-card-primary fade-in stagger-2">
+            <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalPayments">₱0</div>
+                <div class="stat-label">Total Payments</div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <h4 class="text-info mb-0" id="paymentCount">0</h4>
-                <small class="text-muted">Transaction Count</small>
+        <div class="stat-card stat-card-info fade-in stagger-3">
+            <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+            <div class="stat-content">
+                <div class="stat-value" id="paymentCount">0</div>
+                <div class="stat-label">Transaction Count</div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Filter & Search -->
-<div class="card border-0 shadow-sm mb-4">
+<div class="card mb-4 fade-in">
     <div class="card-body">
         <div class="row g-3 align-items-end">
             <div class="col-md-4">
@@ -77,14 +80,14 @@
 </div>
 
 <!-- Payments Table -->
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Payment Records</h5>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
+            <table class="data-table">
+                <thead>
                     <tr>
                         <th>Payment #</th>
                         <th>Invoice #</th>

@@ -18,34 +18,38 @@
     <!-- Stats Cards -->
     <div class="row g-4 mb-4">
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-primary mb-0" id="totalProducts">0</h4>
-                    <small class="text-muted">Total Products</small>
+            <div class="stat-card stat-card-primary fade-in stagger-1">
+                <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+                <div class="stat-content">
+                    <div class="stat-value" id="totalProducts">0</div>
+                    <div class="stat-label">Total Products</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-success mb-0" id="inventoryValue">₱0</h4>
-                    <small class="text-muted">Inventory Value</small>
+            <div class="stat-card stat-card-success fade-in stagger-2">
+                <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+                <div class="stat-content">
+                    <div class="stat-value" id="inventoryValue">₱0</div>
+                    <div class="stat-label">Inventory Value</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-warning mb-0" id="lowStockCount">0</h4>
-                    <small class="text-muted">Low Stock</small>
+            <div class="stat-card stat-card-warning fade-in stagger-3">
+                <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+                <div class="stat-content">
+                    <div class="stat-value" id="lowStockCount">0</div>
+                    <div class="stat-label">Low Stock</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-danger mb-0" id="outOfStockCount">0</h4>
-                    <small class="text-muted">Out of Stock</small>
+            <div class="stat-card stat-card-danger fade-in stagger-4">
+                <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+                <div class="stat-content">
+                    <div class="stat-value" id="outOfStockCount">0</div>
+                    <div class="stat-label">Out of Stock</div>
                 </div>
             </div>
         </div>

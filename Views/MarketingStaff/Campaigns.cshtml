@@ -18,34 +18,38 @@
     <!-- Stats Cards -->
     <div class="row g-4 mb-4">
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-primary mb-0" id="totalCampaigns">0</h4>
-                    <small class="text-muted">Total Campaigns</small>
+            <div class="stat-card stat-card-primary fade-in stagger-1">
+                <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+                <div class="stat-content">
+                    <div class="stat-value" id="totalCampaigns">0</div>
+                    <div class="stat-label">Total Campaigns</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-success mb-0" id="activeCampaigns">0</h4>
-                    <small class="text-muted">Active</small>
+            <div class="stat-card stat-card-success fade-in stagger-2">
+                <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                <div class="stat-content">
+                    <div class="stat-value" id="activeCampaigns">0</div>
+                    <div class="stat-label">Active</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-warning mb-0" id="draftCampaigns">0</h4>
-                    <small class="text-muted">Draft</small>
+            <div class="stat-card stat-card-warning fade-in stagger-3">
+                <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+                <div class="stat-content">
+                    <div class="stat-value" id="draftCampaigns">0</div>
+                    <div class="stat-label">Draft</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-secondary mb-0" id="completedCampaigns">0</h4>
-                    <small class="text-muted">Completed</small>
+            <div class="stat-card stat-card-info fade-in stagger-4">
+                <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+                <div class="stat-content">
+                    <div class="stat-value" id="completedCampaigns">0</div>
+                    <div class="stat-label">Completed</div>
                 </div>
             </div>
         </div>

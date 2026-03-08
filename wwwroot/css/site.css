@@ -480,6 +480,15 @@ body.dark-mode .bg-light {
     margin: 2px 0.5rem;
 }
 
+.nav-section-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.45);
+    padding: 1rem 1rem 0.3rem 1.1rem;
+    font-weight: 600;
+}
+
 .nav-link {
     display: flex;
     align-items: center;

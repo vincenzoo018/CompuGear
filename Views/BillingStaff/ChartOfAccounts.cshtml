@@ -33,21 +33,45 @@
 <!-- Stats -->
 <div class="row mb-4">
     <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-0 shadow-sm"><div class="card-body text-center"><h4 class="text-primary mb-0" id="totalAccounts">0</h4><small class="text-muted">Total Accounts</small></div></div>
+        <div class="stat-card stat-card-primary fade-in stagger-1">
+            <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"/></svg></div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalAccounts">0</div>
+                <div class="stat-label">Total Accounts</div>
+            </div>
+        </div>
     </div>
     <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-0 shadow-sm"><div class="card-body text-center"><h4 class="text-success mb-0" id="assetAccounts">0</h4><small class="text-muted">Asset Accounts</small></div></div>
+        <div class="stat-card stat-card-success fade-in stagger-2">
+            <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3h-8l-2 4h12z"/></svg></div>
+            <div class="stat-content">
+                <div class="stat-value" id="assetAccounts">0</div>
+                <div class="stat-label">Asset Accounts</div>
+            </div>
+        </div>
     </div>
     <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-0 shadow-sm"><div class="card-body text-center"><h4 class="text-warning mb-0" id="revenueAccounts">0</h4><small class="text-muted">Revenue Accounts</small></div></div>
+        <div class="stat-card stat-card-warning fade-in stagger-3">
+            <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div class="stat-content">
+                <div class="stat-value" id="revenueAccounts">0</div>
+                <div class="stat-label">Revenue Accounts</div>
+            </div>
+        </div>
     </div>
     <div class="col-xl-3 col-md-6 mb-3">
-        <div class="card border-0 shadow-sm"><div class="card-body text-center"><h4 class="text-danger mb-0" id="expenseAccounts">0</h4><small class="text-muted">Expense Accounts</small></div></div>
+        <div class="stat-card stat-card-danger fade-in stagger-4">
+            <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+            <div class="stat-content">
+                <div class="stat-value" id="expenseAccounts">0</div>
+                <div class="stat-label">Expense Accounts</div>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Filter -->
-<div class="card mb-4 border-0 shadow-sm">
+<div class="card mb-4 fade-in">
     <div class="card-body">
         <div class="row g-3 align-items-end">
             <div class="col-md-4">
@@ -84,15 +108,15 @@
 </div>
 
 <!-- Table -->
-<div class="card border-0 shadow-sm">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Account List</h5>
         <span class="badge bg-primary" id="coaCount">0 accounts</span>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
+            <table class="data-table">
+                <thead>
                     <tr>
                         <th>Code</th>
                         <th>Account Name</th>

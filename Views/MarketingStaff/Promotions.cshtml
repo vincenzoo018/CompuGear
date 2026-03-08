@@ -28,34 +28,38 @@
     <!-- My Requests Stats -->
     <div class="row g-4 mb-4">
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-warning mb-0" id="pendingRequests">0</h4>
-                    <small class="text-muted">Pending Requests</small>
+            <div class="stat-card stat-card-warning fade-in stagger-1">
+                <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+                <div class="stat-content">
+                    <div class="stat-value" id="pendingRequests">0</div>
+                    <div class="stat-label">Pending Requests</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-success mb-0" id="approvedRequests">0</h4>
-                    <small class="text-muted">Approved</small>
+            <div class="stat-card stat-card-success fade-in stagger-2">
+                <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+                <div class="stat-content">
+                    <div class="stat-value" id="approvedRequests">0</div>
+                    <div class="stat-label">Approved</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-danger mb-0" id="rejectedRequests">0</h4>
-                    <small class="text-muted">Rejected</small>
+            <div class="stat-card stat-card-danger fade-in stagger-3">
+                <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+                <div class="stat-content">
+                    <div class="stat-value" id="rejectedRequests">0</div>
+                    <div class="stat-label">Rejected</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <h4 class="text-primary mb-0" id="activePromotions">0</h4>
-                    <small class="text-muted">Active Promotions</small>
+            <div class="stat-card stat-card-primary fade-in stagger-4">
+                <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+                <div class="stat-content">
+                    <div class="stat-value" id="activePromotions">0</div>
+                    <div class="stat-label">Active Promotions</div>
                 </div>
             </div>
         </div>

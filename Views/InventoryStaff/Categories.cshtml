@@ -27,27 +27,39 @@
 <!-- Stats -->
 <div class="row mb-4">
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm text-center p-3">
-            <div class="h3 text-primary mb-1" id="totalCategories">0</div>
-            <div class="text-muted small">Total Categories</div>
+        <div class="stat-card stat-card-primary fade-in stagger-1">
+            <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalCategories">0</div>
+                <div class="stat-label">Total Categories</div>
+            </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm text-center p-3">
-            <div class="h3 text-warning mb-1" id="pendingRequests">0</div>
-            <div class="text-muted small">Pending Requests</div>
+        <div class="stat-card stat-card-warning fade-in stagger-2">
+            <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="stat-content">
+                <div class="stat-value" id="pendingRequests">0</div>
+                <div class="stat-label">Pending Requests</div>
+            </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm text-center p-3">
-            <div class="h3 text-success mb-1" id="approvedRequests">0</div>
-            <div class="text-muted small">Approved</div>
+        <div class="stat-card stat-card-success fade-in stagger-3">
+            <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <div class="stat-content">
+                <div class="stat-value" id="approvedRequests">0</div>
+                <div class="stat-label">Approved</div>
+            </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm text-center p-3">
-            <div class="h3 text-danger mb-1" id="rejectedRequests">0</div>
-            <div class="text-muted small">Rejected</div>
+        <div class="stat-card stat-card-danger fade-in stagger-4">
+            <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+            <div class="stat-content">
+                <div class="stat-value" id="rejectedRequests">0</div>
+                <div class="stat-label">Rejected</div>
+            </div>
         </div>
     </div>
 </div>

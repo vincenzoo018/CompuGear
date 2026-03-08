@@ -27,27 +27,39 @@
 <!-- Stats -->
 <div class="row mb-4">
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm text-center p-3">
-            <div class="h3 text-warning mb-1" id="pendingEscalations">0</div>
-            <div class="text-muted small">Pending Escalations</div>
+        <div class="stat-card stat-card-warning fade-in stagger-1">
+            <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="stat-content">
+                <div class="stat-value" id="pendingEscalations">0</div>
+                <div class="stat-label">Pending Escalations</div>
+            </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm text-center p-3">
-            <div class="h3 text-success mb-1" id="approvedEscalations">0</div>
-            <div class="text-muted small">Approved</div>
+        <div class="stat-card stat-card-success fade-in stagger-2">
+            <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <div class="stat-content">
+                <div class="stat-value" id="approvedEscalations">0</div>
+                <div class="stat-label">Approved</div>
+            </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm text-center p-3">
-            <div class="h3 text-danger mb-1" id="rejectedEscalations">0</div>
-            <div class="text-muted small">Rejected</div>
+        <div class="stat-card stat-card-danger fade-in stagger-3">
+            <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+            <div class="stat-content">
+                <div class="stat-value" id="rejectedEscalations">0</div>
+                <div class="stat-label">Rejected</div>
+            </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm text-center p-3">
-            <div class="h3 text-info mb-1" id="openTickets">0</div>
-            <div class="text-muted small">Open Tickets</div>
+        <div class="stat-card stat-card-info fade-in stagger-4">
+            <div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div class="stat-content">
+                <div class="stat-value" id="openTickets">0</div>
+                <div class="stat-label">Open Tickets</div>
+            </div>
         </div>
     </div>
 </div>

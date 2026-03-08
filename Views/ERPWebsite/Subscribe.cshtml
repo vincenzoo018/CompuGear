@@ -51,9 +51,13 @@
     .form-check {
         display: flex; align-items: flex-start; gap: 10px;
         margin: 20px 0; font-size: 0.88rem; color: #666;
+        padding: 12px 14px; border-radius: 10px; border: 1.5px solid transparent;
+        transition: all 0.25s ease;
     }
+    .form-check.checked { background: #f0faf9; border-color: #008080; }
+    .form-check.error { background: #fff5f5; border-color: #ef4444; }
     .form-check input[type="checkbox"] {
-        width: 18px; height: 18px; accent-color: #008080; margin-top: 2px; cursor: pointer;
+        width: 18px; height: 18px; accent-color: #008080; margin-top: 2px; cursor: pointer; flex-shrink: 0;
     }
     .form-check a { color: #008080; text-decoration: underline; }
 
@@ -406,13 +410,13 @@
                     </button>
                 </div>
 
-                <div class="form-check">
+                <div class="form-check" id="contractCheckGroup">
                     <input type="checkbox" id="agreeContract" required>
-                    <label for="agreeContract">I have read, understood, and agree to the <a href="javascript:openContractModal()">Subscription Service Contract</a>, including the minimum term commitment, 12% VAT on all charges, and the penalty provisions for non-payment under Philippine law (RA 386, RA 7394, RA 8792).</label>
+                    <label for="agreeContract">I have read, understood, and agree to the <a href="javascript:void(0)" onclick="event.preventDefault();event.stopPropagation();openContractModal()">Subscription Service Contract</a>, including the minimum term commitment, 12% VAT on all charges, and the penalty provisions for non-payment under Philippine law (RA 386, RA 7394, RA 8792).</label>
                 </div>
-                <div class="form-check" style="margin-top:8px;">
+                <div class="form-check" style="margin-top:8px;" id="termsCheckGroup">
                     <input type="checkbox" id="agreeTerms" required>
-                    <label for="agreeTerms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. I understand that my subscription will begin immediately upon registration.</label>
+                    <label for="agreeTerms">I agree to the <a href="javascript:void(0)" onclick="event.preventDefault();event.stopPropagation();">Terms of Service</a> and <a href="javascript:void(0)" onclick="event.preventDefault();event.stopPropagation();">Privacy Policy</a>. I understand that my subscription will begin immediately upon registration.</label>
                 </div>
 
                 <button type="button" class="btn-subscribe" id="btnSubscribe" onclick="submitSubscription()">
@@ -790,8 +794,8 @@
             if (password !== confirmPassword) { showError('confirmPasswordError', 'Passwords do not match'); valid = false; }
             if (!selectedModuleCodes.length) { showError('modulesError', 'Please select at least one module'); valid = false; }
             const agreeContract = document.getElementById('agreeContract').checked;
-            if (!agreeContract) { showToast('error', 'Contract Required', 'Please read and agree to the Subscription Service Contract before continuing.'); return; }
-            if (!agreeTerms) { showToast('error', 'Terms Required', 'Please agree to the Terms of Service before continuing.'); return; }
+            if (!agreeContract) { showToast('error', 'Contract Required', 'Please read and agree to the Subscription Service Contract before continuing.'); valid = false; }
+            if (!agreeTerms) { showToast('error', 'Terms Required', 'Please agree to the Terms of Service before continuing.'); valid = false; }
 
             if (!valid) return;
 
@@ -863,9 +867,25 @@
 
         function acceptContract() {
             document.getElementById('agreeContract').checked = true;
+            updateCheckboxVisual('contractCheckGroup', true);
             closeContractModal();
             showToast('success', 'Contract Accepted', 'You have agreed to the Subscription Service Contract. You may now complete your registration.');
         }
+
+        // Checkbox visual feedback
+        function updateCheckboxVisual(groupId, checked) {
+            const el = document.getElementById(groupId);
+            if (!el) return;
+            el.classList.remove('checked', 'error');
+            if (checked) el.classList.add('checked');
+        }
+
+        document.getElementById('agreeContract')?.addEventListener('change', function() {
+            updateCheckboxVisual('contractCheckGroup', this.checked);
+        });
+        document.getElementById('agreeTerms')?.addEventListener('change', function() {
+            updateCheckboxVisual('termsCheckGroup', this.checked);
+        });
 
         // Close modal on overlay click
         document.getElementById('contractOverlay').addEventListener('click', function(e) {
