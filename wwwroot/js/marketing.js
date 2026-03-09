@@ -19,30 +19,7 @@ const Icons = {
     toggleOff: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="8" cy="12" r="3"/></svg>'
 };
 
-// Toast System
-const Toast = {
-    container: null,
-    init() {
-        if (!this.container) {
-            this.container = document.createElement('div');
-            this.container.className = 'toast-container position-fixed top-0 end-0 p-3';
-            this.container.style.zIndex = '9999';
-            document.body.appendChild(this.container);
-        }
-    },
-    show(message, type = 'success', duration = 4000) {
-        this.init();
-        const toast = document.createElement('div');
-        toast.className = 'toast align-items-center text-white border-0 show';
-        toast.style.backgroundColor = type === 'success' ? '#008080' : type === 'error' ? '#dc3545' : '#ff6b35';
-        toast.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button></div>`;
-        this.container.appendChild(toast);
-        setTimeout(() => toast.remove(), duration);
-    },
-    success(message) { this.show(message, 'success'); },
-    error(message) { this.show(message, 'error'); },
-    warning(message) { this.show(message, 'warning'); }
-};
+// Toast: provided globally by site.js (Toast.success/error/warning)
 
 // API Helper
 const API = {
@@ -157,12 +134,12 @@ const Campaigns = {
                 <td class="text-end">${Format.percentage(c.roi)}</td>
                 <td class="text-center">
                     <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-primary" onclick="Campaigns.view(${c.campaignId})">${Icons.view}</button>
-                        <button class="btn btn-sm btn-outline-warning" onclick="Campaigns.edit(${c.campaignId})">${Icons.edit}</button>
-                        <button class="btn btn-sm btn-outline-${c.status === 'Active' ? 'danger' : 'success'}" onclick="Campaigns.toggleStatus(${c.campaignId})">
+                        <button class="btn btn-sm btn-outline-primary" onclick="Campaigns.view(${c.campaignId})" title="View">${Icons.view}</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="Campaigns.edit(${c.campaignId})" title="Edit">${Icons.edit}</button>
+                        <button class="btn btn-sm btn-outline-${c.status === 'Active' ? 'danger' : 'success'}" onclick="Campaigns.toggleStatus(${c.campaignId})" title="${c.status === 'Active' ? 'Pause' : 'Activate'}">
                             ${c.status === 'Active' ? Icons.toggleOff : Icons.toggleOn}
                         </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="Campaigns.delete(${c.campaignId})">${Icons.delete}</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="Campaigns.delete(${c.campaignId})" title="Delete">${Icons.delete}</button>
                     </div>
                 </td>
             </tr>
@@ -377,12 +354,12 @@ const Campaigns = {
                 <td class="text-end">${Format.percentage(c.roi)}</td>
                 <td class="text-center">
                     <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-primary" onclick="Campaigns.view(${c.campaignId})">${Icons.view}</button>
-                        <button class="btn btn-sm btn-outline-warning" onclick="Campaigns.edit(${c.campaignId})">${Icons.edit}</button>
-                        <button class="btn btn-sm btn-outline-${c.status === 'Active' ? 'danger' : 'success'}" onclick="Campaigns.toggleStatus(${c.campaignId})">
+                        <button class="btn btn-sm btn-outline-primary" onclick="Campaigns.view(${c.campaignId})" title="View">${Icons.view}</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="Campaigns.edit(${c.campaignId})" title="Edit">${Icons.edit}</button>
+                        <button class="btn btn-sm btn-outline-${c.status === 'Active' ? 'danger' : 'success'}" onclick="Campaigns.toggleStatus(${c.campaignId})" title="${c.status === 'Active' ? 'Pause' : 'Activate'}">
                             ${c.status === 'Active' ? Icons.toggleOff : Icons.toggleOn}
                         </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="Campaigns.delete(${c.campaignId})">${Icons.delete}</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="Campaigns.delete(${c.campaignId})" title="Delete">${Icons.delete}</button>
                     </div>
                 </td>
             </tr>
@@ -426,12 +403,12 @@ const Promotions = {
                 <td>${Format.statusBadge(p.isActive ? 'Active' : 'Inactive')}</td>
                 <td class="text-center">
                     <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-primary" onclick="Promotions.view(${p.promotionId})">${Icons.view}</button>
-                        <button class="btn btn-sm btn-outline-warning" onclick="Promotions.edit(${p.promotionId})">${Icons.edit}</button>
-                        <button class="btn btn-sm btn-outline-${p.isActive ? 'danger' : 'success'}" onclick="Promotions.toggle(${p.promotionId})">
+                        <button class="btn btn-sm btn-outline-primary" onclick="Promotions.view(${p.promotionId})" title="View">${Icons.view}</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="Promotions.edit(${p.promotionId})" title="Edit">${Icons.edit}</button>
+                        <button class="btn btn-sm btn-outline-${p.isActive ? 'danger' : 'success'}" onclick="Promotions.toggle(${p.promotionId})" title="${p.isActive ? 'Deactivate' : 'Activate'}">
                             ${p.isActive ? Icons.toggleOff : Icons.toggleOn}
                         </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="Promotions.delete(${p.promotionId})">${Icons.delete}</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="Promotions.delete(${p.promotionId})" title="Delete">${Icons.delete}</button>
                     </div>
                 </td>
             </tr>
@@ -613,12 +590,12 @@ const Promotions = {
                 <td>${Format.statusBadge(p.isActive ? 'Active' : 'Inactive')}</td>
                 <td class="text-center">
                     <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-primary" onclick="Promotions.view(${p.promotionId})">${Icons.view}</button>
-                        <button class="btn btn-sm btn-outline-warning" onclick="Promotions.edit(${p.promotionId})">${Icons.edit}</button>
-                        <button class="btn btn-sm btn-outline-${p.isActive ? 'danger' : 'success'}" onclick="Promotions.toggle(${p.promotionId})">
+                        <button class="btn btn-sm btn-outline-primary" onclick="Promotions.view(${p.promotionId})" title="View">${Icons.view}</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="Promotions.edit(${p.promotionId})" title="Edit">${Icons.edit}</button>
+                        <button class="btn btn-sm btn-outline-${p.isActive ? 'danger' : 'success'}" onclick="Promotions.toggle(${p.promotionId})" title="${p.isActive ? 'Deactivate' : 'Activate'}">
                             ${p.isActive ? Icons.toggleOff : Icons.toggleOn}
                         </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="Promotions.delete(${p.promotionId})">${Icons.delete}</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="Promotions.delete(${p.promotionId})" title="Delete">${Icons.delete}</button>
                     </div>
                 </td>
             </tr>
@@ -670,7 +647,7 @@ const Segments = {
                             <span class="badge" style="color: ${s.color || '#008080'}; font-weight: 600;">${s.count || s.customerCount || 0} customers</span>
                         </div>
                         <p class="card-text text-muted small">${s.description || 'Customer segment'}</p>
-                        <button class="btn btn-sm btn-outline-primary" onclick="Segments.viewCustomers('${(s.name || s.segmentName || '').replace(/'/g, "\\'")}')">View Customers</button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="Segments.viewCustomers('${(s.name || s.segmentName || '').replace(/'/g, "\\'")}')" title="View Customers">View Customers</button>
                     </div>
                 </div>
             </div>

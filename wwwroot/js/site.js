@@ -406,14 +406,75 @@ function addNotification(title, message, type = 'info') {
     playNotificationSound();
 }
 
-// Show toast notification (if Toast not available)
-function showToast(message, type = 'info') {
-    if (typeof Toast !== 'undefined') {
-        Toast[type](message);
+// =====================================================
+// GLOBAL TOAST NOTIFICATION SYSTEM
+// Unified across entire system — no need for per-page definitions
+// =====================================================
+function showToast(message, type) {
+    type = type || 'info';
+
+    // Ensure container exists
+    var container = document.querySelector('.toast-container.position-fixed');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container position-fixed';
+        container.setAttribute('aria-live', 'polite');
+        container.setAttribute('aria-atomic', 'true');
+        document.body.appendChild(container);
+    }
+
+    var icons = {
+        success: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+        error: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+        warning: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+        info: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+        danger: '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+    };
+
+    var titles = { success: 'Success', error: 'Error', warning: 'Warning', info: 'Info', danger: 'Error' };
+    var toastType = type === 'danger' ? 'error' : type;
+    var cssClass = 'toast-' + type;
+
+    var toastEl = document.createElement('div');
+    toastEl.className = 'toast ' + cssClass;
+    toastEl.setAttribute('role', 'alert');
+    toastEl.innerHTML =
+        '<div class="toast-header">' +
+            (icons[type] || icons.info) +
+            '<strong class="ms-2 me-auto">' + (titles[type] || 'Notice') + '</strong>' +
+            '<button type="button" class="btn-close btn-close-sm" data-bs-dismiss="toast" aria-label="Close"></button>' +
+        '</div>' +
+        '<div class="toast-body">' + message + '</div>';
+
+    container.appendChild(toastEl);
+
+    // Use Bootstrap Toast if available, else manual
+    if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+        var bsToast = new bootstrap.Toast(toastEl, { delay: 4000 });
+        bsToast.show();
+        toastEl.addEventListener('hidden.bs.toast', function() { toastEl.remove(); });
     } else {
-        console.log(`[${type.toUpperCase()}] ${message}`);
+        toastEl.style.display = 'block';
+        toastEl.style.opacity = '1';
+        setTimeout(function() {
+            toastEl.style.transition = 'opacity 0.3s';
+            toastEl.style.opacity = '0';
+            setTimeout(function() { toastEl.remove(); }, 350);
+        }, 4000);
     }
 }
+
+// Global Toast object — replaces per-page duplicates
+var Toast = {
+    success: function(msg) { showToast(msg, 'success'); },
+    error: function(msg) { showToast(msg, 'error'); },
+    warning: function(msg) { showToast(msg, 'warning'); },
+    info: function(msg) { showToast(msg, 'info'); }
+};
+
+// Backward-compatible aliases used by layout showSuccess/showError
+function showSuccess(msg) { showToast(msg, 'success'); }
+function showError(msg) { showToast(msg, 'error'); }
 
 // =====================================================
 // Universal Table Pagination
@@ -489,4 +550,128 @@ function autoPaginate(tbodyId, footerId, pageSize) {
     observer.observe(tbody, { childList: true });
     // Run once immediately if tbody already has content
     if (tbody.children.length > 0) initPagination(tbodyId, footerId, pageSize);
+}
+
+// =====================================================
+// GLOBAL PDF EXPORT UTILITY
+// Usage: exportTableToPDF('Report Title', 'tableBodyId', ['Col1','Col2',...], [0,1,2,...colIndexes])
+// Or: exportDataToPDF('Report Title', headers, rows)
+// =====================================================
+
+function exportTableToPDF(title, tbodyId, headers, colIndexes) {
+    var tbody = document.getElementById(tbodyId);
+    if (!tbody) {
+        showToast('No data to export', 'warning');
+        return;
+    }
+    var allRows = tbody.querySelectorAll('tr');
+    if (allRows.length === 0) {
+        showToast('No data to export', 'warning');
+        return;
+    }
+
+    var rows = [];
+    allRows.forEach(function(tr) {
+        if (tr.style.display === 'none') return;
+        var cells = tr.querySelectorAll('td');
+        var row = [];
+        if (colIndexes && colIndexes.length > 0) {
+            colIndexes.forEach(function(i) {
+                row.push(cells[i] ? cells[i].textContent.trim() : '');
+            });
+        } else {
+            // Use all columns except the last one (actions)
+            for (var i = 0; i < cells.length - 1; i++) {
+                row.push(cells[i].textContent.trim());
+            }
+        }
+        rows.push(row);
+    });
+
+    exportDataToPDF(title, headers, rows);
+}
+
+function exportDataToPDF(title, headers, rows) {
+    var now = new Date();
+    var dateStr = now.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+    var timeStr = now.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+
+    var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + title + '</title>';
+    html += '<style>';
+    html += 'body { font-family: "Segoe UI", Arial, sans-serif; margin: 0; padding: 30px; color: #1e293b; }';
+    html += '.report-header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 3px solid #008080; }';
+    html += '.report-header img { width: 60px; height: 60px; margin-bottom: 10px; }';
+    html += '.report-header h1 { font-size: 22px; color: #008080; margin: 5px 0; }';
+    html += '.report-header p { font-size: 12px; color: #64748b; margin: 3px 0; }';
+    html += 'table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; }';
+    html += 'th { background: #008080; color: white; padding: 10px 8px; text-align: left; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }';
+    html += 'td { padding: 8px; border-bottom: 1px solid #e2e8f0; color: #334155; }';
+    html += 'tr:nth-child(even) { background: #f8fafc; }';
+    html += 'tr:hover { background: #f0fdfa; }';
+    html += '.report-footer { text-align: center; margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #94a3b8; }';
+    html += '.summary-row { font-weight: 700; background: #f0fdfa !important; }';
+    html += '@media print { body { padding: 15px; } @page { margin: 1cm; size: landscape; } }';
+    html += '</style></head><body>';
+
+    html += '<div class="report-header">';
+    html += '<img src="' + window.location.origin + '/images/compugear-logo-v7.png" alt="CompuGear">';
+    html += '<h1>' + title + '</h1>';
+    html += '<p>Generated on ' + dateStr + ' at ' + timeStr + '</p>';
+    html += '<p>CompuGear Enterprise Resource Planning System</p>';
+    html += '</div>';
+
+    html += '<table><thead><tr>';
+    headers.forEach(function(h) { html += '<th>' + h + '</th>'; });
+    html += '</tr></thead><tbody>';
+
+    rows.forEach(function(row) {
+        html += '<tr>';
+        row.forEach(function(cell) { html += '<td>' + cell + '</td>'; });
+        html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+
+    html += '<div class="report-footer">';
+    html += '<p>Total Records: ' + rows.length + '</p>';
+    html += '<p>\u00A9 ' + now.getFullYear() + ' CompuGear ERP — Confidential</p>';
+    html += '</div>';
+    html += '</body></html>';
+
+    // Direct download via hidden iframe - no redirect
+    var iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    document.body.appendChild(iframe);
+
+    var doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    iframe.contentWindow.onload = function() {
+        setTimeout(function() {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            setTimeout(function() {
+                document.body.removeChild(iframe);
+            }, 1000);
+        }, 500);
+    };
+
+    showToast('PDF report generated — use Save as PDF in the print dialog', 'success');
+}
+
+// Export stat cards data to PDF
+function exportStatsToPDF(title, statsData) {
+    var headers = ['Metric', 'Value'];
+    var rows = [];
+    statsData.forEach(function(s) {
+        rows.push([s.label, s.value]);
+    });
+    exportDataToPDF(title, headers, rows);
 }

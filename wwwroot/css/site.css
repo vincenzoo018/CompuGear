@@ -1244,7 +1244,7 @@ body.dark-mode .badge.bg-primary {
 
 .data-table th {
     text-align: left;
-    padding: 0.75rem 1rem;
+    padding: 0.65rem 0.75rem;
     font-weight: 600;
     font-size: 0.75rem;
     color: var(--gray-500);
@@ -1256,7 +1256,7 @@ body.dark-mode .badge.bg-primary {
 }
 
 .data-table td {
-    padding: 0.85rem 1rem;
+    padding: 0.7rem 0.75rem;
     border-bottom: 1px solid var(--gray-100);
     font-size: 0.875rem;
     color: var(--gray-700);
@@ -1911,37 +1911,27 @@ body.dark-mode .badge.bg-primary {
 
 .modal-header {
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--gray-100);
-    background: var(--gray-50);
-}
-
-.modal-header-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
-    color: white;
     border-bottom: none;
+    background: linear-gradient(135deg, #008080 0%, #006666 100%) !important;
+    color: white !important;
 }
 
-.modal-header-success {
-    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
-    color: white;
-    border-bottom: none;
+.modal-header .modal-title,
+.modal-header .btn-close {
+    color: white !important;
 }
 
-.modal-header-warning {
-    background: linear-gradient(135deg, var(--warning) 0%, #D97706 100%);
-    color: white;
-    border-bottom: none;
+.modal-header .btn-close {
+    filter: brightness(0) invert(1);
 }
 
-.modal-header-danger {
-    background: linear-gradient(135deg, var(--error) 0%, #DC2626 100%);
-    color: white;
-    border-bottom: none;
-}
-
+.modal-header-primary,
+.modal-header-success,
+.modal-header-warning,
+.modal-header-danger,
 .modal-header-info {
-    background: linear-gradient(135deg, var(--info) 0%, #2563EB 100%);
-    color: white;
+    background: linear-gradient(135deg, #008080 0%, #006666 100%) !important;
+    color: white !important;
     border-bottom: none;
 }
 
@@ -2083,7 +2073,7 @@ body.dark-mode .badge.bg-primary {
 
 .staff-table thead th {
     background: var(--gray-50);
-    padding: 1rem;
+    padding: 0.65rem 0.75rem;
     font-weight: 600;
     font-size: 0.8rem;
     text-transform: uppercase;
@@ -2093,7 +2083,7 @@ body.dark-mode .badge.bg-primary {
 }
 
 .staff-table tbody td {
-    padding: 1rem;
+    padding: 0.7rem 0.75rem;
     vertical-align: middle;
     border-bottom: 1px solid var(--gray-100);
 }
@@ -3038,4 +3028,813 @@ body.dark-mode .card-header {
     background: #0f172a;
     color: #e2e8f0;
     border-color: #334155;
+}
+
+/* =====================================================
+   GLOBAL ACTION BUTTONS — CONSISTENT SYSTEM
+   Standardizes View/Edit/Delete/Archive buttons everywhere.
+   All tables use .action-btns wrapper with .action-btn children.
+   ===================================================== */
+
+/* Wrapper for all action button groups in tables */
+.btn-group,
+.action-btns,
+.action-btn-group,
+.d-flex.gap-1,
+.btn-group-sm {
+    display: inline-flex !important;
+    gap: 6px !important;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+/* Uniform action button base (icon-only, square, bordered) */
+.data-table td .btn,
+.table td .btn,
+.staff-table td .btn,
+.data-table td .action-btn,
+.table td .action-btn,
+.staff-table td .action-btn,
+td .btn-group .btn,
+td .action-btns .btn,
+td .action-btn-group .btn,
+td .d-flex .btn {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1.5px solid !important;
+    font-size: 0 !important;
+    line-height: 1 !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    background: white !important;
+}
+
+/* Icon sizing inside action buttons */
+.data-table td .btn svg,
+.table td .btn svg,
+.staff-table td .btn svg,
+td .btn-group .btn svg,
+td .action-btns .btn svg,
+td .action-btn-group .btn svg,
+td .d-flex .btn svg {
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0;
+}
+
+/* ---- Color scheme for action button types ---- */
+
+/* VIEW — Teal/Primary */
+.data-table td .btn-outline-primary,
+.table td .btn-outline-primary,
+.staff-table td .btn-outline-primary,
+td .btn-outline-primary,
+td .btn.btn-outline-info {
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+    background: rgba(0, 128, 128, 0.04) !important;
+}
+.data-table td .btn-outline-primary:hover,
+.table td .btn-outline-primary:hover,
+.staff-table td .btn-outline-primary:hover,
+td .btn-outline-primary:hover,
+td .btn.btn-outline-info:hover {
+    background: var(--primary) !important;
+    color: white !important;
+    border-color: var(--primary) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 128, 128, 0.3);
+}
+
+/* EDIT — Warning/Orange */
+.data-table td .btn-outline-warning,
+.table td .btn-outline-warning,
+.staff-table td .btn-outline-warning,
+td .btn-outline-warning,
+td .btn-outline-secondary {
+    border-color: var(--warning) !important;
+    color: var(--warning) !important;
+    background: rgba(245, 158, 11, 0.04) !important;
+}
+.data-table td .btn-outline-warning:hover,
+.table td .btn-outline-warning:hover,
+.staff-table td .btn-outline-warning:hover,
+td .btn-outline-warning:hover,
+td .btn-outline-secondary:hover {
+    background: var(--warning) !important;
+    color: white !important;
+    border-color: var(--warning) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(245, 158, 11, 0.3);
+}
+
+/* DELETE/DEACTIVATE — Danger/Red */
+.data-table td .btn-outline-danger,
+.table td .btn-outline-danger,
+.staff-table td .btn-outline-danger,
+td .btn-outline-danger,
+td .btn.text-danger {
+    border-color: var(--error) !important;
+    color: var(--error) !important;
+    background: rgba(239, 68, 68, 0.04) !important;
+}
+.data-table td .btn-outline-danger:hover,
+.table td .btn-outline-danger:hover,
+.staff-table td .btn-outline-danger:hover,
+td .btn-outline-danger:hover,
+td .btn.text-danger:hover {
+    background: var(--error) !important;
+    color: white !important;
+    border-color: var(--error) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* SUCCESS/RESTORE/APPROVE — Green */
+.data-table td .btn-outline-success,
+.table td .btn-outline-success,
+.staff-table td .btn-outline-success,
+td .btn-outline-success,
+td .btn-success.btn-sm {
+    border-color: var(--success) !important;
+    color: var(--success) !important;
+    background: rgba(16, 185, 129, 0.04) !important;
+}
+.data-table td .btn-outline-success:hover,
+.table td .btn-outline-success:hover,
+.staff-table td .btn-outline-success:hover,
+td .btn-outline-success:hover,
+td .btn-success.btn-sm:hover {
+    background: var(--success) !important;
+    color: white !important;
+    border-color: var(--success) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);
+}
+
+/* SuperAdmin plain .btn-outline → treat as primary */
+td .btn.btn-sm.btn-outline:not(.btn-outline-primary):not(.btn-outline-warning):not(.btn-outline-danger):not(.btn-outline-success):not(.btn-outline-info):not(.btn-outline-secondary):not(.text-danger) {
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+    background: rgba(0, 128, 128, 0.04) !important;
+}
+td .btn.btn-sm.btn-outline:not(.btn-outline-primary):not(.btn-outline-warning):not(.btn-outline-danger):not(.btn-outline-success):not(.btn-outline-info):not(.btn-outline-secondary):not(.text-danger):hover {
+    background: var(--primary) !important;
+    color: white !important;
+    transform: translateY(-1px);
+}
+
+/* SuperAdmin .btn-outline.text-danger → treat as danger */
+td .btn.btn-sm.btn-outline.text-danger {
+    border-color: var(--error) !important;
+    color: var(--error) !important;
+    background: rgba(239, 68, 68, 0.04) !important;
+}
+td .btn.btn-sm.btn-outline.text-danger:hover {
+    background: var(--error) !important;
+    color: white !important;
+    border-color: var(--error) !important;
+    transform: translateY(-1px);
+}
+
+/* Dark mode action buttons */
+body.dark-mode .data-table td .btn,
+body.dark-mode .table td .btn,
+body.dark-mode .staff-table td .btn,
+body.dark-mode td .btn-group .btn,
+body.dark-mode td .action-btns .btn {
+    background: #1e293b !important;
+}
+
+body.dark-mode td .btn-outline-primary {
+    border-color: #2dd4bf !important;
+    color: #2dd4bf !important;
+    background: rgba(45, 212, 191, 0.08) !important;
+}
+body.dark-mode td .btn-outline-primary:hover {
+    background: #2dd4bf !important;
+    color: #0f172a !important;
+}
+
+body.dark-mode td .btn-outline-warning {
+    border-color: #fbbf24 !important;
+    color: #fbbf24 !important;
+    background: rgba(251, 191, 36, 0.08) !important;
+}
+body.dark-mode td .btn-outline-warning:hover {
+    background: #fbbf24 !important;
+    color: #0f172a !important;
+}
+
+body.dark-mode td .btn-outline-danger,
+body.dark-mode td .btn.text-danger {
+    border-color: #f87171 !important;
+    color: #f87171 !important;
+    background: rgba(248, 113, 113, 0.08) !important;
+}
+body.dark-mode td .btn-outline-danger:hover,
+body.dark-mode td .btn.text-danger:hover {
+    background: #f87171 !important;
+    color: #0f172a !important;
+}
+
+body.dark-mode td .btn-outline-success {
+    border-color: #34d399 !important;
+    color: #34d399 !important;
+    background: rgba(52, 211, 153, 0.08) !important;
+}
+body.dark-mode td .btn-outline-success:hover {
+    background: #34d399 !important;
+    color: #0f172a !important;
+}
+
+/* =====================================================
+   GLOBAL TABLE ALIGNMENT FIX
+   Forces proper cell alignment and compact spacing.
+   ===================================================== */
+
+/* All table cells: vertical-align middle */
+.data-table td,
+.data-table th,
+.table td,
+.table th,
+.staff-table td,
+.staff-table th {
+    vertical-align: middle !important;
+}
+
+/* Compact, consistent cell padding */
+.data-table th,
+.table th,
+.staff-table th {
+    padding: 0.65rem 0.75rem !important;
+}
+
+.data-table td,
+.table td,
+.staff-table td {
+    padding: 0.7rem 0.75rem !important;
+}
+
+/* Let columns auto-size to their content — no excessive stretch */
+.data-table,
+.table,
+.staff-table {
+    table-layout: auto;
+    width: 100%;
+}
+
+/* Actions column: fixed width, center, no wrap */
+.data-table th:last-child,
+.data-table td:last-child,
+.table th:last-child,
+.table td:last-child,
+.staff-table th:last-child,
+.staff-table td:last-child {
+    text-align: center !important;
+    white-space: nowrap;
+    width: 1%;
+}
+
+/* Numeric/amount columns: right-align */
+td.text-end,
+th.text-end,
+td[style*="text-align: right"],
+th[style*="text-align: right"],
+td[style*="text-align:right"],
+th[style*="text-align:right"] {
+    text-align: right !important;
+    white-space: nowrap;
+}
+
+/* Center-text columns: no grow */
+td.text-center,
+th.text-center {
+    white-space: nowrap;
+    width: 1%;
+}
+
+/* Normal cells: allow wrapping */
+.data-table td,
+.table td,
+.staff-table td {
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+/* Override: actions + center + end columns stay nowrap */
+.data-table td:last-child,
+.table td:last-child,
+.staff-table td:last-child,
+.data-table td.text-center,
+.table td.text-center,
+.staff-table td.text-center,
+.data-table td.text-end,
+.table td.text-end,
+.staff-table td.text-end {
+    white-space: nowrap;
+}
+
+/* Table responsive wrapper */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* =====================================================
+   STAT CARDS — CONSISTENT LAYOUT (Pattern B Fix)
+   Forces ALL stat card variants to: 
+   Label on TOP → Number below → Icon on RIGHT
+   ===================================================== */
+
+/* Pattern B cards (stat-card-{color}): icon goes RIGHT */
+.stat-card-primary,
+.stat-card-success,
+.stat-card-warning,
+.stat-card-danger,
+.stat-card-info {
+    flex-direction: row-reverse !important;
+    padding: 1.25rem 1.35rem !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+}
+
+.stat-card-primary:hover,
+.stat-card-success:hover,
+.stat-card-warning:hover,
+.stat-card-danger:hover,
+.stat-card-info:hover {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(-4px) !important;
+}
+
+/* Reorder stat-content: label FIRST (top), value SECOND (below) */
+.stat-content {
+    display: flex !important;
+    flex-direction: column-reverse !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+/* Make stat-content behave like stat-info */
+.stat-content .stat-value {
+    font-size: 1.65rem !important;
+    font-weight: 700 !important;
+    color: var(--gray-900) !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.02em !important;
+    order: 2;
+}
+
+.stat-content .stat-label {
+    font-size: 0.8rem !important;
+    color: var(--gray-500) !important;
+    margin-bottom: 4px !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    line-height: 1.3 !important;
+    order: 1;
+}
+
+/* Stat icon: uniform 48px square rounded box (same as Pattern A) */
+.stat-card-primary .stat-icon,
+.stat-card-success .stat-icon,
+.stat-card-warning .stat-icon,
+.stat-card-danger .stat-icon,
+.stat-card-info .stat-icon {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    border-radius: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+}
+
+.stat-card-primary .stat-icon svg,
+.stat-card-success .stat-icon svg,
+.stat-card-warning .stat-icon svg,
+.stat-card-danger .stat-icon svg,
+.stat-card-info .stat-icon svg {
+    width: 24px !important;
+    height: 24px !important;
+}
+
+/* Pattern C: stat-card-mini — normalize to same look */
+.stat-cards-row {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+    gap: 1rem !important;
+    margin-bottom: 1.25rem !important;
+}
+
+.stat-card-mini {
+    background: var(--white) !important;
+    border-radius: 16px !important;
+    padding: 1.25rem 1.35rem !important;
+    display: flex !important;
+    flex-direction: row-reverse !important;
+    align-items: center !important;
+    gap: 1rem !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
+    border: 1px solid rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+}
+
+.stat-card-mini:hover {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(-4px) !important;
+}
+
+.stat-icon-mini {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    border-radius: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    color: white !important;
+}
+
+.stat-icon-mini.primary { background: var(--primary) !important; }
+.stat-icon-mini.warning { background: var(--warning) !important; }
+.stat-icon-mini.info { background: var(--info) !important; }
+.stat-icon-mini.success { background: var(--success) !important; }
+.stat-icon-mini.danger { background: var(--error) !important; }
+.stat-icon-mini.secondary { background: var(--gray-500) !important; }
+
+.stat-icon-mini svg {
+    width: 24px !important;
+    height: 24px !important;
+}
+
+.stat-content-mini {
+    flex: 1 !important;
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: column-reverse !important;
+}
+
+.stat-content-mini h4 {
+    font-size: 1.65rem !important;
+    font-weight: 700 !important;
+    color: var(--gray-900) !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+}
+
+.stat-content-mini span {
+    font-size: 0.8rem !important;
+    color: var(--gray-500) !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    margin-bottom: 4px !important;
+}
+
+/* Dark mode stat card fixes for Pattern B */
+body.dark-mode .stat-card-primary,
+body.dark-mode .stat-card-success,
+body.dark-mode .stat-card-warning,
+body.dark-mode .stat-card-danger,
+body.dark-mode .stat-card-info,
+body.dark-mode .stat-card-mini {
+    background: var(--card-bg, #1e293b) !important;
+    border-color: var(--border, #334155) !important;
+}
+
+body.dark-mode .stat-content .stat-value,
+body.dark-mode .stat-content-mini h4 {
+    color: var(--foreground, #e2e8f0) !important;
+}
+
+body.dark-mode .stat-content .stat-label,
+body.dark-mode .stat-content-mini span {
+    color: var(--muted-foreground, #94a3b8) !important;
+}
+
+/* =====================================================
+   SIDEBAR STABILITY
+   Prevents sidebar from stretching/jumping when 
+   navigating between pages or expanding submenus.
+   ===================================================== */
+
+.sidebar {
+    overflow: hidden !important;
+}
+
+.sidebar-nav {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+}
+
+/* Smooth submenu transitions — no jump */
+.nav-submenu {
+    transition: max-height 0.25s ease !important;
+    overflow: hidden;
+}
+
+/* Prevent sidebar footer from being pushed down */
+.sidebar-footer {
+    flex-shrink: 0 !important;
+}
+
+/* Prevent sidebar header from growing */
+.sidebar-header {
+    flex-shrink: 0 !important;
+}
+
+/* =====================================================
+   PDF EXPORT BUTTON STYLE
+   Consistent styling for all PDF/Export buttons
+   ===================================================== */
+
+.btn-pdf-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #ffffff;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-pdf-export:hover {
+    background: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    color: #333;
+    border-color: #ccc;
+}
+
+.btn-pdf-export svg {
+    width: 16px;
+    height: 16px;
+    color: #ef4444;
+}
+
+body.dark-mode .btn-pdf-export {
+    background: #2d2d2d;
+    color: #e0e0e0;
+    border-color: #444;
+}
+
+body.dark-mode .btn-pdf-export:hover {
+    background: #3a3a3a;
+    border-color: #555;
+    color: #e0e0e0;
+}
+
+/* =====================================================
+   GLOBAL MODAL HEADER OVERRIDE
+   Forces teal green on ALL modal headers including inline styles
+   ===================================================== */
+.modal .modal-header[style],
+.modal-header[style*="background"] {
+    background: linear-gradient(135deg, #008080 0%, #006666 100%) !important;
+    color: white !important;
+    border-bottom: none !important;
+}
+
+.modal .modal-header[style] .modal-title,
+.modal-header[style*="background"] .modal-title {
+    color: white !important;
+}
+
+.modal .modal-header[style] .btn-close,
+.modal-header[style*="background"] .btn-close {
+    filter: brightness(0) invert(1) !important;
+}
+
+/* Consistent modal sizing */
+.modal-dialog {
+    max-width: 700px;
+}
+
+.modal-lg {
+    max-width: 900px;
+}
+
+.modal-xl {
+    max-width: 1100px;
+}
+
+body.dark-mode .modal-header {
+    background: linear-gradient(135deg, #006666 0%, #005555 100%) !important;
+    color: white !important;
+}
+
+/* =====================================================
+   GLOBAL TOAST NOTIFICATION SYSTEM
+   Consistent toast styling across the entire system
+   ===================================================== */
+.toast-container {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    z-index: 99999 !important;
+}
+
+.toast {
+    min-width: 320px;
+    max-width: 420px;
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15) !important;
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+    animation: toastSlideIn 0.3s ease-out;
+}
+
+@keyframes toastSlideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.toast .toast-header {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border-bottom: none;
+}
+
+.toast .toast-body {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    color: #333;
+}
+
+/* Toast types */
+.toast-success .toast-header {
+    background: #ecfdf5 !important;
+    color: #065f46 !important;
+    border-left: 4px solid #10b981;
+}
+
+.toast-success .toast-body {
+    background: #f0fdf4;
+    color: #166534;
+}
+
+.toast-error .toast-header,
+.toast-danger .toast-header {
+    background: #fef2f2 !important;
+    color: #991b1b !important;
+    border-left: 4px solid #ef4444;
+}
+
+.toast-error .toast-body,
+.toast-danger .toast-body {
+    background: #fff5f5;
+    color: #991b1b;
+}
+
+.toast-warning .toast-header {
+    background: #fffbeb !important;
+    color: #92400e !important;
+    border-left: 4px solid #f59e0b;
+}
+
+.toast-warning .toast-body {
+    background: #fffef5;
+    color: #92400e;
+}
+
+.toast-info .toast-header {
+    background: #eff6ff !important;
+    color: #1e40af !important;
+    border-left: 4px solid #3b82f6;
+}
+
+.toast-info .toast-body {
+    background: #f0f7ff;
+    color: #1e40af;
+}
+
+body.dark-mode .toast {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
+body.dark-mode .toast .toast-body {
+    background: #1e1e1e;
+    color: #e0e0e0;
+}
+
+body.dark-mode .toast-success .toast-header { background: #064e3b !important; color: #6ee7b7 !important; }
+body.dark-mode .toast-success .toast-body { background: #0a2e1f; color: #6ee7b7; }
+body.dark-mode .toast-error .toast-header,
+body.dark-mode .toast-danger .toast-header { background: #450a0a !important; color: #fca5a5 !important; }
+body.dark-mode .toast-error .toast-body,
+body.dark-mode .toast-danger .toast-body { background: #2d0a0a; color: #fca5a5; }
+body.dark-mode .toast-warning .toast-header { background: #451a03 !important; color: #fcd34d !important; }
+body.dark-mode .toast-warning .toast-body { background: #2d1503; color: #fcd34d; }
+body.dark-mode .toast-info .toast-header { background: #1e3a5f !important; color: #93c5fd !important; }
+body.dark-mode .toast-info .toast-body { background: #0f2440; color: #93c5fd; }
+
+/* =====================================================
+   ARCHIVE PAGE ACTION BUTTONS
+   Consistent restore/activate buttons matching global style
+   ===================================================== */
+.btn-archive-restore {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    width: auto;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 0.65rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: #10b981;
+    border: 1.5px solid #10b981;
+    text-decoration: none;
+}
+
+.btn-archive-restore:hover {
+    background: #10b981;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-archive-restore svg {
+    width: 15px;
+    height: 15px;
+}
+
+.btn-archive-delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    width: auto;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 0.65rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: #ef4444;
+    border: 1.5px solid #ef4444;
+    text-decoration: none;
+}
+
+.btn-archive-delete:hover {
+    background: #ef4444;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btn-archive-delete svg {
+    width: 15px;
+    height: 15px;
+}
+
+body.dark-mode .btn-archive-restore {
+    color: #34d399;
+    border-color: #34d399;
+}
+
+body.dark-mode .btn-archive-restore:hover {
+    background: #34d399;
+    color: #1e1e1e;
+}
+
+body.dark-mode .btn-archive-delete {
+    color: #f87171;
+    border-color: #f87171;
+}
+
+body.dark-mode .btn-archive-delete:hover {
+    background: #f87171;
+    color: #1e1e1e;
 }

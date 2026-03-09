@@ -3,9 +3,14 @@
     Layout = "~/Views/Shared/_InventoryLayout.cshtml";
 }
 
-<div class="page-header">
-    <h1 class="page-title">Stock Levels</h1>
-    <p class="page-subtitle">Monitor inventory stock levels across all products</p>
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Stock Levels</h1>
+        <p class="page-subtitle">Monitor inventory stock levels across all products</p>
+    </div>
+    <button class="btn btn-pdf-export" onclick="exportTableToPDF('Stock Levels', 'stockTableBody', ['SKU','Product','Stock','Reorder','Level','Status'], [0,1,2,3,4,5])">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Export PDF
+    </button>
 </div>
 
 <div class="grid" style="grid-template-columns: 1fr 2fr; gap: 1.5rem; margin-bottom: 1.5rem;">

@@ -9,12 +9,7 @@
         <p class="page-subtitle">View all posted transactions and account balances</p>
     </div>
     <div>
-        <button class="btn btn-outline-primary" onclick="exportGL()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Export
-        </button>
+        <button class="btn btn-pdf-export" onclick="exportGL()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Export PDF</button>
     </div>
 </div>
 
@@ -176,13 +171,12 @@
     function exportGL() {
         const data = GL.data;
         if (!data || data.length === 0) { Toast.error('No data to export'); return; }
-        const csv = [['Date','Account','Description','Reference','Debit','Credit','Running Balance'].join(','),
-            ...data.map(t => [new Date(t.transactionDate).toLocaleDateString(), `"${t.accountName||''}"`, `"${t.description||''}"`, t.reference||'', t.debitAmount?.toFixed(2), t.creditAmount?.toFixed(2), t.runningBalance?.toFixed(2)].join(','))
-        ].join('\n');
-        const blob = new Blob([csv], {type:'text/csv'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = `general_ledger_${new Date().toISOString().split('T')[0]}.csv`; a.click();
-        Toast.success('Exported successfully');
+        var headers = ['Date', 'Account', 'Description', 'Reference', 'Debit', 'Credit', 'Running Balance'];
+        var rows = [];
+        data.forEach(function(t) {
+            rows.push([new Date(t.transactionDate).toLocaleDateString(), t.accountName || '', t.description || '', t.reference || '', t.debitAmount?.toFixed(2) || '0.00', t.creditAmount?.toFixed(2) || '0.00', t.runningBalance?.toFixed(2) || '0.00']);
+        });
+        exportDataToPDF('General Ledger', headers, rows);
     }
     </script>
 }

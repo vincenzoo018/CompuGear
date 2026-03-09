@@ -606,7 +606,7 @@
                             <h5>${escapeHtml(article.title)}</h5>
                             <span>Submitted ${formatDate(article.createdAt)}</span>
                         </div>
-                        <button class="btn btn-sm btn-outline-primary" onclick="viewArticle(${article.articleId})">View</button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewArticle(${article.articleId})" title="View">View</button>
                     </div>
                 `).join('');
             } else {
@@ -675,7 +675,7 @@
                         <div class="article-tags">
                             ${tags.map(tag => `<span class="article-tag">${escapeHtml(tag.trim())}</span>`).join('')}
                         </div>
-                        <button class="btn btn-sm btn-outline-primary" onclick="viewArticle(${article.articleId})">Read</button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewArticle(${article.articleId})" title="Read Article">Read</button>
                     </div>
                 </div>
             `;

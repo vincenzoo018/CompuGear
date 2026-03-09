@@ -18,31 +18,7 @@ const Icons = {
     delete: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'
 };
 
-// Toast Notification System
-const Toast = {
-    container: null,
-    init() {
-        if (!this.container) {
-            this.container = document.createElement('div');
-            this.container.id = 'toast-container';
-            this.container.className = 'toast-container position-fixed top-0 end-0 p-3';
-            this.container.style.zIndex = '9999';
-            document.body.appendChild(this.container);
-        }
-    },
-    show(message, type = 'success', duration = 4000) {
-        this.init();
-        const toast = document.createElement('div');
-        toast.className = `toast align-items-center text-white border-0 show`;
-        toast.style.backgroundColor = type === 'success' ? '#008080' : type === 'error' ? '#dc3545' : '#ff6b35';
-        toast.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button></div>`;
-        this.container.appendChild(toast);
-        setTimeout(() => toast.remove(), duration);
-    },
-    success(message) { this.show(message, 'success'); },
-    error(message) { this.show(message, 'error'); },
-    warning(message) { this.show(message, 'warning'); }
-};
+// Toast: provided globally by site.js (Toast.success/error/warning)
 
 // API Helper
 const API = {
@@ -158,9 +134,9 @@ const SupportTickets = {
                 <td>${Format.date(t.createdAt)}</td>
                 <td class="text-center">
                     <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-primary" onclick="SupportTickets.view(${t.ticketId})">${Icons.view}</button>
-                        <button class="btn btn-sm btn-outline-warning" onclick="SupportTickets.edit(${t.ticketId})">${Icons.edit}</button>
-                        ${t.status !== 'Resolved' && t.status !== 'Closed' ? `<button class="btn btn-sm btn-outline-success" onclick="SupportTickets.resolve(${t.ticketId})">${Icons.resolve}</button>` : ''}
+                        <button class="btn btn-sm btn-outline-primary" onclick="SupportTickets.view(${t.ticketId})" title="View">${Icons.view}</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="SupportTickets.edit(${t.ticketId})" title="Edit">${Icons.edit}</button>
+                        ${t.status !== 'Resolved' && t.status !== 'Closed' ? `<button class="btn btn-sm btn-outline-success" onclick="SupportTickets.resolve(${t.ticketId})" title="Resolve">${Icons.resolve}</button>` : ''}
                     </div>
                 </td>
             </tr>
@@ -385,10 +361,10 @@ const SupportTickets = {
                 <td>${Format.date(t.createdAt)}</td>
                 <td class="text-center">
                     <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-primary" onclick="SupportTickets.view(${t.ticketId})">${Icons.view}</button>
-                        <button class="btn btn-sm btn-outline-warning" onclick="SupportTickets.edit(${t.ticketId})">${Icons.edit}</button>
-                        ${t.status !== 'Resolved' && t.status !== 'Closed' ? `<button class="btn btn-sm btn-outline-success" onclick="SupportTickets.resolve(${t.ticketId})">${Icons.resolve}</button>` : ''}
-                        <button class="btn btn-sm btn-outline-danger" onclick="SupportTickets.delete(${t.ticketId})">${Icons.delete}</button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="SupportTickets.view(${t.ticketId})" title="View">${Icons.view}</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="SupportTickets.edit(${t.ticketId})" title="Edit">${Icons.edit}</button>
+                        ${t.status !== 'Resolved' && t.status !== 'Closed' ? `<button class="btn btn-sm btn-outline-success" onclick="SupportTickets.resolve(${t.ticketId})" title="Resolve">${Icons.resolve}</button>` : ''}
+                        <button class="btn btn-sm btn-outline-danger" onclick="SupportTickets.delete(${t.ticketId})" title="Delete">${Icons.delete}</button>
                     </div>
                 </td>
             </tr>
@@ -431,7 +407,7 @@ const SupportCustomers = {
                 <td>${c.totalOrders || 0} orders</td>
                 <td>${Format.statusBadge(c.status)}</td>
                 <td class="text-center">
-                    <button class="btn btn-sm btn-outline-primary" onclick="SupportCustomers.view(${c.customerId})">${Icons.view}</button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="SupportCustomers.view(${c.customerId})" title="View">${Icons.view}</button>
                 </td>
             </tr>
         `).join('');
@@ -527,7 +503,7 @@ const SupportCustomers = {
                 <td>${c.totalOrders || 0} orders</td>
                 <td>${Format.statusBadge(c.status)}</td>
                 <td class="text-center">
-                    <button class="btn btn-sm btn-outline-primary" onclick="SupportCustomers.view(${c.customerId})">${Icons.view}</button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="SupportCustomers.view(${c.customerId})" title="View">${Icons.view}</button>
                 </td>
             </tr>
         `).join('');
@@ -568,7 +544,7 @@ const KnowledgeBase = {
                     <p class="card-text text-muted">${a.excerpt || ''}</p>
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="badge bg-info">${a.categoryName || 'General'}</span>
-                        <button class="btn btn-sm btn-outline-primary" onclick="KnowledgeBase.view(${a.articleId})">Read More</button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="KnowledgeBase.view(${a.articleId})" title="Read More">Read More</button>
                     </div>
                 </div>
             </div>
@@ -602,7 +578,7 @@ const KnowledgeBase = {
                 <div class="card-body">
                     <h5 class="card-title">${a.title}</h5>
                     <p class="card-text text-muted">${a.excerpt || ''}</p>
-                    <button class="btn btn-sm btn-outline-primary" onclick="KnowledgeBase.view(${a.articleId})">Read More</button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="KnowledgeBase.view(${a.articleId})" title="Read More">Read More</button>
                 </div>
             </div>
         `).join('');

@@ -7,10 +7,10 @@
         <h1 class="page-title">Inventory Reports</h1>
         <p class="page-subtitle">Analyze inventory performance and trends</p>
     </div>
-    <button class="btn btn-primary" onclick="generateInventoryPDF()">
+    <button class="btn btn-pdf-export" onclick="generateInventoryPDF()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="14 2 14 8 20 8"/>
         </svg>
         Generate PDF Report
     </button>
@@ -94,14 +94,7 @@
 <div class="card fade-in mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h3 class="card-title">Detailed Inventory Report</h3>
-        <button class="btn btn-sm btn-outline-primary" onclick="exportReport()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Export to CSV
-        </button>
+        <button class="btn btn-pdf-export" onclick="exportReport()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Export PDF</button>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -369,32 +362,14 @@
         }
 
         function exportReport() {
-            const headers = ['SKU', 'Product Name', 'Category', 'Supplier', 'Stock Qty', 'Cost Price', 'Selling Price', 'Stock Value', 'Status'];
-            const rows = allProducts.map(p => {
-                const stockValue = p.stockQuantity * (p.costPrice || p.sellingPrice || 0);
-                const status = p.stockQuantity === 0 ? 'Out of Stock' : p.stockQuantity <= INVENTORY_LOW_STOCK_THRESHOLD ? 'Low Stock' : 'In Stock';
-                return [
-                    p.sku || 'N/A',
-                    p.productName,
-                    p.categoryName || 'Uncategorized',
-                    p.supplierName || '-',
-                    p.stockQuantity,
-                    p.costPrice || 0,
-                    p.sellingPrice || 0,
-                    stockValue,
-                    status
-                ];
+            var headers = ['SKU', 'Product Name', 'Category', 'Supplier', 'Stock Qty', 'Cost Price', 'Selling Price', 'Stock Value', 'Status'];
+            var rows = [];
+            allProducts.forEach(function(p) {
+                var stockValue = p.stockQuantity * (p.costPrice || p.sellingPrice || 0);
+                var status = p.stockQuantity === 0 ? 'Out of Stock' : p.stockQuantity <= INVENTORY_LOW_STOCK_THRESHOLD ? 'Low Stock' : 'In Stock';
+                rows.push([p.sku || 'N/A', p.productName, p.categoryName || 'Uncategorized', p.supplierName || '-', String(p.stockQuantity), String(p.costPrice || 0), String(p.sellingPrice || 0), String(stockValue), status]);
             });
-            
-            const csvContent = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `inventory_report_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-            
-            Toast.success('Report exported successfully!');
+            exportDataToPDF('Inventory Report', headers, rows);
         }
 
         function generateInventoryPDF() {

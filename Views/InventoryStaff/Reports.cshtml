@@ -3,9 +3,14 @@
     Layout = "~/Views/Shared/_InventoryLayout.cshtml";
 }
 
-<div class="page-header">
-    <h1 class="page-title">Inventory Reports</h1>
-    <p class="page-subtitle">Analyze inventory performance and trends</p>
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h1 class="page-title">Inventory Reports</h1>
+        <p class="page-subtitle">Analyze inventory performance and trends</p>
+    </div>
+    <button class="btn btn-pdf-export" onclick="generateInventoryStaffPDF()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Generate Report
+    </button>
 </div>
 
 <div class="stat-cards">
@@ -85,4 +90,58 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function generateInventoryStaffPDF() {
+            const totalProducts = document.getElementById('totalProducts')?.textContent || '0';
+            const totalStock = document.getElementById('totalStock')?.textContent || '0';
+            const totalValue = document.getElementById('totalValue')?.textContent || '₱0';
+            const avgValue = document.getElementById('avgValue')?.textContent || '₱0';
+
+            // Capture chart images
+            const catCanvas = document.getElementById('categoryChart');
+            const valCanvas = document.getElementById('valueChart');
+            const catImg = catCanvas ? catCanvas.toDataURL('image/png') : '';
+            const valImg = valCanvas ? valCanvas.toDataURL('image/png') : '';
+
+            const now = new Date();
+            const html = `<!DOCTYPE html><html><head><title>Inventory Report</title>
+            <style>
+                body { font-family: 'Segoe UI', Arial, sans-serif; margin: 30px; color: #333; }
+                .header { text-align: center; border-bottom: 2px solid #008080; padding-bottom: 12px; margin-bottom: 20px; }
+                .header h1 { color: #008080; margin: 0 0 4px 0; font-size: 22px; }
+                .header p { margin: 0; font-size: 12px; color: #666; }
+                .stats { display: flex; gap: 16px; margin-bottom: 24px; }
+                .stat-box { flex: 1; border: 1px solid #ddd; border-radius: 8px; padding: 14px; text-align: center; }
+                .stat-box .label { font-size: 11px; color: #666; text-transform: uppercase; }
+                .stat-box .value { font-size: 20px; font-weight: 700; color: #008080; margin-top: 4px; }
+                .charts { display: flex; gap: 20px; margin-top: 20px; }
+                .chart-box { flex: 1; text-align: center; }
+                .chart-box h3 { font-size: 14px; color: #555; margin-bottom: 10px; }
+                .chart-box img { max-width: 100%; max-height: 280px; }
+                .footer { text-align: center; margin-top: 30px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 11px; color: #999; }
+                @@media print { body { margin: 15px; } .no-print { display: none; } }
+            </style></head><body>
+            <div class="header">
+                <h1>CompuGear - Inventory Report</h1>
+                <p>Generated: ${now.toLocaleString()}</p>
+            </div>
+            <div class="stats">
+                <div class="stat-box"><div class="label">Total Products</div><div class="value">${totalProducts}</div></div>
+                <div class="stat-box"><div class="label">Total Stock Units</div><div class="value">${totalStock}</div></div>
+                <div class="stat-box"><div class="label">Total Inventory Value</div><div class="value">${totalValue}</div></div>
+                <div class="stat-box"><div class="label">Avg. Value / Product</div><div class="value">${avgValue}</div></div>
+            </div>
+            <div class="charts">
+                ${catImg ? `<div class="chart-box"><h3>Products by Category</h3><img src="${catImg}"></div>` : ''}
+                ${valImg ? `<div class="chart-box"><h3>Value by Category</h3><img src="${valImg}"></div>` : ''}
+            </div>
+            <div class="footer">CompuGear Inventory Management System</div>
+            <script>window.onload=function(){window.print();}<\/script>
+            </body></html>`;
+
+            const w = window.open('', '_blank');
+            w.document.write(html);
+            w.document.close();
+        }
+    </script>
 }

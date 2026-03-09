@@ -14,12 +14,7 @@
             </svg>
             Seed Default Accounts
         </button>
-        <button class="btn btn-outline-primary" onclick="exportCOA()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Export
-        </button>
+        <button class="btn btn-pdf-export" onclick="exportCOA()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Export PDF</button>
         <button class="btn btn-primary" onclick="openCreateAccountModal()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -281,13 +276,12 @@ async function seedDefaultAccounts() {
 function exportCOA() {
     const data = COA.data;
     if (!data || data.length === 0) { Toast.error('No accounts to export'); return; }
-    const csv = [['Code','Name','Type','Normal Balance','Status','Description'].join(','),
-        ...data.map(a => [a.accountCode, `"${a.accountName}"`, a.accountType, a.normalBalance, a.isActive?'Active':'Inactive', `"${a.description||''}"`].join(','))
-    ].join('\n');
-    const blob = new Blob([csv], {type:'text/csv'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `chart_of_accounts_${new Date().toISOString().split('T')[0]}.csv`; a.click();
-    Toast.success('Exported successfully');
+    var headers = ['Code', 'Name', 'Type', 'Normal Balance', 'Status', 'Description'];
+    var rows = [];
+    data.forEach(function(a) {
+        rows.push([a.accountCode, a.accountName, a.accountType, a.normalBalance, a.isActive ? 'Active' : 'Inactive', a.description || '']);
+    });
+    exportDataToPDF('Chart of Accounts', headers, rows);
 }
 </script>
 }

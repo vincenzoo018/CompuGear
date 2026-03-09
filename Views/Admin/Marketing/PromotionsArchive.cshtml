@@ -69,7 +69,12 @@
                 <td>${p.promotionCode || '-'}</td>
                 <td>${formatDiscount(p)}</td>
                 <td>${p.startDate ? new Date(p.startDate).toLocaleDateString() : '-'} - ${p.endDate ? new Date(p.endDate).toLocaleDateString() : '-'}</td>
-                <td><button class="btn btn-sm btn-success" onclick="restorePromotion(${p.promotionId})">Activate</button></td>
+                <td>
+                    <button class="btn-archive-restore" onclick="restorePromotion(${p.promotionId})" title="Restore">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                        Restore
+                    </button>
+                </td>
             </tr>
         `).join('');
         if (typeof initPagination === 'function') initPagination('archiveTableBody', 'promotionsArchivePagination', 10);

@@ -9,14 +9,7 @@
             <h1 class="page-title">Company Reports</h1>
             <p class="page-subtitle">Generate and view company-level reports and analytics.</p>
         </div>
-        <button class="btn btn-primary" onclick="exportAllReports()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            Export All
-        </button>
+        <button class="btn btn-pdf-export" onclick="exportAllReports()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Export PDF</button>
     </div>
 </div>
 
@@ -367,43 +360,28 @@
         }
 
         function exportAllReports() {
-            const { fromDate, toDate } = getDateRange();
-            const period = `${fromDate.toLocaleDateString()} - ${toDate.toLocaleDateString()}`;
-
             const revenue = document.getElementById('rptRevenue')?.textContent || '₱0';
             const orderCount = document.getElementById('rptOrders')?.textContent || '0';
             const newCust = document.getElementById('rptNewCustomers')?.textContent || '0';
             const ticketCount = document.getElementById('rptTickets')?.textContent || '0';
 
-            // Get top products table data
-            const prodRows = Array.from(document.querySelectorAll('#topProductsTable tr')).map(tr => {
-                const cells = tr.querySelectorAll('td');
-                return cells.length >= 3 ? `"${cells[0].textContent.trim()}","${cells[1].textContent.trim()}","${cells[2].textContent.trim()}"` : null;
-            }).filter(Boolean);
-
-            const csv = [
-                'CompuGear Company Report',
-                `Period: ${period}`,
-                '',
-                'KPI Summary',
-                `Total Revenue,${revenue}`,
-                `Total Orders,${orderCount}`,
-                `New Customers,${newCust}`,
-                `Support Tickets,${ticketCount}`,
-                '',
-                'Top Selling Products',
-                'Product,Qty Sold,Revenue',
-                ...prodRows
+            var headers = ['Metric', 'Value'];
+            var rows = [
+                ['Total Revenue', revenue],
+                ['Total Orders', orderCount],
+                ['New Customers', newCust],
+                ['Support Tickets', ticketCount]
             ];
 
-            const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `company-report-${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-            URL.revokeObjectURL(url);
-            Toast.success('Report exported to CSV');
+            // Add top products table data
+            Array.from(document.querySelectorAll('#topProductsTable tr')).forEach(function(tr) {
+                var cells = tr.querySelectorAll('td');
+                if (cells.length >= 3) {
+                    rows.push([cells[0].textContent.trim() + ' (Product)', cells[1].textContent.trim() + ' sold / ' + cells[2].textContent.trim()]);
+                }
+            });
+
+            exportDataToPDF('Company Report', headers, rows);
         }
     </script>
 }

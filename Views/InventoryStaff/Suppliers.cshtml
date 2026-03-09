@@ -10,9 +10,14 @@
             <h1 class="h3 mb-0">Suppliers</h1>
             <p class="text-muted mb-0">Manage product suppliers</p>
         </div>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#supplierModal">
-            <i class="bi bi-plus-lg me-2"></i>Add Supplier
-        </button>
+        <div class="d-flex gap-2">
+            <button class="btn btn-pdf-export" onclick="exportTableToPDF('Suppliers Report', 'suppliersTableBody', ['Code','Supplier','Email','Phone','Status'])">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Export PDF
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#supplierModal">
+                <i class="bi bi-plus-lg me-2"></i>Add Supplier
+            </button>
+        </div>
     </div>
 
     <!-- Suppliers Table -->

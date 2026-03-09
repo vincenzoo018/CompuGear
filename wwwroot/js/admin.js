@@ -5,7 +5,7 @@
 
 // Global Configuration
 const CONFIG = {
-    currency: 'â‚±',
+    currency: '\u20B1',
     dateFormat: 'en-PH',
     apiBase: '/api'
 };
@@ -18,42 +18,7 @@ const Icons = {
     toggleOff: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="8" cy="12" r="3"/></svg>'
 };
 
-// Toast Notification System
-const Toast = {
-    container: null,
-
-    init() {
-        if (!this.container) {
-            this.container = document.createElement('div');
-            this.container.id = 'toast-container';
-            this.container.className = 'toast-container position-fixed top-0 end-0 p-3';
-            this.container.style.zIndex = '9999';
-            document.body.appendChild(this.container);
-        }
-    },
-
-    show(message, type = 'success', duration = 4000) {
-        this.init();
-        const toast = document.createElement('div');
-        toast.className = `toast align-items-center text-white border-0 show`;
-        toast.style.backgroundColor = type === 'success' ? '#008080' : type === 'error' ? '#dc3545' : type === 'warning' ? '#ff6b35' : '#008080';
-        toast.innerHTML = `
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'exclamation-circle'} me-2"></i>
-                    ${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button>
-            </div>
-        `;
-        this.container.appendChild(toast);
-        setTimeout(() => toast.remove(), duration);
-    },
-
-    success(message) { this.show(message, 'success'); },
-    error(message) { this.show(message, 'error'); },
-    warning(message) { this.show(message, 'warning'); }
-};
+// Toast: provided globally by site.js (Toast.success/error/warning)
 
 // Loading Spinner
 const Loader = {
@@ -1322,10 +1287,10 @@ const Inventory = {
                             }
                             <div>
                                 <div class="fw-semibold">${p.productName}</div>
-                                <small class="text-muted">${p.sku || p.productCode}</small>
                             </div>
                         </div>
                     </td>
+                    <td>${p.sku || p.productCode || '-'}</td>
                     <td>${p.categoryName || '-'}</td>
                     <td>${p.brandName || '-'}</td>
                     <td class="text-end">${Format.currency(p.costPrice)}</td>
@@ -1336,10 +1301,6 @@ const Inventory = {
                         </span>
                     </td>
                     <td>${Format.statusBadge(p.status)}</td>
-                    <td class="text-center">
-                        ${p.isFeatured ? '<i class="bi bi-star-fill text-warning"></i>' : ''}
-                        ${p.isOnSale ? '<span class="badge bg-danger">Sale</span>' : ''}
-                    </td>
                     <td class="text-center">
                         <div class="btn-group">
                             <button class="btn btn-sm btn-outline-primary" onclick="Inventory.products.view(${p.productId})" title="View">
@@ -1638,10 +1599,10 @@ const Inventory = {
                             }
                             <div>
                                 <div class="fw-semibold">${p.productName}</div>
-                                <small class="text-muted">${p.sku || p.productCode}</small>
                             </div>
                         </div>
                     </td>
+                    <td>${p.sku || p.productCode || '-'}</td>
                     <td>${p.categoryName || '-'}</td>
                     <td>${p.brandName || '-'}</td>
                     <td class="text-end">${Format.currency(p.costPrice)}</td>
@@ -1652,10 +1613,6 @@ const Inventory = {
                         </span>
                     </td>
                     <td>${Format.statusBadge(p.status)}</td>
-                    <td class="text-center">
-                        ${p.isFeatured ? '<i class="bi bi-star-fill text-warning"></i>' : ''}
-                        ${p.isOnSale ? '<span class="badge bg-danger">Sale</span>' : ''}
-                    </td>
                     <td class="text-center">
                         <div class="btn-group">
                             <button class="btn btn-sm btn-outline-primary" onclick="Inventory.products.view(${p.productId})" title="View">
@@ -3871,7 +3828,7 @@ const CustomerPortal = {
                                 <small class="text-muted">Use code:</small>
                                 <div class="code-box bg-light p-2 rounded mt-1 d-flex justify-content-between align-items-center">
                                     <code class="fw-bold">${p.promotionCode}</code>
-                                    <button class="btn btn-sm btn-outline-teal" onclick="CustomerPortal.copyCode('${p.promotionCode}')">
+                                    <button class="btn btn-sm btn-outline-teal" onclick="CustomerPortal.copyCode('${p.promotionCode}')" title="Copy Code">
                                         <i class="bi bi-clipboard"></i>
                                     </button>
                                 </div>

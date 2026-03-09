@@ -159,7 +159,7 @@ const COAModule = {
                 <td class="text-end"><strong>${formatCurrency(a.displayBalance)}</strong></td>
                 <td class="text-center">
                     <div class="d-flex gap-1 justify-content-center">
-                        <button class="btn btn-sm btn-outline-primary" onclick="COAModule.edit(${a.accountId})" title="Edit">
+                        <button class="btn btn-sm btn-outline-warning" onclick="COAModule.edit(${a.accountId})" title="Edit">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
                         <button class="btn btn-sm btn-outline-danger" onclick="COAModule.archive(${a.accountId}, '${a.accountName.replace(/'/g, "\\'")}')" title="Archive">
@@ -338,11 +338,11 @@ const JEModule = {
                 <td class="text-center">${statusBadge(e.status)}</td>
                 <td class="text-center">
                     <div class="d-flex gap-1 justify-content-center">
-                        <button class="btn btn-sm btn-outline-info" onclick="JEModule.view(${e.entryId})" title="View">
+                        <button class="btn btn-sm btn-outline-primary" onclick="JEModule.view(${e.entryId})" title="View">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
                         ${e.source === 'Manual' && e.status === 'Draft' ? `
-                        <button class="btn btn-sm btn-outline-primary" onclick="JEModule.edit(${e.entryId})" title="Edit">
+                        <button class="btn btn-sm btn-outline-warning" onclick="JEModule.edit(${e.entryId})" title="Edit">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
                         <button class="btn btn-sm btn-outline-success" onclick="JEModule.post(${e.entryId})" title="Post">
@@ -453,7 +453,7 @@ const JEModule = {
             <td><input type="text" class="form-control form-control-sm line-desc" placeholder="Description"></td>
             <td><input type="number" class="form-control form-control-sm line-debit text-end" step="0.01" min="0" placeholder="0.00" oninput="JEModule.onDebitInput(this)"></td>
             <td><input type="number" class="form-control form-control-sm line-credit text-end" step="0.01" min="0" placeholder="0.00" oninput="JEModule.onCreditInput(this)"></td>
-            <td class="text-center"><button class="btn btn-sm btn-outline-danger" onclick="JEModule.removeLine(this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></td>
+            <td class="text-center"><button class="btn btn-sm btn-outline-danger" onclick="JEModule.removeLine(this)" title="Remove Line"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></td>
         `;
         document.getElementById('jeLinesBody').appendChild(row);
     },

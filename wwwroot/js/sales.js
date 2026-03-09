@@ -5,7 +5,7 @@
 
 // Global Configuration
 const CONFIG = {
-    currency: 'â‚±',
+    currency: '\u20B1',
     dateFormat: 'en-PH',
     apiBase: '/api'
 };
@@ -23,31 +23,7 @@ const Icons = {
     delete: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'
 };
 
-// Toast Notification System
-const Toast = {
-    container: null,
-    init() {
-        if (!this.container) {
-            this.container = document.createElement('div');
-            this.container.id = 'toast-container';
-            this.container.className = 'toast-container position-fixed top-0 end-0 p-3';
-            this.container.style.zIndex = '9999';
-            document.body.appendChild(this.container);
-        }
-    },
-    show(message, type = 'success', duration = 4000) {
-        this.init();
-        const toast = document.createElement('div');
-        toast.className = 'toast align-items-center text-white border-0 show';
-        toast.style.backgroundColor = type === 'success' ? '#008080' : type === 'error' ? '#dc3545' : type === 'warning' ? '#ff6b35' : '#008080';
-        toast.innerHTML = `<div class="d-flex"><div class="toast-body"><i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'exclamation-circle'} me-2"></i>${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button></div>`;
-        this.container.appendChild(toast);
-        setTimeout(() => toast.remove(), duration);
-    },
-    success(msg) { this.show(msg, 'success'); },
-    error(msg) { this.show(msg, 'error'); },
-    warning(msg) { this.show(msg, 'warning'); }
-};
+// Toast: provided globally by site.js (Toast.success/error/warning)
 
 // API Helper
 const API = {
@@ -577,17 +553,12 @@ const SalesOrders = {
     },
 
     exportOrders() {
-        const rows = [['Order #', 'Customer', 'Date', 'Items', 'Amount', 'Order Status', 'Payment Status']];
-        this.data.forEach(o => {
-            rows.push([o.orderNumber, o.customerName || '', new Date(o.orderDate).toLocaleDateString(), o.itemCount, o.totalAmount.toFixed(2), o.orderStatus, o.paymentStatus]);
+        var headers = ['Order #', 'Customer', 'Date', 'Items', 'Amount', 'Order Status', 'Payment Status'];
+        var rows = [];
+        this.data.forEach(function(o) {
+            rows.push([o.orderNumber, o.customerName || '', new Date(o.orderDate).toLocaleDateString(), String(o.itemCount), o.totalAmount.toFixed(2), o.orderStatus, o.paymentStatus]);
         });
-        const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `orders_${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-        Toast.success('Orders exported!');
+        exportDataToPDF('Sales Orders Report', headers, rows);
     }
 };
 
@@ -823,9 +794,9 @@ const SalesLeads = {
                 <td class="text-center">${Format.date(l.createdAt)}</td>
                 <td class="text-center">
                     <div class="btn-group">
-                        <button class="btn btn-sm btn-outline-primary" onclick="SalesLeads.view(${l.leadId})">${Icons.view}</button>
-                        <button class="btn btn-sm btn-outline-warning" onclick="SalesLeads.edit(${l.leadId})">${Icons.edit}</button>
-                        <button class="btn btn-sm btn-outline-${l.status === 'Inactive' ? 'success' : 'danger'}" onclick="SalesLeads.toggleStatus(${l.leadId})">
+                        <button class="btn btn-sm btn-outline-primary" onclick="SalesLeads.view(${l.leadId})" title="View">${Icons.view}</button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="SalesLeads.edit(${l.leadId})" title="Edit">${Icons.edit}</button>
+                        <button class="btn btn-sm btn-outline-${l.status === 'Inactive' ? 'success' : 'danger'}" onclick="SalesLeads.toggleStatus(${l.leadId})" title="${l.status === 'Inactive' ? 'Activate' : 'Deactivate'}">
                             ${l.status === 'Inactive' ? Icons.toggleOn : Icons.toggleOff}
                         </button>
                         <button class="btn btn-sm btn-outline-danger" onclick="SalesLeads.delete(${l.leadId})" title="Delete">${Icons.delete}</button>
@@ -963,7 +934,7 @@ const SalesProducts = {
                 <td class="text-end">${Format.currency(p.sellingPrice)}</td>
                 <td class="text-center"><span class="badge ${p.stockQuantity > 10 ? 'bg-success' : p.stockQuantity > 0 ? 'bg-warning' : 'bg-danger'}">${p.stockQuantity} in stock</span></td>
                 <td class="text-center">${Format.statusBadge(p.status)}</td>
-                <td class="text-center"><button class="btn btn-sm btn-outline-primary" onclick="SalesProducts.view(${p.productId})">${Icons.view}</button></td>
+                <td class="text-center"><button class="btn btn-sm btn-outline-primary" onclick="SalesProducts.view(${p.productId})" title="View Details">${Icons.view}</button></td>
             </tr>
         `).join('');
         if (typeof initPagination === 'function') initPagination('productsTableBody', 'salesProductsPagination', 10);

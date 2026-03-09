@@ -19,30 +19,7 @@ const Icons = {
     download: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'
 };
 
-// Toast System
-const Toast = {
-    container: null,
-    init() {
-        if (!this.container) {
-            this.container = document.createElement('div');
-            this.container.className = 'toast-container position-fixed top-0 end-0 p-3';
-            this.container.style.zIndex = '9999';
-            document.body.appendChild(this.container);
-        }
-    },
-    show(message, type = 'success', duration = 4000) {
-        this.init();
-        const toast = document.createElement('div');
-        toast.className = 'toast align-items-center text-white border-0 show';
-        toast.style.backgroundColor = type === 'success' ? '#008080' : type === 'error' ? '#dc3545' : '#ff6b35';
-        toast.innerHTML = `<div class="d-flex"><div class="toast-body">${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button></div>`;
-        this.container.appendChild(toast);
-        setTimeout(() => toast.remove(), duration);
-    },
-    success(message) { this.show(message, 'success'); },
-    error(message) { this.show(message, 'error'); },
-    warning(message) { this.show(message, 'warning'); }
-};
+// Toast: provided globally by site.js (Toast.success/error/warning)
 
 // API Helper
 const API = {
@@ -668,7 +645,7 @@ const CustomerAccounts = {
             <td>${c.totalOrders || 0}</td>
             <td class="text-end">${Format.currency(c.totalSpent)}</td>
             <td class="text-end">${Format.currency(c.balance || 0)}</td>
-            <td class="text-center"><button class="btn btn-sm btn-outline-primary" onclick="CustomerAccounts.viewStatement(${c.customerId})">${Icons.view}</button></td>
+            <td class="text-center"><button class="btn btn-sm btn-outline-primary" onclick="CustomerAccounts.viewStatement(${c.customerId})" title="View Statement">${Icons.view}</button></td>
         </tr>`).join('');
     },
 
@@ -721,7 +698,7 @@ const CustomerAccounts = {
             <td>${c.totalOrders || 0}</td>
             <td class="text-end">${Format.currency(c.totalSpent)}</td>
             <td class="text-end">${Format.currency(c.balance || 0)}</td>
-            <td class="text-center"><button class="btn btn-sm btn-outline-primary" onclick="CustomerAccounts.viewStatement(${c.customerId})">${Icons.view}</button></td>
+            <td class="text-center"><button class="btn btn-sm btn-outline-primary" onclick="CustomerAccounts.viewStatement(${c.customerId})" title="View Statement">${Icons.view}</button></td>
         </tr>`).join('');
     }
 };
