@@ -1154,6 +1154,141 @@
         </svg>
     </button>
 
+    <!-- Help Center Sidebar -->
+    <div class="helpcenter-fab" id="helpCenterFab" onclick="toggleHelpCenter()" title="Help Center">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span class="fab-label">Help</span>
+    </div>
+    <div class="helpcenter-overlay" id="helpCenterOverlay" onclick="toggleHelpCenter()"></div>
+    <div class="helpcenter-panel" id="helpCenterPanel">
+        <div class="hc-header">
+            <div class="hc-header-top">
+                <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> Help Center</h3>
+                <button class="hc-close" onclick="toggleHelpCenter()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+            <div class="hc-search">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="hcSearchInput" placeholder="Search help articles..." oninput="hcSearchArticles()">
+            </div>
+        </div>
+        <div class="hc-body" id="hcBody">
+            <div class="hc-view" id="hcCategoriesView">
+                <div class="hc-section-label">Browse by Category</div>
+                <div id="hcCategoriesList" class="hc-categories"></div>
+                <div class="hc-section-label" style="margin-top:20px;">Popular Articles</div>
+                <div id="hcPopularArticles" class="hc-articles-list"></div>
+            </div>
+            <div class="hc-view" id="hcArticlesView" style="display:none;">
+                <button class="hc-back-btn" onclick="hcShowCategories()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back to Categories</button>
+                <h4 class="hc-category-title" id="hcCategoryTitle"></h4>
+                <div id="hcArticlesList" class="hc-articles-list"></div>
+            </div>
+            <div class="hc-view" id="hcArticleView" style="display:none;">
+                <button class="hc-back-btn" id="hcArticleBackBtn" onclick="hcGoBackFromArticle()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Back</button>
+                <div class="hc-article-detail">
+                    <span class="hc-article-cat" id="hcArticleCat"></span>
+                    <h3 class="hc-article-title" id="hcArticleTitle"></h3>
+                    <div class="hc-article-meta" id="hcArticleMeta"></div>
+                    <div class="hc-article-content" id="hcArticleContent"></div>
+                    <div class="hc-article-feedback" id="hcArticleFeedback">
+                        <p>Was this article helpful?</p>
+                        <div class="hc-feedback-btns">
+                            <button class="hc-fb-btn hc-fb-yes" onclick="hcRateArticle(true)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg> Yes</button>
+                            <button class="hc-fb-btn hc-fb-no" onclick="hcRateArticle(false)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg> No</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="hc-view" id="hcSearchView" style="display:none;">
+                <button class="hc-back-btn" onclick="hcClearSearch()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg> Clear Search</button>
+                <div class="hc-section-label" id="hcSearchLabel">Search Results</div>
+                <div id="hcSearchResults" class="hc-articles-list"></div>
+            </div>
+            <div class="hc-empty" id="hcEmpty" style="display:none;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <p>No articles found</p>
+            </div>
+        </div>
+        <div class="hc-footer">
+            <span>Can't find what you need?</span>
+            <a href="/CustomerPortal/Support">Chat with Support</a>
+            <span>&middot;</span>
+            <a href="/CustomerPortal/SubmitTicket">Submit Ticket</a>
+        </div>
+    </div>
+
+    <style>
+        .helpcenter-fab{position:fixed;bottom:90px;right:28px;z-index:9998;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#0f766e);color:#fff;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(13,148,136,.4);display:flex;align-items:center;justify-content:center;transition:all .3s ease;overflow:hidden}
+        .helpcenter-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(13,148,136,.5);width:auto;border-radius:28px;padding:0 22px;gap:8px}
+        .helpcenter-fab .fab-label{display:none;font-weight:600;font-size:.9rem;white-space:nowrap}
+        .helpcenter-fab:hover .fab-label{display:inline}
+        .helpcenter-fab.active{background:linear-gradient(135deg,#dc2626,#ef4444);box-shadow:0 4px 20px rgba(220,38,38,.4)}
+        .helpcenter-fab.active svg{transform:rotate(45deg)}
+        .helpcenter-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:9998;backdrop-filter:blur(2px)}
+        .helpcenter-overlay.open{display:block}
+        .helpcenter-panel{position:fixed;top:0;right:-420px;width:400px;height:100vh;background:#fff;z-index:9999;box-shadow:-4px 0 30px rgba(0,0,0,.15);display:flex;flex-direction:column;transition:right .35s cubic-bezier(.4,0,.2,1);font-family:'Inter',sans-serif}
+        .helpcenter-panel.open{right:0}
+        @@media(max-width:480px){.helpcenter-panel{width:100%;right:-100%}}
+        .hc-header{background:linear-gradient(135deg,#0d9488 0%,#0f766e 100%);color:#fff;padding:20px;flex-shrink:0}
+        .hc-header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+        .hc-header-top h3{display:flex;align-items:center;gap:10px;font-size:1.15rem;font-weight:700;margin:0}
+        .hc-close{background:rgba(255,255,255,.15);border:none;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+        .hc-close:hover{background:rgba(255,255,255,.25)}
+        .hc-search{position:relative;display:flex;align-items:center}
+        .hc-search svg{position:absolute;left:14px;color:#9ca3af}
+        .hc-search input{width:100%;padding:12px 16px 12px 42px;border:none;border-radius:12px;font-size:.9rem;font-family:inherit;background:rgba(255,255,255,.95);color:#1f2937}
+        .hc-search input:focus{outline:none;box-shadow:0 0 0 3px rgba(255,255,255,.3)}
+        .hc-search input::placeholder{color:#9ca3af}
+        .hc-body{flex:1;overflow-y:auto;padding:20px}
+        .hc-body::-webkit-scrollbar{width:5px}
+        .hc-body::-webkit-scrollbar-track{background:transparent}
+        .hc-body::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:10px}
+        .hc-section-label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b7280;margin-bottom:12px}
+        .hc-categories{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+        .hc-cat-card{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px 14px;cursor:pointer;transition:all .2s;text-align:center}
+        .hc-cat-card:hover{border-color:#0d9488;background:#f0fdfa;transform:translateY(-2px);box-shadow:0 4px 12px rgba(13,148,136,.1)}
+        .hc-cat-icon{font-size:1.6rem;margin-bottom:6px;display:block}
+        .hc-cat-name{font-size:.82rem;font-weight:600;color:#1f2937;line-height:1.3}
+        .hc-cat-count{font-size:.7rem;color:#9ca3af;margin-top:2px}
+        .hc-articles-list{display:flex;flex-direction:column;gap:8px}
+        .hc-article-item{display:flex;align-items:flex-start;gap:12px;padding:14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:all .2s}
+        .hc-article-item:hover{border-color:#0d9488;background:#f0fdfa}
+        .hc-article-item-icon{width:36px;height:36px;background:linear-gradient(135deg,#0d9488,#14b8a6);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-size:.85rem}
+        .hc-article-item-info{flex:1;min-width:0}
+        .hc-article-item-title{font-size:.88rem;font-weight:600;color:#1f2937;margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+        .hc-article-item-meta{font-size:.72rem;color:#9ca3af;display:flex;gap:10px}
+        .hc-back-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;font-size:.82rem;font-weight:500;color:#374151;cursor:pointer;transition:all .2s;margin-bottom:16px}
+        .hc-back-btn:hover{background:#e5e7eb}
+        .hc-category-title{font-size:1.05rem;font-weight:700;color:#1f2937;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+        .hc-article-detail{line-height:1.7}
+        .hc-article-cat{display:inline-block;background:#f0fdfa;color:#0d9488;padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:600;margin-bottom:10px}
+        .hc-article-detail .hc-article-title{font-size:1.15rem;font-weight:700;color:#1f2937;margin-bottom:8px;line-height:1.4}
+        .hc-article-meta{font-size:.78rem;color:#9ca3af;margin-bottom:20px;display:flex;gap:14px}
+        .hc-article-content{font-size:.9rem;color:#374151;line-height:1.8;white-space:pre-wrap}
+        .hc-article-content p{margin-bottom:12px}
+        .hc-article-feedback{margin-top:28px;padding-top:20px;border-top:1px solid #e5e7eb;text-align:center}
+        .hc-article-feedback p{font-size:.88rem;font-weight:600;color:#374151;margin-bottom:12px}
+        .hc-feedback-btns{display:flex;gap:10px;justify-content:center}
+        .hc-fb-btn{display:inline-flex;align-items:center;gap:6px;padding:10px 22px;border-radius:10px;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;border:2px solid #e5e7eb;background:#fff;color:#374151}
+        .hc-fb-btn:hover{transform:translateY(-1px)}
+        .hc-fb-yes:hover{border-color:#10b981;background:#ecfdf5;color:#059669}
+        .hc-fb-no:hover{border-color:#ef4444;background:#fef2f2;color:#dc2626}
+        .hc-fb-btn.selected{pointer-events:none}
+        .hc-fb-yes.selected{border-color:#10b981;background:#10b981;color:#fff}
+        .hc-fb-no.selected{border-color:#ef4444;background:#ef4444;color:#fff}
+        .hc-footer{padding:14px 20px;border-top:1px solid #e5e7eb;background:#f9fafb;font-size:.8rem;color:#6b7280;text-align:center;flex-shrink:0;display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}
+        .hc-footer a{color:#0d9488;font-weight:600;text-decoration:none}
+        .hc-footer a:hover{text-decoration:underline}
+        .hc-empty{text-align:center;padding:40px 20px;color:#9ca3af}
+        .hc-empty p{margin-top:12px;font-size:.9rem}
+        .hc-loading{display:flex;align-items:center;justify-content:center;padding:40px}
+        .hc-spinner{width:32px;height:32px;border:3px solid #e5e7eb;border-top:3px solid #0d9488;border-radius:50%;animation:hcSpin .8s linear infinite}
+        @@keyframes hcSpin{to{transform:rotate(360deg)}}
+    </style>
+
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -1356,6 +1491,129 @@
                 if (window.scrollY > 300) { scrollTop.classList.add('visible'); } else { scrollTop.classList.remove('visible'); }
             });
         });
+    </script>
+        <script>
+        // ===== HELP CENTER =====
+        let hcCategories = [], hcAllArticles = [], hcCurrentArticleId = null, hcPreviousView = 'categories';
+        const catIcons = ['','','','','','','','','','','',''];
+        function toggleHelpCenter() {
+            const panel = document.getElementById('helpCenterPanel');
+            const overlay = document.getElementById('helpCenterOverlay');
+            const fab = document.getElementById('helpCenterFab');
+            const isOpen = panel.classList.contains('open');
+            if (isOpen) {
+                panel.classList.remove('open'); overlay.classList.remove('open'); fab.classList.remove('active');
+            } else {
+                panel.classList.add('open'); overlay.classList.add('open'); fab.classList.add('active');
+                if (hcCategories.length === 0) hcLoadData();
+            }
+        }
+        async function hcLoadData() {
+            ['hcCategoriesView','hcArticlesView','hcArticleView','hcSearchView'].forEach(id => {
+                const el = document.getElementById(id); if(el) el.style.display='none';
+            });
+            document.getElementById('hcEmpty').style.display='none';
+            const loadingEl = document.createElement('div');
+            loadingEl.className='hc-loading'; loadingEl.id='hcLoadingSpinner';
+            loadingEl.innerHTML='<div class="hc-spinner"></div>';
+            document.getElementById('hcBody').appendChild(loadingEl);
+            try {
+                const [catRes, artRes] = await Promise.all([
+                    fetch('/CustomerPortal/GetHelpCategories'), fetch('/CustomerPortal/GetHelpArticles')
+                ]);
+                if (!catRes.ok || !artRes.ok) throw new Error('API error');
+                hcCategories = await catRes.json(); hcAllArticles = await artRes.json();
+                const spinner = document.getElementById('hcLoadingSpinner'); if(spinner) spinner.remove();
+                hcRenderCategories(); hcRenderPopular();
+                document.getElementById('hcCategoriesView').style.display='';
+            } catch(e) {
+                const spinner = document.getElementById('hcLoadingSpinner'); if(spinner) spinner.remove();
+                document.getElementById('hcEmpty').style.display='';
+                document.getElementById('hcEmpty').querySelector('p').textContent='Unable to load help articles';
+            }
+        }
+        function hcRenderCategories() {
+            const el = document.getElementById('hcCategoriesList'); if(!el) return;
+            el.innerHTML = hcCategories.map((c,i) => 
+                '<div class="hc-cat-card" onclick="hcShowCategory('+c.categoryId+',\''+hcEsc(c.categoryName)+'\')">'+
+                '<span class="hc-cat-icon">'+(catIcons[i%catIcons.length])+'</span>'+
+                '<div class="hc-cat-name">'+hcEsc(c.categoryName)+'</div>'+
+                '<div class="hc-cat-count">'+c.articleCount+' article'+(c.articleCount!==1?'s':'')+'</div></div>'
+            ).join('');
+        }
+        function hcRenderPopular() {
+            const el = document.getElementById('hcPopularArticles'); if(!el) return;
+            const popular = hcAllArticles.slice(0,5);
+            el.innerHTML = popular.map(a => hcArticleCard(a)).join('');
+            if(!popular.length) el.innerHTML = '<p style="color:#9ca3af;font-size:.85rem;">No articles yet</p>';
+        }
+        function hcArticleCard(a) {
+            const cat = hcCategories.find(c=>c.categoryId===a.categoryId);
+            return '<div class="hc-article-item" onclick="hcViewArticle('+a.articleId+')">'+
+                '<div class="hc-article-item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>'+
+                '<div class="hc-article-item-info"><div class="hc-article-item-title">'+hcEsc(a.title)+'</div>'+
+                '<div class="hc-article-item-meta"><span>'+(cat?hcEsc(cat.categoryName):'')+'</span><span>'+a.viewCount+' views</span></div></div></div>';
+        }
+        function hcShowCategory(catId, catName) {
+            hcPreviousView='categories';
+            const articles = hcAllArticles.filter(a=>a.categoryId===catId);
+            document.getElementById('hcCategoryTitle').textContent = catName;
+            document.getElementById('hcArticlesList').innerHTML = articles.length ? articles.map(a=>hcArticleCard(a)).join('') : '<div class="hc-empty"><p>No articles in this category</p></div>';
+            hcSwitchView('hcArticlesView');
+        }
+        function hcShowCategories() { hcSwitchView('hcCategoriesView'); }
+        async function hcViewArticle(id) {
+            if(document.getElementById('hcArticlesView').style.display!=='none') hcPreviousView='articles';
+            else if(document.getElementById('hcSearchView').style.display!=='none') hcPreviousView='search';
+            else hcPreviousView='categories';
+            hcCurrentArticleId = id;
+            hcSwitchView('hcArticleView');
+            document.getElementById('hcArticleContent').innerHTML='<div class="hc-loading"><div class="hc-spinner"></div></div>';
+            try {
+                const res = await fetch('/CustomerPortal/GetHelpArticle?id='+id);
+                const a = await res.json();
+                const cat = hcCategories.find(c=>c.categoryId===a.categoryId);
+                document.getElementById('hcArticleCat').textContent = cat ? cat.categoryName : '';
+                document.getElementById('hcArticleTitle').textContent = a.title;
+                document.getElementById('hcArticleMeta').innerHTML = '<span>'+a.viewCount+' views</span><span>'+new Date(a.publishedAt||a.createdAt).toLocaleDateString()+'</span>';
+                document.getElementById('hcArticleContent').innerHTML = a.content || a.summary || 'No content available';
+                document.getElementById('hcArticleFeedback').style.display='';
+                document.querySelectorAll('.hc-fb-btn').forEach(b=>{b.classList.remove('selected');b.style.pointerEvents='';});
+            } catch(e) { document.getElementById('hcArticleContent').innerHTML='<p style="color:#ef4444;">Failed to load article</p>'; }
+        }
+        function hcGoBackFromArticle() { hcSwitchView(hcPreviousView==='articles'?'hcArticlesView':hcPreviousView==='search'?'hcSearchView':'hcCategoriesView'); }
+        let hcSearchTimeout;
+        function hcSearchArticles() {
+            clearTimeout(hcSearchTimeout);
+            const q = document.getElementById('hcSearchInput').value.trim();
+            if(!q) { hcClearSearch(); return; }
+            hcSearchTimeout = setTimeout(async () => {
+                hcSwitchView('hcSearchView');
+                document.getElementById('hcSearchResults').innerHTML='<div class="hc-loading"><div class="hc-spinner"></div></div>';
+                try {
+                    const res = await fetch('/CustomerPortal/GetHelpArticles?search='+encodeURIComponent(q));
+                    const articles = await res.json();
+                    document.getElementById('hcSearchLabel').textContent='Search Results ('+articles.length+')';
+                    document.getElementById('hcSearchResults').innerHTML = articles.length ? articles.map(a=>hcArticleCard(a)).join('') : '';
+                    document.getElementById('hcEmpty').style.display = articles.length ? 'none' : '';
+                } catch(e) { document.getElementById('hcSearchResults').innerHTML='<p style="color:#ef4444;">Search failed</p>'; }
+            }, 300);
+        }
+        function hcClearSearch() { document.getElementById('hcSearchInput').value=''; hcSwitchView('hcCategoriesView'); document.getElementById('hcEmpty').style.display='none'; }
+        async function hcRateArticle(helpful) {
+            try {
+                await fetch('/CustomerPortal/RateHelpArticle', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({articleId:hcCurrentArticleId,helpful:helpful}) });
+                document.querySelectorAll('.hc-fb-btn').forEach(b=>b.style.pointerEvents='none');
+                document.querySelector(helpful?'.hc-fb-yes':'.hc-fb-no').classList.add('selected');
+            } catch(e) {}
+        }
+        function hcSwitchView(viewId) {
+            ['hcCategoriesView','hcArticlesView','hcArticleView','hcSearchView'].forEach(id => {
+                const el = document.getElementById(id); if(el) el.style.display = id===viewId ? '' : 'none';
+            });
+            document.getElementById('hcEmpty').style.display='none';
+        }
+        function hcEsc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

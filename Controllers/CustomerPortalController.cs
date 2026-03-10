@@ -3130,6 +3130,155 @@ namespace CompuGear.Controllers
         }
 
         #endregion
+
+        #region Knowledge Base / Help Center API
+
+        // GET: /CustomerPortal/GetHelpCategories
+        [HttpGet]
+        public async Task<IActionResult> GetHelpCategories()
+        {
+            try
+            {
+                var categories = await _context.KnowledgeCategories
+                    .AsNoTracking()
+                    .Where(c => c.IsActive)
+                    .OrderBy(c => c.DisplayOrder)
+                    .ThenBy(c => c.CategoryName)
+                    .Select(c => new
+                    {
+                        c.CategoryId,
+                        c.CategoryName,
+                        c.Description,
+                        ArticleCount = c.Articles.Count(a => a.Status == "Published")
+                    })
+                    .ToListAsync();
+
+                return Json(categories);
+            }
+            catch
+            {
+                return Json(new List<object>());
+            }
+        }
+
+        // GET: /CustomerPortal/GetHelpArticles
+        [HttpGet]
+        public async Task<IActionResult> GetHelpArticles(int? categoryId = null, string? search = null)
+        {
+            try
+            {
+                var query = _context.KnowledgeArticles
+                    .AsNoTracking()
+                    .Include(a => a.Category)
+                    .Where(a => a.Status == "Published");
+
+                if (categoryId.HasValue)
+                    query = query.Where(a => a.CategoryId == categoryId.Value);
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    query = query.Where(a =>
+                        a.Title.Contains(search) ||
+                        (a.Content != null && a.Content.Contains(search)) ||
+                        (a.Summary != null && a.Summary.Contains(search)) ||
+                        (a.Tags != null && a.Tags.Contains(search))
+                    );
+                }
+
+                var articles = await query
+                    .OrderByDescending(a => a.ViewCount)
+                    .ThenByDescending(a => a.UpdatedAt)
+                    .Select(a => new
+                    {
+                        a.ArticleId,
+                        a.CategoryId,
+                        CategoryName = a.Category != null ? a.Category.CategoryName : null,
+                        a.Title,
+                        a.Summary,
+                        a.Tags,
+                        a.ViewCount,
+                        a.HelpfulCount,
+                        a.UpdatedAt
+                    })
+                    .ToListAsync();
+
+                return Json(articles);
+            }
+            catch
+            {
+                return Json(new List<object>());
+            }
+        }
+
+        // GET: /CustomerPortal/GetHelpArticle/{id}
+        [HttpGet]
+        public async Task<IActionResult> GetHelpArticle(int id)
+        {
+            try
+            {
+                var article = await _context.KnowledgeArticles
+                    .Include(a => a.Category)
+                    .FirstOrDefaultAsync(a => a.ArticleId == id && a.Status == "Published");
+
+                if (article == null)
+                    return NotFound();
+
+                article.ViewCount += 1;
+                await _context.SaveChangesAsync();
+
+                return Json(new
+                {
+                    article.ArticleId,
+                    article.CategoryId,
+                    CategoryName = article.Category?.CategoryName,
+                    article.Title,
+                    article.Content,
+                    article.Summary,
+                    article.Tags,
+                    article.ViewCount,
+                    article.HelpfulCount,
+                    article.PublishedAt,
+                    article.CreatedAt,
+                    article.UpdatedAt
+                });
+            }
+            catch
+            {
+                return Json(new { success = false, message = "Error loading article" });
+            }
+        }
+
+        // POST: /CustomerPortal/RateHelpArticle
+        [HttpPost]
+        public async Task<IActionResult> RateHelpArticle([FromBody] HelpArticleRatingModel model)
+        {
+            try
+            {
+                var article = await _context.KnowledgeArticles.FindAsync(model.ArticleId);
+                if (article == null)
+                    return Json(new { success = false, message = "Article not found" });
+
+                if (model.Helpful)
+                    article.HelpfulCount += 1;
+                else
+                    article.NotHelpfulCount += 1;
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Thank you for your feedback!" });
+            }
+            catch
+            {
+                return Json(new { success = false, message = "Error submitting feedback" });
+            }
+        }
+
+        #endregion
+    }
+
+    public class HelpArticleRatingModel
+    {
+        public int ArticleId { get; set; }
+        public bool Helpful { get; set; }
     }
 
     public class CustomerProfileUpdateModel
