@@ -2200,20 +2200,33 @@ namespace CompuGear.Controllers
             if (user == null)
                 return Json(new { success = false, message = "User account not found" });
 
-            // Verify current password using simple hash comparison
-            // (Since BCrypt is not installed, compare with stored hash directly)
-            var currentHash = Convert.ToBase64String(System.Security.Cryptography.SHA256.Create().ComputeHash(System.Text.Encoding.UTF8.GetBytes(model.CurrentPassword)));
-            if (user.PasswordHash != currentHash && user.PasswordHash != model.CurrentPassword)
+            // Verify current password using salt-based hash (matches AuthController logic)
+            var currentHash = Convert.ToBase64String(
+                System.Security.Cryptography.SHA256.HashData(
+                    System.Text.Encoding.UTF8.GetBytes(model.CurrentPassword + (user.Salt ?? ""))));
+            if (user.PasswordHash != currentHash)
                 return Json(new { success = false, message = "Current password is incorrect" });
 
-            if (model.NewPassword.Length < 8)
-                return Json(new { success = false, message = "New password must be at least 8 characters" });
+            // Validate new password: min 12 chars, 1 uppercase, 1 number, 1 special character
+            if (string.IsNullOrWhiteSpace(model.NewPassword) || model.NewPassword.Length < 12)
+                return Json(new { success = false, message = "New password must be at least 12 characters" });
+            if (!model.NewPassword.Any(char.IsUpper))
+                return Json(new { success = false, message = "Password must contain at least one uppercase letter" });
+            if (!model.NewPassword.Any(char.IsDigit))
+                return Json(new { success = false, message = "Password must contain at least one number" });
+            if (!model.NewPassword.Any(c => !char.IsLetterOrDigit(c)))
+                return Json(new { success = false, message = "Password must contain at least one special character" });
 
-            user.PasswordHash = Convert.ToBase64String(System.Security.Cryptography.SHA256.Create().ComputeHash(System.Text.Encoding.UTF8.GetBytes(model.NewPassword)));
+            // Generate new salt and hash
+            var newSalt = Guid.NewGuid().ToString("N").Substring(0, 16);
+            user.PasswordHash = Convert.ToBase64String(
+                System.Security.Cryptography.SHA256.HashData(
+                    System.Text.Encoding.UTF8.GetBytes(model.NewPassword + newSalt)));
+            user.Salt = newSalt;
             user.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true, message = "Password changed successfully" });
+            return Json(new { success = true, message = "Password changed successfully!" });
         }
 
         // POST: /CustomerPortal/UpdateEmailPreferences

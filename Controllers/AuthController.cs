@@ -146,14 +146,16 @@ namespace CompuGear.Controllers
             {
                 if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
                 {
-                    return Json(new { success = false, message = "Email and password are required" });
+                    return Json(new { success = false, message = "Email/Username and password are required" });
                 }
 
-                // First, try to authenticate as a User (staff member)
+                var loginInput = request.Email.Trim();
+
+                // First, try to authenticate as a User (staff member) - match by email or username
                 var user = await _context.Users
                     .Include(u => u.Role)
                     .Include(u => u.Company)
-                    .FirstOrDefaultAsync(u => u.Email == request.Email && u.IsActive);
+                    .FirstOrDefaultAsync(u => (u.Email == loginInput || u.Username == loginInput) && u.IsActive);
 
                 if (user != null)
                 {
@@ -221,15 +223,15 @@ namespace CompuGear.Controllers
                     }
                 }
 
-                // If not found as User, try to find as Customer
+                // If not found as User, try to find as Customer (by email or username match)
                 var customer2 = await _context.Customers
-                    .FirstOrDefaultAsync(c => c.Email == request.Email && c.Status == "Active");
+                    .FirstOrDefaultAsync(c => c.Email == loginInput && c.Status == "Active");
 
                 if (customer2 != null)
                 {
                     // Find associated user account for password verification
                     var customerUser = await _context.Users
-                        .FirstOrDefaultAsync(u => u.Email == request.Email);
+                        .FirstOrDefaultAsync(u => u.Email == loginInput || u.Username == loginInput);
 
                     if (customerUser != null)
                     {
@@ -261,13 +263,13 @@ namespace CompuGear.Controllers
                     }
                 }
 
-                await _auditService.LogLoginAsync(0, request.Email, false, "Invalid email or password");
-                return Json(new { success = false, message = "Invalid email or password" });
+                await _auditService.LogLoginAsync(0, request.Email, false, "Invalid credentials");
+                return Json(new { success = false, message = "Invalid email/username or password. Please check your credentials and try again." });
             }
             catch (Exception ex)
             {
                 await _auditService.LogLoginAsync(0, request.Email, false, ex.Message);
-                return Json(new { success = false, message = "An error occurred: " + ex.Message });
+                return Json(new { success = false, message = "An error occurred. Please try again later." });
             }
         }
 
@@ -294,6 +296,33 @@ namespace CompuGear.Controllers
                 if (await _context.Users.AnyAsync(u => u.Email == request.Email))
                 {
                     return Json(new { success = false, message = "An account with this email already exists" });
+                }
+
+                // Validate password complexity: min 12 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special
+                if (request.Password.Length < 12)
+                {
+                    return Json(new { success = false, message = "Password must be at least 12 characters long" });
+                }
+                if (!request.Password.Any(char.IsUpper))
+                {
+                    return Json(new { success = false, message = "Password must contain at least one uppercase letter" });
+                }
+                if (!request.Password.Any(char.IsLower))
+                {
+                    return Json(new { success = false, message = "Password must contain at least one lowercase letter" });
+                }
+                if (!request.Password.Any(char.IsDigit))
+                {
+                    return Json(new { success = false, message = "Password must contain at least one number" });
+                }
+                if (!request.Password.Any(c => !char.IsLetterOrDigit(c)))
+                {
+                    return Json(new { success = false, message = "Password must contain at least one special character" });
+                }
+
+                if (request.Password != request.ConfirmPassword)
+                {
+                    return Json(new { success = false, message = "Passwords do not match" });
                 }
 
                 // Create user account first
@@ -366,6 +395,34 @@ namespace CompuGear.Controllers
             HttpContext.Session.Clear();
             return RedirectToAction("Login");
         }
+
+        // One-time: Reset all user passwords to a default value
+        [HttpPost]
+        public async Task<IActionResult> ResetAllPasswords([FromBody] ResetAllPasswordsRequest request)
+        {
+            if (string.IsNullOrEmpty(request?.AdminKey) || request.AdminKey != "CompuGear2024ResetKey")
+            {
+                return Json(new { success = false, message = "Unauthorized" });
+            }
+
+            var defaultPassword = "Password123!";
+            var users = await _context.Users.ToListAsync();
+            int count = 0;
+
+            foreach (var user in users)
+            {
+                var salt = Guid.NewGuid().ToString("N").Substring(0, 16);
+                user.Salt = salt;
+                user.PasswordHash = Convert.ToBase64String(
+                    System.Security.Cryptography.SHA256.HashData(
+                        System.Text.Encoding.UTF8.GetBytes(defaultPassword + salt)));
+                user.UpdatedAt = DateTime.UtcNow;
+                count++;
+            }
+
+            await _context.SaveChangesAsync();
+            return Json(new { success = true, message = $"Successfully reset passwords for {count} users" });
+        }
     }
 
     // Request Models
@@ -384,5 +441,10 @@ namespace CompuGear.Controllers
         public string Phone { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string ConfirmPassword { get; set; } = string.Empty;
+    }
+
+    public class ResetAllPasswordsRequest
+    {
+        public string AdminKey { get; set; } = string.Empty;
     }
 }

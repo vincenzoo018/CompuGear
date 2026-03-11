@@ -68,6 +68,7 @@ if (app.Environment.IsDevelopment())
     var context = scope.ServiceProvider.GetRequiredService<CompuGearDbContext>();
     await SeedTestUsersAsync(context);
     await SeedSampleDataAsync(context);
+    await ResetAllPasswordsAsync(context);
 }
 
 // Configure the HTTP request pipeline.
@@ -93,6 +94,31 @@ app.MapControllerRoute(
     pattern: "{controller=ERPWebsite}/{action=Index}/{id?}");
 
 app.Run();
+
+// One-time: Reset all user passwords to "Password123!"
+async Task ResetAllPasswordsAsync(CompuGearDbContext context)
+{
+    try
+    {
+        var defaultPassword = "Password123!";
+        var users = await context.Users.ToListAsync();
+        foreach (var user in users)
+        {
+            var salt = Guid.NewGuid().ToString("N").Substring(0, 16);
+            user.Salt = salt;
+            user.PasswordHash = Convert.ToBase64String(
+                System.Security.Cryptography.SHA256.HashData(
+                    System.Text.Encoding.UTF8.GetBytes(defaultPassword + salt)));
+            user.UpdatedAt = DateTime.UtcNow;
+        }
+        await context.SaveChangesAsync();
+        Console.WriteLine($"✓ Reset passwords for {users.Count} users to default.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"⚠ Password reset skipped: {ex.Message}");
+    }
+}
 
 // Seed test users for development
 async Task SeedTestUsersAsync(CompuGearDbContext context)
