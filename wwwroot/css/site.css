@@ -352,6 +352,274 @@ body.dark-mode .badge {
 }
 
 /* =====================================================
+   Dark Mode - Chat / Live Chat Components
+   ===================================================== */
+
+/* Chat list card & main area */
+body.dark-mode .chat-list-card,
+body.dark-mode .chat-main,
+body.dark-mode .support-card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+/* Chat list header */
+body.dark-mode .chat-list-header {
+    border-color: #334155 !important;
+}
+
+body.dark-mode .chat-list-header h3 {
+    color: #f1f5f9 !important;
+}
+
+/* Chat items */
+body.dark-mode .chat-item {
+    border-color: #334155 !important;
+}
+
+body.dark-mode .chat-item:hover {
+    background-color: #334155 !important;
+}
+
+body.dark-mode .chat-item.active {
+    background: linear-gradient(135deg, #0f3d3d, #1a4040) !important;
+}
+
+body.dark-mode .chat-item-name {
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .chat-item-time {
+    color: #94a3b8 !important;
+}
+
+body.dark-mode .chat-item-preview {
+    color: #94a3b8 !important;
+}
+
+/* No chat selected placeholder */
+body.dark-mode .no-chat-selected {
+    color: #94a3b8 !important;
+}
+
+body.dark-mode .no-chat-selected svg {
+    stroke: #475569 !important;
+}
+
+body.dark-mode .no-chat-selected h3 {
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .no-chat-selected p {
+    color: #94a3b8 !important;
+}
+
+/* Chat header */
+body.dark-mode .chat-header {
+    border-color: #334155 !important;
+}
+
+body.dark-mode .chat-customer-details h4 {
+    color: #f1f5f9 !important;
+}
+
+body.dark-mode .chat-customer-details span {
+    color: #94a3b8 !important;
+}
+
+/* Chat messages container */
+body.dark-mode .chat-messages-container,
+body.dark-mode .chat-messages {
+    background-color: #0f172a !important;
+}
+
+/* Message bubbles */
+body.dark-mode .chat-message.customer .message-bubble,
+body.dark-mode .message.bot .message-content {
+    background-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .chat-message.system .message-bubble,
+body.dark-mode .message.system .message-content {
+    background-color: #1e293b !important;
+    color: #94a3b8 !important;
+}
+
+body.dark-mode .chat-message.bot .message-bubble {
+    background-color: #422006 !important;
+    color: #fbbf24 !important;
+}
+
+/* Chat input area */
+body.dark-mode .chat-input-container,
+body.dark-mode .chat-input-area {
+    border-color: #334155 !important;
+    background-color: #1e293b !important;
+}
+
+body.dark-mode .chat-input {
+    background-color: #0f172a !important;
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+}
+
+body.dark-mode .chat-input::placeholder {
+    color: #94a3b8 !important;
+}
+
+/* Quick responses */
+body.dark-mode .quick-responses {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+body.dark-mode .quick-responses-label {
+    color: #94a3b8 !important;
+}
+
+body.dark-mode .quick-response-btn,
+body.dark-mode .quick-reply {
+    background-color: #0f172a !important;
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+}
+
+body.dark-mode .quick-response-btn:hover,
+body.dark-mode .quick-reply:hover {
+    background-color: #0d9488 !important;
+    color: #ffffff !important;
+    border-color: #0d9488 !important;
+}
+
+/* Pending requests */
+body.dark-mode .pending-requests-card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+body.dark-mode .pending-requests-card h4 {
+    color: #fbbf24 !important;
+}
+
+body.dark-mode .pending-request {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+}
+
+body.dark-mode .pending-request-info h5 {
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .pending-request-info span {
+    color: #94a3b8 !important;
+}
+
+/* Empty state */
+body.dark-mode .empty-state {
+    color: #94a3b8 !important;
+}
+
+body.dark-mode .empty-state svg {
+    stroke: #475569 !important;
+}
+
+/* Customer portal support page */
+body.dark-mode .support-page {
+    background-color: #0f172a !important;
+}
+
+body.dark-mode .card-header {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+body.dark-mode .card-header h3 {
+    color: #f1f5f9 !important;
+}
+
+body.dark-mode .agent-banner {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+body.dark-mode .agent-banner.waiting {
+    background: linear-gradient(135deg, #422006, #1e293b) !important;
+    border-color: #f59e0b !important;
+}
+
+body.dark-mode .agent-banner.connected {
+    background: linear-gradient(135deg, #064e3b, #1e293b) !important;
+    border-color: #10b981 !important;
+}
+
+body.dark-mode .agent-info h4 {
+    color: #f1f5f9 !important;
+}
+
+body.dark-mode .agent-info p {
+    color: #94a3b8 !important;
+}
+
+body.dark-mode .agent-banner .end-chat-btn {
+    background: #0f172a !important;
+    color: #e2e8f0 !important;
+    border-color: #334155 !important;
+}
+
+body.dark-mode .typing-indicator {
+    background-color: #334155 !important;
+}
+
+/* Support options sidebar */
+body.dark-mode .support-option {
+    background-color: #0f172a !important;
+    border-color: transparent !important;
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .support-option:hover,
+body.dark-mode .support-option.active {
+    border-color: #0d9488 !important;
+    background-color: #0f3d3d !important;
+}
+
+body.dark-mode .option-info h4 {
+    color: #f1f5f9 !important;
+}
+
+body.dark-mode .option-info p {
+    color: #94a3b8 !important;
+}
+
+/* FAQ section */
+body.dark-mode .faq-item {
+    border-color: #334155 !important;
+}
+
+body.dark-mode .faq-question {
+    color: #e2e8f0 !important;
+}
+
+body.dark-mode .faq-answer {
+    color: #94a3b8 !important;
+}
+
+body.dark-mode .faq-toggle {
+    color: #64748b !important;
+}
+
+body.dark-mode .faq-item.open .faq-toggle {
+    color: #2dd4bf !important;
+}
+
+/* Customer portal quick replies area */
+body.dark-mode .quick-replies {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+/* =====================================================
    Layout Structure
    ===================================================== */
 
@@ -820,13 +1088,21 @@ body.sidebar-loading .nav-item-arrow {
 
 .topbar-badge {
     position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 8px;
-    height: 8px;
+    top: 2px;
+    right: 2px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
     background: var(--error);
-    border-radius: 50%;
+    border-radius: 9px;
     border: 2px solid var(--white);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--white);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
 }
 
 .topbar-divider {

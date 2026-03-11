@@ -1278,7 +1278,7 @@ namespace CompuGear.Controllers
                 
                 var sessions = await _context.ChatSessions
                     .Include(s => s.Customer)
-                    .Where(s => s.Status == "Active" || s.Status == "Transferred" || s.Status == "Pending")
+                    .Where(s => (s.Status == "Active" && s.AgentId != null) || s.Status == "Transferred" || s.Status == "Pending")
                     .OrderByDescending(s => s.StartedAt)
                     .Select(s => new
                     {

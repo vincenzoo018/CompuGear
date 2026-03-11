@@ -1,7 +1,27 @@
-@{
+﻿@{
     ViewData["Title"] = "Support Tickets";
     Layout = "~/Views/Shared/_SupportLayout.cshtml";
 }
+
+<style>
+    .status-badge, .priority-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    .status-open { background: #dbeafe; color: #1d4ed8; }
+    .status-inprogress { background: #fef3cd; color: #92400e; }
+    .status-pending { background: #f3e8ff; color: #7c3aed; }
+    .status-pending-approval { background: #ffedd5; color: #ea580c; }
+    .status-resolved { background: #dcfce7; color: #166534; }
+    .status-closed { background: #e5e7eb; color: #374151; }
+    .priority-low { background: #f3f4f6; color: #6b7280; }
+    .priority-medium { background: #dbeafe; color: #2563eb; }
+    .priority-high { background: #fef3cd; color: #d97706; }
+    .priority-urgent { background: #fee2e2; color: #dc2626; }
+</style>
 
 <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
@@ -22,375 +42,181 @@
     </div>
 </div>
 
-<style>
-    .readonly-notice {
-        background: linear-gradient(135deg, #fef3cd, #fff8e1);
-        border: 1px solid #f59e0b;
-        border-radius: 8px;
-        padding: 12px 16px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 0.85rem;
-        color: #92400e;
-        margin-bottom: 20px;
-    }
-
-    .stat-cards-row {
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        gap: 15px;
-        margin-bottom: 24px;
-    }
-
-    .stat-card-mini {
-        background: var(--card);
-        border-radius: 12px;
-        padding: 1.25rem 1.35rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-
-    .stat-icon-mini {
-        width: 48px;
-        height: 48px;
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .stat-icon-mini.primary { background: #0d9488; color: #ffffff; }
-    .stat-icon-mini.warning { background: #d97706; color: #ffffff; }
-    .stat-icon-mini.info { background: #2563eb; color: #ffffff; }
-    .stat-icon-mini.success { background: #16a34a; color: #ffffff; }
-    .stat-icon-mini.danger { background: #dc2626; color: #ffffff; }
-    .stat-icon-mini.secondary { background: #6b7280; color: #ffffff; }
-
-    .stat-icon-mini svg { width: 24px; height: 24px; }
-
-    .stat-content-mini h4 {
-        margin: 0;
-        font-size: 1.65rem;
-        font-weight: 700;
-        color: var(--foreground);
-        line-height: 1.2;
-        letter-spacing: -0.02em;
-    }
-
-    .stat-content-mini span {
-        font-size: 0.8rem;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--muted-foreground);
-    }
-
-    .search-card {
-        background: var(--card);
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 24px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-
-    .tickets-table-card {
-        background: var(--card);
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        overflow: hidden;
-    }
-
-    .tickets-table-header {
-        padding: 15px 20px;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .tickets-table-header h5 {
-        margin: 0;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .data-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .data-table th {
-        background: var(--muted);
-        padding: 12px 16px;
-        text-align: left;
-        font-weight: 600;
-        font-size: 0.85rem;
-        color: var(--muted-foreground);
-        border-bottom: 1px solid var(--border);
-    }
-
-    .data-table td {
-        padding: 14px 16px;
-        border-bottom: 1px solid var(--border);
-        font-size: 0.9rem;
-    }
-
-    .data-table tr:hover { background: var(--muted); }
-
-    .badge-status {
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-
-    .badge-status.open { background: #fef3cd; color: #d97706; }
-    .badge-status.in-progress { background: #dbeafe; color: #2563eb; }
-    .badge-status.pending { background: #f3e8ff; color: #9333ea; }
-    .badge-status.pending-approval { background: #ffedd5; color: #ea580c; }
-    .badge-status.resolved { background: #dcfce7; color: #16a34a; }
-    .badge-status.closed { background: #f3f4f6; color: #6b7280; }
-
-    .badge-priority {
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-
-    .badge-priority.low { background: #f3f4f6; color: #6b7280; }
-    .badge-priority.medium { background: #dbeafe; color: #2563eb; }
-    .badge-priority.high { background: #fef3cd; color: #d97706; }
-    .badge-priority.urgent { background: #fee2e2; color: #dc2626; }
-
-    .action-btns { display: flex; gap: 6px; justify-content: center; }
-
-    .action-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        border: 1px solid var(--border);
-        background: var(--card);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-    }
-
-    .action-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
-    .action-btn.danger:hover { background: #ef4444; border-color: #ef4444; }
-    .action-btn.warning:hover { background: #f59e0b; border-color: #f59e0b; }
-
-    .action-btn svg { width: 16px; height: 16px; }
-
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        color: var(--muted-foreground);
-    }
-
-    .ticket-detail-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 10px 0;
-        border-bottom: 1px solid var(--border);
-    }
-
-    .ticket-detail-row:last-child { border-bottom: none; }
-    .ticket-detail-label { font-weight: 600; color: var(--muted-foreground); }
-    .ticket-detail-value { color: var(--foreground); }
-
-    .ticket-description {
-        background: var(--muted);
-        padding: 15px;
-        border-radius: 8px;
-        margin: 15px 0;
-        line-height: 1.6;
-    }
-
-    .escalate-section {
-        background: linear-gradient(135deg, #fff7ed, #ffedd5);
-        border: 1px solid #f97316;
-        border-radius: 8px;
-        padding: 15px;
-        margin-top: 15px;
-    }
-
-    .escalate-section h6 {
-        color: #c2410c;
-        margin: 0 0 10px 0;
-        font-size: 0.9rem;
-    }
-
-    @@media (max-width: 1200px) {
-        .stat-cards-row { grid-template-columns: repeat(3, 1fr); }
-    }
-
-    @@media (max-width: 768px) {
-        .stat-cards-row { grid-template-columns: repeat(2, 1fr); }
-    }
-</style>
-
-<!-- Notice about view-only access for certain features -->
-<div class="readonly-notice">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<!-- Notice -->
+<div class="alert alert-warning d-flex align-items-center gap-2 mb-4" style="border-radius: 10px; font-size: 0.85rem;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
     </svg>
     <span>You can review tickets and respond to customers. For complex issues, send the ticket to Admin for approval.</span>
 </div>
 
 <!-- Stats -->
-<div class="stat-cards-row">
-    <div class="stat-card-mini">
-        <div class="stat-icon-mini primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            </svg>
-        </div>
-        <div class="stat-content-mini">
-            <h4 id="totalTickets">0</h4>
-            <span>Total</span>
-        </div>
-    </div>
-    <div class="stat-card-mini">
-        <div class="stat-icon-mini warning">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-        </div>
-        <div class="stat-content-mini">
-            <h4 id="openTickets">0</h4>
-            <span>Open</span>
+<div class="row mb-4">
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="totalTickets">0</div>
+                <div class="stat-label">Total</div>
+            </div>
         </div>
     </div>
-    <div class="stat-card-mini">
-        <div class="stat-icon-mini info">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-            </svg>
-        </div>
-        <div class="stat-content-mini">
-            <h4 id="inProgressTickets">0</h4>
-            <span>In Progress</span>
-        </div>
-    </div>
-    <div class="stat-card-mini">
-        <div class="stat-icon-mini success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
-        </div>
-        <div class="stat-content-mini">
-            <h4 id="resolvedTickets">0</h4>
-            <span>Resolved</span>
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+        <div class="stat-card stat-card-warning">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="openTickets">0</div>
+                <div class="stat-label">Open</div>
+            </div>
         </div>
     </div>
-    <div class="stat-card-mini">
-        <div class="stat-icon-mini danger">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
-        </div>
-        <div class="stat-content-mini">
-            <h4 id="urgentTickets">0</h4>
-            <span>Urgent</span>
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+        <div class="stat-card stat-card-info">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="inProgressTickets">0</div>
+                <div class="stat-label">In Progress</div>
+            </div>
         </div>
     </div>
-    <div class="stat-card-mini">
-        <div class="stat-icon-mini secondary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="resolvedTickets">0</div>
+                <div class="stat-label">Resolved</div>
+            </div>
         </div>
-        <div class="stat-content-mini">
-            <h4 id="closedTickets">0</h4>
-            <span>Closed</span>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+        <div class="stat-card stat-card-danger">
+            <div class="stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="urgentTickets">0</div>
+                <div class="stat-label">Urgent</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-2 col-md-4 col-6 mb-3">
+        <div class="stat-card" style="border: 1px solid rgba(0,0,0,0.06);">
+            <div class="stat-icon" style="background: var(--gray-500); color: #fff;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value" id="closedTickets">0</div>
+                <div class="stat-label">Closed</div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Search & Filter -->
-<div class="search-card">
-    <div class="row g-3 align-items-end">
-        <div class="col-md-4">
-            <label class="form-label">Search Tickets</label>
-            <input type="text" class="form-control" id="searchTickets" placeholder="Search by ticket #, subject, or customer..." oninput="filterTickets()">
-        </div>
-        <div class="col-md-2">
-            <label class="form-label">Status</label>
-            <select class="form-select" id="filterStatus" onchange="filterTickets()">
-                <option value="">All Status</option>
-                <option value="Open">Open</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Pending">Pending</option>
-                <option value="Pending Approval">Pending Approval</option>
-                <option value="Resolved">Resolved</option>
-                <option value="Closed">Closed</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <label class="form-label">Priority</label>
-            <select class="form-select" id="filterPriority" onchange="filterTickets()">
-                <option value="">All Priority</option>
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
-                <option value="Urgent">Urgent</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <label class="form-label">Category</label>
-            <select class="form-select" id="filterCategory" onchange="filterTickets()">
-                <option value="">All Categories</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
-                </svg>
-                Reset
-            </button>
+<!-- Filter & Search -->
+<div class="card mb-4 fade-in">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Search Tickets</label>
+                <input type="text" class="form-control" id="searchTickets" placeholder="Search by ticket #, subject, or customer..." oninput="filterTickets()">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select class="form-select" id="filterStatus" onchange="filterTickets()">
+                    <option value="">All Status</option>
+                    <option value="Open">Open</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Pending Approval">Pending Approval</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Closed">Closed</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Priority</label>
+                <select class="form-select" id="filterPriority" onchange="filterTickets()">
+                    <option value="">All Priority</option>
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                    <option value="Urgent">Urgent</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Category</label>
+                <select class="form-select" id="filterCategory" onchange="filterTickets()">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary flex-fill" onclick="resetFilters()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                        </svg>
+                        Reset
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Tickets Table -->
-<div class="tickets-table-card">
-    <div class="tickets-table-header">
-        <h5>🎫 Support Tickets</h5>
+<div class="card fade-in">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 d-flex align-items-center gap-2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Support Tickets
+        </h5>
         <span class="badge bg-primary" id="ticketCount">0 tickets</span>
     </div>
-    <div class="table-responsive">
-        <table class="data-table" id="ticketsTable">
-            <thead>
-                <tr>
-                    <th>Ticket #</th>
-                    <th>Subject</th>
-                    <th>Customer</th>
-                    <th>Category</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                    <th class="text-center" style="width: 140px;">Actions</th>
-                </tr>
-            </thead>
-            <tbody id="ticketsTableBody">
-                <tr>
-                    <td colspan="8" class="text-center py-4">
-                        <div class="spinner-border text-primary" role="status"></div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="data-table" id="ticketsTable">
+                <thead>
+                    <tr>
+                        <th>Ticket #</th>
+                        <th>Subject</th>
+                        <th>Customer</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th class="text-center" style="width: 140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ticketsTableBody">
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2 mb-0 text-muted">Loading tickets...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
     <div class="card-footer d-flex justify-content-between align-items-center" id="ticketsPagination"></div>
 </div>
@@ -399,13 +225,11 @@
 <div class="modal fade" id="viewTicketModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header modal-header-primary">
                 <h5 class="modal-title" id="viewTicketTitle">Ticket Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="viewTicketContent">
-                <!-- Content loaded dynamically -->
-            </div>
+            <div class="modal-body" id="viewTicketContent"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-outline-warning" onclick="openEscalateModal()" id="btnEscalate">
@@ -429,9 +253,9 @@
 <div class="modal fade" id="responseModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), #0d9488); color: white;">
-                <h5 class="modal-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+            <div class="modal-header modal-header-primary">
+                <h5 class="modal-title d-flex align-items-center gap-2">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
                     </svg>
                     Respond to Ticket
@@ -474,8 +298,8 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header" style="background: linear-gradient(135deg, #f97316, #ea580c); color: white;">
-                <h5 class="modal-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
+                <h5 class="modal-title d-flex align-items-center gap-2">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/>
                     </svg>
                     Send to Admin for Approval
@@ -546,7 +370,6 @@
             const response = await fetch('/api/ticket-categories');
             const categories = await response.json();
             allCategories = Array.isArray(categories) ? categories : [];
-
             const filterSelect = document.getElementById('filterCategory');
             allCategories.forEach(cat => {
                 filterSelect.innerHTML += `<option value="${cat.categoryId}">${cat.categoryName}</option>`;
@@ -561,14 +384,12 @@
             const response = await fetch('/api/tickets');
             const tickets = await response.json();
             allTickets = Array.isArray(tickets) ? tickets : [];
-
             updateStats();
             renderTickets(allTickets);
         } catch (error) {
             console.error('Error loading tickets:', error);
-            document.getElementById('ticketsTableBody').innerHTML = `
-                <tr><td colspan="8" class="text-center py-4 text-muted">Error loading tickets. Please try again.</td></tr>
-            `;
+            document.getElementById('ticketsTableBody').innerHTML =
+                '<tr><td colspan="8" class="text-center py-4 text-muted">Error loading tickets. Please try again.</td></tr>';
         }
     }
 
@@ -579,78 +400,60 @@
         document.getElementById('resolvedTickets').textContent = allTickets.filter(t => t.status === 'Resolved').length;
         document.getElementById('urgentTickets').textContent = allTickets.filter(t => t.priority === 'Urgent' || t.priority === 'High').length;
         document.getElementById('closedTickets').textContent = allTickets.filter(t => t.status === 'Closed').length;
-        document.getElementById('ticketCount').textContent = `${allTickets.length} tickets`;
+        document.getElementById('ticketCount').textContent = allTickets.length + ' tickets';
     }
 
     function renderTickets(tickets) {
         const tbody = document.getElementById('ticketsTableBody');
-
         if (tickets.length === 0) {
-            tbody.innerHTML = `
-                <tr><td colspan="8" class="text-center py-4 text-muted">No tickets found</td></tr>
-            `;
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No tickets found</td></tr>';
             return;
         }
-
         tbody.innerHTML = tickets.map(ticket => {
             const statusClass = getStatusClass(ticket.status);
             const priorityClass = getPriorityClass(ticket.priority);
             const category = allCategories.find(c => c.categoryId === ticket.categoryId);
-
             return `
                 <tr>
-                    <td><strong>${ticket.ticketNumber || `TKT-${ticket.ticketId}`}</strong></td>
-                    <td>${escapeHtml(ticket.subject)}</td>
-                    <td>${escapeHtml(ticket.contactName || 'N/A')}</td>
-                    <td>${category ? category.categoryName : 'General'}</td>
-                    <td><span class="badge-priority ${priorityClass}">${ticket.priority || 'Medium'}</span></td>
-                    <td><span class="badge-status ${statusClass}">${ticket.status || 'Open'}</span></td>
+                    <td><strong>${ticket.ticketNumber || ('TKT-' + ticket.ticketId)}</strong></td>
+                    <td style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(ticket.subject)}</td>
+                    <td>${escapeHtml(ticket.customerName || ticket.contactName || 'N/A')}</td>
+                    <td>${category ? category.categoryName : (ticket.categoryName || 'General')}</td>
+                    <td><span class="priority-badge ${priorityClass}">${ticket.priority || 'Medium'}</span></td>
+                    <td><span class="status-badge ${statusClass}">${ticket.status || 'Open'}</span></td>
                     <td>${formatDate(ticket.createdAt)}</td>
                     <td>
-                        <div class="action-btns">
-                            <button class="action-btn" onclick="viewTicket(${ticket.ticketId})" title="View">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <div class="d-flex gap-1 justify-content-center">
+                            <button class="btn btn-sm btn-outline-primary" onclick="viewTicket(${ticket.ticketId})" title="View">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
                                 </svg>
                             </button>
-                            <button class="action-btn" onclick="quickRespond(${ticket.ticketId})" title="Quick Respond">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <button class="btn btn-sm btn-outline-success" onclick="quickRespond(${ticket.ticketId})" title="Respond">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
                                 </svg>
                             </button>
-                            <button class="action-btn warning" onclick="quickEscalate(${ticket.ticketId})" title="Send to Admin">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <button class="btn btn-sm btn-outline-warning" onclick="quickEscalate(${ticket.ticketId})" title="Escalate">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/>
                                 </svg>
                             </button>
                         </div>
                     </td>
-                </tr>
-            `;
+                </tr>`;
         }).join('');
         if (typeof initPagination === 'function') initPagination('ticketsTableBody', 'ticketsPagination', 10);
     }
 
     function getStatusClass(status) {
-        const map = {
-            'Open': 'open',
-            'In Progress': 'in-progress',
-            'Pending': 'pending',
-            'Pending Approval': 'pending-approval',
-            'Resolved': 'resolved',
-            'Closed': 'closed'
-        };
-        return map[status] || 'open';
+        const map = { 'Open': 'status-open', 'In Progress': 'status-inprogress', 'Pending': 'status-pending', 'Pending Approval': 'status-pending-approval', 'Resolved': 'status-resolved', 'Closed': 'status-closed' };
+        return map[status] || 'status-open';
     }
 
     function getPriorityClass(priority) {
-        const map = {
-            'Low': 'low',
-            'Medium': 'medium',
-            'High': 'high',
-            'Urgent': 'urgent'
-        };
-        return map[priority] || 'medium';
+        const map = { 'Low': 'priority-low', 'Medium': 'priority-medium', 'High': 'priority-high', 'Urgent': 'priority-urgent' };
+        return map[priority] || 'priority-medium';
     }
 
     function filterTickets() {
@@ -659,23 +462,20 @@
         const status = document.getElementById('filterStatus').value;
         const priority = document.getElementById('filterPriority').value;
         const categoryId = document.getElementById('filterCategory').value;
-
         let filtered = allTickets;
-
         if (search) {
             filtered = filtered.filter(t =>
                 (t.ticketNumber && t.ticketNumber.toLowerCase().includes(search)) ||
                 (t.subject && t.subject.toLowerCase().includes(search)) ||
+                (t.customerName && t.customerName.toLowerCase().includes(search)) ||
                 (t.contactName && t.contactName.toLowerCase().includes(search))
             );
         }
-
         if (status) filtered = filtered.filter(t => t.status === status);
         if (priority) filtered = filtered.filter(t => t.priority === priority);
         if (categoryId) filtered = filtered.filter(t => t.categoryId == categoryId);
-
         renderTickets(filtered);
-        document.getElementById('ticketCount').textContent = `${filtered.length} tickets`;
+        document.getElementById('ticketCount').textContent = filtered.length + ' tickets';
     }
 
     function resetFilters() {
@@ -684,54 +484,68 @@
         document.getElementById('filterPriority').value = '';
         document.getElementById('filterCategory').value = '';
         renderTickets(allTickets);
-        document.getElementById('ticketCount').textContent = `${allTickets.length} tickets`;
+        document.getElementById('ticketCount').textContent = allTickets.length + ' tickets';
     }
 
     async function viewTicket(ticketId) {
         currentTicketId = ticketId;
         try {
-            const response = await fetch(`/api/tickets/${ticketId}`);
+            const response = await fetch('/api/tickets/' + ticketId);
             const ticket = await response.json();
             const category = allCategories.find(c => c.categoryId === ticket.categoryId);
-
-            document.getElementById('viewTicketTitle').textContent = ticket.ticketNumber || `Ticket #${ticketId}`;
+            document.getElementById('viewTicketTitle').textContent = ticket.ticketNumber || ('Ticket #' + ticketId);
             document.getElementById('viewTicketContent').innerHTML = `
-                <div class="ticket-detail-row">
-                    <span class="ticket-detail-label">Subject</span>
-                    <span class="ticket-detail-value">${escapeHtml(ticket.subject)}</span>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="p-3 rounded" style="background: var(--muted, #f8f9fa);">
+                            <small class="text-muted d-block mb-1">Subject</small>
+                            <strong>${escapeHtml(ticket.subject)}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 rounded" style="background: var(--muted, #f8f9fa);">
+                            <small class="text-muted d-block mb-1">Status</small>
+                            <span class="status-badge ${getStatusClass(ticket.status)}">${ticket.status}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="p-3 rounded" style="background: var(--muted, #f8f9fa);">
+                            <small class="text-muted d-block mb-1">Priority</small>
+                            <span class="priority-badge ${getPriorityClass(ticket.priority)}">${ticket.priority || 'Medium'}</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="ticket-detail-row">
-                    <span class="ticket-detail-label">Status</span>
-                    <span class="badge-status ${getStatusClass(ticket.status)}">${ticket.status}</span>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <div class="p-3 rounded" style="background: var(--muted, #f8f9fa);">
+                            <small class="text-muted d-block mb-1">Category</small>
+                            <strong>${category ? category.categoryName : 'General'}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 rounded" style="background: var(--muted, #f8f9fa);">
+                            <small class="text-muted d-block mb-1">Customer</small>
+                            <strong>${escapeHtml(ticket.customerName || ticket.contactName || 'N/A')}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 rounded" style="background: var(--muted, #f8f9fa);">
+                            <small class="text-muted d-block mb-1">Email</small>
+                            <strong>${escapeHtml(ticket.contactEmail || 'N/A')}</strong>
+                        </div>
+                    </div>
                 </div>
-                <div class="ticket-detail-row">
-                    <span class="ticket-detail-label">Priority</span>
-                    <span class="badge-priority ${getPriorityClass(ticket.priority)}">${ticket.priority || 'Medium'}</span>
+                <div class="mb-3">
+                    <div class="p-3 rounded" style="background: var(--muted, #f8f9fa);">
+                        <small class="text-muted d-block mb-1">Created</small>
+                        <strong>${formatDateTime(ticket.createdAt)}</strong>
+                    </div>
                 </div>
-                <div class="ticket-detail-row">
-                    <span class="ticket-detail-label">Category</span>
-                    <span class="ticket-detail-value">${category ? category.categoryName : 'General'}</span>
-                </div>
-                <div class="ticket-detail-row">
-                    <span class="ticket-detail-label">Customer</span>
-                    <span class="ticket-detail-value">${escapeHtml(ticket.contactName || 'N/A')}</span>
-                </div>
-                <div class="ticket-detail-row">
-                    <span class="ticket-detail-label">Email</span>
-                    <span class="ticket-detail-value">${escapeHtml(ticket.contactEmail || 'N/A')}</span>
-                </div>
-                <div class="ticket-detail-row">
-                    <span class="ticket-detail-label">Created</span>
-                    <span class="ticket-detail-value">${formatDateTime(ticket.createdAt)}</span>
-                </div>
-                <h6 class="mt-4 mb-2">Description</h6>
-                <div class="ticket-description">${escapeHtml(ticket.description || 'No description provided.')}</div>
+                <h6 class="mt-3 mb-2">Description</h6>
+                <div class="p-3 rounded border" style="line-height: 1.7; background: var(--muted, #f8f9fa);">${escapeHtml(ticket.description || 'No description provided.')}</div>
             `;
-
-            // Disable respond button if ticket is closed
             document.getElementById('btnRespond').disabled = ticket.status === 'Closed';
             document.getElementById('btnEscalate').disabled = ticket.status === 'Closed' || ticket.status === 'Pending Approval';
-
             new bootstrap.Modal(document.getElementById('viewTicketModal')).show();
         } catch (error) {
             showError('Error loading ticket details');
@@ -760,23 +574,19 @@
 
     async function submitResponse(event) {
         event.preventDefault();
-
         const data = {
             ticketId: currentTicketId,
             message: document.getElementById('responseMessage').value,
             status: document.getElementById('responseStatus').value,
             internalNotes: document.getElementById('internalNotes').value
         };
-
         try {
-            const response = await fetch(`/api/tickets/${currentTicketId}/respond`, {
+            const response = await fetch('/api/tickets/' + currentTicketId + '/respond', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-
             const result = await response.json();
-
             if (result.success || response.ok) {
                 showSuccess('Response sent successfully!');
                 bootstrap.Modal.getInstance(document.getElementById('responseModal')).hide();
@@ -794,22 +604,17 @@
 
     async function submitEscalation(event) {
         event.preventDefault();
-
         const data = {
             reason: document.getElementById('escalationReason').value,
             notes: document.getElementById('escalationNotes').value
         };
-
         try {
-            // Call the new escalate endpoint
-            const response = await fetch(`/api/tickets/${currentTicketId}/escalate`, {
+            const response = await fetch('/api/tickets/' + currentTicketId + '/escalate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-
             const result = await response.json();
-
             if (result.success || response.ok) {
                 showSuccess('Ticket sent to Admin for approval!');
                 bootstrap.Modal.getInstance(document.getElementById('escalateModal')).hide();
@@ -828,7 +633,7 @@
     function formatDate(dateString) {
         if (!dateString) return '';
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
     function formatDateTime(dateString) {
