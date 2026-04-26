@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CompuGear.Data;
 using CompuGear.Models;
 using System.Security.Claims;
+using System.Text.Json;
+using System.Text;
+using System.Security.Cryptography;
 
 namespace CompuGear.Controllers
 {
@@ -10,16 +13,15 @@ namespace CompuGear.Controllers
     /// Customer Portal Controller - For Customer-facing pages
     /// Handles customer dashboard, products, orders, support, and promotions
     /// </summary>
-    public class CustomerPortalController : Controller
+    public class CustomerPortalController(CompuGearDbContext context, IConfiguration configuration) : Controller
     {
-        private readonly CompuGearDbContext _context;
-        private readonly IConfiguration _configuration;
+        private readonly CompuGearDbContext _context = context;
+        private readonly IConfiguration _configuration = configuration;
 
-        public CustomerPortalController(CompuGearDbContext context, IConfiguration configuration)
-        {
-            _context = context;
-            _configuration = configuration;
-        }
+        private static readonly string[] ProcessingStatuses = ["Processing", "Shipped", "Out for Delivery", "Delivered"];
+        private static readonly string[] ShippedStatuses = ["Shipped", "Out for Delivery", "Delivered"];
+        private static readonly string[] OutForDeliveryStatuses = ["Out for Delivery", "Delivered"];
+        private static readonly string[] PaymentMethodsAllowed = ["card", "gcash", "grab_pay", "paymaya"];
 
         // Helper method to get current customer
         private async Task<Customer?> GetCurrentCustomerAsync()
@@ -189,7 +191,7 @@ namespace CompuGear.Controllers
                     customer.DateOfBirth,
                     customer.Gender,
                     customer.Avatar,
-                    CategoryName = customer.Category?.CategoryName,
+                    customer.Category?.CategoryName,
                     customer.BillingAddress,
                     customer.BillingCity,
                     customer.BillingState,
@@ -376,7 +378,7 @@ namespace CompuGear.Controllers
                 .ToListAsync();
 
             // If no featured products, get latest active products
-            if (!products.Any())
+            if (products.Count == 0)
             {
                 products = await baseQuery
                     .OrderByDescending(p => p.CreatedAt)
@@ -595,7 +597,7 @@ namespace CompuGear.Controllers
             var companyId = GetPortalCompanyId();
 
             // Validate cart items
-            if (model.Items == null || !model.Items.Any())
+            if (model.Items == null || model.Items.Count == 0)
                 return Json(new { success = false, message = "Cart is empty" });
 
             // Get product details
@@ -606,7 +608,7 @@ namespace CompuGear.Controllers
 
             // Calculate totals
             decimal subtotal = 0;
-            var orderItems = new List<OrderItem>();
+            List<OrderItem> orderItems = [];
 
             foreach (var item in model.Items)
             {
@@ -685,10 +687,9 @@ namespace CompuGear.Controllers
                 ShippingZipCode = model.ShippingZipCode,
                 ShippingCountry = model.ShippingCountry ?? "Philippines",
                 Notes = model.Notes,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                OrderItems = orderItems
             };
-
-            order.OrderItems = orderItems;
 
             // Update stock
             foreach (var item in model.Items)
@@ -772,7 +773,7 @@ namespace CompuGear.Controllers
             });
         }
 
-        // POST: /CustomerPortal/ProcessPayment — records payment via PayMongo and marks order paid
+        // POST: /CustomerPortal/ProcessPayment � records payment via PayMongo and marks order paid
         [HttpPost]
         public async Task<IActionResult> ProcessPayment([FromBody] PaymentRequestModel model)
         {
@@ -788,7 +789,7 @@ namespace CompuGear.Controllers
             if (order == null)
                 return Json(new { success = false, message = "Order not found" });
 
-            // ===== COD (Cash on Delivery) — skip PayMongo, keep order as Confirmed/Unpaid =====
+            // ===== COD (Cash on Delivery) � skip PayMongo, keep order as Confirmed/Unpaid =====
             if (string.Equals(model.PaymentMethod, "cod", StringComparison.OrdinalIgnoreCase))
             {
                 try
@@ -827,7 +828,7 @@ namespace CompuGear.Controllers
                                 UserId = userId,
                                 Type = "order",
                                 Title = $"Order {order.OrderNumber} Confirmed (COD)",
-                                Message = $"Your COD order for ₱{order.TotalAmount:N2} has been confirmed. Please prepare the exact amount for the courier.",
+                                Message = $"Your COD order for ?{order.TotalAmount:N2} has been confirmed. Please prepare the exact amount for the courier.",
                                 Link = "/CustomerPortal/Orders",
                                 IsRead = false,
                                 CreatedAt = DateTime.UtcNow
@@ -860,7 +861,7 @@ namespace CompuGear.Controllers
             {
                 // --- Call PayMongo to create a Payment Intent (record the payment) ---
                 using var httpClient = new HttpClient();
-                var authToken = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{paymongoSecretKey}:"));
+                var authToken = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{paymongoSecretKey}:"));
                 httpClient.DefaultRequestHeaders.Add("Authorization", $"Basic {authToken}");
 
                 var amountInCentavos = (int)(order.TotalAmount * 100);
@@ -872,7 +873,7 @@ namespace CompuGear.Controllers
                         {
                             amount = amountInCentavos,
                             currency = "PHP",
-                            payment_method_allowed = new[] { "card", "gcash", "grab_pay", "paymaya" },
+                            payment_method_allowed = PaymentMethodsAllowed,
                             description = $"CompuGear Order {order.OrderNumber}",
                             statement_descriptor = "CompuGear",
                             capture_type = "automatic"
@@ -881,8 +882,8 @@ namespace CompuGear.Controllers
                 };
 
                 var piContent = new StringContent(
-                    System.Text.Json.JsonSerializer.Serialize(paymentIntentRequest),
-                    System.Text.Encoding.UTF8,
+                    JsonSerializer.Serialize(paymentIntentRequest),
+                    Encoding.UTF8,
                     "application/json"
                 );
 
@@ -891,13 +892,13 @@ namespace CompuGear.Controllers
 
                 if (piResponse.IsSuccessStatusCode)
                 {
-                    var piJson = System.Text.Json.JsonDocument.Parse(piResponseContent);
+                    var piJson = JsonDocument.Parse(piResponseContent);
                     paymentIntentId = piJson.RootElement.GetProperty("data").GetProperty("id").GetString();
                 }
             }
             catch (Exception ex)
             {
-                // PayMongo call failed — log but continue to mark order paid
+                // PayMongo call failed � log but continue to mark order paid
                 System.Diagnostics.Debug.WriteLine($"PayMongo payment intent creation failed: {ex.Message}");
             }
 
@@ -965,8 +966,8 @@ namespace CompuGear.Controllers
                         {
                             UserId = userId2,
                             Type = "order",
-                            Title = $"Payment Confirmed — {order.OrderNumber}",
-                            Message = $"Your payment of ₱{order.TotalAmount:N2} via {model.PaymentMethod ?? "card"} was successful!",
+                            Title = $"Payment Confirmed � {order.OrderNumber}",
+                            Message = $"Your payment of ?{order.TotalAmount:N2} via {model.PaymentMethod ?? "card"} was successful!",
                             Link = "/CustomerPortal/Orders",
                             IsRead = false,
                             CreatedAt = DateTime.UtcNow
@@ -1012,7 +1013,7 @@ namespace CompuGear.Controllers
                 {
                     var paymongoSecretKey = _configuration["PayMongo:SecretKey"] ?? "sk_test_SakyRyg4R6hXeni4x5EaNUow";
                     using var httpClient = new HttpClient();
-                    var authToken = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{paymongoSecretKey}:"));
+                    var authToken = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{paymongoSecretKey}:"));
                     httpClient.DefaultRequestHeaders.Add("Authorization", $"Basic {authToken}");
 
                     var response = await httpClient.GetAsync($"https://api.paymongo.com/v1/payment_intents/{order.PaymentReference}");
@@ -1020,7 +1021,7 @@ namespace CompuGear.Controllers
 
                     if (response.IsSuccessStatusCode)
                     {
-                        var json = System.Text.Json.JsonDocument.Parse(content);
+                        var json = JsonDocument.Parse(content);
                         var status = json.RootElement.GetProperty("data").GetProperty("attributes").GetProperty("status").GetString();
 
                         if (status == "succeeded")
@@ -1169,7 +1170,7 @@ namespace CompuGear.Controllers
         {
             var companyId = GetPortalCompanyId();
             var promoQuery = _context.Promotions
-                .Where(p => p.PromotionCode.ToLower() == model.PromoCode.ToLower() && p.IsActive);
+                .Where(p => EF.Functions.Collate(p.PromotionCode, "NOCASE") == model.PromoCode.ToLower() && p.IsActive);
 
             if (companyId.HasValue)
                 promoQuery = promoQuery.Where(p => p.CompanyId == companyId);
@@ -1183,7 +1184,7 @@ namespace CompuGear.Controllers
                 return Json(new { success = false, message = "Promo code has expired or reached usage limit" });
 
             if (model.Subtotal < promo.MinOrderAmount)
-                return Json(new { success = false, message = $"Minimum order amount is ₱{promo.MinOrderAmount:N2}" });
+                return Json(new { success = false, message = $"Minimum order amount is ?{promo.MinOrderAmount:N2}" });
 
             decimal discount = promo.DiscountType == "Percentage"
                 ? model.Subtotal * (promo.DiscountValue / 100)
@@ -1298,7 +1299,7 @@ namespace CompuGear.Controllers
                 })
                 .ToListAsync();
 
-            return Json(new { success = true, data = ticket, messages = messages });
+            return Json(new { success = true, data = ticket, messages });
         }
 
         // POST: /CustomerPortal/ReplyToTicket
@@ -1539,7 +1540,7 @@ namespace CompuGear.Controllers
                 .ToListAsync();
 
             // Build timeline from order dates
-            var timeline = new List<object>();
+            List<object> timeline = [];
 
             // Order placed
             timeline.Add(new
@@ -1563,7 +1564,7 @@ namespace CompuGear.Controllers
             });
 
             // Processing
-            var isProcessing = new[] { "Processing", "Shipped", "Out for Delivery", "Delivered" }.Contains(order.OrderStatus);
+            var isProcessing = ProcessingStatuses.Contains(order.OrderStatus);
             timeline.Add(new
             {
                 status = "Processing",
@@ -1574,7 +1575,7 @@ namespace CompuGear.Controllers
             });
 
             // Shipped
-            var isShipped = new[] { "Shipped", "Out for Delivery", "Delivered" }.Contains(order.OrderStatus);
+            var isShipped = ShippedStatuses.Contains(order.OrderStatus);
             timeline.Add(new
             {
                 status = "Shipped",
@@ -1585,7 +1586,7 @@ namespace CompuGear.Controllers
             });
 
             // Out for Delivery
-            var isOutForDelivery = new[] { "Out for Delivery", "Delivered" }.Contains(order.OrderStatus);
+            var isOutForDelivery = OutForDeliveryStatuses.Contains(order.OrderStatus);
             timeline.Add(new
             {
                 status = "Out for Delivery",
@@ -1624,7 +1625,7 @@ namespace CompuGear.Controllers
             else if (order.OrderStatus == "Delivered") progress = 1.0;
 
             // Generate waypoints along the route
-            var waypoints = new List<object>();
+            List<object> waypoints = [];
             var steps = 5;
             for (int i = 0; i <= steps; i++)
             {
@@ -1760,10 +1761,10 @@ namespace CompuGear.Controllers
 
         private static readonly Random _rand = new();
 
-        private (string Response, string Intent, decimal Confidence, string[] QuickReplies, bool ShouldTransferToAgent) GenerateAIResponse(string message)
+        private static (string Response, string Intent, decimal Confidence, string[] QuickReplies, bool ShouldTransferToAgent) GenerateAIResponse(string message)
         {
             if (string.IsNullOrWhiteSpace(message))
-                return ("I didn't catch that. Could you type your question again? 😊", "empty", 0.50m, new[] { "📦 Track Order", "🛒 Browse Products", "👤 Live Agent" }, false);
+                return ("I didn't catch that. Could you type your question again? ??", "empty", 0.50m, new[] { "?? Track Order", "?? Browse Products", "?? Live Agent" }, false);
 
             var msg = message.ToLower().Trim();
 
@@ -1772,12 +1773,12 @@ namespace CompuGear.Controllers
             {
                 var greetings = new[]
                 {
-                    "Hello! 👋 Welcome to CompuGear! I'm your AI assistant and I'm here to make your experience awesome. What can I help you with today?",
-                    "Hey there! 😊 Welcome to CompuGear Support! Whether it's orders, products, payments, or tech questions — I've got you covered! How can I help?",
-                    "Hi! 👋 Great to see you! I'm the CompuGear AI assistant. Ask me anything — from order tracking to product recommendations. What do you need?",
-                    "Kumusta! 👋 Welcome sa CompuGear! I'm here to help you with anything — orders, products, payments, at marami pa. Ano ang maitutulong ko? 😊"
+                    "Hello! ?? Welcome to CompuGear! I'm your AI assistant and I'm here to make your experience awesome. What can I help you with today?",
+                    "Hey there! ?? Welcome to CompuGear Support! Whether it's orders, products, payments, or tech questions � I've got you covered! How can I help?",
+                    "Hi! ?? Great to see you! I'm the CompuGear AI assistant. Ask me anything � from order tracking to product recommendations. What do you need?",
+                    "Kumusta! ?? Welcome sa CompuGear! I'm here to help you with anything � orders, products, payments, at marami pa. Ano ang maitutulong ko? ??"
                 };
-                return (Pick(greetings), "greeting", 0.95m, new[] { "🛒 Browse Products", "📦 Track Order", "🏷️ View Promotions", "❓ Get Help" }, false);
+                return (Pick(greetings), "greeting", 0.95m, new[] { "?? Browse Products", "?? Track Order", "??? View Promotions", "? Get Help" }, false);
             }
 
             // ========== FILIPINO/BISAYA LANGUAGE DETECTION ==========
@@ -1788,40 +1789,40 @@ namespace CompuGear.Controllers
                 {
                     var responses = new[]
                     {
-                        "Pwede ko i-check ang order mo! 📦 Punta ka lang sa 'My Orders' section sa dashboard mo at makikita mo ang status ng lahat ng orders mo. Kung may specific order number ka, i-share mo lang! 😊",
-                        "Sige, tulungan kita sa order mo! 📦 Sa 'My Orders' page mo makikita ang tracking info at delivery status. May order number ka ba na gusto mong i-track?"
+                        "Pwede ko i-check ang order mo! ?? Punta ka lang sa 'My Orders' section sa dashboard mo at makikita mo ang status ng lahat ng orders mo. Kung may specific order number ka, i-share mo lang! ??",
+                        "Sige, tulungan kita sa order mo! ?? Sa 'My Orders' page mo makikita ang tracking info at delivery status. May order number ka ba na gusto mong i-track?"
                     };
-                    return (Pick(responses), "order_inquiry", 0.90m, new[] { "📦 View My Orders", "🔍 Track an Order", "👤 Talk to Agent" }, false);
+                    return (Pick(responses), "order_inquiry", 0.90m, new[] { "?? View My Orders", "?? Track an Order", "?? Talk to Agent" }, false);
                 }
                 if (IsMatch(msg, "(bayad|payment|magbayad|pambayad|gcash|maya|card|pera|singil|bayaran)"))
                 {
-                    return ("Maraming payment methods ang CompuGear! 💳 Pwede kang magbayad gamit ang:\n\n• Credit/Debit Card (Visa, Mastercard, JCB)\n• GCash\n• GrabPay\n• Maya (PayMaya)\n• Bank Transfer\n• Cash on Delivery (COD)\n\nLahat ng transactions ay secure at encrypted sa PayMongo. Ano ang preferred payment method mo? 😊",
-                        "payment_inquiry", 0.92m, new[] { "💳 Payment Methods", "🛒 Go to Checkout", "👤 Talk to Agent" }, false);
+                    return ("Maraming payment methods ang CompuGear! ?? Pwede kang magbayad gamit ang:\n\n� Credit/Debit Card (Visa, Mastercard, JCB)\n� GCash\n� GrabPay\n� Maya (PayMaya)\n� Bank Transfer\n� Cash on Delivery (COD)\n\nLahat ng transactions ay secure at encrypted sa PayMongo. Ano ang preferred payment method mo? ??",
+                        "payment_inquiry", 0.92m, new[] { "?? Payment Methods", "?? Go to Checkout", "?? Talk to Agent" }, false);
                 }
                 if (IsMatch(msg, "(ibalik|refund|return|palitan|sira|broken|defect|nasira|exchange)"))
                 {
-                    return ("Pwede kang mag-return ng item within 7 days of delivery! 🔄 Para sa warranty claims, pumunta ka sa Support → Create Ticket → piliin ang 'Warranty Claims'. Kung may sira ang product, mag-attach ka ng photos para mas mabilis ang process. Gusto mo bang tulungan ka namin? 😊",
-                        "return_refund", 0.90m, new[] { "📋 Return Policy", "📝 Submit Ticket", "👤 Talk to Agent" }, false);
+                    return ("Pwede kang mag-return ng item within 7 days of delivery! ?? Para sa warranty claims, pumunta ka sa Support ? Create Ticket ? piliin ang 'Warranty Claims'. Kung may sira ang product, mag-attach ka ng photos para mas mabilis ang process. Gusto mo bang tulungan ka namin? ??",
+                        "return_refund", 0.90m, new[] { "?? Return Policy", "?? Submit Ticket", "?? Talk to Agent" }, false);
                 }
                 if (IsMatch(msg, "(promo|discount|sale|mura|barat|libre|free|tawad|tipid)"))
                 {
-                    return ("May mga hot deals ang CompuGear ngayon! 🔥\n\n🏷️ SUMMER10 — 10% off sa orders over ₱10,000\n🎮 GAMER2026 — ₱2,000 off sa gaming bundles\n🚚 FREESHIP — Free shipping sa orders over ₱5,000\n🎉 WELCOME500 — ₱500 off sa first order (min ₱3,000)\n\nTingnan mo ang Promotions page para sa latest deals! 😊",
-                        "promo_inquiry", 0.93m, new[] { "🏷️ View Promotions", "🔥 Current Deals", "🛒 Shop Now" }, false);
+                    return ("May mga hot deals ang CompuGear ngayon! ??\n\n??? SUMMER10 � 10% off sa orders over ?10,000\n?? GAMER2026 � ?2,000 off sa gaming bundles\n?? FREESHIP � Free shipping sa orders over ?5,000\n?? WELCOME500 � ?500 off sa first order (min ?3,000)\n\nTingnan mo ang Promotions page para sa latest deals! ??",
+                        "promo_inquiry", 0.93m, new[] { "??? View Promotions", "?? Current Deals", "?? Shop Now" }, false);
                 }
                 if (IsMatch(msg, "(product|laptop|computer|pc|gaming|mouse|keyboard|monitor|ram|gpu|ssd|bili|bilhin|bibilhin|recommend)"))
                 {
-                    return ("Maraming magagandang products ang CompuGear! 🖥️ Meron kaming:\n\n• 💻 Laptops & Desktops\n• 🎮 Gaming Gear (Razer, Logitech)\n• ⚡ Components (Intel, AMD, NVIDIA)\n• 🖱️ Peripherals (keyboard, mouse, headset)\n• 💾 Storage (Samsung, WD SSDs)\n\nPumunta ka sa Products page para ma-browse ang full catalog. Ano ang hanap mo specifically? 😊",
-                        "product_inquiry", 0.88m, new[] { "🛒 Browse Products", "🎮 Gaming Gear", "💻 Components" }, false);
+                    return ("Maraming magagandang products ang CompuGear! ??? Meron kaming:\n\n� ?? Laptops & Desktops\n� ?? Gaming Gear (Razer, Logitech)\n� ? Components (Intel, AMD, NVIDIA)\n� ??? Peripherals (keyboard, mouse, headset)\n� ?? Storage (Samsung, WD SSDs)\n\nPumunta ka sa Products page para ma-browse ang full catalog. Ano ang hanap mo specifically? ??",
+                        "product_inquiry", 0.88m, new[] { "?? Browse Products", "?? Gaming Gear", "?? Components" }, false);
                 }
 
                 // Generic Filipino response
                 var filipinoResponses = new[]
                 {
-                    "Sige, tulungan kita! 😊 Pwede akong mag-assist sa orders, products, payments, returns, at iba pa. Ano specifically ang kailangan mo?",
-                    "Oo naman! 😊 Nandito ako para tumulong. Ano ang gusto mong malaman — order status, product info, payment options, o promotions?",
-                    "Syempre! 😊 I'm here to help. Sabihin mo lang kung ano ang kailangan mo — mula sa order tracking hanggang product recommendations!"
+                    "Sige, tulungan kita! ?? Pwede akong mag-assist sa orders, products, payments, returns, at iba pa. Ano specifically ang kailangan mo?",
+                    "Oo naman! ?? Nandito ako para tumulong. Ano ang gusto mong malaman � order status, product info, payment options, o promotions?",
+                    "Syempre! ?? I'm here to help. Sabihin mo lang kung ano ang kailangan mo � mula sa order tracking hanggang product recommendations!"
                 };
-                return (Pick(filipinoResponses), "filipino_general", 0.85m, new[] { "📦 Track Order", "🛒 Products", "💳 Payments", "🏷️ Promos" }, false);
+                return (Pick(filipinoResponses), "filipino_general", 0.85m, new[] { "?? Track Order", "?? Products", "?? Payments", "??? Promos" }, false);
             }
 
             // ========== ORDER / DELIVERY / SHIPPING / TRACKING ==========
@@ -1829,20 +1830,20 @@ namespace CompuGear.Controllers
             {
                 if (IsMatch(msg, "(cancel|cancell)"))
                 {
-                    return ("You can cancel an order before it's shipped! 🚫 Go to 'My Orders', click on the order, and select 'Cancel Order'. If it's already shipped, you'll need to process a return after delivery. Need help with a specific order?",
-                        "order_cancel", 0.92m, new[] { "📦 View My Orders", "📝 Submit Ticket", "👤 Talk to Agent" }, false);
+                    return ("You can cancel an order before it's shipped! ?? Go to 'My Orders', click on the order, and select 'Cancel Order'. If it's already shipped, you'll need to process a return after delivery. Need help with a specific order?",
+                        "order_cancel", 0.92m, new[] { "?? View My Orders", "?? Submit Ticket", "?? Talk to Agent" }, false);
                 }
                 if (IsMatch(msg, "(how long|how many days|when|eta|gaano|ilang araw|kailan)"))
                 {
-                    return ("Here are our delivery timelines! 🚚\n\n📍 Metro Manila: 1–3 business days\n🏘️ Provincial: 3–7 business days\n🏔️ Remote areas: 7–14 business days\n\nOnce shipped, you'll get a tracking number via email and can track it in real-time from your 'My Orders' page with our Google Maps tracker! 📍",
-                        "delivery_time", 0.94m, new[] { "📦 View My Orders", "🔍 Track Order", "👤 Talk to Agent" }, false);
+                    return ("Here are our delivery timelines! ??\n\n?? Metro Manila: 1�3 business days\n??? Provincial: 3�7 business days\n??? Remote areas: 7�14 business days\n\nOnce shipped, you'll get a tracking number via email and can track it in real-time from your 'My Orders' page with our Google Maps tracker! ??",
+                        "delivery_time", 0.94m, new[] { "?? View My Orders", "?? Track Order", "?? Talk to Agent" }, false);
                 }
                 var orderResponses = new[]
                 {
-                    "I can help with your order! 📦 To check your order status:\n\n1️⃣ Go to 'My Orders' in your dashboard\n2️⃣ Click on any order to see full details\n3️⃣ Use the '📍 Track My Order' button for real-time GPS tracking\n\nIf you have a specific order number, feel free to share it!",
-                    "Let me help you with your order! 📦 You can view all your orders and track them in real-time from the 'My Orders' section. We even have live Google Maps tracking for shipped orders! Would you like to go there now?"
+                    "I can help with your order! ?? To check your order status:\n\n1?? Go to 'My Orders' in your dashboard\n2?? Click on any order to see full details\n3?? Use the '?? Track My Order' button for real-time GPS tracking\n\nIf you have a specific order number, feel free to share it!",
+                    "Let me help you with your order! ?? You can view all your orders and track them in real-time from the 'My Orders' section. We even have live Google Maps tracking for shipped orders! Would you like to go there now?"
                 };
-                return (Pick(orderResponses), "order_inquiry", 0.92m, new[] { "📦 View My Orders", "🔍 Track an Order", "👤 Talk to Agent" }, false);
+                return (Pick(orderResponses), "order_inquiry", 0.92m, new[] { "?? View My Orders", "?? Track an Order", "?? Talk to Agent" }, false);
             }
 
             // ========== RETURNS / REFUNDS / WARRANTY ==========
@@ -1850,20 +1851,20 @@ namespace CompuGear.Controllers
             {
                 if (IsMatch(msg, "(warranty|how long.*warranty|warranty.*period|covered)"))
                 {
-                    return ("Here are our warranty periods! 🛡️\n\n• 🖥️ Processors (Intel/AMD): 3 years\n• 🎮 Graphics Cards: 3 years\n• 💾 RAM: Lifetime warranty\n• 💿 Storage/SSD: 5 years\n• ⌨️ Peripherals: 1–2 years\n\n❌ Not covered: physical/water damage, unauthorized modifications, normal wear & tear.\n\nTo file a claim: Support → Create Ticket → 'Warranty Claims'. Attach photos of the issue! 📸",
-                        "warranty_inquiry", 0.93m, new[] { "📝 Submit Ticket", "📋 My Tickets", "👤 Talk to Agent" }, false);
+                    return ("Here are our warranty periods! ???\n\n� ??? Processors (Intel/AMD): 3 years\n� ?? Graphics Cards: 3 years\n� ?? RAM: Lifetime warranty\n� ?? Storage/SSD: 5 years\n� ?? Peripherals: 1�2 years\n\n? Not covered: physical/water damage, unauthorized modifications, normal wear & tear.\n\nTo file a claim: Support ? Create Ticket ? 'Warranty Claims'. Attach photos of the issue! ??",
+                        "warranty_inquiry", 0.93m, new[] { "?? Submit Ticket", "?? My Tickets", "?? Talk to Agent" }, false);
                 }
                 if (IsMatch(msg, "(how.*return|process|step|procedure|paano.*ibalik)"))
                 {
-                    return ("Here's how to return an item! 🔄\n\n1️⃣ Make sure it's within 7 days of delivery\n2️⃣ Go to Support → Submit Ticket\n3️⃣ Select 'Returns & Refunds' category\n4️⃣ Provide your order number and reason\n5️⃣ Attach photos if the item is damaged\n\n💰 Refunds are processed via original payment method (GCash, Card, etc.). Need help starting a return?",
-                        "return_process", 0.91m, new[] { "📝 Submit Ticket", "📦 View Orders", "👤 Talk to Agent" }, false);
+                    return ("Here's how to return an item! ??\n\n1?? Make sure it's within 7 days of delivery\n2?? Go to Support ? Submit Ticket\n3?? Select 'Returns & Refunds' category\n4?? Provide your order number and reason\n5?? Attach photos if the item is damaged\n\n?? Refunds are processed via original payment method (GCash, Card, etc.). Need help starting a return?",
+                        "return_process", 0.91m, new[] { "?? Submit Ticket", "?? View Orders", "?? Talk to Agent" }, false);
                 }
                 var returnResponses = new[]
                 {
-                    "I can help with returns and refunds! 🔄 Our policy allows returns within 7 days of delivery for unopened items. For defective products, you can file a warranty claim anytime within the warranty period. Would you like me to guide you through the process?",
-                    "Sure, let me help with that! 🔄 You can return items within 7 days of delivery. For defects and warranty issues, submit a support ticket with photos and we'll process it quickly. What's the issue with your item?"
+                    "I can help with returns and refunds! ?? Our policy allows returns within 7 days of delivery for unopened items. For defective products, you can file a warranty claim anytime within the warranty period. Would you like me to guide you through the process?",
+                    "Sure, let me help with that! ?? You can return items within 7 days of delivery. For defects and warranty issues, submit a support ticket with photos and we'll process it quickly. What's the issue with your item?"
                 };
-                return (Pick(returnResponses), "return_refund", 0.89m, new[] { "📋 Return Policy", "📝 Submit Ticket", "👤 Talk to Agent" }, false);
+                return (Pick(returnResponses), "return_refund", 0.89m, new[] { "?? Return Policy", "?? Submit Ticket", "?? Talk to Agent" }, false);
             }
 
             // ========== PRODUCTS / RECOMMENDATIONS ==========
@@ -1871,35 +1872,35 @@ namespace CompuGear.Controllers
             {
                 if (IsMatch(msg, "(gaming|game|gamer|play|fps|esport)"))
                 {
-                    return ("Looking for gaming gear? 🎮 We've got you covered!\n\n🖥️ **GPUs:** NVIDIA RTX 4090, RTX 4070, AMD RX 7900\n⌨️ **Keyboards:** Razer BlackWidow V4 Pro (₱11,000)\n🖱️ **Mice:** Logitech G502 X Plus (₱6,500)\n🎧 **Headsets:** Top brands from Razer, Corsair, HyperX\n\nVisit our Products page and filter by 'Gaming' category. We also have gaming bundles with special discounts! 🔥",
-                        "gaming_products", 0.91m, new[] { "🎮 Gaming Gear", "🛒 Browse Products", "🏷️ View Deals" }, false);
+                    return ("Looking for gaming gear? ?? We've got you covered!\n\n??? **GPUs:** NVIDIA RTX 4090, RTX 4070, AMD RX 7900\n?? **Keyboards:** Razer BlackWidow V4 Pro (?11,000)\n??? **Mice:** Logitech G502 X Plus (?6,500)\n?? **Headsets:** Top brands from Razer, Corsair, HyperX\n\nVisit our Products page and filter by 'Gaming' category. We also have gaming bundles with special discounts! ??",
+                        "gaming_products", 0.91m, new[] { "?? Gaming Gear", "?? Browse Products", "??? View Deals" }, false);
                 }
                 if (IsMatch(msg, "(laptop|notebook)"))
                 {
-                    return ("We have great laptops for every need! 💻\n\n• 🎮 Gaming Laptops — ASUS ROG, MSI, Acer Predator\n• 💼 Business Laptops — HP, Dell, Lenovo ThinkPad\n• 📚 Budget-friendly — Acer Aspire, Lenovo IdeaPad\n\nBrowse our Products page and filter by 'Computer Systems' to find the perfect one. What's your budget range? 😊",
-                        "laptop_inquiry", 0.90m, new[] { "💻 Browse Laptops", "🛒 All Products", "🎮 Gaming Laptops" }, false);
+                    return ("We have great laptops for every need! ??\n\n� ?? Gaming Laptops � ASUS ROG, MSI, Acer Predator\n� ?? Business Laptops � HP, Dell, Lenovo ThinkPad\n� ?? Budget-friendly � Acer Aspire, Lenovo IdeaPad\n\nBrowse our Products page and filter by 'Computer Systems' to find the perfect one. What's your budget range? ??",
+                        "laptop_inquiry", 0.90m, new[] { "?? Browse Laptops", "?? All Products", "?? Gaming Laptops" }, false);
                 }
                 if (IsMatch(msg, "(gpu|graphics|video card|rtx|rx |nvidia|amd.*gpu|radeon)"))
                 {
-                    return ("Great choice! 🎮 Here are our popular GPUs:\n\n🔥 NVIDIA GeForce RTX 4090 — ₱120,000 (Beast mode!)\n⚡ NVIDIA RTX 4070 Ti — Great for 1440p gaming\n💰 AMD RX 7800 XT — Best value for gamers\n\nAll GPUs come with 3-year warranty. Check the Products page → filter by 'Components' for the full lineup! Want a recommendation based on your budget?",
-                        "gpu_inquiry", 0.91m, new[] { "🛒 Browse GPUs", "🎮 Gaming Setup", "💰 Budget Options" }, false);
+                    return ("Great choice! ?? Here are our popular GPUs:\n\n?? NVIDIA GeForce RTX 4090 � ?120,000 (Beast mode!)\n? NVIDIA RTX 4070 Ti � Great for 1440p gaming\n?? AMD RX 7800 XT � Best value for gamers\n\nAll GPUs come with 3-year warranty. Check the Products page ? filter by 'Components' for the full lineup! Want a recommendation based on your budget?",
+                        "gpu_inquiry", 0.91m, new[] { "?? Browse GPUs", "?? Gaming Setup", "?? Budget Options" }, false);
                 }
                 if (IsMatch(msg, "(cpu|processor|intel|amd|ryzen|core i)"))
                 {
-                    return ("Looking for a processor? ⚡ Top picks:\n\n🏆 Intel Core i7-13700K — ₱22,500 (Great all-rounder)\n🔥 AMD Ryzen 7 7800X3D — Best for gaming\n💰 Intel Core i5-13600K — Best value\n\nAll processors come with 3-year warranty. Check our Components section for the full range. What's your use case — gaming, work, or content creation? 🤔",
-                        "cpu_inquiry", 0.91m, new[] { "⚡ Browse CPUs", "🛒 All Components", "🎮 Gaming Build" }, false);
+                    return ("Looking for a processor? ? Top picks:\n\n?? Intel Core i7-13700K � ?22,500 (Great all-rounder)\n?? AMD Ryzen 7 7800X3D � Best for gaming\n?? Intel Core i5-13600K � Best value\n\nAll processors come with 3-year warranty. Check our Components section for the full range. What's your use case � gaming, work, or content creation? ??",
+                        "cpu_inquiry", 0.91m, new[] { "? Browse CPUs", "?? All Components", "?? Gaming Build" }, false);
                 }
                 if (IsMatch(msg, "(cheap|budget|affordable|mura|tipid|under.*(5|10|15|20).*(k|thousand|000))"))
                 {
-                    return ("Great news — we have awesome budget options! 💰\n\n⌨️ Quality keyboards from ₱1,500\n🖱️ Gaming mice from ₱2,000\n🎧 Headsets from ₱1,800\n💾 SSDs from ₱2,500\n\n🏷️ Plus use promo code WELCOME500 for ₱500 off your first order (min ₱3,000)! Check our Products page and sort by 'Price: Low to High'. 😊",
-                        "budget_inquiry", 0.88m, new[] { "🛒 Browse Products", "🏷️ View Promos", "💰 Best Deals" }, false);
+                    return ("Great news � we have awesome budget options! ??\n\n?? Quality keyboards from ?1,500\n??? Gaming mice from ?2,000\n?? Headsets from ?1,800\n?? SSDs from ?2,500\n\n??? Plus use promo code WELCOME500 for ?500 off your first order (min ?3,000)! Check our Products page and sort by 'Price: Low to High'. ??",
+                        "budget_inquiry", 0.88m, new[] { "?? Browse Products", "??? View Promos", "?? Best Deals" }, false);
                 }
                 var productResponses = new[]
                 {
-                    "We have a huge selection of tech products! 🖥️\n\n• 💻 Computer Systems — Desktops & Laptops\n• ⚡ Components — CPUs, GPUs, RAM, Motherboards, SSDs\n• ⌨️ Peripherals — Keyboards, Mice, Monitors, Headsets\n• 🎮 Gaming — Full gaming gear lineup\n• 📡 Networking — Routers, Switches\n\nTop brands: Intel, AMD, NVIDIA, ASUS, Razer, Logitech, Corsair, Samsung & more. Browse our Products page to explore! 😊",
-                    "I'd love to help you find the right product! 🛒 We carry all major brands — Intel, AMD, NVIDIA, ASUS, MSI, Razer, Logitech, and more. What are you looking for? Tell me your needs (gaming, work, budget) and I'll point you in the right direction! 😊"
+                    "We have a huge selection of tech products! ???\n\n� ?? Computer Systems � Desktops & Laptops\n� ? Components � CPUs, GPUs, RAM, Motherboards, SSDs\n� ?? Peripherals � Keyboards, Mice, Monitors, Headsets\n� ?? Gaming � Full gaming gear lineup\n� ?? Networking � Routers, Switches\n\nTop brands: Intel, AMD, NVIDIA, ASUS, Razer, Logitech, Corsair, Samsung & more. Browse our Products page to explore! ??",
+                    "I'd love to help you find the right product! ?? We carry all major brands � Intel, AMD, NVIDIA, ASUS, MSI, Razer, Logitech, and more. What are you looking for? Tell me your needs (gaming, work, budget) and I'll point you in the right direction! ??"
                 };
-                return (Pick(productResponses), "product_inquiry", 0.88m, new[] { "🛒 Browse Products", "🎮 Gaming Gear", "⚡ Components", "💰 Budget Picks" }, false);
+                return (Pick(productResponses), "product_inquiry", 0.88m, new[] { "?? Browse Products", "?? Gaming Gear", "? Components", "?? Budget Picks" }, false);
             }
 
             // ========== PAYMENT ==========
@@ -1907,23 +1908,23 @@ namespace CompuGear.Controllers
             {
                 if (IsMatch(msg, "(installment|monthly|hulugan)"))
                 {
-                    return ("Currently, we process payments in full through our PayMongo gateway. 💳 However, if your credit card supports installment plans, you may be able to convert the transaction through your bank. For large orders, you can contact our support team to discuss options! 😊",
-                        "installment_inquiry", 0.85m, new[] { "💳 Payment Methods", "👤 Talk to Agent", "🛒 Checkout" }, false);
+                    return ("Currently, we process payments in full through our PayMongo gateway. ?? However, if your credit card supports installment plans, you may be able to convert the transaction through your bank. For large orders, you can contact our support team to discuss options! ??",
+                        "installment_inquiry", 0.85m, new[] { "?? Payment Methods", "?? Talk to Agent", "?? Checkout" }, false);
                 }
                 if (IsMatch(msg, "(failed|error|declined|rejected|not working|di pumasa|hindi pumasok|problem)"))
                 {
-                    return ("Sorry to hear about the payment issue! 😣 Here are some things to try:\n\n1️⃣ Check your balance/credit limit\n2️⃣ Make sure your card isn't expired\n3️⃣ Try a different payment method (GCash, Maya, etc.)\n4️⃣ Clear your browser cache and try again\n\nIf it still doesn't work, our support team can help! 🔧",
-                        "payment_failed", 0.90m, new[] { "💳 Try Again", "📝 Submit Ticket", "👤 Talk to Agent" }, false);
+                    return ("Sorry to hear about the payment issue! ?? Here are some things to try:\n\n1?? Check your balance/credit limit\n2?? Make sure your card isn't expired\n3?? Try a different payment method (GCash, Maya, etc.)\n4?? Clear your browser cache and try again\n\nIf it still doesn't work, our support team can help! ??",
+                        "payment_failed", 0.90m, new[] { "?? Try Again", "?? Submit Ticket", "?? Talk to Agent" }, false);
                 }
-                return ("We accept multiple secure payment methods! 💳\n\n• 💳 Credit/Debit Cards (Visa, Mastercard, JCB)\n• 📱 GCash\n• 🟢 GrabPay\n• 💜 Maya (PayMaya)\n• 🏦 Bank Transfer\n• 💵 Cash on Delivery (COD)\n\nAll transactions are processed securely through PayMongo with encryption. You can choose your preferred method at checkout! 😊",
-                    "payment_inquiry", 0.91m, new[] { "💳 Payment Methods", "🛒 Go to Checkout", "👤 Talk to Agent" }, false);
+                return ("We accept multiple secure payment methods! ??\n\n� ?? Credit/Debit Cards (Visa, Mastercard, JCB)\n� ?? GCash\n� ?? GrabPay\n� ?? Maya (PayMaya)\n� ?? Bank Transfer\n� ?? Cash on Delivery (COD)\n\nAll transactions are processed securely through PayMongo with encryption. You can choose your preferred method at checkout! ??",
+                    "payment_inquiry", 0.91m, new[] { "?? Payment Methods", "?? Go to Checkout", "?? Talk to Agent" }, false);
             }
 
             // ========== PROMOTIONS / DISCOUNTS ==========
             if (IsMatch(msg, "(promo|promotion|discount|coupon|code|voucher|sale|deal|offer|free shipping|flash sale|mega sale|percent off|% off|tipid|barat|libre|tawad)"))
             {
-                return ("Hot deals happening now! 🔥\n\n🏷️ **SUMMER10** — 10% off orders over ₱10,000 (max ₱15,000 discount)\n🎮 **GAMER2026** — ₱2,000 off gaming bundles over ₱15,000\n🚚 **FREESHIP** — Free shipping on orders over ₱5,000\n🎉 **WELCOME500** — ₱500 off your first order (min ₱3,000)\n⚡ **FLASH25** — 25% off on Flash Fridays!\n\n💡 Enter your promo code in the cart before checkout. Visit our Promotions page for all active deals! 😊",
-                    "promo_inquiry", 0.93m, new[] { "🏷️ View Promotions", "🔥 Flash Deals", "🛒 Shop Now" }, false);
+                return ("Hot deals happening now! ??\n\n??? **SUMMER10** � 10% off orders over ?10,000 (max ?15,000 discount)\n?? **GAMER2026** � ?2,000 off gaming bundles over ?15,000\n?? **FREESHIP** � Free shipping on orders over ?5,000\n?? **WELCOME500** � ?500 off your first order (min ?3,000)\n? **FLASH25** � 25% off on Flash Fridays!\n\n?? Enter your promo code in the cart before checkout. Visit our Promotions page for all active deals! ??",
+                    "promo_inquiry", 0.93m, new[] { "??? View Promotions", "?? Flash Deals", "?? Shop Now" }, false);
             }
 
             // ========== SUPPORT / TICKETS ==========
@@ -1931,15 +1932,15 @@ namespace CompuGear.Controllers
             {
                 if (IsMatch(msg, "(ticket|submit|create|file|how.*ticket)"))
                 {
-                    return ("To submit a support ticket: 📝\n\n1️⃣ Go to Support → Submit Ticket\n2️⃣ Choose a category (Order Issue, Technical Support, Returns, etc.)\n3️⃣ Describe your issue in detail\n4️⃣ Attach any relevant screenshots or photos\n5️⃣ Submit and you'll get a ticket number!\n\nOur team will respond based on priority — urgent orders within 12 hours, general inquiries within 48–72 hours. 😊",
-                        "ticket_info", 0.92m, new[] { "📝 Submit Ticket", "📋 My Tickets", "👤 Talk to Agent" }, false);
+                    return ("To submit a support ticket: ??\n\n1?? Go to Support ? Submit Ticket\n2?? Choose a category (Order Issue, Technical Support, Returns, etc.)\n3?? Describe your issue in detail\n4?? Attach any relevant screenshots or photos\n5?? Submit and you'll get a ticket number!\n\nOur team will respond based on priority � urgent orders within 12 hours, general inquiries within 48�72 hours. ??",
+                        "ticket_info", 0.92m, new[] { "?? Submit Ticket", "?? My Tickets", "?? Talk to Agent" }, false);
                 }
                 var supportResponses = new[]
                 {
-                    "I'm here to help! 🙋 What issue are you experiencing? I can assist with:\n\n• 📦 Order problems\n• 💳 Payment issues\n• 🔄 Returns & refunds\n• 🛡️ Warranty claims\n• 🖥️ Product questions\n• 🔧 Technical issues\n\nDescribe your problem and I'll do my best to help, or I can connect you with a live agent! 😊",
-                    "No worries, I'll help you out! 🔧 Tell me what's going on and I'll guide you to a solution. If it's something I can't handle, I can instantly connect you with our support team or help you submit a ticket."
+                    "I'm here to help! ?? What issue are you experiencing? I can assist with:\n\n� ?? Order problems\n� ?? Payment issues\n� ?? Returns & refunds\n� ??? Warranty claims\n� ??? Product questions\n� ?? Technical issues\n\nDescribe your problem and I'll do my best to help, or I can connect you with a live agent! ??",
+                    "No worries, I'll help you out! ?? Tell me what's going on and I'll guide you to a solution. If it's something I can't handle, I can instantly connect you with our support team or help you submit a ticket."
                 };
-                return (Pick(supportResponses), "support_request", 0.85m, new[] { "📝 Submit Ticket", "📋 My Tickets", "👤 Talk to Agent" }, false);
+                return (Pick(supportResponses), "support_request", 0.85m, new[] { "?? Submit Ticket", "?? My Tickets", "?? Talk to Agent" }, false);
             }
 
             // ========== ACCOUNT / PROFILE ==========
@@ -1947,18 +1948,18 @@ namespace CompuGear.Controllers
             {
                 if (IsMatch(msg, "(password|forgot|reset)"))
                 {
-                    return ("Need to reset your password? 🔐\n\nYou can update your password from your Profile page. If you're locked out, contact our support team and they'll help you regain access. For security, we recommend using a strong password with at least 8 characters, numbers, and special characters! 😊",
-                        "password_reset", 0.90m, new[] { "👤 Go to Profile", "📝 Submit Ticket", "👤 Talk to Agent" }, false);
+                    return ("Need to reset your password? ??\n\nYou can update your password from your Profile page. If you're locked out, contact our support team and they'll help you regain access. For security, we recommend using a strong password with at least 8 characters, numbers, and special characters! ??",
+                        "password_reset", 0.90m, new[] { "?? Go to Profile", "?? Submit Ticket", "?? Talk to Agent" }, false);
                 }
-                return ("You can manage your account from the Profile section! 👤\n\n• ✏️ Edit name, email, phone number\n• 📍 Add/update shipping addresses\n• 🔐 Change your password\n• 🏠 Set default shipping address\n\nGo to your Profile page to update your info. Need help with something specific? 😊",
-                    "account_inquiry", 0.88m, new[] { "👤 Go to Profile", "📍 Manage Addresses", "👤 Talk to Agent" }, false);
+                return ("You can manage your account from the Profile section! ??\n\n� ?? Edit name, email, phone number\n� ?? Add/update shipping addresses\n� ?? Change your password\n� ?? Set default shipping address\n\nGo to your Profile page to update your info. Need help with something specific? ??",
+                    "account_inquiry", 0.88m, new[] { "?? Go to Profile", "?? Manage Addresses", "?? Talk to Agent" }, false);
             }
 
             // ========== AGENT REQUEST ==========
             if (IsMatch(msg, "(agent|human|person|representative|real person|live.*chat|talk.*someone|speak.*someone|customer service|operator|staff|tao|kausapin)"))
             {
-                return ("I'll connect you with a live support agent right away! 👨‍💼 Please hold on while I transfer your chat. An agent will be with you shortly. 🔔",
-                    "agent_request", 0.98m, new string[] { }, true);
+                return ("I'll connect you with a live support agent right away! ????? Please hold on while I transfer your chat. An agent will be with you shortly. ??",
+                    "agent_request", 0.98m, [], true);
             }
 
             // ========== GRATITUDE ==========
@@ -1966,12 +1967,12 @@ namespace CompuGear.Controllers
             {
                 var thankResponses = new[]
                 {
-                    "You're welcome! 😊 Happy to help! Is there anything else I can assist you with?",
-                    "Glad I could help! 🎉 Don't hesitate to ask if you need anything else. Enjoy your CompuGear experience! 😊",
-                    "Walang anuman! 😊 If you ever need help again, I'm always here. Have a great day! 🌟",
-                    "My pleasure! 😊 Feel free to come back anytime. Happy shopping at CompuGear! 🛒"
+                    "You're welcome! ?? Happy to help! Is there anything else I can assist you with?",
+                    "Glad I could help! ?? Don't hesitate to ask if you need anything else. Enjoy your CompuGear experience! ??",
+                    "Walang anuman! ?? If you ever need help again, I'm always here. Have a great day! ??",
+                    "My pleasure! ?? Feel free to come back anytime. Happy shopping at CompuGear! ??"
                 };
-                return (Pick(thankResponses), "gratitude", 0.95m, new[] { "🛒 Browse Products", "📦 My Orders", "👋 Goodbye" }, false);
+                return (Pick(thankResponses), "gratitude", 0.95m, new[] { "?? Browse Products", "?? My Orders", "?? Goodbye" }, false);
             }
 
             // ========== GOODBYE ==========
@@ -1979,25 +1980,25 @@ namespace CompuGear.Controllers
             {
                 var byeResponses = new[]
                 {
-                    "Goodbye! 👋 Thanks for chatting with CompuGear. Have a great day and happy shopping! 🛒😊",
-                    "See you soon! 👋 Remember, I'm here 24/7 whenever you need help. Take care! 😊",
-                    "Paalam! 👋 Ingat ka! Come back anytime you need assistance. Enjoy your CompuGear experience! 😊"
+                    "Goodbye! ?? Thanks for chatting with CompuGear. Have a great day and happy shopping! ????",
+                    "See you soon! ?? Remember, I'm here 24/7 whenever you need help. Take care! ??",
+                    "Paalam! ?? Ingat ka! Come back anytime you need assistance. Enjoy your CompuGear experience! ??"
                 };
-                return (Pick(byeResponses), "goodbye", 0.95m, new[] { "🛒 Browse Products", "🏷️ View Deals" }, false);
+                return (Pick(byeResponses), "goodbye", 0.95m, new[] { "?? Browse Products", "??? View Deals" }, false);
             }
 
             // ========== ERP / BUSINESS / SUBSCRIPTION ==========
             if (IsMatch(msg, "(erp|subscription|plan|business|enterprise|saas|crm|module|pricing|basic plan|pro plan|inventory management|sales management|billing module|marketing module)"))
             {
-                return ("CompuGear also offers cloud ERP solutions for businesses! 🏢\n\n📊 **Basic Plan** — ₱2,499/mo\n• Up to 50 users, 3 admins\n• Sales + Inventory modules\n\n⚡ **Pro Plan** — ₱4,999/mo\n• Up to 200 users, 10 admins\n• All modules (Sales, Inventory, Billing, Support, Marketing)\n• Advanced analytics + Priority support\n\n🏢 **Enterprise** — Custom pricing\n• Unlimited users, dedicated support, SLA guarantees\n\n✨ 14-day free trial on Pro plan! Annual billing saves 2 months. Visit our ERP Website for details! 😊",
-                    "erp_inquiry", 0.90m, new[] { "📊 View Plans", "💼 Pro Plan", "👤 Talk to Sales" }, false);
+                return ("CompuGear also offers cloud ERP solutions for businesses! ??\n\n?? **Basic Plan** � ?2,499/mo\n� Up to 50 users, 3 admins\n� Sales + Inventory modules\n\n? **Pro Plan** � ?4,999/mo\n� Up to 200 users, 10 admins\n� All modules (Sales, Inventory, Billing, Support, Marketing)\n� Advanced analytics + Priority support\n\n?? **Enterprise** � Custom pricing\n� Unlimited users, dedicated support, SLA guarantees\n\n? 14-day free trial on Pro plan! Annual billing saves 2 months. Visit our ERP Website for details! ??",
+                    "erp_inquiry", 0.90m, new[] { "?? View Plans", "?? Pro Plan", "?? Talk to Sales" }, false);
             }
 
             // ========== ABOUT COMPUGEAR ==========
             if (IsMatch(msg, "(who are you|what is compugear|what.*compugear|about|company|sino ka|ano.*compugear|tell me about|what do you sell|what.*you.*sell|saan.*located|where.*located|location|branch|store)"))
             {
-                return ("CompuGear is a Philippines-based online tech retailer and ERP platform! 🇵🇭\n\n🖥️ **What we sell:** Computer parts, laptops, gaming gear, peripherals, components, and accessories from top brands like Intel, AMD, NVIDIA, ASUS, Razer, Logitech, Corsair, Samsung, and more.\n\n💼 **For businesses:** We also offer a cloud-based ERP/CRM platform with Sales, Inventory, Billing, Support, and Marketing modules.\n\n🚚 We deliver nationwide across the Philippines! Founded in 2024, our mission is to be your one-stop tech shop. 😊",
-                    "about_compugear", 0.92m, new[] { "🛒 Browse Products", "📊 ERP Plans", "📞 Contact Us" }, false);
+                return ("CompuGear is a Philippines-based online tech retailer and ERP platform! ????\n\n??? **What we sell:** Computer parts, laptops, gaming gear, peripherals, components, and accessories from top brands like Intel, AMD, NVIDIA, ASUS, Razer, Logitech, Corsair, Samsung, and more.\n\n?? **For businesses:** We also offer a cloud-based ERP/CRM platform with Sales, Inventory, Billing, Support, and Marketing modules.\n\n?? We deliver nationwide across the Philippines! Founded in 2024, our mission is to be your one-stop tech shop. ??",
+                    "about_compugear", 0.92m, new[] { "?? Browse Products", "?? ERP Plans", "?? Contact Us" }, false);
             }
 
             // ========== GENERAL TECH QUESTIONS ==========
@@ -2005,16 +2006,16 @@ namespace CompuGear.Controllers
             {
                 if (IsMatch(msg, "(build.*pc|pc build|gaming.*pc|gaming.*build|gaming.*setup)"))
                 {
-                    return ("Building a PC? Awesome! 🖥️ Here's a quick guide:\n\n1️⃣ **CPU** — Intel i5/i7 or AMD Ryzen 5/7\n2️⃣ **GPU** — RTX 4070 for 1440p, RTX 4090 for 4K\n3️⃣ **RAM** — 16GB DDR5 minimum (32GB for futureproofing)\n4️⃣ **Storage** — 1TB NVMe SSD (Samsung 990 Pro recommended)\n5️⃣ **Motherboard** — Match your CPU socket (LGA1700/AM5)\n6️⃣ **PSU** — 750W–850W 80+ Gold\n\nWe carry all these components! Check our Products → Components section. Need a specific build recommendation? 💪",
-                        "pc_build", 0.90m, new[] { "⚡ Browse Components", "🎮 Gaming Setup", "👤 Get Advice" }, false);
+                    return ("Building a PC? Awesome! ??? Here's a quick guide:\n\n1?? **CPU** � Intel i5/i7 or AMD Ryzen 5/7\n2?? **GPU** � RTX 4070 for 1440p, RTX 4090 for 4K\n3?? **RAM** � 16GB DDR5 minimum (32GB for futureproofing)\n4?? **Storage** � 1TB NVMe SSD (Samsung 990 Pro recommended)\n5?? **Motherboard** � Match your CPU socket (LGA1700/AM5)\n6?? **PSU** � 750W�850W 80+ Gold\n\nWe carry all these components! Check our Products ? Components section. Need a specific build recommendation? ??",
+                        "pc_build", 0.90m, new[] { "? Browse Components", "?? Gaming Setup", "?? Get Advice" }, false);
                 }
                 if (IsMatch(msg, "(ram|memory|how much ram|ddr4|ddr5)"))
                 {
-                    return ("Here's a quick RAM guide! 💾\n\n• 🏢 Basic tasks (Office, browsing): 8GB is enough\n• 🎮 Gaming: 16GB is the sweet spot\n• 🎬 Content creation/streaming: 32GB recommended\n• 🔬 Professional workloads: 64GB+\n\n💡 Tip: DDR5 is the latest standard with better speeds. We carry Corsair Vengeance, Kingston Fury, and more — all with lifetime warranty! Check our Products page. 😊",
-                        "ram_guide", 0.88m, new[] { "💾 Browse RAM", "🛒 All Products", "🎮 Gaming Setup" }, false);
+                    return ("Here's a quick RAM guide! ??\n\n� ?? Basic tasks (Office, browsing): 8GB is enough\n� ?? Gaming: 16GB is the sweet spot\n� ?? Content creation/streaming: 32GB recommended\n� ?? Professional workloads: 64GB+\n\n?? Tip: DDR5 is the latest standard with better speeds. We carry Corsair Vengeance, Kingston Fury, and more � all with lifetime warranty! Check our Products page. ??",
+                        "ram_guide", 0.88m, new[] { "?? Browse RAM", "?? All Products", "?? Gaming Setup" }, false);
                 }
-                return ("Great tech question! 🤓 I can help with general recommendations, but for very specific technical advice, I'd recommend connecting with our support team who are hardware experts. In the meantime, check our Products page where you can filter by specs, compare items, and read details. What specifically are you looking for? 😊",
-                    "tech_question", 0.80m, new[] { "🛒 Browse Products", "📝 Ask Support", "👤 Talk to Expert" }, false);
+                return ("Great tech question! ?? I can help with general recommendations, but for very specific technical advice, I'd recommend connecting with our support team who are hardware experts. In the meantime, check our Products page where you can filter by specs, compare items, and read details. What specifically are you looking for? ??",
+                    "tech_question", 0.80m, new[] { "?? Browse Products", "?? Ask Support", "?? Talk to Expert" }, false);
             }
 
             // ========== HOW TO / NAVIGATION ==========
@@ -2022,50 +2023,50 @@ namespace CompuGear.Controllers
             {
                 if (IsMatch(msg, "(checkout|buy|purchase|order|bili|bumili)"))
                 {
-                    return ("Here's how to place an order! 🛒\n\n1️⃣ Browse Products and add items to your cart\n2️⃣ Go to Cart → Review items\n3️⃣ Click 'Proceed to Checkout'\n4️⃣ Enter/confirm your shipping address\n5️⃣ Choose payment method and complete payment\n6️⃣ Done! You'll get a confirmation email 📧\n\n💡 Don't forget to apply a promo code before checkout for extra savings! 🏷️",
-                        "how_to_order", 0.92m, new[] { "🛒 Go to Cart", "🛍️ Browse Products", "🏷️ Promo Codes" }, false);
+                    return ("Here's how to place an order! ??\n\n1?? Browse Products and add items to your cart\n2?? Go to Cart ? Review items\n3?? Click 'Proceed to Checkout'\n4?? Enter/confirm your shipping address\n5?? Choose payment method and complete payment\n6?? Done! You'll get a confirmation email ??\n\n?? Don't forget to apply a promo code before checkout for extra savings! ???",
+                        "how_to_order", 0.92m, new[] { "?? Go to Cart", "??? Browse Products", "??? Promo Codes" }, false);
                 }
-                return ("I can help you navigate CompuGear! 🗺️ Here are the main sections:\n\n• 🛒 **Products** — Browse and search our catalog\n• 📦 **My Orders** — Track all your orders\n• ❤️ **Wishlist** — Items you saved for later\n• 🏷️ **Promotions** — Current deals and discounts\n• 👤 **Profile** — Manage your account & addresses\n• 💬 **Support** — Chat, tickets, and FAQ\n\nWhat are you trying to find? 😊",
-                    "navigation", 0.85m, new[] { "🛒 Products", "📦 Orders", "🏷️ Promos", "👤 Profile" }, false);
+                return ("I can help you navigate CompuGear! ??? Here are the main sections:\n\n� ?? **Products** � Browse and search our catalog\n� ?? **My Orders** � Track all your orders\n� ?? **Wishlist** � Items you saved for later\n� ??? **Promotions** � Current deals and discounts\n� ?? **Profile** � Manage your account & addresses\n� ?? **Support** � Chat, tickets, and FAQ\n\nWhat are you trying to find? ??",
+                    "navigation", 0.85m, new[] { "?? Products", "?? Orders", "??? Promos", "?? Profile" }, false);
             }
 
             // ========== GENERAL CONVERSATION (catch-all with smart responses) ==========
             if (IsMatch(msg, "(what.*your name|who.*you|name|are you.*bot|are you.*ai|are you.*real|robot|artificial)"))
             {
-                return ("I'm the CompuGear AI Assistant! 🤖 I'm an intelligent chatbot designed to help you with anything related to CompuGear — from product browsing to order tracking to tech advice. While I'm not a human, I'm pretty smart! 😊 And if you need a real person, I can connect you to a live agent anytime. How can I help you today?",
-                    "identity", 0.95m, new[] { "🛒 Browse Products", "📦 Track Order", "👤 Live Agent" }, false);
+                return ("I'm the CompuGear AI Assistant! ?? I'm an intelligent chatbot designed to help you with anything related to CompuGear � from product browsing to order tracking to tech advice. While I'm not a human, I'm pretty smart! ?? And if you need a real person, I can connect you to a live agent anytime. How can I help you today?",
+                    "identity", 0.95m, new[] { "?? Browse Products", "?? Track Order", "?? Live Agent" }, false);
             }
 
-            if (IsMatch(msg, "(weather|time|date|news|joke|funny|bored|lonely|sad|happy|love|hate|angry|lol|haha|😂|🤣|cute|pretty|ganda)"))
+            if (IsMatch(msg, "(weather|time|date|news|joke|funny|bored|lonely|sad|happy|love|hate|angry|lol|haha|??|??|cute|pretty|ganda)"))
             {
                 var funResponses = new[]
                 {
-                    "Haha, I appreciate the chat! 😄 While I'm best at helping with CompuGear stuff — orders, products, tech advice — I'm always happy to keep you company. Anything I can actually help you with today? 😊",
-                    "Ha! You're fun to talk to! 😄 But hey, while we're here — have you checked out our latest deals? We've got some amazing promos running right now! 🔥 Or is there something else I can help with?",
-                    "LOL 😂 I love a good conversation! But I'm at my best when helping with tech and orders. Anything on your mind that I can assist with? Or feel free to browse our Products — you might find something cool! 🛒"
+                    "Haha, I appreciate the chat! ?? While I'm best at helping with CompuGear stuff � orders, products, tech advice � I'm always happy to keep you company. Anything I can actually help you with today? ??",
+                    "Ha! You're fun to talk to! ?? But hey, while we're here � have you checked out our latest deals? We've got some amazing promos running right now! ?? Or is there something else I can help with?",
+                    "LOL ?? I love a good conversation! But I'm at my best when helping with tech and orders. Anything on your mind that I can assist with? Or feel free to browse our Products � you might find something cool! ??"
                 };
-                return (Pick(funResponses), "casual", 0.70m, new[] { "🛒 Browse Products", "🏷️ View Deals", "🎮 Gaming Gear" }, false);
+                return (Pick(funResponses), "casual", 0.70m, new[] { "?? Browse Products", "??? View Deals", "?? Gaming Gear" }, false);
             }
 
             // ========== SMART DEFAULT (pattern: questions vs statements) ==========
-            if (msg.Contains("?") || IsMatch(msg, "^(what|how|when|where|why|which|can|do|does|is|are|will|would|could|should|did)"))
+            if (msg.Contains('?') || IsMatch(msg, "^(what|how|when|where|why|which|can|do|does|is|are|will|would|could|should|did)"))
             {
                 var questionDefaults = new[]
                 {
-                    "That's a great question! 🤔 I may not have the specific answer, but I can help with:\n\n📦 Order tracking and delivery info\n🛒 Product browsing and recommendations\n💳 Payment methods and checkout\n🔄 Returns, refunds, and warranties\n🏷️ Promotions and discount codes\n👤 Account management\n\nCould you rephrase your question related to one of these? Or I can connect you with a live agent who can help! 😊",
-                    "Hmm, I want to make sure I give you the right answer! 🤔 Could you give me a bit more detail? I'm great at helping with orders, products, payments, returns, and promotions. If your question is more complex, I can connect you with our support team! 😊"
+                    "That's a great question! ?? I may not have the specific answer, but I can help with:\n\n?? Order tracking and delivery info\n?? Product browsing and recommendations\n?? Payment methods and checkout\n?? Returns, refunds, and warranties\n??? Promotions and discount codes\n?? Account management\n\nCould you rephrase your question related to one of these? Or I can connect you with a live agent who can help! ??",
+                    "Hmm, I want to make sure I give you the right answer! ?? Could you give me a bit more detail? I'm great at helping with orders, products, payments, returns, and promotions. If your question is more complex, I can connect you with our support team! ??"
                 };
-                return (Pick(questionDefaults), "unknown_question", 0.60m, new[] { "📦 Track Order", "🛒 Products", "🏷️ Promos", "👤 Talk to Agent" }, false);
+                return (Pick(questionDefaults), "unknown_question", 0.60m, new[] { "?? Track Order", "?? Products", "??? Promos", "?? Talk to Agent" }, false);
             }
 
             // ========== ABSOLUTE DEFAULT ==========
             var defaults = new[]
             {
-                "Thanks for your message! 😊 I can help you with orders, products, payments, promotions, returns, and more. What would you like to know? Just ask or pick one of the options below!",
-                "I'm here to assist! 😊 Whether you need help with your orders, want product recommendations, or have questions about payments and returns — just let me know! You can also pick from the quick options below.",
-                "Got it! 😊 I'm your CompuGear assistant and I can help with:\n\n📦 Orders & shipping\n🛒 Products & recommendations\n💳 Payments\n🔄 Returns & warranties\n🏷️ Promotions\n\nWhat interests you? Or type your question and I'll do my best to help!"
+                "Thanks for your message! ?? I can help you with orders, products, payments, promotions, returns, and more. What would you like to know? Just ask or pick one of the options below!",
+                "I'm here to assist! ?? Whether you need help with your orders, want product recommendations, or have questions about payments and returns � just let me know! You can also pick from the quick options below.",
+                "Got it! ?? I'm your CompuGear assistant and I can help with:\n\n?? Orders & shipping\n?? Products & recommendations\n?? Payments\n?? Returns & warranties\n??? Promotions\n\nWhat interests you? Or type your question and I'll do my best to help!"
             };
-            return (Pick(defaults), "general", 0.55m, new[] { "🛒 Browse Products", "📦 View Orders", "🏷️ Promotions", "👤 Talk to Agent" }, false);
+            return (Pick(defaults), "general", 0.55m, new[] { "?? Browse Products", "?? View Orders", "??? Promotions", "?? Talk to Agent" }, false);
         }
 
         // Helper: Regex matching
@@ -2202,8 +2203,8 @@ namespace CompuGear.Controllers
 
             // Verify current password using salt-based hash (matches AuthController logic)
             var currentHash = Convert.ToBase64String(
-                System.Security.Cryptography.SHA256.HashData(
-                    System.Text.Encoding.UTF8.GetBytes(model.CurrentPassword + (user.Salt ?? ""))));
+                SHA256.HashData(
+                    Encoding.UTF8.GetBytes(model.CurrentPassword + (user.Salt ?? ""))));
             if (user.PasswordHash != currentHash)
                 return Json(new { success = false, message = "Current password is incorrect" });
 
@@ -2218,10 +2219,10 @@ namespace CompuGear.Controllers
                 return Json(new { success = false, message = "Password must contain at least one special character" });
 
             // Generate new salt and hash
-            var newSalt = Guid.NewGuid().ToString("N").Substring(0, 16);
+            var newSalt = Guid.NewGuid().ToString("N")[..16];
             user.PasswordHash = Convert.ToBase64String(
-                System.Security.Cryptography.SHA256.HashData(
-                    System.Text.Encoding.UTF8.GetBytes(model.NewPassword + newSalt)));
+                SHA256.HashData(
+                    Encoding.UTF8.GetBytes(model.NewPassword + newSalt)));
             user.Salt = newSalt;
             user.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
@@ -2595,7 +2596,7 @@ namespace CompuGear.Controllers
                 CustomerId = customer.CustomerId,
                 TransactionType = "Redeemed",
                 Points = -model.Points,
-                Description = $"Redeemed {model.Points} points for ₱{discountAmount:N2} discount",
+                Description = $"Redeemed {model.Points} points for ?{discountAmount:N2} discount",
                 CreatedAt = DateTime.UtcNow
             });
 
@@ -2604,7 +2605,7 @@ namespace CompuGear.Controllers
             return Json(new
             {
                 success = true,
-                message = $"Redeemed {model.Points} points for ₱{discountAmount:N2} discount!",
+                message = $"Redeemed {model.Points} points for ?{discountAmount:N2} discount!",
                 data = new
                 {
                     remainingPoints = customer.LoyaltyPoints,
@@ -2642,8 +2643,8 @@ namespace CompuGear.Controllers
                 .GroupBy(o => new { o.OrderDate.Year, o.OrderDate.Month })
                 .Select(g => new
                 {
-                    Year = g.Key.Year,
-                    Month = g.Key.Month,
+                    g.Key.Year,
+                    g.Key.Month,
                     Count = g.Count(),
                     Amount = g.Sum(o => o.TotalAmount)
                 })
@@ -2704,7 +2705,9 @@ namespace CompuGear.Controllers
                 CompanyId = companyId,
                 CategoryId = categoryId,
                 Subject = subject,
-                Description = description,
+                Description = !string.IsNullOrWhiteSpace(relatedOrderNumber)
+                    ? $"{description}\n\nRelated Order: {relatedOrderNumber}"
+                    : description,
                 ContactName = contactName ?? customer?.FullName,
                 ContactEmail = contactEmail ?? customer?.Email ?? "",
                 ContactPhone = contactPhone ?? customer?.Phone,
@@ -2921,7 +2924,7 @@ namespace CompuGear.Controllers
             order.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true, message = $"Installment plan created: {model.Months} payments of ₱{installmentAmount:N2}" });
+            return Json(new { success = true, message = $"Installment plan created: {model.Months} payments of ?{installmentAmount:N2}" });
         }
 
         // ========== SUBSCRIPTION ORDERS ==========
@@ -3032,7 +3035,7 @@ namespace CompuGear.Controllers
         // ========== NOTIFICATIONS ==========
         #region Notifications
 
-        // GET: /CustomerPortal/GetNotifications — returns latest notifications for current user
+        // GET: /CustomerPortal/GetNotifications � returns latest notifications for current user
         [HttpGet]
         public async Task<IActionResult> GetNotifications(int page = 1, int pageSize = 20)
         {
@@ -3243,7 +3246,7 @@ namespace CompuGear.Controllers
                 {
                     article.ArticleId,
                     article.CategoryId,
-                    CategoryName = article.Category?.CategoryName,
+                    article.Category?.CategoryName,
                     article.Title,
                     article.Content,
                     article.Summary,
@@ -3484,7 +3487,7 @@ namespace CompuGear.Controllers
     {
         public string? Frequency { get; set; }
         public int? ShippingAddressId { get; set; }
-        public List<SubscriptionItemModel> Items { get; set; } = new();
+        public List<SubscriptionItemModel> Items { get; set; } = [];
     }
 
     public class SubscriptionItemModel

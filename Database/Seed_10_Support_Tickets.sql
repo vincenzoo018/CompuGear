@@ -1,4 +1,4 @@
-﻿-- Seed 10 Support Tickets for Customer: vincenzocassano@yahoo.com (CustomerId = 7)
+-- Seed 10 Support Tickets for Customer: vincenzocassano@yahoo.com (CustomerId = 7)
 -- Orders available: 26-30 (ORD-2026-0026 to ORD-2026-0030)
 -- Categories: 1=Technical Support, 2=Billing Inquiry, 3=Order Issue, 4=Product Information,
 --             5=Returns & Refunds, 6=Warranty Claims, 7=Account Issues, 8=General Inquiry
@@ -18,7 +18,7 @@ VALUES
 
     ('TKT-2026-0006', 7, 2, 26, 'Vincenzo Cassano', 'vincenzocassano@yahoo.com', '+63 912 345 6789',
      'Double charged for order ORD-2026-0026',
-     'I noticed that my credit card was charged twice for order ORD-2026-0026. The total amount of the order is PHP 45,500 but I see two charges of the same amount on my bank statement. Please investigate and process a refund for the duplicate charge as soon as possible.',
+     'I noticed that my credit card      was charged twice for order ORD-2026-0026. The total amount of the order is PHP 45,500 but I see two charges of the same amount on my bank statement. Please investigate and process a refund for the duplicate charge as soon as possible.',
      'High', 'Open', 'Web', DATEADD(DAY, -1, GETUTCDATE()), DATEADD(DAY, -1, GETUTCDATE()), 1),
 
     ('TKT-2026-0007', 7, 5, 27, 'Vincenzo Cassano', 'vincenzocassano@yahoo.com', '+63 912 345 6789',

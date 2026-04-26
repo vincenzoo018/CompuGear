@@ -2803,6 +2803,44 @@ const Users = {
     allData: [],
     roles: [],
     currentId: null,
+    disallowedCreateRoleIds: new Set([1, 2]),
+
+    removeTemporaryAdminRoleOption() {
+        const roleSelect = document.getElementById('roleId');
+        if (!roleSelect) return;
+        roleSelect.querySelectorAll('option[data-temp-admin="true"]').forEach(o => o.remove());
+    },
+
+    ensureAdminRoleOptionForEdit(user) {
+        if (!user || (user.roleId !== 1 && user.roleId !== 2)) return;
+        const roleSelect = document.getElementById('roleId');
+        if (!roleSelect) return;
+
+        let opt = roleSelect.querySelector(`option[value="${user.roleId}"]`);
+        if (!opt) {
+            opt = document.createElement('option');
+            opt.value = String(user.roleId);
+            opt.textContent = user.roleName || (user.roleId === 1 ? 'Super Admin' : 'Company Admin');
+            opt.dataset.tempAdmin = 'true';
+            roleSelect.appendChild(opt);
+        }
+    },
+
+    normalizePhone(phone) {
+        let value = (phone || '').replace(/[^\d+]/g, '');
+        if (value.includes('+')) {
+            value = (value[0] === '+' ? '+' : '') + value.slice(value[0] === '+' ? 1 : 0).replace(/\+/g, '');
+        }
+        return value;
+    },
+
+    isValidPhoneNumber(phone) {
+        return /^(09\d{9}|\+639\d{9})$/.test(phone);
+    },
+
+    isStrongPassword(password) {
+        return password.length >= 12 && /[A-Z]/.test(password) && /[^A-Za-z0-9]/.test(password);
+    },
 
     async load() {
         try {
@@ -2900,6 +2938,9 @@ const Users = {
         if (modalTitle) modalTitle.textContent = user ? 'Edit User' : 'Add New User';
         document.getElementById('userId').value = user?.userId || '';
 
+        this.removeTemporaryAdminRoleOption();
+        this.ensureAdminRoleOptionForEdit(user);
+
         // Show/hide password fields based on edit mode
         const passwordSection = document.getElementById('passwordSection');
         const passwordField = document.getElementById('password');
@@ -2925,6 +2966,8 @@ const Users = {
             document.getElementById('phone').value = user.phone || '';
             document.getElementById('roleId').value = user.roleId || '';
             document.getElementById('isActive').value = user.isActive ? 'true' : 'false';
+        } else {
+            document.getElementById('roleId').value = '';
         }
 
         Modal.show('userModal');
@@ -2932,12 +2975,56 @@ const Users = {
 
     async save() {
         const id = document.getElementById('userId').value;
+        const idNum = id ? parseInt(id, 10) : null;
         const password = document.getElementById('password').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
+
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        const username = document.getElementById('username').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = this.normalizePhone(document.getElementById('phone').value);
+        const roleId = parseInt(document.getElementById('roleId').value, 10);
+
+        if (!firstName || !lastName || !username || !email || !roleId) {
+            Toast.error('Please complete all required fields');
+            return;
+        }
+
+        if (!id && this.disallowedCreateRoleIds.has(roleId)) {
+            Toast.error('Super Admin and Company Admin roles are not allowed in Add User');
+            return;
+        }
+
+        if (phone && !this.isValidPhoneNumber(phone)) {
+            Toast.error('Phone must be 11 digits (09XXXXXXXXX) or +63 format (+639XXXXXXXXX)');
+            return;
+        }
+
+        const duplicateUsername = (this.allData || []).some(u =>
+            (u.username || '').toLowerCase() === username.toLowerCase() && u.userId !== idNum
+        );
+        if (duplicateUsername) {
+            Toast.error('Username already exists');
+            return;
+        }
+
+        const duplicateEmail = (this.allData || []).some(u =>
+            (u.email || '').toLowerCase() === email.toLowerCase() && u.userId !== idNum
+        );
+        if (duplicateEmail) {
+            Toast.error('Email already exists');
+            return;
+        }
 
         // Validate password match
         if (password && password !== confirmPassword) {
             Toast.error('Passwords do not match');
+            return;
+        }
+
+        if (password && !this.isStrongPassword(password)) {
+            Toast.error('Password must be at least 12 characters with at least one uppercase letter and one special character');
             return;
         }
 
@@ -2948,12 +3035,12 @@ const Users = {
         }
 
         const data = {
-            firstName: document.getElementById('firstName').value,
-            lastName: document.getElementById('lastName').value,
-            username: document.getElementById('username').value,
-            email: document.getElementById('email').value,
-            phone: document.getElementById('phone').value,
-            roleId: parseInt(document.getElementById('roleId').value) || null,
+            firstName,
+            lastName,
+            username,
+            email,
+            phone: phone || null,
+            roleId,
             isActive: document.getElementById('isActive').value === 'true'
         };
 
@@ -3857,20 +3944,20 @@ const CustomerPortal = {
 // ===========================================
 document.addEventListener('DOMContentLoaded', () => {
     // Global modal backdrop cleanup - ensures backdrops are removed when modals are hidden
-    document.addEventListener('hidden.bs.modal', function (event) {
+    document.addEventListener('hidden.bs.modal', function (e) {
         // Immediate cleanup
         Modal.cleanup();
     });
     
     // Also listen for hide event as backup
-    document.addEventListener('hide.bs.modal', function (event) {
+    document.addEventListener('hide.bs.modal', function (e) {
         // Schedule cleanup
         setTimeout(() => Modal.cleanup(), 350);
     });
     
     // Emergency escape: click on backdrop to remove it if stuck
-    document.addEventListener('click', function(event) {
-        if (event.target.classList.contains('modal-backdrop')) {
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal-backdrop')) {
             Modal.cleanup();
         }
     });

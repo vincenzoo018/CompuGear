@@ -5,20 +5,15 @@ using CompuGear.Data;
 using CompuGear.Models;
 using System.Security.Claims;
 
-namespace CompuGear.Controllers
+namespace CompuGear.Controllers.Admin
 {
     /// <summary>
     /// Support Controller for Admin - Uses Views/Admin/Support folder
     /// RoleId: 1 - Super Admin, 2 - Company Admin
     /// </summary>
-    public class SupportController : Controller
+    public class SupportController(CompuGearDbContext context) : Controller
     {
-        private readonly CompuGearDbContext _context;
-
-        public SupportController(CompuGearDbContext context)
-        {
-            _context = context;
-        }
+        private readonly CompuGearDbContext _context = context;
 
         // Authorization check - Admins for views, all authenticated staff for API
         public override void OnActionExecuting(ActionExecutingContext context)
@@ -139,7 +134,7 @@ namespace CompuGear.Controllers
                     t.Status,
                     t.Source,
                     Category = t.Category != null ? t.Category.CategoryName : null,
-                    CategoryId = t.CategoryId,
+                    t.CategoryId,
                     t.CustomerId,
                     CustomerName = t.Customer != null ? t.Customer.FullName : t.ContactName,
                     CustomerEmail = t.Customer != null ? t.Customer.Email : t.ContactEmail,
@@ -178,7 +173,7 @@ namespace CompuGear.Controllers
                     t.Status,
                     t.Source,
                     Category = t.Category != null ? t.Category.CategoryName : null,
-                    CategoryId = t.CategoryId,
+                    t.CategoryId,
                     t.CustomerId,
                     CustomerName = t.Customer != null ? t.Customer.FullName : t.ContactName,
                     CustomerEmail = t.Customer != null ? t.Customer.Email : t.ContactEmail,
@@ -496,8 +491,8 @@ namespace CompuGear.Controllers
                 {
                     m.MessageId,
                     m.SenderType,
-                    SenderName = m.SenderType == "Agent" && m.SenderId.HasValue && agents.ContainsKey(m.SenderId.Value) 
-                        ? agents[m.SenderId.Value] 
+                    SenderName = m.SenderType == "Agent" && m.SenderId.HasValue && agents.TryGetValue(m.SenderId.Value, out var agentName) 
+                        ? agentName 
                         : (m.SenderType == "Customer" ? "Customer" : m.SenderType),
                     m.Message,
                     m.MessageType,
@@ -665,7 +660,7 @@ namespace CompuGear.Controllers
                     a.ViewCount,
                     a.HelpfulCount,
                     a.NotHelpfulCount,
-                    CategoryId = a.CategoryId,
+                    a.CategoryId,
                     CategoryName = a.Category != null ? a.Category.CategoryName : null,
                     CreatedByName = a.CreatedByUser != null ? $"{a.CreatedByUser.FirstName} {a.CreatedByUser.LastName}" : null,
                     a.PublishedAt,
@@ -862,7 +857,7 @@ namespace CompuGear.Controllers
                     ? Math.Round((decimal)tickets.Count(t => t.Status == "Resolved" || t.Status == "Closed") / tickets.Count * 100, 1) 
                     : 0,
                     
-                AverageResolutionHours = tickets.Where(t => t.ResolvedAt.HasValue).Any()
+                AverageResolutionHours = tickets.Any(t => t.ResolvedAt.HasValue)
                     ? Math.Round(tickets.Where(t => t.ResolvedAt.HasValue).Average(t => (t.ResolvedAt!.Value - t.CreatedAt).TotalHours), 1)
                     : 0
             };
@@ -1259,11 +1254,11 @@ namespace CompuGear.Controllers
 
             return Ok(new { 
                 success = true, 
-                data = new { 
-                    userId = userId, 
-                    roleId = roleId, 
-                    userName = userName, 
-                    fullName = fullName 
+                data = new {
+                    userId,
+                    roleId,
+                    userName,
+                    fullName
                 } 
             });
         }
@@ -1728,8 +1723,8 @@ namespace CompuGear.Controllers
                     success = true, 
                     data = new {
                         status = session.Status,
-                        agentName = agentName,
-                        messages = messages
+                        agentName,
+                        messages
                     }
                 });
             }

@@ -4,26 +4,22 @@ using Microsoft.EntityFrameworkCore;
 using CompuGear.Data;
 using CompuGear.Models;
 using CompuGear.Services;
+using System.Text;
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 
-namespace CompuGear.Controllers
+namespace CompuGear.Controllers.Admin
 {
     /// <summary>
     /// Users Controller for Admin - Uses Views/Admin/Users folder
     /// RoleId: 1 - Super Admin, 2 - Company Admin
     /// Includes API endpoints for user management, roles, role access, and activity/audit logs.
     /// </summary>
-    public class UsersController : Controller
+    public class UsersController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService) : Controller
     {
-        private readonly CompuGearDbContext _context;
-        private readonly IConfiguration _configuration;
-        private readonly IAuditService _auditService;
-
-        public UsersController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService)
-        {
-            _context = context;
-            _configuration = configuration;
-            _auditService = auditService;
-        }
+        private readonly CompuGearDbContext _context = context;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly IAuditService _auditService = auditService;
 
         // Authorization check - Admins for views, all authenticated staff for API
         public override void OnActionExecuting(ActionExecutingContext context)
@@ -63,6 +59,37 @@ namespace CompuGear.Controllers
         private int? GetRoleId()
         {
             return HttpContext.Session.GetInt32("RoleId");
+        }
+
+        private static bool IsPrivilegedRole(int roleId)
+        {
+            return roleId == 1 || roleId == 2;
+        }
+
+        private static bool IsPasswordStrong(string password)
+        {
+            return password.Length >= 12 &&
+                   password.Any(char.IsUpper) &&
+                   password.Any(ch => !char.IsLetterOrDigit(ch));
+        }
+
+        private static bool TryNormalizePhone(string? phone, out string? normalizedPhone)
+        {
+            if (string.IsNullOrWhiteSpace(phone))
+            {
+                normalizedPhone = null;
+                return true;
+            }
+
+            var cleaned = Regex.Replace(phone.Trim(), @"[\s-]", string.Empty);
+            if (Regex.IsMatch(cleaned, @"^09\d{9}$") || Regex.IsMatch(cleaned, @"^\+639\d{9}$"))
+            {
+                normalizedPhone = cleaned;
+                return true;
+            }
+
+            normalizedPhone = null;
+            return false;
         }
 
         private IQueryable<ActivityLog> GetScopedActivityLogQuery()
@@ -159,24 +186,53 @@ namespace CompuGear.Controllers
         {
             try
             {
-                if (await _context.Users.AnyAsync(u => u.Username == user.Username))
+                if (user == null)
+                    return BadRequest(new { success = false, message = "Invalid user payload" });
+
+                var normalizedUsername = user.Username?.Trim();
+                var normalizedEmail = user.Email?.Trim();
+
+                if (string.IsNullOrWhiteSpace(normalizedUsername) || string.IsNullOrWhiteSpace(normalizedEmail))
+                    return BadRequest(new { success = false, message = "Username and email are required" });
+
+                if (user.RoleId <= 0)
+                    return BadRequest(new { success = false, message = "Please select a valid role" });
+
+                if (IsPrivilegedRole(user.RoleId))
+                    return BadRequest(new { success = false, message = "Creating Super Admin or Company Admin users is not allowed from this page" });
+
+                if (!TryNormalizePhone(user.Phone, out var normalizedPhone))
+                    return BadRequest(new { success = false, message = "Phone number must be 11 digits (09XXXXXXXXX) or +63 format (+639XXXXXXXXX)" });
+
+                var usernameLower = normalizedUsername.ToLowerInvariant();
+                var emailLower = normalizedEmail.ToLowerInvariant();
+
+                if (await _context.Users.AnyAsync(u => u.Username.ToLower() == usernameLower))
                     return BadRequest(new { success = false, message = "Username already exists" });
-                if (await _context.Users.AnyAsync(u => u.Email == user.Email))
+                if (await _context.Users.AnyAsync(u => u.Email.ToLower() == emailLower))
                     return BadRequest(new { success = false, message = "Email already exists" });
+
                 if (!string.IsNullOrEmpty(user.Password))
                 {
-                    user.Salt = Guid.NewGuid().ToString("N").Substring(0, 16);
+                    if (!IsPasswordStrong(user.Password))
+                        return BadRequest(new { success = false, message = "Password must be at least 12 characters and include at least one uppercase letter and one special character" });
+
+                    user.Salt = Guid.NewGuid().ToString("N")[..16];
                     user.PasswordHash = Convert.ToBase64String(
-                        System.Security.Cryptography.SHA256.HashData(
-                            System.Text.Encoding.UTF8.GetBytes(user.Password + user.Salt)));
+                        SHA256.HashData(
+                            Encoding.UTF8.GetBytes(user.Password + user.Salt)));
                 }
                 else
                 {
                     return BadRequest(new { success = false, message = "Password is required" });
                 }
+
+                user.Username = normalizedUsername;
+                user.Email = normalizedEmail;
+                user.Phone = normalizedPhone;
+
                 var companyId = GetCompanyId();
                 user.CompanyId = companyId;
-                if (user.RoleId == 0) user.RoleId = 3;
                 user.CreatedAt = DateTime.UtcNow;
                 user.UpdatedAt = DateTime.UtcNow;
                 _context.Users.Add(user);
@@ -195,24 +251,55 @@ namespace CompuGear.Controllers
         {
             try
             {
+                if (user == null)
+                    return BadRequest(new { success = false, message = "Invalid user payload" });
+
+                var normalizedUsername = user.Username?.Trim();
+                var normalizedEmail = user.Email?.Trim();
+
+                if (string.IsNullOrWhiteSpace(normalizedUsername) || string.IsNullOrWhiteSpace(normalizedEmail))
+                    return BadRequest(new { success = false, message = "Username and email are required" });
+
+                if (user.RoleId <= 0)
+                    return BadRequest(new { success = false, message = "Please select a valid role" });
+
+                if (!TryNormalizePhone(user.Phone, out var normalizedPhone))
+                    return BadRequest(new { success = false, message = "Phone number must be 11 digits (09XXXXXXXXX) or +63 format (+639XXXXXXXXX)" });
+
                 var companyId = GetCompanyId();
                 var existing = await _context.Users.FindAsync(id);
                 if (existing == null) return NotFound();
                 if (companyId != null && existing.CompanyId != null && existing.CompanyId != companyId) return NotFound();
                 if (existing.CompanyId == null && companyId != null) existing.CompanyId = companyId;
+
+                if (IsPrivilegedRole(user.RoleId) && !IsPrivilegedRole(existing.RoleId))
+                    return BadRequest(new { success = false, message = "Assigning Super Admin or Company Admin roles is not allowed from this page" });
+
+                var usernameLower = normalizedUsername.ToLowerInvariant();
+                var emailLower = normalizedEmail.ToLowerInvariant();
+
+                if (await _context.Users.AnyAsync(u => u.UserId != id && u.Username.ToLower() == usernameLower))
+                    return BadRequest(new { success = false, message = "Username already exists" });
+                if (await _context.Users.AnyAsync(u => u.UserId != id && u.Email.ToLower() == emailLower))
+                    return BadRequest(new { success = false, message = "Email already exists" });
+
+                existing.Username = normalizedUsername;
                 existing.FirstName = user.FirstName;
                 existing.LastName = user.LastName;
-                existing.Email = user.Email;
-                existing.Phone = user.Phone;
+                existing.Email = normalizedEmail;
+                existing.Phone = normalizedPhone;
                 existing.RoleId = user.RoleId;
                 existing.IsActive = user.IsActive;
                 existing.UpdatedAt = DateTime.UtcNow;
                 if (!string.IsNullOrEmpty(user.Password))
                 {
-                    existing.Salt = Guid.NewGuid().ToString("N").Substring(0, 16);
+                    if (!IsPasswordStrong(user.Password))
+                        return BadRequest(new { success = false, message = "Password must be at least 12 characters and include at least one uppercase letter and one special character" });
+
+                    existing.Salt = Guid.NewGuid().ToString("N")[..16];
                     existing.PasswordHash = Convert.ToBase64String(
-                        System.Security.Cryptography.SHA256.HashData(
-                            System.Text.Encoding.UTF8.GetBytes(user.Password + existing.Salt)));
+                        SHA256.HashData(
+                            Encoding.UTF8.GetBytes(user.Password + existing.Salt)));
                     existing.PasswordChangedAt = DateTime.UtcNow;
                 }
                 await _context.SaveChangesAsync();
@@ -269,7 +356,7 @@ namespace CompuGear.Controllers
             try
             {
                 var roles = await _context.Roles.ToListAsync();
-                if (!roles.Any())
+                if (roles.Count == 0)
                 {
                     return Ok(new[]
                     {

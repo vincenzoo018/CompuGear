@@ -5,22 +5,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 
-namespace CompuGear.Controllers
+namespace CompuGear.Controllers.Admin
 {
     /// <summary>
     /// Home Controller - Dashboard for Admin users (Super Admin & Company Admin only)
     /// RoleId: 1 - Super Admin, 2 - Company Admin
     /// </summary>
-    public class HomeController : Controller
+    public class HomeController(ILogger<HomeController> logger, CompuGearDbContext context) : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-        private readonly CompuGearDbContext _context;
-
-        public HomeController(ILogger<HomeController> logger, CompuGearDbContext context)
-        {
-            _logger = logger;
-            _context = context;
-        }
+        private readonly ILogger<HomeController> _logger = logger;
+        private readonly CompuGearDbContext _context = context;
 
         // Authorization check - Admins for views, all authenticated staff for API
         public override void OnActionExecuting(ActionExecutingContext context)

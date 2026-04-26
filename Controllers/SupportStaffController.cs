@@ -11,16 +11,10 @@ namespace CompuGear.Controllers
     /// RoleId: 4 - Customer Support Staff
     /// Access: Tickets, customer profiles (read-only for sensitive), knowledge base, support reports
     /// </summary>
-    public class SupportStaffController : Controller
+    public class SupportStaffController(CompuGearDbContext context, IMemoryCache cache) : Controller
     {
-        private readonly CompuGearDbContext _context;
-        private readonly IMemoryCache _cache;
-
-        public SupportStaffController(CompuGearDbContext context, IMemoryCache cache)
-        {
-            _context = context;
-            _cache = cache;
-        }
+        private readonly CompuGearDbContext _context = context;
+        private readonly IMemoryCache _cache = cache;
 
         // Role-based authorization check
         public override void OnActionExecuting(ActionExecutingContext context)
@@ -66,7 +60,7 @@ namespace CompuGear.Controllers
                 .ToList();
 
             bool result;
-            if (!roleHasExplicitAccess.Any())
+            if (roleHasExplicitAccess.Count == 0)
                 result = true;
             else
                 result = roleHasExplicitAccess.Any(r => r.ModuleCode == moduleCode && r.HasAccess);

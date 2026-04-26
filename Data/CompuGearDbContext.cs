@@ -7,12 +7,8 @@ namespace CompuGear.Data
     /// CompuGear Database Context
     /// Main database context for the CompuGear CRM system
     /// </summary>
-    public class CompuGearDbContext : DbContext
+    public class CompuGearDbContext(DbContextOptions<CompuGearDbContext> options) : DbContext(options)
     {
-        public CompuGearDbContext(DbContextOptions<CompuGearDbContext> options)
-            : base(options)
-        {
-        }
 
         // Core Entities
         public DbSet<Role> Roles { get; set; }

@@ -1,9 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.ResponseCompression;
 using CompuGear.Models;
 using CompuGear.Data;
 using CompuGear.Services;
 using System.Text.Json;
+using System.Text;
+using System.Security.Cryptography;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,7 +43,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddResponseCompression(options =>
 {
     options.EnableForHttps = true;
-    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/json" });
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["application/json"]);
 });
 
 // Register Audit Service
@@ -104,19 +106,19 @@ async Task ResetAllPasswordsAsync(CompuGearDbContext context)
         var users = await context.Users.ToListAsync();
         foreach (var user in users)
         {
-            var salt = Guid.NewGuid().ToString("N").Substring(0, 16);
+            var salt = Guid.NewGuid().ToString("N")[..16];
             user.Salt = salt;
             user.PasswordHash = Convert.ToBase64String(
-                System.Security.Cryptography.SHA256.HashData(
-                    System.Text.Encoding.UTF8.GetBytes(defaultPassword + salt)));
+                SHA256.HashData(
+                    Encoding.UTF8.GetBytes(defaultPassword + salt)));
             user.UpdatedAt = DateTime.UtcNow;
         }
         await context.SaveChangesAsync();
-        Console.WriteLine($"✓ Reset passwords for {users.Count} users to default.");
+        Console.WriteLine($"? Reset passwords for {users.Count} users to default.");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"⚠ Password reset skipped: {ex.Message}");
+        Console.WriteLine($"? Password reset skipped: {ex.Message}");
     }
 }
 
@@ -127,8 +129,8 @@ async Task SeedTestUsersAsync(CompuGearDbContext context)
     {
         var salt = "CompuGearSalt2024";
         var passwordHash = Convert.ToBase64String(
-            System.Security.Cryptography.SHA256.HashData(
-                System.Text.Encoding.UTF8.GetBytes("password123" + salt)));
+            SHA256.HashData(
+                Encoding.UTF8.GetBytes("password123" + salt)));
 
         var usersToSeed = new List<(string username, string email, string firstName, string lastName, int roleId)>
         {
@@ -194,12 +196,12 @@ async Task SeedTestUsersAsync(CompuGearDbContext context)
         }
 
         await context.SaveChangesAsync();
-        Console.WriteLine("✓ Test users seeded successfully!");
+        Console.WriteLine("? Test users seeded successfully!");
         Console.WriteLine("  Login credentials: [email]@compugear.com / password123");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"⚠ User seeding skipped: {ex.Message}");
+        Console.WriteLine($"? User seeding skipped: {ex.Message}");
         // Don't throw - just log and continue
     }
 }
@@ -213,7 +215,7 @@ async Task SeedSampleDataAsync(CompuGearDbContext context)
         var hasOrders = await context.Orders.AnyAsync();
         if (hasOrders)
         {
-            Console.WriteLine("✓ Sample data already exists - skipping seed.");
+            Console.WriteLine("? Sample data already exists - skipping seed.");
             return;
         }
 
@@ -500,18 +502,18 @@ async Task SeedSampleDataAsync(CompuGearDbContext context)
         {
             context.Promotions.AddRange(
                 new Promotion { CompanyId = 1, PromotionCode = "SUMMER2026", PromotionName = "Summer Sale 20% Off", Description = "Get 20% off on all products this summer", DiscountType = "Percentage", DiscountValue = 20, MinOrderAmount = 5000, MaxDiscountAmount = 10000, StartDate = now.AddDays(-15), EndDate = now.AddDays(45), UsageLimit = 500, TimesUsed = 85, IsActive = true, CreatedAt = now.AddDays(-15) },
-                new Promotion { CompanyId = 1, PromotionCode = "NEWCUST500", PromotionName = "New Customer ₱500 Off", Description = "₱500 discount for first-time buyers", DiscountType = "Fixed", DiscountValue = 500, MinOrderAmount = 2000, StartDate = now.AddDays(-30), EndDate = now.AddDays(60), UsageLimit = 1000, TimesUsed = 230, IsActive = true, CreatedAt = now.AddDays(-30) },
+                new Promotion { CompanyId = 1, PromotionCode = "NEWCUST500", PromotionName = "New Customer ?500 Off", Description = "?500 discount for first-time buyers", DiscountType = "Fixed", DiscountValue = 500, MinOrderAmount = 2000, StartDate = now.AddDays(-30), EndDate = now.AddDays(60), UsageLimit = 1000, TimesUsed = 230, IsActive = true, CreatedAt = now.AddDays(-30) },
                 new Promotion { CompanyId = 1, PromotionCode = "BUNDLE15", PromotionName = "Bundle Discount 15%", Description = "15% off when buying 3 or more items", DiscountType = "Percentage", DiscountValue = 15, MinOrderAmount = 15000, MaxDiscountAmount = 20000, StartDate = now.AddDays(-10), EndDate = now.AddDays(20), UsageLimit = 200, TimesUsed = 42, IsActive = true, CreatedAt = now.AddDays(-10) }
             );
             await context.SaveChangesAsync();
         }
 
-        Console.WriteLine("✓ Sample data seeded successfully!");
+        Console.WriteLine("? Sample data seeded successfully!");
         Console.WriteLine("  - 10 Products, 5 Customers, 8 Orders, 5 Leads, 3 Campaigns, 3 Promotions");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"⚠ Sample data seeding skipped: {ex.Message}");
+        Console.WriteLine($"? Sample data seeding skipped: {ex.Message}");
         // Don't throw - just log and continue
     }
 }

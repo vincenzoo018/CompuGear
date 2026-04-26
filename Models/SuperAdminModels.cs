@@ -42,7 +42,7 @@ namespace CompuGear.Models
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation
-        public virtual ICollection<CompanyModuleAccess> CompanyAccess { get; set; } = new List<CompanyModuleAccess>();
+        public virtual ICollection<CompanyModuleAccess> CompanyAccess { get; set; } = [];
     }
 
     /// <summary>

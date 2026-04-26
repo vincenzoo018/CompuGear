@@ -4,26 +4,20 @@ using CompuGear.Data;
 using CompuGear.Models;
 using CompuGear.Services;
 using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace CompuGear.Controllers
 {
     [Route("api")]
     [ApiController]
-    public class ApiController : ControllerBase
+    public class ApiController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService, IMemoryCache cache) : ControllerBase
     {
-        private readonly CompuGearDbContext _context;
-        private readonly IConfiguration _configuration;
-        private readonly IAuditService _auditService;
-        private readonly IMemoryCache _cache;
-
-        public ApiController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService, IMemoryCache cache)
-        {
-            _context = context;
-            _configuration = configuration;
-            _auditService = auditService;
-            _cache = cache;
-        }
+        private static readonly string[] AllowedImageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+        private readonly CompuGearDbContext _context = context;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly IAuditService _auditService = auditService;
+        private readonly IMemoryCache _cache = cache;
 
         // Helper: returns CompanyId from session. Super Admin (RoleId=1) gets null → sees all data.
         private int? GetCompanyId()
@@ -84,7 +78,7 @@ namespace CompuGear.Controllers
             return query;
         }
 
-        private bool HasFullBillingAccess()
+        private static bool HasFullBillingAccess()
         {
             return false;
         }
@@ -162,9 +156,8 @@ namespace CompuGear.Controllers
                     return BadRequest(new { success = false, message = "No file uploaded" });
 
                 // Validate file type
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
                 var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-                if (!allowedExtensions.Contains(extension))
+                if (!AllowedImageExtensions.Contains(extension))
                     return BadRequest(new { success = false, message = "Invalid file type. Only images are allowed." });
 
                 // Validate file size (max 5MB)
@@ -238,7 +231,7 @@ namespace CompuGear.Controllers
                 var cachedModules = HttpContext.Session.GetString("CachedModules");
                 if (!string.IsNullOrEmpty(cachedModules))
                 {
-                    var modules = System.Text.Json.JsonSerializer.Deserialize<List<string>>(cachedModules);
+                    var modules = JsonSerializer.Deserialize<List<string>>(cachedModules);
                     return Ok(new { success = true, modules });
                 }
 
@@ -277,19 +270,17 @@ namespace CompuGear.Controllers
                             .Distinct()
                             .ToListAsync();
 
-                        if (roleAllowedModules.Any())
+                        if (roleAllowedModules.Count > 0)
                         {
                             var allowedSet = roleAllowedModules.ToHashSet(StringComparer.OrdinalIgnoreCase);
-                            resultModules = resultModules
-                                .Where(m => allowedSet.Contains(m))
-                                .ToList();
+                            resultModules = [.. resultModules.Where(m => allowedSet.Contains(m))];
                         }
                     }
                 }
 
                 // Cache in session for the duration of the session
                 HttpContext.Session.SetString("CachedModules",
-                    System.Text.Json.JsonSerializer.Serialize(resultModules));
+                    JsonSerializer.Serialize(resultModules));
 
                 return Ok(new { success = true, modules = resultModules });
             }
@@ -643,15 +634,15 @@ namespace CompuGear.Controllers
             try
             {
                 var companyId = GetCompanyId();
-                var searchTerm = q.ToLower();
+                var searchTerm = q;
 
                 // Search products
                 var products = await _context.Products
                     .AsNoTracking()
                     .Where(p => (companyId == null || p.CompanyId == companyId) &&
-                        (p.ProductName.ToLower().Contains(searchTerm) || 
-                         (p.SKU != null && p.SKU.ToLower().Contains(searchTerm)) ||
-                         (p.ShortDescription != null && p.ShortDescription.ToLower().Contains(searchTerm))))
+                        (p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) || 
+                         (p.SKU != null && p.SKU.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                         (p.ShortDescription != null && p.ShortDescription.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))))
                     .Take(10)
                     .Select(p => new { p.ProductId, p.ProductName, p.SKU, p.SellingPrice, ImageUrl = p.MainImageUrl, Type = "Product" })
                     .ToListAsync();
@@ -660,10 +651,10 @@ namespace CompuGear.Controllers
                 var customers = await _context.Customers
                     .AsNoTracking()
                     .Where(c => (companyId == null || c.CompanyId == companyId) &&
-                        (c.FirstName.ToLower().Contains(searchTerm) ||
-                         c.LastName.ToLower().Contains(searchTerm) ||
-                         c.Email.ToLower().Contains(searchTerm) ||
-                         (c.CustomerCode != null && c.CustomerCode.ToLower().Contains(searchTerm))))
+                        (c.FirstName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                         c.LastName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                         c.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                         (c.CustomerCode != null && c.CustomerCode.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))))
                     .Take(10)
                     .Select(c => new { c.CustomerId, Name = c.FirstName + " " + c.LastName, c.Email, CustomerNumber = c.CustomerCode, Type = "Customer" })
                     .ToListAsync();
@@ -672,7 +663,7 @@ namespace CompuGear.Controllers
                 var orders = await _context.Orders
                     .AsNoTracking()
                     .Where(o => (companyId == null || o.CompanyId == companyId) &&
-                        (o.OrderNumber.ToLower().Contains(searchTerm)))
+                        (o.OrderNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
                     .Take(10)
                     .Select(o => new { o.OrderId, o.OrderNumber, o.TotalAmount, o.OrderStatus, o.OrderDate, Type = "Order" })
                     .ToListAsync();
@@ -705,10 +696,10 @@ namespace CompuGear.Controllers
                 // Apply filters
                 if (!string.IsNullOrEmpty(q))
                 {
-                    var searchTerm = q.ToLower();
-                    query = query.Where(p => p.ProductName.ToLower().Contains(searchTerm) || 
-                                            (p.SKU != null && p.SKU.ToLower().Contains(searchTerm)) ||
-                                            (p.ShortDescription != null && p.ShortDescription.ToLower().Contains(searchTerm)));
+                    var searchTerm = q;
+                    query = query.Where(p => p.ProductName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) || 
+                                            (p.SKU != null && p.SKU.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) ||
+                                            (p.ShortDescription != null && p.ShortDescription.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)));
                 }
 
                 if (categoryId.HasValue)
@@ -794,10 +785,10 @@ namespace CompuGear.Controllers
                 // Apply filters
                 if (!string.IsNullOrEmpty(q))
                 {
-                    var searchTerm = q.ToLower();
-                    query = query.Where(o => o.OrderNumber.ToLower().Contains(searchTerm) ||
-                                            (o.Customer != null && (o.Customer.FirstName.ToLower().Contains(searchTerm) ||
-                                            o.Customer.LastName.ToLower().Contains(searchTerm))));
+                    var searchTerm = q;
+                    query = query.Where(o => o.OrderNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                                            (o.Customer != null && (o.Customer.FirstName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                                            o.Customer.LastName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))));
                 }
 
                 if (!string.IsNullOrEmpty(status))
@@ -869,7 +860,7 @@ namespace CompuGear.Controllers
     public class RoleAccessSaveRequest
     {
         public int? CompanyId { get; set; }
-        public List<RoleAccessItem> AccessList { get; set; } = new();
+        public List<RoleAccessItem> AccessList { get; set; } = [];
     }
 
     public class RoleAccessItem
@@ -925,7 +916,7 @@ namespace CompuGear.Controllers
         public string OrderDate { get; set; } = string.Empty;
         public string? ExpectedDelivery { get; set; }
         public string? Notes { get; set; }
-        public List<PurchaseOrderItemRequest> Items { get; set; } = new();
+        public List<PurchaseOrderItemRequest> Items { get; set; } = [];
     }
 
     public class PurchaseOrderItemRequest
@@ -991,13 +982,13 @@ namespace CompuGear.Controllers
     // Bulk Operation DTOs
     public class BulkStatusUpdate
     {
-        public List<int> Ids { get; set; } = new();
+        public List<int> Ids { get; set; } = [];
         public string Status { get; set; } = string.Empty;
     }
 
     public class BulkDeleteRequest
     {
-        public List<int> Ids { get; set; } = new();
+        public List<int> Ids { get; set; } = [];
     }
 
 }

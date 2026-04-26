@@ -2,21 +2,14 @@ using Microsoft.AspNetCore.Http;
 
 namespace CompuGear.Services
 {
-    public class ActivityAuditMiddleware
+    public class ActivityAuditMiddleware(RequestDelegate next)
     {
-        private readonly RequestDelegate _next;
-
-        public ActivityAuditMiddleware(RequestDelegate next)
-        {
-            _next = next;
-        }
-
         public async Task InvokeAsync(HttpContext context)
         {
             var request = context.Request;
             var shouldTrack = ShouldTrackRequest(request);
 
-            await _next(context);
+            await next(context);
 
             if (!shouldTrack || context.Response.StatusCode >= 400)
                 return;
@@ -75,7 +68,7 @@ namespace CompuGear.Services
 
         private static string ResolveModule(PathString path)
         {
-            var segments = path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+            var segments = path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? [];
             if (segments.Length < 2) return "System";
 
             var raw = string.Equals(segments[0], "api", StringComparison.OrdinalIgnoreCase)
@@ -89,7 +82,7 @@ namespace CompuGear.Services
 
         private static string ResolveAction(string method, PathString path)
         {
-            var segments = path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+            var segments = path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? [];
             var hasId = segments.Length >= 3 && int.TryParse(segments[2], out _);
 
             var actionFromPath = ResolveActionFromPath(segments, method);
@@ -135,7 +128,7 @@ namespace CompuGear.Services
         private static bool IsLikelyCollection(string segment)
         {
             var s = segment.ToLowerInvariant();
-            return s.EndsWith("s") || s.Contains("-");
+            return s.EndsWith('s') || s.Contains('-');
         }
 
         private static string Humanize(string value)
@@ -145,7 +138,7 @@ namespace CompuGear.Services
             var cleaned = value.Replace("-", " ").Replace("_", " ").Trim();
             if (cleaned.Length == 0) return "Activity";
 
-            var output = new List<char>();
+            List<char> output = [];
             for (var i = 0; i < cleaned.Length; i++)
             {
                 var current = cleaned[i];
@@ -157,7 +150,7 @@ namespace CompuGear.Services
                 output.Add(current);
             }
 
-            return string.Join(' ', new string(output.ToArray())
+            return string.Join(' ', new string([.. output])
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries)
                 .Select(w => char.ToUpperInvariant(w[0]) + w[1..].ToLowerInvariant()));
         }
@@ -171,7 +164,7 @@ namespace CompuGear.Services
             if (int.TryParse(idFromRoute, out var parsedId))
                 return parsedId;
 
-            var pathSegments = context.Request.Path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+            var pathSegments = context.Request.Path.Value?.Split('/', StringSplitOptions.RemoveEmptyEntries) ?? [];
             if (pathSegments.Length >= 3 && int.TryParse(pathSegments[2], out parsedId))
                 return parsedId;
 

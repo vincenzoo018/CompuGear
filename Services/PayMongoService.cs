@@ -27,6 +27,11 @@ namespace CompuGear.Services
         private readonly string _secretKey;
         private readonly ILogger<PayMongoService> _logger;
         private const string BaseUrl = "https://api.paymongo.com/v1";
+        private static readonly JsonSerializerOptions _jsonOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+        };
 
         public PayMongoService(HttpClient httpClient, IConfiguration configuration, ILogger<PayMongoService> logger)
         {
@@ -83,11 +88,7 @@ namespace CompuGear.Services
                     }
                 };
 
-                var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-                });
+                var json = JsonSerializer.Serialize(payload, _jsonOptions);
 
                 _logger.LogInformation("Creating PayMongo checkout session for plan: {Plan}, amount: {Amount} PHP", request.PlanName, request.Amount);
 
@@ -231,6 +232,6 @@ namespace CompuGear.Services
         public string Status { get; set; } = "unknown";
         public bool IsPaid { get; set; }
         public string? PaymentId { get; set; }
-        public Dictionary<string, string> Metadata { get; set; } = new();
+        public Dictionary<string, string> Metadata { get; set; } = [];
     }
 }

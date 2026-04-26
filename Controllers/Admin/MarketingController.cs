@@ -5,26 +5,20 @@ using CompuGear.Data;
 using CompuGear.Models;
 using CompuGear.Services;
 
-namespace CompuGear.Controllers
+namespace CompuGear.Controllers.Admin
 {
     /// <summary>
     /// Marketing Controller for Admin - Uses Views/Admin/Marketing folder
     /// RoleId: 1 - Super Admin, 2 - Company Admin, 5 - Marketing Staff
     /// </summary>
-    public class MarketingController : Controller
+    public class MarketingController(CompuGearDbContext context, IWebHostEnvironment environment, IConfiguration configuration, IAuditService auditService) : Controller
     {
-        private readonly CompuGearDbContext _context;
-        private readonly IWebHostEnvironment _environment;
-        private readonly IConfiguration _configuration;
-        private readonly IAuditService _auditService;
+        private readonly CompuGearDbContext _context = context;
+        private readonly IWebHostEnvironment _environment = environment;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly IAuditService _auditService = auditService;
 
-        public MarketingController(CompuGearDbContext context, IWebHostEnvironment environment, IConfiguration configuration, IAuditService auditService)
-        {
-            _context = context;
-            _environment = environment;
-            _configuration = configuration;
-            _auditService = auditService;
-        }
+        private static readonly string[] AllowedImageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
 
         // Authorization check - Admins for views, all authenticated staff for API
         public override void OnActionExecuting(ActionExecutingContext context)
@@ -125,7 +119,7 @@ namespace CompuGear.Controllers
                 var thirtyDaysAgo = now.AddDays(-30);
 
                 // VIP: high spenders (top 10% by TotalSpent or over $1000 spent)
-                var highSpendThreshold = customers.Any() ? customers.OrderByDescending(c => c.TotalSpent).Take(Math.Max(1, customers.Count / 10)).Min(c => c.TotalSpent) : 1000m;
+                var highSpendThreshold = customers.Count > 0 ? customers.OrderByDescending(c => c.TotalSpent).Take(Math.Max(1, customers.Count / 10)).Min(c => c.TotalSpent) : 1000m;
                 highSpendThreshold = Math.Max(highSpendThreshold, 500m);
 
                 var segments = new
@@ -261,10 +255,9 @@ namespace CompuGear.Controllers
                 if (file == null || file.Length == 0)
                     return Json(new { success = false, message = "No file uploaded" });
 
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
                 var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
                 
-                if (!allowedExtensions.Contains(extension))
+                if (!AllowedImageExtensions.Contains(extension))
                     return Json(new { success = false, message = "Invalid file type. Allowed: jpg, jpeg, png, gif, webp" });
 
                 // Create promotions folder if it doesn't exist
@@ -299,10 +292,9 @@ namespace CompuGear.Controllers
                 if (file == null || file.Length == 0)
                     return Json(new { success = false, message = "No file uploaded" });
 
-                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
                 var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
                 
-                if (!allowedExtensions.Contains(extension))
+                if (!AllowedImageExtensions.Contains(extension))
                     return Json(new { success = false, message = "Invalid file type" });
 
                 var uploadsFolder = Path.Combine(_environment.WebRootPath, "images", "campaigns");
@@ -711,7 +703,7 @@ namespace CompuGear.Controllers
                 var now = DateTime.UtcNow;
                 var thirtyDaysAgo = now.AddDays(-30);
 
-                var highSpendThreshold = customers.Any()
+                var highSpendThreshold = customers.Count > 0
                     ? customers.OrderByDescending(c => c.TotalSpent).Take(Math.Max(1, customers.Count / 10)).Min(c => c.TotalSpent)
                     : 500m;
                 highSpendThreshold = Math.Max(highSpendThreshold, 500m);

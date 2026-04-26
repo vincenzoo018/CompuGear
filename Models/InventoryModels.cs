@@ -35,9 +35,9 @@ namespace CompuGear.Models
         [ForeignKey("ParentCategoryId")]
         public virtual ProductCategory? ParentCategory { get; set; }
 
-        public virtual ICollection<ProductCategory> SubCategories { get; set; } = new List<ProductCategory>();
+        public virtual ICollection<ProductCategory> SubCategories { get; set; } = [];
 
-        public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+        public virtual ICollection<Product> Products { get; set; } = [];
     }
 
     /// <summary>
@@ -63,7 +63,7 @@ namespace CompuGear.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation Properties
-        public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+        public virtual ICollection<Product> Products { get; set; } = [];
     }
 
     /// <summary>
@@ -199,15 +199,15 @@ namespace CompuGear.Models
         [ForeignKey("SupplierId")]
         public virtual Supplier? Supplier { get; set; }
 
-        public virtual ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
+        public virtual ICollection<ProductImage> Images { get; set; } = [];
 
-        public virtual ICollection<ProductSpecification> Specifications { get; set; } = new List<ProductSpecification>();
+        public virtual ICollection<ProductSpecification> Specifications { get; set; } = [];
 
-        public virtual ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();
+        public virtual ICollection<InventoryTransaction> InventoryTransactions { get; set; } = [];
 
-        public virtual ICollection<StockAlert> StockAlerts { get; set; } = new List<StockAlert>();
+        public virtual ICollection<StockAlert> StockAlerts { get; set; } = [];
 
-        public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+        public virtual ICollection<OrderItem> OrderItems { get; set; } = [];
     }
 
     /// <summary>
@@ -397,8 +397,8 @@ namespace CompuGear.Models
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation Properties
-        public virtual ICollection<Product> Products { get; set; } = new List<Product>();
-        public virtual ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();
+        public virtual ICollection<Product> Products { get; set; } = [];
+        public virtual ICollection<PurchaseOrder> PurchaseOrders { get; set; } = [];
     }
 
     public class PurchaseOrder
@@ -434,7 +434,7 @@ namespace CompuGear.Models
         [ForeignKey("SupplierId")]
         public virtual Supplier? Supplier { get; set; }
 
-        public virtual ICollection<PurchaseOrderItem> Items { get; set; } = new List<PurchaseOrderItem>();
+        public virtual ICollection<PurchaseOrderItem> Items { get; set; } = [];
     }
 
     public class PurchaseOrderItem

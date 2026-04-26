@@ -5,24 +5,17 @@ using CompuGear.Data;
 using CompuGear.Models;
 using CompuGear.Services;
 
-namespace CompuGear.Controllers
+namespace CompuGear.Controllers.Admin
 {
     /// <summary>
     /// Inventory Controller for Admin - Uses Views/Admin/Inventory folder
     /// RoleId: 1 - Super Admin, 2 - Company Admin
     /// </summary>
-    public class InventoryController : Controller
+    public class InventoryController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService) : Controller
     {
-        private readonly CompuGearDbContext _context;
-        private readonly IConfiguration _configuration;
-        private readonly IAuditService _auditService;
-
-        public InventoryController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService)
-        {
-            _context = context;
-            _configuration = configuration;
-            _auditService = auditService;
-        }
+        private readonly CompuGearDbContext _context = context;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly IAuditService _auditService = auditService;
 
         // Helper: returns CompanyId from session. Super Admin (RoleId=1) gets null → sees all data.
         private int? GetCompanyId()
@@ -506,7 +499,7 @@ namespace CompuGear.Controllers
         }
 
         [HttpGet]
-        [Route("api/stock-alerts")]
+        [Route("api/admin/stock-alerts")]
         public async Task<IActionResult> GetStockAlerts()
         {
             try
@@ -527,7 +520,7 @@ namespace CompuGear.Controllers
         }
 
         [HttpPost]
-        [Route("api/stock-alerts")]
+        [Route("api/admin/stock-alerts")]
         public async Task<IActionResult> CreateStockAlert([FromBody] StockAlertRequest request)
         {
             try
@@ -576,7 +569,7 @@ namespace CompuGear.Controllers
         }
 
         [HttpPut]
-        [Route("api/stock-alerts/{id}/resolve")]
+        [Route("api/admin/stock-alerts/{id}/resolve")]
         public async Task<IActionResult> ResolveStockAlert(int id)
         {
             try
@@ -698,12 +691,12 @@ namespace CompuGear.Controllers
                     ExpectedDeliveryDate = !string.IsNullOrEmpty(request.ExpectedDelivery) ? DateTime.Parse(request.ExpectedDelivery) : null,
                     Status = "Pending",
                     Notes = request.Notes,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    CompanyId = companyId
                 };
-                purchaseOrder.CompanyId = companyId;
 
                 decimal totalAmount = 0;
-                purchaseOrder.Items = new List<PurchaseOrderItem>();
+                purchaseOrder.Items = [];
 
                 foreach (var item in request.Items)
                 {
@@ -1140,7 +1133,7 @@ namespace CompuGear.Controllers
                     {
                         t.TransactionId,
                         t.ProductId,
-                        ProductName = t.Product.ProductName,
+                        t.Product.ProductName,
                         ProductImage = t.Product.MainImageUrl,
                         t.TransactionType,
                         t.Quantity,

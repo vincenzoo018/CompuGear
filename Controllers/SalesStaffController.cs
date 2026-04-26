@@ -11,16 +11,10 @@ namespace CompuGear.Controllers
     /// RoleId: 3 - Sales Staff
     /// Access: Customer management, orders, leads, sales reports, product/inventory info (read)
     /// </summary>
-    public class SalesStaffController : Controller
+    public class SalesStaffController(CompuGearDbContext context, IMemoryCache cache) : Controller
     {
-        private readonly CompuGearDbContext _context;
-        private readonly IMemoryCache _cache;
-
-        public SalesStaffController(CompuGearDbContext context, IMemoryCache cache)
-        {
-            _context = context;
-            _cache = cache;
-        }
+        private readonly CompuGearDbContext _context = context;
+        private readonly IMemoryCache _cache = cache;
 
         // Role-based authorization check
         public override void OnActionExecuting(ActionExecutingContext context)
@@ -66,7 +60,7 @@ namespace CompuGear.Controllers
                 .ToList();
 
             bool result;
-            if (!roleHasExplicitAccess.Any())
+            if (roleHasExplicitAccess.Count == 0)
                 result = true;
             else
                 result = roleHasExplicitAccess.Any(r => r.ModuleCode == moduleCode && r.HasAccess);

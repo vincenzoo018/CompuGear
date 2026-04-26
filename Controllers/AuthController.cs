@@ -3,22 +3,33 @@ using Microsoft.EntityFrameworkCore;
 using CompuGear.Data;
 using CompuGear.Models;
 using CompuGear.Services;
+using System.Text;
+using System.Security.Cryptography;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CompuGear.Controllers
 {
     /// <summary>
     /// Authentication Controller for Customer and User Login/Register
     /// </summary>
-    public class AuthController : Controller
+    public class AuthController(CompuGearDbContext context, IAuditService auditService, IConfiguration configuration, IHttpClientFactory httpClientFactory) : Controller
     {
-        private readonly CompuGearDbContext _context;
-        private readonly IAuditService _auditService;
-
-        public AuthController(CompuGearDbContext context, IAuditService auditService)
+        private readonly CompuGearDbContext _context = context;
+        private readonly IAuditService _auditService = auditService;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+        private static readonly HashSet<string> AllowedRegistrationAddresses = new(StringComparer.OrdinalIgnoreCase)
         {
-            _context = context;
-            _auditService = auditService;
-        }
+            "Quezon City, Metro Manila",
+            "Manila, Metro Manila",
+            "Makati, Metro Manila",
+            "Taguig, Metro Manila",
+            "Pasig, Metro Manila",
+            "Caloocan, Metro Manila",
+            "Cebu City, Cebu",
+            "Davao City, Davao del Sur"
+        };
 
         // Debug: Check current session (useful for troubleshooting)
         [HttpGet]
@@ -103,6 +114,12 @@ namespace CompuGear.Controllers
             {
                 return RedirectToAction("Index", "CustomerPortal");
             }
+            var recaptchaEnabled = _configuration.GetValue<bool>("ReCaptcha:Enabled");
+            var recaptchaSiteKey = _configuration["ReCaptcha:SiteKey"] ?? string.Empty;
+
+            ViewData["ReCaptchaEnabled"] = recaptchaEnabled;
+            ViewData["ReCaptchaSiteKey"] = recaptchaSiteKey;
+
             return View();
         }
 
@@ -122,7 +139,7 @@ namespace CompuGear.Controllers
             return View();
         }
 
-        private IActionResult RedirectBasedOnRole(int roleId)
+        private RedirectToActionResult RedirectBasedOnRole(int roleId)
         {
             return roleId switch
             {
@@ -144,9 +161,19 @@ namespace CompuGear.Controllers
         {
             try
             {
-                if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
+                if (request == null || string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
                 {
                     return Json(new { success = false, message = "Email/Username and password are required" });
+                }
+
+                var recaptchaEnabled = _configuration.GetValue<bool>("ReCaptcha:Enabled");
+                if (recaptchaEnabled)
+                {
+                    var (isValid, message) = await VerifyRecaptchaAsync(request.RecaptchaToken);
+                    if (!isValid)
+                    {
+                        return Json(new { success = false, message });
+                    }
                 }
 
                 var loginInput = request.Email.Trim();
@@ -161,8 +188,8 @@ namespace CompuGear.Controllers
                 {
                     // Verify password using the stored salt
                     var hashedPassword = Convert.ToBase64String(
-                        System.Security.Cryptography.SHA256.HashData(
-                            System.Text.Encoding.UTF8.GetBytes(request.Password + user.Salt)));
+                        SHA256.HashData(
+                            Encoding.UTF8.GetBytes(request.Password + user.Salt)));
 
                     if (user.PasswordHash == hashedPassword)
                     {
@@ -236,8 +263,8 @@ namespace CompuGear.Controllers
                     if (customerUser != null)
                     {
                         var hashedPassword = Convert.ToBase64String(
-                            System.Security.Cryptography.SHA256.HashData(
-                                System.Text.Encoding.UTF8.GetBytes(request.Password + customerUser.Salt)));
+                            SHA256.HashData(
+                                Encoding.UTF8.GetBytes(request.Password + customerUser.Salt)));
 
                         if (customerUser.PasswordHash == hashedPassword)
                         {
@@ -268,9 +295,51 @@ namespace CompuGear.Controllers
             }
             catch (Exception ex)
             {
-                await _auditService.LogLoginAsync(0, request.Email, false, ex.Message);
+                var loginIdentifier = request?.Email ?? "unknown";
+                await _auditService.LogLoginAsync(0, loginIdentifier, false, ex.Message);
                 return Json(new { success = false, message = "An error occurred. Please try again later." });
             }
+        }
+
+        private async Task<(bool Success, string Message)> VerifyRecaptchaAsync(string recaptchaToken)
+        {
+            if (string.IsNullOrWhiteSpace(recaptchaToken))
+            {
+                return (false, "Please complete the reCAPTCHA challenge.");
+            }
+
+            var secretKey = _configuration["ReCaptcha:SecretKey"];
+            if (string.IsNullOrWhiteSpace(secretKey))
+            {
+                return (false, "Login security check is not configured. Please contact support.");
+            }
+
+            var verifyUrl = _configuration["ReCaptcha:VerifyUrl"] ?? "https://www.google.com/recaptcha/api/siteverify";
+            var remoteIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
+
+            using var client = _httpClientFactory.CreateClient();
+            using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["secret"] = secretKey,
+                ["response"] = recaptchaToken,
+                ["remoteip"] = remoteIp
+            });
+
+            using var response = await client.PostAsync(verifyUrl, content);
+            if (!response.IsSuccessStatusCode)
+            {
+                return (false, "Unable to verify reCAPTCHA. Please try again.");
+            }
+
+            var responseBody = await response.Content.ReadAsStringAsync();
+            var verification = JsonSerializer.Deserialize<RecaptchaVerifyResponse>(responseBody);
+
+            if (verification?.Success == true)
+            {
+                return (true, string.Empty);
+            }
+
+            return (false, "reCAPTCHA verification failed. Please try again.");
         }
 
         // Process Registration
@@ -279,6 +348,17 @@ namespace CompuGear.Controllers
         {
             try
             {
+                if (request == null)
+                {
+                    return Json(new { success = false, message = "Invalid registration payload" });
+                }
+
+                request.FirstName = request.FirstName?.Trim() ?? string.Empty;
+                request.LastName = request.LastName?.Trim() ?? string.Empty;
+                request.Email = request.Email?.Trim() ?? string.Empty;
+                request.Phone = request.Phone?.Trim() ?? string.Empty;
+                request.Address = request.Address?.Trim() ?? string.Empty;
+
                 // Validate required fields
                 if (string.IsNullOrEmpty(request.FirstName) || string.IsNullOrEmpty(request.LastName) ||
                     string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
@@ -286,18 +366,38 @@ namespace CompuGear.Controllers
                     return Json(new { success = false, message = "All fields are required" });
                 }
 
+                if (string.IsNullOrEmpty(request.Address))
+                {
+                    return Json(new { success = false, message = "Please select an address" });
+                }
+
+                if (!AllowedRegistrationAddresses.Contains(request.Address))
+                {
+                    return Json(new { success = false, message = "Invalid address selection" });
+                }
+
+                if (!string.IsNullOrEmpty(request.Phone) && !request.Phone.All(char.IsDigit))
+                {
+                    return Json(new { success = false, message = "Phone number must contain numbers only" });
+                }
+
+                if (!string.IsNullOrEmpty(request.Phone) && request.Phone.Length != 11)
+                {
+                    return Json(new { success = false, message = "Phone number must be exactly 11 digits" });
+                }
+
+                var normalizedEmail = request.Email.ToLowerInvariant();
+
                 // Check if email already exists in Customers
-                if (await _context.Customers.AnyAsync(c => c.Email == request.Email))
+                if (await _context.Customers.AnyAsync(c => c.Email.ToLower() == normalizedEmail))
                 {
                     return Json(new { success = false, message = "An account with this email already exists" });
                 }
-
                 // Check if email already exists in Users
-                if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+                if (await _context.Users.AnyAsync(u => u.Email.ToLower() == normalizedEmail))
                 {
                     return Json(new { success = false, message = "An account with this email already exists" });
                 }
-
                 // Validate password complexity: min 12 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special
                 if (request.Password.Length < 12)
                 {
@@ -326,17 +426,17 @@ namespace CompuGear.Controllers
                 }
 
                 // Create user account first
-                var salt = Guid.NewGuid().ToString("N").Substring(0, 16);
+                var salt = Guid.NewGuid().ToString("N")[..16];
                 var user = new User
                 {
-                    Username = request.Email.Split('@')[0] + DateTime.Now.Ticks.ToString().Substring(10),
+                    Username = request.Email.Split('@')[0] + DateTime.Now.Ticks.ToString()[10..],
                     Email = request.Email,
                     FirstName = request.FirstName,
                     LastName = request.LastName,
                     Phone = request.Phone,
                     PasswordHash = Convert.ToBase64String(
-                        System.Security.Cryptography.SHA256.HashData(
-                            System.Text.Encoding.UTF8.GetBytes(request.Password + salt))),
+                        SHA256.HashData(
+                            Encoding.UTF8.GetBytes(request.Password + salt))),
                     Salt = salt,
                     RoleId = 7, // Customer role
                     IsActive = true,
@@ -357,6 +457,12 @@ namespace CompuGear.Controllers
                     LastName = request.LastName,
                     Email = request.Email,
                     Phone = request.Phone,
+                    BillingAddress = request.Address,
+                    ShippingAddress = request.Address,
+                    BillingCity = request.Address.Split(',')[0].Trim(),
+                    ShippingCity = request.Address.Split(',')[0].Trim(),
+                    BillingCountry = "Philippines",
+                    ShippingCountry = "Philippines",
                     Status = "Active",
                     CategoryId = 1, // Standard customer
                     CreatedAt = DateTime.UtcNow,
@@ -411,11 +517,11 @@ namespace CompuGear.Controllers
 
             foreach (var user in users)
             {
-                var salt = Guid.NewGuid().ToString("N").Substring(0, 16);
+                var salt = Guid.NewGuid().ToString("N")[..16];
                 user.Salt = salt;
                 user.PasswordHash = Convert.ToBase64String(
-                    System.Security.Cryptography.SHA256.HashData(
-                        System.Text.Encoding.UTF8.GetBytes(defaultPassword + salt)));
+                    SHA256.HashData(
+                        Encoding.UTF8.GetBytes(defaultPassword + salt)));
                 user.UpdatedAt = DateTime.UtcNow;
                 count++;
             }
@@ -431,6 +537,22 @@ namespace CompuGear.Controllers
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public bool RememberMe { get; set; }
+        public string RecaptchaToken { get; set; } = string.Empty;
+    }
+
+    public class RecaptchaVerifyResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; set; }
+
+        [JsonPropertyName("challenge_ts")]
+        public string? ChallengeTimestamp { get; set; }
+
+        [JsonPropertyName("hostname")]
+        public string? Hostname { get; set; }
+
+        [JsonPropertyName("error-codes")]
+        public string[] ErrorCodes { get; set; } = [];
     }
 
     public class RegisterRequest
@@ -439,6 +561,7 @@ namespace CompuGear.Controllers
         public string LastName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string ConfirmPassword { get; set; } = string.Empty;
     }

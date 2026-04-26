@@ -98,8 +98,6 @@
                 <label class="form-label">Filter by Role</label>
                 <select class="form-select" id="filterRole">
                     <option value="">All Roles</option>
-                    <option value="1">Super Admin</option>
-                    <option value="2">Company Admin</option>
                     <option value="3">Sales Staff</option>
                     <option value="4">Customer Support Staff</option>
                     <option value="5">Marketing Staff</option>
@@ -204,7 +202,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Phone Number</label>
-                                <input type="tel" class="form-control" id="phone" name="phone" placeholder="+63-XXX-XXX-XXXX">
+                                <input type="tel" class="form-control" id="phone" name="phone" inputmode="numeric" placeholder="09XXXXXXXXX or +639XXXXXXXXX" maxlength="13" pattern="^(09\d{9}|\+639\d{9})$" title="Use 11-digit local format (09XXXXXXXXX) or +63 format (+639XXXXXXXXX)" oninput="sanitizeAdminPhoneInput(this)">
                             </div>
                         </div>
                     </div>
@@ -221,8 +219,6 @@
                                 <label class="form-label required">User Role</label>
                                 <select class="form-select" id="roleId" name="roleId" required>
                                     <option value="">Select Role</option>
-                                    <option value="1">Super Admin</option>
-                                    <option value="2">Company Admin</option>
                                     <option value="3">Sales Staff</option>
                                     <option value="4">Customer Support Staff</option>
                                     <option value="5">Marketing Staff</option>
@@ -258,6 +254,7 @@
                                         </svg>
                                     </button>
                                 </div>
+                                <small class="text-muted d-block mt-1">Minimum 12 characters, with at least one uppercase letter and one special character.</small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Confirm Password</label>
@@ -420,6 +417,14 @@
     function togglePassword(fieldId) {
         const field = document.getElementById(fieldId);
         field.type = field.type === 'password' ? 'text' : 'password';
+    }
+
+    function sanitizeAdminPhoneInput(input) {
+        let val = (input.value || '').replace(/[^\d+]/g, '');
+        if (val.includes('+')) {
+            val = (val[0] === '+' ? '+' : '') + val.slice(val[0] === '+' ? 1 : 0).replace(/\+/g, '');
+        }
+        input.value = val.slice(0, 13);
     }
 
     function exportUsers() {

@@ -5,24 +5,17 @@ using CompuGear.Data;
 using CompuGear.Models;
 using CompuGear.Services;
 
-namespace CompuGear.Controllers
+namespace CompuGear.Controllers.Admin
 {
     /// <summary>
     /// Customers Controller for Admin - Uses Views/Admin/Customers folder
     /// RoleId: 1 - Super Admin, 2 - Company Admin
     /// </summary>
-    public class CustomersController : Controller
+    public class CustomersController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService) : Controller
     {
-        private readonly CompuGearDbContext _context;
-        private readonly IConfiguration _configuration;
-        private readonly IAuditService _auditService;
-
-        public CustomersController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService)
-        {
-            _context = context;
-            _configuration = configuration;
-            _auditService = auditService;
-        }
+        private readonly CompuGearDbContext _context = context;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly IAuditService _auditService = auditService;
 
         // Helper: returns CompanyId from session. Super Admin (RoleId=1) gets null → sees all data.
         private int? GetCompanyId()

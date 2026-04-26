@@ -1025,7 +1025,7 @@ body.sidebar-loading .nav-item-arrow {
     justify-content: space-between;
     padding: 0 1.5rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-    z-index: 100;
+    z-index: 1050;
     border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
 
@@ -2603,10 +2603,6 @@ body.dark-mode .badge.bg-primary {
     border: none;
 }
 
-.toast-container {
-    z-index: 9999 !important;
-}
-
 /* =====================================================
    Data Tables Enhancement
    ===================================================== */
@@ -2858,7 +2854,7 @@ body.dark-mode .badge.bg-primary {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10000;
+    z-index: 1090;
 }
 
 .loading-spinner {
@@ -3928,7 +3924,12 @@ body.dark-mode .modal-header {
     position: fixed !important;
     top: 20px !important;
     right: 20px !important;
-    z-index: 99999 !important;
+    z-index: 1080 !important;
+}
+
+/* Notification dropdown must sit above topbar content */
+.notification-dropdown {
+    z-index: 1060;
 }
 
 .toast {
@@ -4113,4 +4114,110 @@ body.dark-mode .btn-archive-delete {
 body.dark-mode .btn-archive-delete:hover {
     background: #f87171;
     color: #1e1e1e;
+}
+
+/* =====================================================
+   GLOBAL UI STABILIZATION FIXES
+   Resolves topbar dropdown/toast overlap and toast contrast issues.
+   ===================================================== */
+
+/* Keep action menus visually above topbar content and always cleanly styled */
+.topbar-actions .dropdown-menu,
+.topbar-user .dropdown-menu,
+.notification-dropdown {
+    z-index: 1075 !important;
+}
+
+.topbar-user .dropdown-menu {
+    list-style: none;
+    margin-top: 0.5rem;
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.topbar-user .dropdown-menu li {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.topbar-user .dropdown-item {
+    color: var(--gray-700);
+    text-decoration: none;
+}
+
+.notification-dropdown {
+    width: min(360px, calc(100vw - 1.5rem)) !important;
+    max-height: min(460px, calc(100vh - var(--topbar-height) - 2rem)) !important;
+    overflow-y: auto !important;
+    border-radius: 12px;
+    padding: 0;
+}
+
+/* Position toasts below the sticky topbar so they no longer cover dropdowns */
+.toast-container {
+    position: fixed !important;
+    top: calc(var(--topbar-height) + 0.75rem) !important;
+    right: 1rem !important;
+    z-index: 1040 !important;
+    pointer-events: none;
+}
+
+.toast-container .toast {
+    pointer-events: auto;
+    min-width: 320px;
+    max-width: 420px;
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18) !important;
+    overflow: hidden;
+}
+
+.toast .d-flex {
+    align-items: center;
+}
+
+.toast .toast-body {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #111827;
+}
+
+/* Preserve white text for Bootstrap colored toasts */
+.toast.text-white .toast-body,
+.toast.bg-success .toast-body,
+.toast.bg-danger .toast-body,
+.toast.bg-warning .toast-body,
+.toast.bg-info .toast-body,
+.toast.bg-primary .toast-body {
+    color: inherit !important;
+}
+
+.toast.text-white .btn-close,
+.toast.bg-success .btn-close,
+.toast.bg-danger .btn-close,
+.toast.bg-primary .btn-close,
+.toast.bg-dark .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: 0.95;
+}
+
+@media (max-width: 767.98px) {
+    .toast-container {
+        left: 0.75rem !important;
+        right: 0.75rem !important;
+        top: calc(var(--topbar-height) + 0.5rem) !important;
+    }
+
+    .toast-container .toast {
+        min-width: 0;
+        max-width: 100%;
+        width: 100%;
+    }
+
+    .notification-dropdown {
+        width: min(360px, calc(100vw - 1rem)) !important;
+    }
 }

@@ -12,14 +12,9 @@ namespace CompuGear.Controllers
     /// </summary>
     [Route("api/approval-requests")]
     [ApiController]
-    public class ApprovalRequestsController : ControllerBase
+    public class ApprovalRequestsController(CompuGearDbContext context) : ControllerBase
     {
-        private readonly CompuGearDbContext _context;
-
-        public ApprovalRequestsController(CompuGearDbContext context)
-        {
-            _context = context;
-        }
+        private readonly CompuGearDbContext _context = context;
 
         /// <summary>
         /// Get all approval requests (Admin only)
@@ -238,7 +233,7 @@ namespace CompuGear.Controllers
             try
             {
                 // Generate request code
-                var requestCode = $"REQ-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper()}";
+                var requestCode = $"REQ-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..6].ToUpper()}";
 
                 var request = new ApprovalRequest
                 {
@@ -306,14 +301,14 @@ namespace CompuGear.Controllers
 
             try
             {
-                if (dto.Action.ToLower() == "approve")
+                if (string.Equals(dto.Action, "approve", StringComparison.OrdinalIgnoreCase))
                 {
                     request.Status = ApprovalStatus.Approved;
                     
                     // Execute the approved action based on request type
                     await ExecuteApprovedAction(request);
                 }
-                else if (dto.Action.ToLower() == "reject")
+                else if (string.Equals(dto.Action, "reject", StringComparison.OrdinalIgnoreCase))
                 {
                     request.Status = ApprovalStatus.Rejected;
                 }

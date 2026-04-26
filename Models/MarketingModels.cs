@@ -91,7 +91,7 @@ namespace CompuGear.Models
         [ForeignKey("UpdatedBy")]
         public virtual User? UpdatedByUser { get; set; }
 
-        public virtual ICollection<Promotion> Promotions { get; set; } = new List<Promotion>();
+        public virtual ICollection<Promotion> Promotions { get; set; } = [];
     }
 
     /// <summary>
@@ -129,7 +129,7 @@ namespace CompuGear.Models
         [ForeignKey("CreatedBy")]
         public virtual User? CreatedByUser { get; set; }
 
-        public virtual ICollection<SegmentMember> Members { get; set; } = new List<SegmentMember>();
+        public virtual ICollection<SegmentMember> Members { get; set; } = [];
     }
 
     /// <summary>
@@ -236,7 +236,7 @@ namespace CompuGear.Models
         [ForeignKey("CreatedBy")]
         public virtual User? CreatedByUser { get; set; }
 
-        public virtual ICollection<PromotionUsage> UsageHistory { get; set; } = new List<PromotionUsage>();
+        public virtual ICollection<PromotionUsage> UsageHistory { get; set; } = [];
     }
 
     /// <summary>
@@ -309,7 +309,7 @@ namespace CompuGear.Models
         [ForeignKey("CampaignId")]
         public virtual Campaign? Campaign { get; set; }
 
-        public virtual ICollection<ABTestVariant> Variants { get; set; } = new List<ABTestVariant>();
+        public virtual ICollection<ABTestVariant> Variants { get; set; } = [];
     }
 
     /// <summary>

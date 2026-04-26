@@ -4,25 +4,20 @@ using Microsoft.EntityFrameworkCore;
 using CompuGear.Data;
 using CompuGear.Models;
 using CompuGear.Services;
+using System.Text.Json;
+using System.Text;
 
-namespace CompuGear.Controllers
+namespace CompuGear.Controllers.Admin
 {
     /// <summary>
     /// Sales Controller for Admin - Uses Views/Admin/Sales folder
     /// RoleId: 1 - Super Admin, 2 - Company Admin
     /// </summary>
-    public class SalesController : Controller
+    public class SalesController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService) : Controller
     {
-        private readonly CompuGearDbContext _context;
-        private readonly IConfiguration _configuration;
-        private readonly IAuditService _auditService;
-
-        public SalesController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService)
-        {
-            _context = context;
-            _configuration = configuration;
-            _auditService = auditService;
-        }
+        private readonly CompuGearDbContext _context = context;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly IAuditService _auditService = auditService;
 
         // Authorization check - Admins for views, all authenticated staff for API
         public override void OnActionExecuting(ActionExecutingContext context)
@@ -454,7 +449,7 @@ namespace CompuGear.Controllers
                     {
                         var paymongoSecretKey = _configuration["PayMongo:SecretKey"] ?? "sk_test_SakyRyg4R6hXeni4x5EaNUow";
                         using var httpClient = new HttpClient();
-                        var authToken = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{paymongoSecretKey}:"));
+                        var authToken = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{paymongoSecretKey}:"));
                         httpClient.DefaultRequestHeaders.Add("Authorization", $"Basic {authToken}");
 
                         var amountInCentavos = (int)(order.TotalAmount * 100);
@@ -488,8 +483,8 @@ namespace CompuGear.Controllers
                         };
 
                         var content = new StringContent(
-                            System.Text.Json.JsonSerializer.Serialize(checkoutRequest),
-                            System.Text.Encoding.UTF8,
+                            JsonSerializer.Serialize(checkoutRequest),
+                            Encoding.UTF8,
                             "application/json"
                         );
 
@@ -498,7 +493,7 @@ namespace CompuGear.Controllers
 
                         if (response.IsSuccessStatusCode)
                         {
-                            var json = System.Text.Json.JsonDocument.Parse(responseContent);
+                            var json = JsonDocument.Parse(responseContent);
                             checkoutSessionId = json.RootElement.GetProperty("data").GetProperty("id").GetString();
                             checkoutUrl = json.RootElement.GetProperty("data").GetProperty("attributes").GetProperty("checkout_url").GetString();
 
@@ -731,9 +726,9 @@ namespace CompuGear.Controllers
                     CompanyName = lead.CompanyName,
                     Status = "Active",
                     CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    UpdatedAt = DateTime.UtcNow,
+                    CompanyId = lead.CompanyId
                 };
-                customer.CompanyId = lead.CompanyId;
 
                 _context.Customers.Add(customer);
                 await _context.SaveChangesAsync();

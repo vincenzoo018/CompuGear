@@ -28,7 +28,7 @@ namespace CompuGear.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation Properties
-        public virtual ICollection<SupportTicket> Tickets { get; set; } = new List<SupportTicket>();
+        public virtual ICollection<SupportTicket> Tickets { get; set; } = [];
     }
 
     /// <summary>
@@ -126,9 +126,9 @@ namespace CompuGear.Models
         [ForeignKey("ResolvedBy")]
         public virtual User? ResolvedByUser { get; set; }
 
-        public virtual ICollection<TicketMessage> Messages { get; set; } = new List<TicketMessage>();
+        public virtual ICollection<TicketMessage> Messages { get; set; } = [];
 
-        public virtual ICollection<TicketAttachment> Attachments { get; set; } = new List<TicketAttachment>();
+        public virtual ICollection<TicketAttachment> Attachments { get; set; } = [];
     }
 
     /// <summary>
@@ -231,9 +231,9 @@ namespace CompuGear.Models
         [ForeignKey("ParentCategoryId")]
         public virtual KnowledgeCategory? ParentCategory { get; set; }
 
-        public virtual ICollection<KnowledgeCategory> SubCategories { get; set; } = new List<KnowledgeCategory>();
+        public virtual ICollection<KnowledgeCategory> SubCategories { get; set; } = [];
 
-        public virtual ICollection<KnowledgeArticle> Articles { get; set; } = new List<KnowledgeArticle>();
+        public virtual ICollection<KnowledgeArticle> Articles { get; set; } = [];
     }
 
     /// <summary>
@@ -394,7 +394,7 @@ namespace CompuGear.Models
         [ForeignKey("CategoryId")]
         public virtual TicketCategory? Category { get; set; }
 
-        public virtual ICollection<AssignmentRuleAgent> Agents { get; set; } = new List<AssignmentRuleAgent>();
+        public virtual ICollection<AssignmentRuleAgent> Agents { get; set; } = [];
     }
 
     /// <summary>

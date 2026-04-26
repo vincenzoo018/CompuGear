@@ -225,11 +225,11 @@ namespace CompuGear.Models
         [ForeignKey("AssignedTo")]
         public virtual User? AssignedUser { get; set; }
 
-        public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+        public virtual ICollection<OrderItem> OrderItems { get; set; } = [];
 
-        public virtual ICollection<OrderStatusHistory> StatusHistory { get; set; } = new List<OrderStatusHistory>();
+        public virtual ICollection<OrderStatusHistory> StatusHistory { get; set; } = [];
 
-        public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
+        public virtual ICollection<Payment> Payments { get; set; } = [];
     }
 
     /// <summary>
@@ -391,7 +391,7 @@ namespace CompuGear.Models
         [ForeignKey("LeadId")]
         public virtual Lead? Lead { get; set; }
 
-        public virtual ICollection<QuotationItem> Items { get; set; } = new List<QuotationItem>();
+        public virtual ICollection<QuotationItem> Items { get; set; } = [];
     }
 
     /// <summary>

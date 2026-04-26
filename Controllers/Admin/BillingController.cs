@@ -5,24 +5,17 @@ using CompuGear.Data;
 using CompuGear.Models;
 using CompuGear.Services;
 
-namespace CompuGear.Controllers
+namespace CompuGear.Controllers.Admin
 {
     /// <summary>
     /// Billing Controller for Admin - Uses Views/Admin/Billing folder
     /// RoleId: 1 - Super Admin, 2 - Company Admin
     /// </summary>
-    public class BillingController : Controller
+    public class BillingController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService) : Controller
     {
-        private readonly CompuGearDbContext _context;
-        private readonly IConfiguration _configuration;
-        private readonly IAuditService _auditService;
-
-        public BillingController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService)
-        {
-            _context = context;
-            _configuration = configuration;
-            _auditService = auditService;
-        }
+        private readonly CompuGearDbContext _context = context;
+        private readonly IConfiguration _configuration = configuration;
+        private readonly IAuditService _auditService = auditService;
 
         // Authorization check - Admins for views, all authenticated staff for API
         public override void OnActionExecuting(ActionExecutingContext context)
@@ -272,12 +265,12 @@ namespace CompuGear.Controllers
                             InvoiceDate = order.OrderDate,
                             DueDate = order.OrderDate,
                             Status = derivedStatus,
-                            Subtotal = order.Subtotal,
-                            DiscountAmount = order.DiscountAmount,
-                            TaxAmount = order.TaxAmount,
-                            ShippingAmount = order.ShippingAmount,
-                            TotalAmount = order.TotalAmount,
-                            PaidAmount = order.PaidAmount,
+                            order.Subtotal,
+                            order.DiscountAmount,
+                            order.TaxAmount,
+                            order.ShippingAmount,
+                            order.TotalAmount,
+                            order.PaidAmount,
                             BalanceDue = Math.Max(0, order.TotalAmount - order.PaidAmount),
                             BillingName = order.Customer != null ? order.Customer.FirstName + " " + order.Customer.LastName : "Customer",
                             order.BillingAddress,
@@ -288,9 +281,9 @@ namespace CompuGear.Controllers
                             BillingEmail = order.Customer?.Email,
                             PaymentTerms = "Order Based",
                             order.Notes,
-                            OrderNumber = order.OrderNumber,
-                            OrderDate = order.OrderDate,
-                            OrderStatus = order.OrderStatus,
+                            order.OrderNumber,
+                            order.OrderDate,
+                            order.OrderStatus,
                             OrderPaymentStatus = order.PaymentStatus,
                             OrderPaymentMethod = order.PaymentMethod,
                             OrderTrackingNumber = order.TrackingNumber,
@@ -304,10 +297,10 @@ namespace CompuGear.Controllers
                                 Description = item.ProductName,
                                 item.Quantity,
                                 item.UnitPrice,
-                                DiscountAmount = item.DiscountAmount,
-                                TaxAmount = item.TaxAmount,
-                                TotalPrice = item.TotalPrice,
-                                ProductCode = item.ProductCode
+                                item.DiscountAmount,
+                                item.TaxAmount,
+                                item.TotalPrice,
+                                item.ProductCode
                             }),
                             Payments = orderPayments
                         }
@@ -370,9 +363,9 @@ namespace CompuGear.Controllers
                         invoice.BillingEmail,
                         invoice.PaymentTerms,
                         invoice.Notes,
-                        OrderNumber = invoice.Order?.OrderNumber,
+                        invoice.Order?.OrderNumber,
                         OrderDate = invoice.Order != null ? invoice.Order.OrderDate : (DateTime?)null,
-                        OrderStatus = invoice.Order?.OrderStatus,
+                        invoice.Order?.OrderStatus,
                         OrderPaymentStatus = invoice.Order?.PaymentStatus,
                         OrderPaymentMethod = invoice.Order?.PaymentMethod,
                         OrderTrackingNumber = invoice.Order?.TrackingNumber,
@@ -391,7 +384,7 @@ namespace CompuGear.Controllers
                             item.DiscountAmount,
                             item.TaxAmount,
                             item.TotalPrice,
-                            ProductCode = item.Product?.ProductCode
+                            item.Product?.ProductCode
                         }),
                         Payments = payments
                     }
@@ -700,30 +693,30 @@ namespace CompuGear.Controllers
                         InvoiceId = -o.OrderId,
                         InvoiceNumber = "ORD-" + o.OrderNumber,
                         OrderId = (int?)o.OrderId,
-                        OrderNumber = o.OrderNumber,
-                        CustomerId = o.CustomerId,
+                        o.OrderNumber,
+                        o.CustomerId,
                         CustomerName = o.Customer != null ? o.Customer.FirstName + " " + o.Customer.LastName : "N/A",
                         InvoiceDate = o.OrderDate,
                         DueDate = o.OrderDate,
-                        Subtotal = o.Subtotal,
-                        DiscountAmount = o.DiscountAmount,
-                        TaxAmount = o.TaxAmount,
-                        ShippingAmount = o.ShippingAmount,
-                        TotalAmount = o.TotalAmount,
-                        PaidAmount = o.PaidAmount,
+                        o.Subtotal,
+                        o.DiscountAmount,
+                        o.TaxAmount,
+                        o.ShippingAmount,
+                        o.TotalAmount,
+                        o.PaidAmount,
                         BalanceDue = Math.Max(0, o.TotalAmount - o.PaidAmount),
                         Status = o.OrderStatus == "Confirmed" && o.PaymentStatus == "Paid"
                             ? "Paid/Confirmed"
                             : (o.PaidAmount >= o.TotalAmount ? "Paid" : (o.PaidAmount > 0 ? "Partial" : "Pending")),
                         BillingName = o.Customer != null ? o.Customer.FirstName + " " + o.Customer.LastName : "N/A",
-                        BillingAddress = o.BillingAddress,
-                        BillingCity = o.BillingCity,
-                        BillingCountry = o.BillingCountry,
+                        o.BillingAddress,
+                        o.BillingCity,
+                        o.BillingCountry,
                         PaymentTerms = (string?)"Order Based",
-                        Notes = o.Notes,
+                        o.Notes,
                         SentAt = (DateTime?)null,
                         PaidAt = (DateTime?)null,
-                        CreatedAt = o.CreatedAt,
+                        o.CreatedAt,
                         Items = o.OrderItems.Select(item => new
                         {
                             ItemId = -item.OrderItemId,
@@ -733,7 +726,7 @@ namespace CompuGear.Controllers
                             item.UnitPrice,
                             item.DiscountAmount,
                             item.TaxAmount,
-                            TotalPrice = item.TotalPrice
+                            item.TotalPrice
                         })
                     })
                     .ToListAsync();
@@ -773,35 +766,35 @@ namespace CompuGear.Controllers
                     InvoiceId = -order.OrderId,
                     InvoiceNumber = "ORD-" + order.OrderNumber,
                     OrderId = (int?)order.OrderId,
-                    OrderNumber = order.OrderNumber,
-                    CustomerId = order.CustomerId,
+                    order.OrderNumber,
+                    order.CustomerId,
                     CustomerName = order.Customer != null ? order.Customer.FirstName + " " + order.Customer.LastName : "N/A",
                     CustomerEmail = order.Customer != null ? order.Customer.Email : "",
                     InvoiceDate = order.OrderDate,
                     DueDate = order.OrderDate,
-                    Subtotal = order.Subtotal,
-                    DiscountAmount = order.DiscountAmount,
-                    TaxAmount = order.TaxAmount,
-                    ShippingAmount = order.ShippingAmount,
-                    TotalAmount = order.TotalAmount,
-                    PaidAmount = order.PaidAmount,
+                    order.Subtotal,
+                    order.DiscountAmount,
+                    order.TaxAmount,
+                    order.ShippingAmount,
+                    order.TotalAmount,
+                    order.PaidAmount,
                     BalanceDue = Math.Max(0, order.TotalAmount - order.PaidAmount),
                     Status = order.OrderStatus == "Confirmed" && order.PaymentStatus == "Paid"
                         ? "Paid/Confirmed"
                         : (order.PaidAmount >= order.TotalAmount ? "Paid" : (order.PaidAmount > 0 ? "Partial" : "Pending")),
                     BillingName = order.Customer != null ? order.Customer.FirstName + " " + order.Customer.LastName : "N/A",
-                    BillingAddress = order.BillingAddress,
-                    BillingCity = order.BillingCity,
-                    BillingState = order.BillingState,
-                    BillingZipCode = order.BillingZipCode,
-                    BillingCountry = order.BillingCountry,
+                    order.BillingAddress,
+                    order.BillingCity,
+                    order.BillingState,
+                    order.BillingZipCode,
+                    order.BillingCountry,
                     BillingEmail = order.Customer?.Email,
                     PaymentTerms = "Order Based",
                     order.Notes,
                     InternalNotes = (string?)null,
                     SentAt = (DateTime?)null,
                     PaidAt = (DateTime?)null,
-                    CreatedAt = order.CreatedAt,
+                    order.CreatedAt,
                     Items = order.OrderItems.Select(item => new
                     {
                         ItemId = -item.OrderItemId,
@@ -811,7 +804,7 @@ namespace CompuGear.Controllers
                         item.UnitPrice,
                         item.DiscountAmount,
                         item.TaxAmount,
-                        TotalPrice = item.TotalPrice
+                        item.TotalPrice
                     })
                 };
 
@@ -1028,33 +1021,37 @@ namespace CompuGear.Controllers
                     .ToDictionary(g => g.Key, g => g.OrderByDescending(x => x.InvoiceId).First());
 
                 var derivedFromOrders = ordersForDerivation
-                    .Select(o => new
+                    .Select(o =>
                     {
-                        PaymentId = -o.OrderId,
-                        PaymentNumber = "AUTO-" + o.OrderNumber,
-                        InvoiceId = invoiceByOrder.ContainsKey(o.OrderId) ? (int?)invoiceByOrder[o.OrderId].InvoiceId : null,
-                        InvoiceNumber = invoiceByOrder.ContainsKey(o.OrderId) ? invoiceByOrder[o.OrderId].InvoiceNumber : null,
-                        InvoiceSubtotal = invoiceByOrder.ContainsKey(o.OrderId) ? invoiceByOrder[o.OrderId].Subtotal : 0,
-                        InvoiceTaxAmount = invoiceByOrder.ContainsKey(o.OrderId) ? invoiceByOrder[o.OrderId].TaxAmount : 0,
-                        InvoiceDiscountAmount = invoiceByOrder.ContainsKey(o.OrderId) ? invoiceByOrder[o.OrderId].DiscountAmount : 0,
-                        InvoiceShippingAmount = invoiceByOrder.ContainsKey(o.OrderId) ? invoiceByOrder[o.OrderId].ShippingAmount : 0,
-                        InvoiceTotalAmount = invoiceByOrder.ContainsKey(o.OrderId) ? invoiceByOrder[o.OrderId].TotalAmount : o.TotalAmount,
-                        OrderId = (int?)o.OrderId,
-                        OrderNumber = (string?)o.OrderNumber,
-                        CustomerId = o.CustomerId,
-                        CustomerName = o.CustomerName,
-                        PaymentDate = o.ConfirmedAt ?? o.UpdatedAt,
-                        Amount = o.PaidAmount > 0 ? o.PaidAmount : o.TotalAmount,
-                        PaymentMethodType = o.PaymentMethod ?? "Order Confirmation",
-                        Status = o.PaymentStatus == "Paid" ? "Completed" : "Pending",
-                        TransactionId = o.PaymentReference,
-                        ReferenceNumber = o.PaymentReference,
-                        Currency = "PHP",
-                        Notes = (string?)"Auto-derived from customer order",
-                        FailureReason = (string?)null,
-                        ProcessedAt = o.ConfirmedAt,
-                        CreatedAt = o.CreatedAt,
-                        IsDerived = true
+                        var hasInvoice = invoiceByOrder.TryGetValue(o.OrderId, out var inv);
+                        return new
+                        {
+                            PaymentId = -o.OrderId,
+                            PaymentNumber = "AUTO-" + o.OrderNumber,
+                            InvoiceId = hasInvoice ? (int?)inv!.InvoiceId : null,
+                            InvoiceNumber = hasInvoice ? inv!.InvoiceNumber : null,
+                            InvoiceSubtotal = hasInvoice ? inv!.Subtotal : 0,
+                            InvoiceTaxAmount = hasInvoice ? inv!.TaxAmount : 0,
+                            InvoiceDiscountAmount = hasInvoice ? inv!.DiscountAmount : 0,
+                            InvoiceShippingAmount = hasInvoice ? inv!.ShippingAmount : 0,
+                            InvoiceTotalAmount = hasInvoice ? inv!.TotalAmount : o.TotalAmount,
+                            OrderId = (int?)o.OrderId,
+                            OrderNumber = (string?)o.OrderNumber,
+                            o.CustomerId,
+                            o.CustomerName,
+                            PaymentDate = o.ConfirmedAt ?? o.UpdatedAt,
+                            Amount = o.PaidAmount > 0 ? o.PaidAmount : o.TotalAmount,
+                            PaymentMethodType = o.PaymentMethod ?? "Order Confirmation",
+                            Status = o.PaymentStatus == "Paid" ? "Completed" : "Pending",
+                            TransactionId = o.PaymentReference,
+                            ReferenceNumber = o.PaymentReference,
+                            Currency = "PHP",
+                            Notes = (string?)"Auto-derived from customer order",
+                            FailureReason = (string?)null,
+                            ProcessedAt = o.ConfirmedAt,
+                            o.CreatedAt,
+                            IsDerived = true
+                        };
                     })
                     .ToList();
 
@@ -1084,9 +1081,9 @@ namespace CompuGear.Controllers
                         InvoiceDiscountAmount = i.DiscountAmount,
                         InvoiceShippingAmount = i.ShippingAmount,
                         InvoiceTotalAmount = i.TotalAmount,
-                        OrderId = i.OrderId,
+                        i.OrderId,
                         OrderNumber = i.Order != null ? i.Order.OrderNumber : null,
-                        CustomerId = i.CustomerId,
+                        i.CustomerId,
                         CustomerName = i.Customer != null ? i.Customer.FirstName + " " + i.Customer.LastName : "N/A",
                         PaymentDate = i.PaidAt ?? i.SentAt ?? i.InvoiceDate,
                         Amount = i.PaidAmount > 0 ? i.PaidAmount : i.TotalAmount,
@@ -1098,7 +1095,7 @@ namespace CompuGear.Controllers
                         Notes = (string?)"Auto-derived from customer invoice",
                         FailureReason = (string?)null,
                         ProcessedAt = i.PaidAt,
-                        CreatedAt = i.CreatedAt,
+                        i.CreatedAt,
                         IsDerived = true
                     })
                     .ToListAsync();
@@ -1145,16 +1142,16 @@ namespace CompuGear.Controllers
                     {
                         PaymentId = -(derivedInvoiceOffset + invoice.InvoiceId),
                         PaymentNumber = "AUTO-" + invoice.InvoiceNumber,
-                        InvoiceId = invoice.InvoiceId,
-                        InvoiceNumber = invoice.InvoiceNumber,
+                        invoice.InvoiceId,
+                        invoice.InvoiceNumber,
                         InvoiceSubtotal = invoice.Subtotal,
                         InvoiceTaxAmount = invoice.TaxAmount,
                         InvoiceDiscountAmount = invoice.DiscountAmount,
                         InvoiceShippingAmount = invoice.ShippingAmount,
                         InvoiceTotalAmount = invoice.TotalAmount,
-                        OrderId = invoice.OrderId,
-                        OrderNumber = invoice.Order?.OrderNumber,
-                        CustomerId = invoice.CustomerId,
+                        invoice.OrderId,
+                        invoice.Order?.OrderNumber,
+                        invoice.CustomerId,
                         CustomerName = invoice.Customer != null ? invoice.Customer.FirstName + " " + invoice.Customer.LastName : "N/A",
                         PaymentDate = invoice.PaidAt ?? invoice.SentAt ?? invoice.InvoiceDate,
                         Amount = invoice.PaidAmount > 0 ? invoice.PaidAmount : invoice.TotalAmount,
@@ -1166,7 +1163,7 @@ namespace CompuGear.Controllers
                         Notes = "Auto-derived from customer invoice",
                         FailureReason = (string?)null,
                         ProcessedAt = invoice.PaidAt,
-                        CreatedAt = invoice.CreatedAt,
+                        invoice.CreatedAt,
                         Refunds = new List<object>()
                     }
                 });
@@ -1196,16 +1193,16 @@ namespace CompuGear.Controllers
                     {
                         PaymentId = -order.OrderId,
                         PaymentNumber = "AUTO-" + order.OrderNumber,
-                        InvoiceId = linkedInvoice?.InvoiceId,
-                        InvoiceNumber = linkedInvoice?.InvoiceNumber,
+                        linkedInvoice?.InvoiceId,
+                        linkedInvoice?.InvoiceNumber,
                         InvoiceSubtotal = linkedInvoice?.Subtotal ?? 0,
                         InvoiceTaxAmount = linkedInvoice?.TaxAmount ?? 0,
                         InvoiceDiscountAmount = linkedInvoice?.DiscountAmount ?? 0,
                         InvoiceShippingAmount = linkedInvoice?.ShippingAmount ?? 0,
                         InvoiceTotalAmount = linkedInvoice?.TotalAmount ?? order.TotalAmount,
-                        OrderId = order.OrderId,
-                        OrderNumber = order.OrderNumber,
-                        CustomerId = order.CustomerId,
+                        order.OrderId,
+                        order.OrderNumber,
+                        order.CustomerId,
                         CustomerName = order.Customer != null ? order.Customer.FirstName + " " + order.Customer.LastName : "N/A",
                         PaymentDate = order.ConfirmedAt ?? order.UpdatedAt,
                         Amount = order.PaidAmount,
@@ -1217,7 +1214,7 @@ namespace CompuGear.Controllers
                         Notes = "Auto-derived from customer order",
                         FailureReason = (string?)null,
                         ProcessedAt = order.ConfirmedAt,
-                        CreatedAt = order.CreatedAt,
+                        order.CreatedAt,
                         Refunds = new List<object>()
                     }
                 });
@@ -1351,8 +1348,7 @@ namespace CompuGear.Controllers
             // Use first found to avoid duplicate key exceptions
             var map = new Dictionary<string, int>();
             foreach (var a in accounts)
-                if (!map.ContainsKey(a.AccountCode))
-                    map[a.AccountCode] = a.AccountId;
+                map.TryAdd(a.AccountCode, a.AccountId);
             return map;
         }
 
@@ -1365,8 +1361,8 @@ namespace CompuGear.Controllers
 
             void AddBal(int acctId, decimal dr, decimal cr)
             {
-                if (balances.ContainsKey(acctId))
-                    balances[acctId] = (balances[acctId].debit + dr, balances[acctId].credit + cr);
+                if (balances.TryGetValue(acctId, out var existing))
+                    balances[acctId] = (existing.debit + dr, existing.credit + cr);
                 else
                     balances[acctId] = (dr, cr);
             }
@@ -1380,7 +1376,7 @@ namespace CompuGear.Controllers
             foreach (var g in glEntries) AddBal(g.AccountId, g.Debit, g.Credit);
 
             var map = await GetAccountCodeMap(companyId);
-            int Acct(string code) => map.ContainsKey(code) ? map[code] : 0;
+            int Acct(string code) => map.TryGetValue(code, out var id) ? id : 0;
 
             // 2) Invoices (Paid/Partial) → Debit 1010 AR, Credit 4000 Revenue, Credit 2020 Tax Payable
             var invoices = await _context.Invoices
@@ -1543,8 +1539,8 @@ namespace CompuGear.Controllers
 
             var result = accounts.Select(a =>
             {
-                var bal = balances.ContainsKey(a.AccountId) ? balances[a.AccountId] : (debit: 0m, credit: 0m);
-                var netBalance = bal.debit - bal.credit;
+                var (debit, credit) = balances.TryGetValue(a.AccountId, out var foundBal) ? foundBal : (debit: 0m, credit: 0m);
+                var netBalance = debit - credit;
                 return new
                 {
                     a.AccountId,
@@ -1558,11 +1554,11 @@ namespace CompuGear.Controllers
                     a.IsArchived,
                     a.CreatedAt,
                     a.UpdatedAt,
-                    TotalDebit = bal.debit,
-                    TotalCredit = bal.credit,
+                    TotalDebit = debit,
+                    TotalCredit = credit,
                     Balance = netBalance,
                     // Formatted balance uses normal balance side
-                    DisplayBalance = a.NormalBalance == "Credit" ? bal.credit - bal.debit : netBalance
+                    DisplayBalance = a.NormalBalance == "Credit" ? credit - debit : netBalance
                 };
             }).ToList();
 
@@ -1700,8 +1696,8 @@ namespace CompuGear.Controllers
                     {
                         l.LineId,
                         l.AccountId,
-                        AccountCode = l.Account.AccountCode,
-                        AccountName = l.Account.AccountName,
+                        l.Account.AccountCode,
+                        l.Account.AccountName,
                         l.Description,
                         l.DebitAmount,
                         l.CreditAmount
@@ -1711,7 +1707,7 @@ namespace CompuGear.Controllers
 
             // 2) System-derived entries from Invoices (non-cancelled, non-draft)
             var map = await GetAccountCodeMap(companyId);
-            int Acct(string code) => map.ContainsKey(code) ? map[code] : 0;
+            int Acct(string code) => map.TryGetValue(code, out var id) ? id : 0;
 
             var invoiceEntries = await _context.Invoices
                 .Include(i => i.Customer)
@@ -1746,7 +1742,7 @@ namespace CompuGear.Controllers
                 IsArchived = false,
                 Notes = $"Auto-generated from Invoice. Status: {inv.Status}",
                 PostedAt = (DateTime?)inv.InvoiceDate,
-                CreatedAt = inv.CreatedAt,
+                inv.CreatedAt,
                 Source = "System",
                 SourceType = "Invoice",
                 Lines = new[]
@@ -1788,7 +1784,7 @@ namespace CompuGear.Controllers
                 IsArchived = false,
                 Notes = $"Auto-generated from Payment. Method: {pay.PaymentMethodType}",
                 PostedAt = (DateTime?)pay.PaymentDate,
-                CreatedAt = pay.CreatedAt,
+                pay.CreatedAt,
                 Source = "System",
                 SourceType = "Payment",
                 Lines = new[]
@@ -1865,7 +1861,7 @@ namespace CompuGear.Controllers
                         IsArchived = false,
                         Notes = $"Auto-generated COGS from Order. Items: {o.OrderItems.Count}",
                         PostedAt = (DateTime?)(o.ConfirmedAt ?? o.OrderDate),
-                        CreatedAt = o.CreatedAt,
+                        o.CreatedAt,
                         Source = "System",
                         SourceType = "COGS",
                         Lines = new[]
@@ -1942,7 +1938,7 @@ namespace CompuGear.Controllers
             {
                 var companyId = GetCompanyId();
                 var map = await GetAccountCodeMap(companyId);
-                int Acct(string code) => map.ContainsKey(code) ? map[code] : 0;
+                int Acct(string code) => map.TryGetValue(code, out var id2) ? id2 : 0;
 
                 var absId = -id;
 
@@ -1968,7 +1964,7 @@ namespace CompuGear.Controllers
                             TotalCredit = inv.TotalAmount,
                             Notes = $"System-generated from Invoice. Subtotal: ₱{inv.Subtotal:N2}, Tax: ₱{inv.TaxAmount:N2}, Discount: ₱{inv.DiscountAmount:N2}",
                             PostedAt = (DateTime?)inv.InvoiceDate,
-                            CreatedAt = inv.CreatedAt,
+                            inv.CreatedAt,
                             Source = "System",
                             SourceType = "Invoice",
                             Lines = new[]
@@ -2004,7 +2000,7 @@ namespace CompuGear.Controllers
                             TotalCredit = pay.Amount,
                             Notes = $"System-generated from Payment. Method: {pay.PaymentMethodType}, Ref: {pay.ReferenceNumber}",
                             PostedAt = (DateTime?)pay.PaymentDate,
-                            CreatedAt = pay.CreatedAt,
+                            pay.CreatedAt,
                             Source = "System",
                             SourceType = "Payment",
                             Lines = new[]
@@ -2076,7 +2072,7 @@ namespace CompuGear.Controllers
                             TotalCredit = totalCost,
                             Notes = $"System-generated COGS. Items: {ord.OrderItems.Count}, Total cost: ₱{totalCost:N2}",
                             PostedAt = (DateTime?)(ord.ConfirmedAt ?? ord.OrderDate),
-                            CreatedAt = ord.CreatedAt,
+                            ord.CreatedAt,
                             Source = "System",
                             SourceType = "COGS",
                             Lines = new[]
@@ -2116,8 +2112,8 @@ namespace CompuGear.Controllers
                         {
                             l.LineId,
                             l.AccountId,
-                            AccountCode = l.Account.AccountCode,
-                            AccountName = l.Account.AccountName,
+                            l.Account.AccountCode,
+                            l.Account.AccountName,
                             l.Description,
                             l.DebitAmount,
                             l.CreditAmount
@@ -2214,7 +2210,7 @@ namespace CompuGear.Controllers
                 if (entry == null) return NotFound(new { success = false, message = "Entry not found" });
                 if (entry.Status == "Posted") return BadRequest(new { success = false, message = "Already posted" });
                 if (entry.TotalDebit != entry.TotalCredit) return BadRequest(new { success = false, message = "Debits must equal credits" });
-                if (!entry.Lines.Any()) return BadRequest(new { success = false, message = "Entry must have at least one line" });
+                if (entry.Lines.Count == 0) return BadRequest(new { success = false, message = "Entry must have at least one line" });
 
                 entry.Status = "Posted";
                 entry.PostedAt = DateTime.UtcNow;
@@ -2316,9 +2312,9 @@ namespace CompuGear.Controllers
                 {
                     g.LedgerId,
                     g.AccountId,
-                    AccountCode = g.Account.AccountCode,
-                    AccountName = g.Account.AccountName,
-                    AccountType = g.Account.AccountType,
+                    g.Account.AccountCode,
+                    g.Account.AccountName,
+                    g.Account.AccountType,
                     g.EntryId,
                     EntryNumber = g.JournalEntry != null ? g.JournalEntry.EntryNumber : null,
                     g.TransactionDate,
@@ -2336,7 +2332,7 @@ namespace CompuGear.Controllers
 
             // ---- System-derived ledger transactions ----
             var map = await GetAccountCodeMap(companyId);
-            int Acct(string code) => map.ContainsKey(code) ? map[code] : 0;
+            int Acct(string code) => map.TryGetValue(code, out var id) ? id : 0;
 
             // Helper for account filter
             bool MatchesAccountFilter(int acctId) => !accountId.HasValue || acctId == accountId.Value;
@@ -2361,14 +2357,14 @@ namespace CompuGear.Controllers
                 var arId = Acct("1010"); var revId = Acct("4000"); var taxId = Acct("2020"); var othId = Acct("4020");
 
                 if (arId > 0 && MatchesAccountFilter(arId))
-                    systemEntries.Add(new { LedgerId = -(inv.InvoiceId * 10 + 1), AccountId = arId, AccountCode = "1010", AccountName = "Accounts Receivable", AccountType = "Asset", EntryId = (int?)null, EntryNumber = $"SYS-INV-{inv.InvoiceNumber}", TransactionDate = inv.InvoiceDate, Description = $"Invoice {inv.InvoiceNumber} - {custName}", DebitAmount = inv.TotalAmount, CreditAmount = 0m, RunningBalance = 0m, Reference = inv.InvoiceNumber, IsArchived = false, CreatedAt = inv.CreatedAt, Source = "System", SourceType = "Invoice" });
+                    systemEntries.Add(new { LedgerId = -(inv.InvoiceId * 10 + 1), AccountId = arId, AccountCode = "1010", AccountName = "Accounts Receivable", AccountType = "Asset", EntryId = (int?)null, EntryNumber = $"SYS-INV-{inv.InvoiceNumber}", TransactionDate = inv.InvoiceDate, Description = $"Invoice {inv.InvoiceNumber} - {custName}", DebitAmount = inv.TotalAmount, CreditAmount = 0m, RunningBalance = 0m, Reference = inv.InvoiceNumber, IsArchived = false, inv.CreatedAt, Source = "System", SourceType = "Invoice" });
 
                 var netRevenue = inv.Subtotal - inv.DiscountAmount + inv.ShippingAmount;
                 if (revId > 0 && netRevenue > 0 && MatchesAccountFilter(revId))
-                    systemEntries.Add(new { LedgerId = -(inv.InvoiceId * 10 + 2), AccountId = revId, AccountCode = "4000", AccountName = "Sales Revenue", AccountType = "Revenue", EntryId = (int?)null, EntryNumber = $"SYS-INV-{inv.InvoiceNumber}", TransactionDate = inv.InvoiceDate, Description = $"Revenue from {inv.InvoiceNumber} - {custName}", DebitAmount = 0m, CreditAmount = netRevenue, RunningBalance = 0m, Reference = inv.InvoiceNumber, IsArchived = false, CreatedAt = inv.CreatedAt, Source = "System", SourceType = "Sales Revenue" });
+                    systemEntries.Add(new { LedgerId = -(inv.InvoiceId * 10 + 2), AccountId = revId, AccountCode = "4000", AccountName = "Sales Revenue", AccountType = "Revenue", EntryId = (int?)null, EntryNumber = $"SYS-INV-{inv.InvoiceNumber}", TransactionDate = inv.InvoiceDate, Description = $"Revenue from {inv.InvoiceNumber} - {custName}", DebitAmount = 0m, CreditAmount = netRevenue, RunningBalance = 0m, Reference = inv.InvoiceNumber, IsArchived = false, inv.CreatedAt, Source = "System", SourceType = "Sales Revenue" });
 
                 if (taxId > 0 && inv.TaxAmount > 0 && MatchesAccountFilter(taxId))
-                    systemEntries.Add(new { LedgerId = -(inv.InvoiceId * 10 + 3), AccountId = taxId, AccountCode = "2020", AccountName = "Sales Tax Payable", AccountType = "Liability", EntryId = (int?)null, EntryNumber = $"SYS-INV-{inv.InvoiceNumber}", TransactionDate = inv.InvoiceDate, Description = $"Tax on {inv.InvoiceNumber}", DebitAmount = 0m, CreditAmount = inv.TaxAmount, RunningBalance = 0m, Reference = inv.InvoiceNumber, IsArchived = false, CreatedAt = inv.CreatedAt, Source = "System", SourceType = "Tax" });
+                    systemEntries.Add(new { LedgerId = -(inv.InvoiceId * 10 + 3), AccountId = taxId, AccountCode = "2020", AccountName = "Sales Tax Payable", AccountType = "Liability", EntryId = (int?)null, EntryNumber = $"SYS-INV-{inv.InvoiceNumber}", TransactionDate = inv.InvoiceDate, Description = $"Tax on {inv.InvoiceNumber}", DebitAmount = 0m, CreditAmount = inv.TaxAmount, RunningBalance = 0m, Reference = inv.InvoiceNumber, IsArchived = false, inv.CreatedAt, Source = "System", SourceType = "Tax" });
             }
 
             // 3) Payments → DR Cash, CR Accounts Receivable
@@ -2384,10 +2380,10 @@ namespace CompuGear.Controllers
                 var cashId = Acct("1000"); var arId = Acct("1010");
 
                 if (cashId > 0 && MatchesAccountFilter(cashId))
-                    systemEntries.Add(new { LedgerId = -(500000 + pay.PaymentId * 10 + 1), AccountId = cashId, AccountCode = "1000", AccountName = "Cash", AccountType = "Asset", EntryId = (int?)null, EntryNumber = $"SYS-PAY-{pay.PaymentNumber}", TransactionDate = pay.PaymentDate, Description = $"Payment {pay.PaymentNumber} from {custName} ({pay.PaymentMethodType})", DebitAmount = pay.Amount, CreditAmount = 0m, RunningBalance = 0m, Reference = pay.PaymentNumber, IsArchived = false, CreatedAt = pay.CreatedAt, Source = "System", SourceType = "Payment" });
+                    systemEntries.Add(new { LedgerId = -(500000 + pay.PaymentId * 10 + 1), AccountId = cashId, AccountCode = "1000", AccountName = "Cash", AccountType = "Asset", EntryId = (int?)null, EntryNumber = $"SYS-PAY-{pay.PaymentNumber}", TransactionDate = pay.PaymentDate, Description = $"Payment {pay.PaymentNumber} from {custName} ({pay.PaymentMethodType})", DebitAmount = pay.Amount, CreditAmount = 0m, RunningBalance = 0m, Reference = pay.PaymentNumber, IsArchived = false, pay.CreatedAt, Source = "System", SourceType = "Payment" });
 
                 if (arId > 0 && MatchesAccountFilter(arId))
-                    systemEntries.Add(new { LedgerId = -(500000 + pay.PaymentId * 10 + 2), AccountId = arId, AccountCode = "1010", AccountName = "Accounts Receivable", AccountType = "Asset", EntryId = (int?)null, EntryNumber = $"SYS-PAY-{pay.PaymentNumber}", TransactionDate = pay.PaymentDate, Description = $"Received from {custName}", DebitAmount = 0m, CreditAmount = pay.Amount, RunningBalance = 0m, Reference = pay.PaymentNumber, IsArchived = false, CreatedAt = pay.CreatedAt, Source = "System", SourceType = "Payment" });
+                    systemEntries.Add(new { LedgerId = -(500000 + pay.PaymentId * 10 + 2), AccountId = arId, AccountCode = "1010", AccountName = "Accounts Receivable", AccountType = "Asset", EntryId = (int?)null, EntryNumber = $"SYS-PAY-{pay.PaymentNumber}", TransactionDate = pay.PaymentDate, Description = $"Received from {custName}", DebitAmount = 0m, CreditAmount = pay.Amount, RunningBalance = 0m, Reference = pay.PaymentNumber, IsArchived = false, pay.CreatedAt, Source = "System", SourceType = "Payment" });
             }
 
             // 4) Refunds → DR Sales Revenue, CR Cash
@@ -2429,10 +2425,10 @@ namespace CompuGear.Controllers
                 var custName = ord.Customer != null ? ord.Customer.FirstName + " " + ord.Customer.LastName : "N/A";
 
                 if (cogsId > 0 && MatchesAccountFilter(cogsId))
-                    systemEntries.Add(new { LedgerId = -(700000 + ord.OrderId * 10 + 1), AccountId = cogsId, AccountCode = "5000", AccountName = "Cost of Goods Sold", AccountType = "Expense", EntryId = (int?)null, EntryNumber = $"SYS-COGS-{ord.OrderNumber}", TransactionDate = ordDate, Description = $"COGS for Order {ord.OrderNumber} - {custName}", DebitAmount = totalCost, CreditAmount = 0m, RunningBalance = 0m, Reference = ord.OrderNumber, IsArchived = false, CreatedAt = ord.CreatedAt, Source = "System", SourceType = "COGS" });
+                    systemEntries.Add(new { LedgerId = -(700000 + ord.OrderId * 10 + 1), AccountId = cogsId, AccountCode = "5000", AccountName = "Cost of Goods Sold", AccountType = "Expense", EntryId = (int?)null, EntryNumber = $"SYS-COGS-{ord.OrderNumber}", TransactionDate = ordDate, Description = $"COGS for Order {ord.OrderNumber} - {custName}", DebitAmount = totalCost, CreditAmount = 0m, RunningBalance = 0m, Reference = ord.OrderNumber, IsArchived = false, ord.CreatedAt, Source = "System", SourceType = "COGS" });
 
                 if (invId > 0 && MatchesAccountFilter(invId))
-                    systemEntries.Add(new { LedgerId = -(700000 + ord.OrderId * 10 + 2), AccountId = invId, AccountCode = "1020", AccountName = "Inventory", AccountType = "Asset", EntryId = (int?)null, EntryNumber = $"SYS-COGS-{ord.OrderNumber}", TransactionDate = ordDate, Description = $"Inventory reduction {ord.OrderNumber}", DebitAmount = 0m, CreditAmount = totalCost, RunningBalance = 0m, Reference = ord.OrderNumber, IsArchived = false, CreatedAt = ord.CreatedAt, Source = "System", SourceType = "COGS" });
+                    systemEntries.Add(new { LedgerId = -(700000 + ord.OrderId * 10 + 2), AccountId = invId, AccountCode = "1020", AccountName = "Inventory", AccountType = "Asset", EntryId = (int?)null, EntryNumber = $"SYS-COGS-{ord.OrderNumber}", TransactionDate = ordDate, Description = $"Inventory reduction {ord.OrderNumber}", DebitAmount = 0m, CreditAmount = totalCost, RunningBalance = 0m, Reference = ord.OrderNumber, IsArchived = false, ord.CreatedAt, Source = "System", SourceType = "COGS" });
             }
 
             // Filter by source if requested
@@ -2448,9 +2444,8 @@ namespace CompuGear.Controllers
 
             void AddToSummary(int acctId, string code, string name, string type, decimal dr, decimal cr)
             {
-                if (summaryDict.ContainsKey(acctId))
+                if (summaryDict.TryGetValue(acctId, out var existing))
                 {
-                    var existing = summaryDict[acctId];
                     summaryDict[acctId] = (existing.code, existing.name, existing.type, existing.dr + dr, existing.cr + cr);
                 }
                 else
@@ -2477,10 +2472,9 @@ namespace CompuGear.Controllers
 
             foreach (var kvp in balances)
             {
-                if (!accountLookup.ContainsKey(kvp.Key)) continue;
-                var acct = accountLookup[kvp.Key];
+                if (!accountLookup.TryGetValue(kvp.Key, out var acct)) continue;
                 // Don't double-count manual GL (already in manualSummary). System balances include manual GL, so just use system totals
-                if (summaryDict.ContainsKey(kvp.Key))
+                if (summaryDict.TryGetValue(kvp.Key, out _))
                 {
                     // Replace with full system balance (which includes manual GL + system transactions)
                     summaryDict[kvp.Key] = (acct.AccountCode, acct.AccountName, acct.AccountType, kvp.Value.debit, kvp.Value.credit);

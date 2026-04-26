@@ -27,8 +27,8 @@ namespace CompuGear.Models
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation Properties
-        public virtual ICollection<User> Users { get; set; } = new List<User>();
-        public virtual ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
+        public virtual ICollection<User> Users { get; set; } = [];
+        public virtual ICollection<RolePermission> RolePermissions { get; set; } = [];
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ namespace CompuGear.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation Properties
-        public virtual ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
+        public virtual ICollection<RolePermission> RolePermissions { get; set; } = [];
     }
 
     /// <summary>
@@ -125,7 +125,7 @@ namespace CompuGear.Models
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation Properties
-        public virtual ICollection<User> Users { get; set; } = new List<User>();
+        public virtual ICollection<User> Users { get; set; } = [];
     }
 
     /// <summary>

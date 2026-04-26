@@ -24,7 +24,7 @@ namespace CompuGear.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation Properties
-        public virtual ICollection<Customer> Customers { get; set; } = new List<Customer>();
+        public virtual ICollection<Customer> Customers { get; set; } = [];
     }
 
     /// <summary>
@@ -159,15 +159,15 @@ namespace CompuGear.Models
         [ForeignKey("CategoryId")]
         public virtual CustomerCategory? Category { get; set; }
 
-        public virtual ICollection<CustomerAddress> Addresses { get; set; } = new List<CustomerAddress>();
+        public virtual ICollection<CustomerAddress> Addresses { get; set; } = [];
 
-        public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+        public virtual ICollection<Order> Orders { get; set; } = [];
 
-        public virtual ICollection<SupportTicket> SupportTickets { get; set; } = new List<SupportTicket>();
+        public virtual ICollection<SupportTicket> SupportTickets { get; set; } = [];
 
-        public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
+        public virtual ICollection<Invoice> Invoices { get; set; } = [];
 
-        public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
+        public virtual ICollection<Payment> Payments { get; set; } = [];
     }
 
     /// <summary>
@@ -423,7 +423,7 @@ namespace CompuGear.Models
         [ForeignKey("OrderId")]
         public virtual Order? Order { get; set; }
 
-        public virtual ICollection<ShipmentTracking> TrackingHistory { get; set; } = new List<ShipmentTracking>();
+        public virtual ICollection<ShipmentTracking> TrackingHistory { get; set; } = [];
     }
 
     /// <summary>
@@ -537,7 +537,7 @@ namespace CompuGear.Models
         [ForeignKey("CustomerId")]
         public virtual Customer? Customer { get; set; }
 
-        public virtual ICollection<InstallmentPayment> Payments { get; set; } = new List<InstallmentPayment>();
+        public virtual ICollection<InstallmentPayment> Payments { get; set; } = [];
     }
 
     /// <summary>
@@ -613,7 +613,7 @@ namespace CompuGear.Models
         [ForeignKey("ShippingAddressId")]
         public virtual CustomerAddress? ShippingAddress { get; set; }
 
-        public virtual ICollection<SubscriptionItem> Items { get; set; } = new List<SubscriptionItem>();
+        public virtual ICollection<SubscriptionItem> Items { get; set; } = [];
     }
 
     /// <summary>

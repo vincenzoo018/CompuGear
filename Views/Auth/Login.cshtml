@@ -1,6 +1,8 @@
 @{
     ViewData["Title"] = "Login";
     Layout = null;
+    var recaptchaEnabled = (bool?)ViewData["ReCaptchaEnabled"] ?? false;
+    var recaptchaSiteKey = ViewData["ReCaptchaSiteKey"]?.ToString() ?? string.Empty;
 }
 
 <!DOCTYPE html>
@@ -363,6 +365,12 @@
             box-shadow: 0 8px 20px rgba(0, 128, 128, 0.3);
         }
 
+        .recaptcha-wrapper {
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
         .btn-login:hover {
             transform: translateY(-3px);
             box-shadow: 0 12px 28px rgba(0, 128, 128, 0.4);
@@ -524,6 +532,12 @@
             .btn-login {
                 padding: 14px 20px;
             }
+
+            .recaptcha-wrapper {
+                justify-content: flex-start;
+                transform: scale(0.90);
+                transform-origin: left top;
+            }
         }
     </style>
 </head>
@@ -595,6 +609,13 @@
                         <a href="#" class="forgot-link">Forgot Password?</a>
                     </div>
 
+                    @if (recaptchaEnabled && !string.IsNullOrWhiteSpace(recaptchaSiteKey))
+                    {
+                        <div class="recaptcha-wrapper">
+                            <div class="g-recaptcha" data-sitekey="@recaptchaSiteKey"></div>
+                        </div>
+                    }
+
                     <button type="submit" class="btn-login" id="loginBtn">
                         <div class="spinner"></div>
                         <span class="btn-text">Sign In</span>
@@ -624,6 +645,10 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @if (recaptchaEnabled && !string.IsNullOrWhiteSpace(recaptchaSiteKey))
+    {
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    }
     <script>
         function togglePassword() {
             const passwordInput = document.getElementById('password');
@@ -671,10 +696,26 @@
             const password = document.getElementById('password').value;
             const rememberMe = document.getElementById('rememberMe').checked;
             const loginBtn = document.getElementById('loginBtn');
+            const recaptchaWidget = document.querySelector('.g-recaptcha');
+            const recaptchaEnabled = !!recaptchaWidget;
+            let recaptchaToken = '';
             
             if (!email || !password) {
                 showError('Please fill in all required fields');
                 return;
+            }
+
+            if (recaptchaEnabled) {
+                if (typeof grecaptcha === 'undefined') {
+                    showError('reCAPTCHA is still loading. Please try again in a moment.');
+                    return;
+                }
+
+                recaptchaToken = grecaptcha.getResponse();
+                if (!recaptchaToken) {
+                    showError('Please complete the reCAPTCHA challenge.');
+                    return;
+                }
             }
 
             loginBtn.classList.add('loading');
@@ -689,7 +730,8 @@
                     body: JSON.stringify({
                         email: email,
                         password: password,
-                        rememberMe: rememberMe
+                        rememberMe: rememberMe,
+                        recaptchaToken: recaptchaToken
                     })
                 });
 
@@ -702,11 +744,17 @@
                     }, 1000);
                 } else {
                     showError(result.message || 'Login failed. Please try again.');
+                    if (recaptchaEnabled && typeof grecaptcha !== 'undefined') {
+                        grecaptcha.reset();
+                    }
                     loginBtn.classList.remove('loading');
                     loginBtn.disabled = false;
                 }
             } catch (error) {
                 showError('An error occurred. Please try again.');
+                if (recaptchaEnabled && typeof grecaptcha !== 'undefined') {
+                    grecaptcha.reset();
+                }
                 loginBtn.classList.remove('loading');
                 loginBtn.disabled = false;
             }

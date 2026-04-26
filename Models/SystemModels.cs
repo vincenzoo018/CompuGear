@@ -142,7 +142,7 @@ namespace CompuGear.Models
         [ForeignKey("CompanyId")]
         public virtual Company? Company { get; set; }
 
-        public virtual ICollection<ChatMessage> Messages { get; set; } = new List<ChatMessage>();
+        public virtual ICollection<ChatMessage> Messages { get; set; } = [];
     }
 
     /// <summary>

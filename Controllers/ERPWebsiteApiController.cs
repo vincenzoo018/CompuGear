@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using CompuGear.Data;
 using CompuGear.Models;
 using CompuGear.Services;
 using System.Text.Json;
+using System.Text;
+using System.Security.Cryptography;
 
 namespace CompuGear.Controllers
 {
@@ -15,18 +17,11 @@ namespace CompuGear.Controllers
     /// </summary>
     [Route("api/erpwebsite")]
     [ApiController]
-    public class ERPWebsiteApiController : ControllerBase
+    public class ERPWebsiteApiController(CompuGearDbContext context, IPayMongoService payMongoService, IMemoryCache memoryCache) : ControllerBase
     {
-        private readonly CompuGearDbContext _context;
-        private readonly IPayMongoService _payMongoService;
-        private readonly IMemoryCache _memoryCache;
-
-        public ERPWebsiteApiController(CompuGearDbContext context, IPayMongoService payMongoService, IMemoryCache memoryCache)
-        {
-            _context = context;
-            _payMongoService = payMongoService;
-            _memoryCache = memoryCache;
-        }
+        private readonly CompuGearDbContext _context = context;
+        private readonly IPayMongoService _payMongoService = payMongoService;
+        private readonly IMemoryCache _memoryCache = memoryCache;
 
         /// <summary>
         /// Process a new subscription from the public ERP website
@@ -95,7 +90,6 @@ namespace CompuGear.Controllers
                 await strategy.ExecuteAsync(async () =>
                 {
                     using var tx = await _context.Database.BeginTransactionAsync();
-
                     // ===== 1. CREATE COMPANY =====
                     var companyCode = $"CG-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
                     company = new Company
@@ -116,14 +110,14 @@ namespace CompuGear.Controllers
                     await _context.SaveChangesAsync();
 
                     // ===== 2. CREATE ADMIN USER (RoleId = 2 = Company Admin) =====
-                    var salt = Guid.NewGuid().ToString("N").Substring(0, 16);
+                    var salt = Guid.NewGuid().ToString("N")[..16];
                     var passwordHash = Convert.ToBase64String(
-                        System.Security.Cryptography.SHA256.HashData(
-                            System.Text.Encoding.UTF8.GetBytes(request.Password + salt)));
+                        SHA256.HashData(
+                            Encoding.UTF8.GetBytes(request.Password + salt)));
 
                     adminUser = new User
                     {
-                        Username = request.AdminEmail.Split('@')[0] + DateTime.Now.Ticks.ToString().Substring(10),
+                        Username = request.AdminEmail.Split('@')[0] + DateTime.Now.Ticks.ToString()[10..],
                         Email = request.AdminEmail,
                         FirstName = request.FirstName,
                         LastName = request.LastName,
@@ -284,7 +278,7 @@ namespace CompuGear.Controllers
                 if (billingCycle == "Annual")
                 {
                     amount = planConfig.MonthlyFee * 10; // Annual = 10 months (save 2)
-                    description = $"CompuGear ERP {request.PlanName} Plan - Annual Subscription (â‚±{planConfig.MonthlyFee:N0}/mo Ã— 10 months)";
+                    description = $"CompuGear ERP {request.PlanName} Plan - Annual Subscription (₱{planConfig.MonthlyFee:N0}/mo × 10 months)";
                 }
                 else
                 {
@@ -441,7 +435,6 @@ namespace CompuGear.Controllers
                 await verifyStrategy.ExecuteAsync(async () =>
                 {
                     using var tx = await _context.Database.BeginTransactionAsync();
-
                     // ===== 1. CREATE COMPANY =====
                     var companyCode = $"CG-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
                     company = new Company
@@ -462,14 +455,14 @@ namespace CompuGear.Controllers
                     await _context.SaveChangesAsync();
 
                     // ===== 2. CREATE ADMIN USER =====
-                    var salt = Guid.NewGuid().ToString("N").Substring(0, 16);
+                    var salt = Guid.NewGuid().ToString("N")[..16];
                     var passwordHash = Convert.ToBase64String(
-                        System.Security.Cryptography.SHA256.HashData(
-                            System.Text.Encoding.UTF8.GetBytes(request.Password + salt)));
+                        SHA256.HashData(
+                            Encoding.UTF8.GetBytes(request.Password + salt)));
 
                     adminUser = new User
                     {
-                        Username = request.AdminEmail.Split('@')[0] + DateTime.Now.Ticks.ToString().Substring(10),
+                        Username = request.AdminEmail.Split('@')[0] + DateTime.Now.Ticks.ToString()[10..],
                         Email = request.AdminEmail,
                         FirstName = request.FirstName,
                         LastName = request.LastName,
@@ -691,25 +684,25 @@ namespace CompuGear.Controllers
                 {
                     MonthlyFee = 999m,
                     MaxUsers = 15,
-                    ModuleCodes = new[] { "SALES", "INVENTORY" }
+                    ModuleCodes = ["SALES", "INVENTORY"]
                 },
                 "Pro" => new PlanConfig
                 {
                     MonthlyFee = 2499m,
                     MaxUsers = 50,
-                    ModuleCodes = new[] { "SALES", "CUSTOMERS", "INVENTORY", "BILLING", "SUPPORT", "MARKETING" }
+                    ModuleCodes = ["SALES", "CUSTOMERS", "INVENTORY", "BILLING", "SUPPORT", "MARKETING"]
                 },
                 "Enterprise" => new PlanConfig
                 {
                     MonthlyFee = 4999m,
                     MaxUsers = 200,
-                    ModuleCodes = new[] { "SALES", "CUSTOMERS", "INVENTORY", "BILLING", "SUPPORT", "MARKETING" }
+                    ModuleCodes = ["SALES", "CUSTOMERS", "INVENTORY", "BILLING", "SUPPORT", "MARKETING"]
                 },
                 _ => new PlanConfig
                 {
                     MonthlyFee = 999m,
                     MaxUsers = 15,
-                    ModuleCodes = new[] { "SALES", "INVENTORY" }
+                    ModuleCodes = ["SALES", "INVENTORY"]
                 }
             };
         }
@@ -721,7 +714,7 @@ namespace CompuGear.Controllers
                 .Select(m => m.ToUpperInvariant())
                 .ToHashSet();
 
-            var selected = (request.SelectedModuleCodes ?? new List<string>())
+            var selected = (request.SelectedModuleCodes ?? [])
                 .Where(m => !string.IsNullOrWhiteSpace(m))
                 .Select(m => m.Trim().ToUpperInvariant())
                 .Where(allowed.Contains)
@@ -730,10 +723,10 @@ namespace CompuGear.Controllers
 
             if (!selected.Any())
             {
-                selected = allowed.ToList();
+                selected = [.. allowed];
             }
 
-            return selected.ToArray();
+            return [.. selected];
         }
 
         private static List<RoleModuleAccess> BuildRoleAccessForSubscribedModules(int companyId, IEnumerable<string> subscribedModuleCodes)
@@ -923,7 +916,7 @@ namespace CompuGear.Controllers
         {
             public decimal MonthlyFee { get; set; }
             public int MaxUsers { get; set; }
-            public string[] ModuleCodes { get; set; } = Array.Empty<string>();
+            public string[] ModuleCodes { get; set; } = [];
         }
     }
 

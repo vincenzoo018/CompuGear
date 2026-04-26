@@ -11,16 +11,10 @@ namespace CompuGear.Controllers
     /// RoleId: 8 - Inventory Staff
     /// Access: Products, stock levels, alerts, suppliers, inventory reports
     /// </summary>
-    public class InventoryStaffController : Controller
+    public class InventoryStaffController(CompuGearDbContext context, IMemoryCache cache) : Controller
     {
-        private readonly CompuGearDbContext _context;
-        private readonly IMemoryCache _cache;
-
-        public InventoryStaffController(CompuGearDbContext context, IMemoryCache cache)
-        {
-            _context = context;
-            _cache = cache;
-        }
+        private readonly CompuGearDbContext _context = context;
+        private readonly IMemoryCache _cache = cache;
 
         // Role-based authorization check
         public override void OnActionExecuting(ActionExecutingContext context)
@@ -66,7 +60,7 @@ namespace CompuGear.Controllers
                 .ToList();
 
             bool result;
-            if (!roleHasExplicitAccess.Any())
+            if (roleHasExplicitAccess.Count == 0)
                 result = true;
             else
                 result = roleHasExplicitAccess.Any(r => r.ModuleCode == moduleCode && r.HasAccess);

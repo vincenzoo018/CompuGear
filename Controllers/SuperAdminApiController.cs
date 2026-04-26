@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using CompuGear.Data;
 using CompuGear.Models;
+using System.Text;
+using System.Security.Cryptography;
 
 namespace CompuGear.Controllers
 {
@@ -12,16 +14,10 @@ namespace CompuGear.Controllers
     /// </summary>
     [Route("api/superadmin")]
     [ApiController]
-    public class SuperAdminApiController : ControllerBase
+    public class SuperAdminApiController(CompuGearDbContext context, IMemoryCache cache) : ControllerBase
     {
-        private readonly CompuGearDbContext _context;
-        private readonly IMemoryCache _cache;
-
-        public SuperAdminApiController(CompuGearDbContext context, IMemoryCache cache)
-        {
-            _context = context;
-            _cache = cache;
-        }
+        private readonly CompuGearDbContext _context = context;
+        private readonly IMemoryCache _cache = cache;
 
         private bool IsSuperAdmin()
         {
@@ -156,8 +152,8 @@ namespace CompuGear.Controllers
                 {
                     a.AccessId,
                     a.ModuleId,
-                    ModuleName = a.Module.ModuleName,
-                    ModuleCode = a.Module.ModuleCode,
+                    a.Module.ModuleName,
+                    a.Module.ModuleCode,
                     a.IsEnabled,
                     a.ActivatedAt,
                     a.DeactivatedAt
@@ -271,7 +267,7 @@ namespace CompuGear.Controllers
                 {
                     s.SubscriptionId,
                     s.CompanyId,
-                    CompanyName = s.Company.CompanyName,
+                    s.Company.CompanyName,
                     s.PlanName,
                     s.Status,
                     s.BillingCycle,
@@ -460,8 +456,8 @@ namespace CompuGear.Controllers
                     m.AnnualPrice,
                     m.Features,
                     IsEnabled = access?.IsEnabled ?? false,
-                    AccessId = access?.AccessId,
-                    ActivatedAt = access?.ActivatedAt
+                    access?.AccessId,
+                    access?.ActivatedAt
                 };
             });
 
@@ -644,8 +640,8 @@ namespace CompuGear.Controllers
             var salt = Guid.NewGuid().ToString("N")[..16];
             user.Salt = salt;
             user.PasswordHash = Convert.ToBase64String(
-                System.Security.Cryptography.SHA256.HashData(
-                    System.Text.Encoding.UTF8.GetBytes(user.Password + salt)));
+                SHA256.HashData(
+                    Encoding.UTF8.GetBytes(user.Password + salt)));
             user.Username = user.Email.Split('@')[0] + DateTime.Now.Ticks.ToString()[10..];
             user.IsActive = true;
             user.IsEmailVerified = true;
@@ -682,8 +678,8 @@ namespace CompuGear.Controllers
                 var salt = existing.Salt ?? Guid.NewGuid().ToString("N")[..16];
                 existing.Salt = salt;
                 existing.PasswordHash = Convert.ToBase64String(
-                    System.Security.Cryptography.SHA256.HashData(
-                        System.Text.Encoding.UTF8.GetBytes(user.Password + salt)));
+                    SHA256.HashData(
+                        Encoding.UTF8.GetBytes(user.Password + salt)));
             }
 
             await _context.SaveChangesAsync();
@@ -828,7 +824,7 @@ namespace CompuGear.Controllers
                     .Select(s => new
                     {
                         s.SubscriptionId, s.CompanyId,
-                        CompanyName = s.Company.CompanyName,
+                        s.Company.CompanyName,
                         CompanyEmail = s.Company.Email,
                         s.PlanName, s.Status, s.BillingCycle, s.MonthlyFee,
                         s.ContractAgreed, s.ContractAgreedAt, s.ContractType, s.ContractTermMonths,
@@ -957,7 +953,7 @@ namespace CompuGear.Controllers
 
                 var result = accounts.Select(a =>
                 {
-                    var bal = balances.ContainsKey(a.AccountId) ? balances[a.AccountId] : (0m, 0m);
+                    var bal = balances.TryGetValue(a.AccountId, out var foundBal) ? foundBal : (0m, 0m);
                     var net = bal.Item1 - bal.Item2;
                     return new
                     {
@@ -1142,7 +1138,7 @@ namespace CompuGear.Controllers
                 if (sub == null) return NotFound(new { message = "System entry not found" });
 
                 var map = await GetPlatformAccountCodeMap();
-                int Acct(string code) => map.ContainsKey(code) ? map[code] : 0;
+                int Acct(string code) => map.TryGetValue(code, out var id) ? id : 0;
 
                 return Ok(new
                 {
@@ -1181,7 +1177,7 @@ namespace CompuGear.Controllers
                 SourceType = entry.Reference != null && entry.Reference.StartsWith("SUB-") ? "Subscription"
                            : entry.Reference != null && entry.Reference.StartsWith("TAX-") ? "Tax"
                            : "Journal Entry",
-                Lines = entry.Lines.Select(l => new { l.LineId, l.AccountId, AccountCode = l.Account.AccountCode, AccountName = l.Account.AccountName, l.Description, l.DebitAmount, l.CreditAmount })
+                Lines = entry.Lines.Select(l => new { l.LineId, l.AccountId, l.Account.AccountCode, l.Account.AccountName, l.Description, l.DebitAmount, l.CreditAmount })
             });
         }
 
@@ -1320,8 +1316,10 @@ namespace CompuGear.Controllers
                 var manualGL = await query.OrderByDescending(g => g.TransactionDate)
                     .Select(g => new
                     {
-                        g.LedgerId, g.AccountId, AccountCode = g.Account.AccountCode, AccountName = g.Account.AccountName,
-                        AccountType = g.Account.AccountType, g.TransactionDate, g.Description,
+                        g.LedgerId, g.AccountId,
+                        g.Account.AccountCode,
+                        g.Account.AccountName,
+                        g.Account.AccountType, g.TransactionDate, g.Description,
                         g.DebitAmount, g.CreditAmount, g.RunningBalance, g.Reference,
                         EntryNumber = g.JournalEntry != null ? g.JournalEntry.EntryNumber : "",
                         Source = (g.Reference != null && (g.Reference.StartsWith("SUB-") || g.Reference.StartsWith("TAX-SUB-"))) ? "System" : "Manual",
@@ -1350,7 +1348,7 @@ namespace CompuGear.Controllers
                     .ToListAsync();
 
                 var map = await GetPlatformAccountCodeMap();
-                int Acct(string code) => map.ContainsKey(code) ? map[code] : 0;
+                int Acct(string code) => map.TryGetValue(code, out var id) ? id : 0;
                 var arId = Acct("1100"); var revId = Acct("4000");
 
                 var subGL = new List<object>();
@@ -1380,7 +1378,7 @@ namespace CompuGear.Controllers
 
                 var glSumMap = glSummary.ToDictionary(g => g.AccountId, g => (g.Dr, g.Cr));
                 var summary = summaryAccounts
-                    .Where(a => glSumMap.ContainsKey(a.AccountId) && (glSumMap[a.AccountId].Dr != 0 || glSumMap[a.AccountId].Cr != 0))
+                    .Where(a => glSumMap.TryGetValue(a.AccountId, out var glBal) && (glBal.Dr != 0 || glBal.Cr != 0))
                     .Select(a => { var b = glSumMap[a.AccountId]; return new { a.AccountId, a.AccountCode, a.AccountName, a.AccountType, TotalDebit = b.Dr, TotalCredit = b.Cr }; })
                     .ToList();
 
@@ -1438,7 +1436,7 @@ namespace CompuGear.Controllers
             var map = mapList.ToDictionary(a => a.AccountCode, a => a.AccountId);
             var existingBalSubIds = existingBalSubRefs
                 .Where(r => r != null)
-                .Select(r => { int id; return int.TryParse(r!.Replace("SUB-", ""), out id) ? id : 0; })
+                .Select(r => { return int.TryParse(r!.Replace("SUB-", ""), out int id) ? id : 0; })
                 .Where(id => id > 0)
                 .ToHashSet();
 
@@ -1452,33 +1450,29 @@ namespace CompuGear.Controllers
 
             if (subTotal > 0)
             {
-                if (map.ContainsKey("1100"))
+                if (map.TryGetValue("1100", out var arAcctId))
                 {
-                    var id = map["1100"];
-                    var cur = result.ContainsKey(id) ? result[id] : (0m, 0m);
-                    result[id] = (cur.Item1 + subTotal, cur.Item2);
+                    var cur = result.TryGetValue(arAcctId, out var arCur) ? arCur : (0m, 0m);
+                    result[arAcctId] = (cur.Item1 + subTotal, cur.Item2);
                 }
-                if (map.ContainsKey("4000"))
+                if (map.TryGetValue("4000", out var revAcctId))
                 {
-                    var id = map["4000"];
-                    var cur = result.ContainsKey(id) ? result[id] : (0m, 0m);
-                    result[id] = (cur.Item1, cur.Item2 + subTotal);
+                    var cur = result.TryGetValue(revAcctId, out var revCur) ? revCur : (0m, 0m);
+                    result[revAcctId] = (cur.Item1, cur.Item2 + subTotal);
                 }
             }
 
             if (taxTotal > 0)
             {
-                if (map.ContainsKey("1000"))
+                if (map.TryGetValue("1000", out var cashAcctId))
                 {
-                    var id = map["1000"];
-                    var cur = result.ContainsKey(id) ? result[id] : (0m, 0m);
-                    result[id] = (cur.Item1 + taxTotal, cur.Item2);
+                    var cur = result.TryGetValue(cashAcctId, out var cashCur) ? cashCur : (0m, 0m);
+                    result[cashAcctId] = (cur.Item1 + taxTotal, cur.Item2);
                 }
-                if (map.ContainsKey("2100"))
+                if (map.TryGetValue("2100", out var taxAcctId))
                 {
-                    var id = map["2100"];
-                    var cur = result.ContainsKey(id) ? result[id] : (0m, 0m);
-                    result[id] = (cur.Item1, cur.Item2 + taxTotal);
+                    var cur = result.TryGetValue(taxAcctId, out var taxCur) ? taxCur : (0m, 0m);
+                    result[taxAcctId] = (cur.Item1, cur.Item2 + taxTotal);
                 }
             }
 
@@ -1499,7 +1493,7 @@ namespace CompuGear.Controllers
     public class BulkModuleAccessRequest
     {
         public int CompanyId { get; set; }
-        public List<int> ModuleIds { get; set; } = new();
+        public List<int> ModuleIds { get; set; } = [];
         public bool IsEnabled { get; set; }
     }
 }

@@ -243,6 +243,47 @@
             border: 1px solid #bbf7d0;
         }
 
+        .toast-container-custom {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast-custom {
+            min-width: 280px;
+            max-width: 420px;
+            border-radius: 12px;
+            padding: 12px 14px;
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+            animation: toastSlideIn 0.2s ease-out;
+        }
+
+        .toast-custom.error {
+            background: #dc2626;
+        }
+
+        .toast-custom.success {
+            background: #16a34a;
+        }
+
+        @@keyframes toastSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
         .form-row {
             display: flex;
             gap: 16px;
@@ -613,7 +654,25 @@
                         <label class="form-label">Phone Number</label>
                         <div class="input-wrapper">
                             <i class="bi bi-phone input-icon"></i>
-                            <input type="tel" class="form-control" id="phone" placeholder="+63 912 345 6789">
+                            <input type="tel" class="form-control" id="phone" inputmode="numeric" maxlength="11" pattern="^\d{11}$" placeholder="09XXXXXXXXX" oninput="sanitizePhoneInput(this)">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Address <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <i class="bi bi-geo-alt input-icon"></i>
+                            <select class="form-control" id="address" required>
+                                <option value="" selected disabled>Select your city/address</option>
+                                <option value="Quezon City, Metro Manila">Quezon City, Metro Manila</option>
+                                <option value="Manila, Metro Manila">Manila, Metro Manila</option>
+                                <option value="Makati, Metro Manila">Makati, Metro Manila</option>
+                                <option value="Taguig, Metro Manila">Taguig, Metro Manila</option>
+                                <option value="Pasig, Metro Manila">Pasig, Metro Manila</option>
+                                <option value="Caloocan, Metro Manila">Caloocan, Metro Manila</option>
+                                <option value="Cebu City, Cebu">Cebu City, Cebu</option>
+                                <option value="Davao City, Davao del Sur">Davao City, Davao del Sur</option>
+                            </select>
                         </div>
                     </div>
 
@@ -670,6 +729,8 @@
             </div>
         </div>
     </div>
+
+    <div class="toast-container-custom" id="toastContainer"></div>
 
     <script>
         function togglePassword(inputId, iconId) {
@@ -744,6 +805,24 @@
             }
         }
 
+        function showToast(type, message) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `toast-custom ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 4200);
+        }
+
+        function sanitizePhoneInput(input) {
+            input.value = (input.value || '').replace(/\D/g, '').slice(0, 11);
+        }
+
         function showAlert(type, message) {
             const alertEl = document.getElementById(type === 'error' ? 'alertError' : 'alertSuccess');
             const otherAlert = document.getElementById(type === 'error' ? 'alertSuccess' : 'alertError');
@@ -764,34 +843,46 @@
             
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
+            const phone = document.getElementById('phone').value.trim();
+            const address = document.getElementById('address').value;
             
             if (password !== confirmPassword) {
-                showAlert('error', 'Passwords do not match');
+                showToast('error', 'Passwords do not match');
+                return;
+            }
+
+            if (!address) {
+                showToast('error', 'Please select an address');
+                return;
+            }
+
+            if (phone && !/^\d{11}$/.test(phone)) {
+                showToast('error', 'Phone number must be exactly 11 digits');
                 return;
             }
             
             if (password.length < 12) {
-                showAlert('error', 'Password must be at least 12 characters long');
+                showToast('error', 'Password must be at least 12 characters long');
                 return;
             }
 
             if (!/[A-Z]/.test(password)) {
-                showAlert('error', 'Password must contain at least one uppercase letter');
+                showToast('error', 'Password must contain at least one uppercase letter');
                 return;
             }
 
             if (!/[a-z]/.test(password)) {
-                showAlert('error', 'Password must contain at least one lowercase letter');
+                showToast('error', 'Password must contain at least one lowercase letter');
                 return;
             }
 
             if (!/[0-9]/.test(password)) {
-                showAlert('error', 'Password must contain at least one number');
+                showToast('error', 'Password must contain at least one number');
                 return;
             }
 
             if (!/[^a-zA-Z0-9]/.test(password)) {
-                showAlert('error', 'Password must contain at least one special character (!@@#$%^&*)');
+                showToast('error', 'Password must contain at least one special character (!@@#$%^&*)');
                 return;
             }
             
@@ -811,7 +902,8 @@
                         firstName: document.getElementById('firstName').value,
                         lastName: document.getElementById('lastName').value,
                         email: document.getElementById('email').value,
-                        phone: document.getElementById('phone').value,
+                        phone: phone,
+                        address: address,
                         password: password,
                         confirmPassword: confirmPassword
                     })
@@ -820,17 +912,21 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    showAlert('success', result.message);
+                    showToast('success', result.message);
                     setTimeout(() => {
                         window.location.href = result.redirectUrl || '/Auth/Login';
                     }, 1000);
                 } else {
-                    showAlert('error', result.message);
+                    if ((result.message || '').toLowerCase().includes('already exists')) {
+                        showToast('error', 'Duplicate account detected. Email already exists.');
+                    } else {
+                        showToast('error', result.message || 'Registration failed.');
+                    }
                     btn.disabled = false;
                     btnText.textContent = 'Create Account';
                 }
             } catch (error) {
-                showAlert('error', 'An error occurred. Please try again.');
+                showToast('error', 'An error occurred. Please try again.');
                 btn.disabled = false;
                 btnText.textContent = 'Create Account';
             }

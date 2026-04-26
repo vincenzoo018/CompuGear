@@ -235,7 +235,7 @@ namespace CompuGear.Models.ViewModels
 
         public int? AssignedTo { get; set; }
 
-        public List<OrderItemViewModel> Items { get; set; } = new();
+        public List<OrderItemViewModel> Items { get; set; } = [];
     }
 
     public class OrderItemViewModel
@@ -383,7 +383,7 @@ namespace CompuGear.Models.ViewModels
 
         public string? Notes { get; set; }
 
-        public List<InvoiceItemViewModel> Items { get; set; } = new();
+        public List<InvoiceItemViewModel> Items { get; set; } = [];
     }
 
     public class InvoiceItemViewModel
@@ -540,14 +540,14 @@ namespace CompuGear.Models.ViewModels
         public decimal RevenueGrowth { get; set; }
 
         // Charts Data
-        public List<ChartDataPoint> RevenueChart { get; set; } = new();
-        public List<ChartDataPoint> OrdersChart { get; set; } = new();
-        public List<PieChartData> CategorySales { get; set; } = new();
+        public List<ChartDataPoint> RevenueChart { get; set; } = [];
+        public List<ChartDataPoint> OrdersChart { get; set; } = [];
+        public List<PieChartData> CategorySales { get; set; } = [];
 
         // Recent Data
-        public List<OrderListViewModel> RecentOrders { get; set; } = new();
-        public List<TicketListViewModel> RecentTickets { get; set; } = new();
-        public List<ProductListViewModel> LowStockAlerts { get; set; } = new();
+        public List<OrderListViewModel> RecentOrders { get; set; } = [];
+        public List<TicketListViewModel> RecentTickets { get; set; } = [];
+        public List<ProductListViewModel> LowStockAlerts { get; set; } = [];
     }
 
     public class ChartDataPoint
@@ -570,12 +570,12 @@ namespace CompuGear.Models.ViewModels
         public bool Success { get; set; }
         public string Message { get; set; } = string.Empty;
         public T? Data { get; set; }
-        public List<string> Errors { get; set; } = new();
+        public List<string> Errors { get; set; } = [];
     }
 
     public class PagedResult<T>
     {
-        public List<T> Items { get; set; } = new();
+        public List<T> Items { get; set; } = [];
         public int TotalCount { get; set; }
         public int PageNumber { get; set; }
         public int PageSize { get; set; }
