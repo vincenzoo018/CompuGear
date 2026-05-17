@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.Http;
 using CompuGear.Models;
 using CompuGear.Data;
 using CompuGear.Services;
@@ -38,6 +39,9 @@ builder.Services.AddDbContext<CompuGearDbContext>(options =>
 // Add HttpContextAccessor for services that need HTTP context
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMemoryCache();
+builder.Services.Configure<GmailSmtpOptions>(builder.Configuration.GetSection("GmailSmtp"));
+builder.Services.AddSingleton<IOtpService, OtpService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Add response compression
 builder.Services.AddResponseCompression(options =>
@@ -59,6 +63,7 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromMinutes(30);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
 var app = builder.Build();

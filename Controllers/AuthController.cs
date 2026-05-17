@@ -114,11 +114,11 @@ namespace CompuGear.Controllers
             {
                 return RedirectToAction("Index", "CustomerPortal");
             }
-            var recaptchaEnabled = _configuration.GetValue<bool>("ReCaptcha:Enabled");
-            var recaptchaSiteKey = _configuration["ReCaptcha:SiteKey"] ?? string.Empty;
-
-            ViewData["ReCaptchaEnabled"] = recaptchaEnabled;
-            ViewData["ReCaptchaSiteKey"] = recaptchaSiteKey;
+            var recaptchaConfig = GetRecaptchaConfig();
+            ViewData["ReCaptchaEnabled"] = recaptchaConfig.Enabled;
+            ViewData["ReCaptchaSiteKey"] = recaptchaConfig.SiteKey;
+            ViewData["ReCaptchaVersion"] = recaptchaConfig.Version;
+            ViewData["ReCaptchaAction"] = recaptchaConfig.Action;
 
             return View();
         }
@@ -136,6 +136,11 @@ namespace CompuGear.Controllers
             {
                 return RedirectToAction("Index", "CustomerPortal");
             }
+            var recaptchaConfig = GetRecaptchaConfig();
+            ViewData["ReCaptchaEnabled"] = recaptchaConfig.Enabled;
+            ViewData["ReCaptchaSiteKey"] = recaptchaConfig.SiteKey;
+            ViewData["ReCaptchaVersion"] = recaptchaConfig.Version;
+            ViewData["ReCaptchaAction"] = recaptchaConfig.Action;
             return View();
         }
 
@@ -166,10 +171,14 @@ namespace CompuGear.Controllers
                     return Json(new { success = false, message = "Email/Username and password are required" });
                 }
 
-                var recaptchaEnabled = _configuration.GetValue<bool>("ReCaptcha:Enabled");
-                if (recaptchaEnabled)
+                var recaptchaConfig = GetRecaptchaConfig();
+                if (recaptchaConfig.Enabled)
                 {
-                    var (isValid, message) = await VerifyRecaptchaAsync(request.RecaptchaToken);
+                    var (isValid, message) = await VerifyRecaptchaAsync(
+                        request.RecaptchaToken,
+                        recaptchaConfig.Version,
+                        recaptchaConfig.Action,
+                        recaptchaConfig.ScoreThreshold);
                     if (!isValid)
                     {
                         return Json(new { success = false, message });
@@ -301,14 +310,19 @@ namespace CompuGear.Controllers
             }
         }
 
-        private async Task<(bool Success, string Message)> VerifyRecaptchaAsync(string recaptchaToken)
+        private async Task<(bool Success, string Message)> VerifyRecaptchaAsync(
+            string recaptchaToken,
+            string version,
+            string expectedAction,
+            decimal scoreThreshold)
         {
             if (string.IsNullOrWhiteSpace(recaptchaToken))
             {
                 return (false, "Please complete the reCAPTCHA challenge.");
             }
 
-            var secretKey = _configuration["ReCaptcha:SecretKey"];
+            var recaptchaConfig = GetRecaptchaConfig();
+            var secretKey = recaptchaConfig.SecretKey;
             if (string.IsNullOrWhiteSpace(secretKey))
             {
                 return (false, "Login security check is not configured. Please contact support.");
@@ -336,10 +350,62 @@ namespace CompuGear.Controllers
 
             if (verification?.Success == true)
             {
+                if (string.Equals(version, "v3", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!string.IsNullOrWhiteSpace(expectedAction)
+                        && !string.Equals(verification.Action ?? string.Empty, expectedAction, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return (false, "reCAPTCHA verification failed. Please try again.");
+                    }
+
+                    if (verification.Score < (double)scoreThreshold)
+                    {
+                        return (false, "reCAPTCHA score too low. Please try again.");
+                    }
+                }
+
                 return (true, string.Empty);
             }
 
             return (false, "reCAPTCHA verification failed. Please try again.");
+        }
+
+        private (bool Enabled, string SiteKey, string SecretKey, string Version, decimal ScoreThreshold, string Action) GetRecaptchaConfig()
+        {
+            var enabled = _configuration.GetValue<bool>("ReCaptcha:Enabled");
+            var version = NormalizeRecaptchaVersion(_configuration["ReCaptcha:Version"]);
+            var action = (_configuration["ReCaptcha:Action"] ?? "login").Trim();
+            if (string.IsNullOrWhiteSpace(action))
+            {
+                action = "login";
+            }
+            var scoreThreshold = _configuration.GetValue("ReCaptcha:ScoreThreshold", 0.5m);
+
+            var siteKey = _configuration["ReCaptcha:SiteKey"] ?? string.Empty;
+            var secretKey = _configuration["ReCaptcha:SecretKey"] ?? string.Empty;
+
+            return (enabled, siteKey, secretKey, version, scoreThreshold, action);
+        }
+
+        private static string NormalizeRecaptchaVersion(string? version)
+        {
+            if (string.IsNullOrWhiteSpace(version))
+            {
+                return "v2";
+            }
+
+            var normalized = version.Trim().ToLowerInvariant();
+            if (normalized.StartsWith("v2", StringComparison.Ordinal) || normalized == "2" || normalized == "checkbox")
+            {
+                return "v2";
+            }
+
+            if (normalized.StartsWith("v3", StringComparison.Ordinal) || normalized == "3" || normalized == "score")
+            {
+                return "v3";
+            }
+
+            return "v2";
         }
 
         // Process Registration
@@ -358,6 +424,20 @@ namespace CompuGear.Controllers
                 request.Email = request.Email?.Trim() ?? string.Empty;
                 request.Phone = request.Phone?.Trim() ?? string.Empty;
                 request.Address = request.Address?.Trim() ?? string.Empty;
+
+                var recaptchaConfig = GetRecaptchaConfig();
+                if (recaptchaConfig.Enabled)
+                {
+                    var (isValid, message) = await VerifyRecaptchaAsync(
+                        request.RecaptchaToken,
+                        recaptchaConfig.Version,
+                        recaptchaConfig.Action,
+                        recaptchaConfig.ScoreThreshold);
+                    if (!isValid)
+                    {
+                        return Json(new { success = false, message });
+                    }
+                }
 
                 // Validate required fields
                 if (string.IsNullOrEmpty(request.FirstName) || string.IsNullOrEmpty(request.LastName) ||
@@ -551,6 +631,12 @@ namespace CompuGear.Controllers
         [JsonPropertyName("hostname")]
         public string? Hostname { get; set; }
 
+        [JsonPropertyName("score")]
+        public double Score { get; set; }
+
+        [JsonPropertyName("action")]
+        public string? Action { get; set; }
+
         [JsonPropertyName("error-codes")]
         public string[] ErrorCodes { get; set; } = [];
     }
@@ -564,6 +650,7 @@ namespace CompuGear.Controllers
         public string Address { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string ConfirmPassword { get; set; } = string.Empty;
+        public string RecaptchaToken { get; set; } = string.Empty;
     }
 
     public class ResetAllPasswordsRequest

@@ -1,6 +1,10 @@
 @{
     ViewData["Title"] = "Register";
     Layout = null;
+    var recaptchaEnabled = (bool?)ViewData["ReCaptchaEnabled"] ?? false;
+    var recaptchaSiteKey = ViewData["ReCaptchaSiteKey"]?.ToString() ?? string.Empty;
+    var recaptchaVersion = (ViewData["ReCaptchaVersion"]?.ToString() ?? "v2").Trim().ToLowerInvariant();
+    var recaptchaAction = ViewData["ReCaptchaAction"]?.ToString() ?? "login";
 }
 
 <!DOCTYPE html>
@@ -429,6 +433,12 @@
             text-decoration: underline;
         }
 
+        .recaptcha-wrapper {
+            margin-bottom: 22px;
+            display: flex;
+            justify-content: center;
+        }
+
         .btn-register {
             width: 100%;
             padding: 16px 24px;
@@ -587,6 +597,12 @@
             .btn-register {
                 padding: 14px 20px;
             }
+
+            .recaptcha-wrapper {
+                justify-content: flex-start;
+                transform: scale(0.90);
+                transform-origin: left top;
+            }
         }
     </style>
 </head>
@@ -714,6 +730,22 @@
                         </label>
                     </div>
 
+                    @if (recaptchaEnabled && !string.IsNullOrWhiteSpace(recaptchaSiteKey))
+                    {
+                        if (recaptchaVersion == "v2")
+                        {
+                            <div class="recaptcha-wrapper">
+                                <div class="g-recaptcha" data-sitekey="@recaptchaSiteKey"></div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="recaptcha-wrapper">
+                                <span class="text-muted" style="font-size:0.85rem;">Protected by reCAPTCHA</span>
+                            </div>
+                        }
+                    }
+
                     <button type="submit" class="btn-register" id="btnRegister">
                         <span id="btnText">Create Account</span>
                     </button>
@@ -732,6 +764,17 @@
 
     <div class="toast-container-custom" id="toastContainer"></div>
 
+    @if (recaptchaEnabled && !string.IsNullOrWhiteSpace(recaptchaSiteKey))
+    {
+        if (recaptchaVersion == "v2")
+        {
+            <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+        }
+        else
+        {
+            <script src="https://www.google.com/recaptcha/api.js?render=@recaptchaSiteKey"></script>
+        }
+    }
     <script>
         function togglePassword(inputId, iconId) {
             const passwordInput = document.getElementById(inputId);
@@ -845,6 +888,10 @@
             const confirmPassword = document.getElementById('confirmPassword').value;
             const phone = document.getElementById('phone').value.trim();
             const address = document.getElementById('address').value;
+            const recaptchaEnabled = @recaptchaEnabled.ToString().ToLowerInvariant();
+            const recaptchaVersion = '@recaptchaVersion';
+            const recaptchaAction = '@recaptchaAction';
+            let recaptchaToken = '';
             
             if (password !== confirmPassword) {
                 showToast('error', 'Passwords do not match');
@@ -885,6 +932,34 @@
                 showToast('error', 'Password must contain at least one special character (!@@#$%^&*)');
                 return;
             }
+
+            if (recaptchaEnabled) {
+                if (typeof grecaptcha === 'undefined') {
+                    showToast('error', 'reCAPTCHA is still loading. Please try again in a moment.');
+                    return;
+                }
+
+                if (recaptchaVersion === 'v3') {
+                    try {
+                        recaptchaToken = await new Promise((resolve, reject) => {
+                            grecaptcha.ready(() => {
+                                grecaptcha.execute('@recaptchaSiteKey', { action: recaptchaAction })
+                                    .then(resolve)
+                                    .catch(reject);
+                            });
+                        });
+                    } catch {
+                        showToast('error', 'Unable to verify reCAPTCHA. Please try again.');
+                        return;
+                    }
+                } else {
+                    recaptchaToken = grecaptcha.getResponse();
+                    if (!recaptchaToken) {
+                        showToast('error', 'Please complete the reCAPTCHA challenge.');
+                        return;
+                    }
+                }
+            }
             
             const btn = document.getElementById('btnRegister');
             const btnText = document.getElementById('btnText');
@@ -905,7 +980,8 @@
                         phone: phone,
                         address: address,
                         password: password,
-                        confirmPassword: confirmPassword
+                        confirmPassword: confirmPassword,
+                        recaptchaToken: recaptchaToken
                     })
                 });
 
@@ -922,11 +998,17 @@
                     } else {
                         showToast('error', result.message || 'Registration failed.');
                     }
+                    if (recaptchaEnabled && recaptchaVersion === 'v2' && typeof grecaptcha !== 'undefined') {
+                        grecaptcha.reset();
+                    }
                     btn.disabled = false;
                     btnText.textContent = 'Create Account';
                 }
             } catch (error) {
                 showToast('error', 'An error occurred. Please try again.');
+                if (recaptchaEnabled && recaptchaVersion === 'v2' && typeof grecaptcha !== 'undefined') {
+                    grecaptcha.reset();
+                }
                 btn.disabled = false;
                 btnText.textContent = 'Create Account';
             }
