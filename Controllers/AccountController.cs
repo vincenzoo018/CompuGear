@@ -3,6 +3,7 @@ using System.Text;
 using CompuGear.Data;
 using CompuGear.Models.ViewModels;
 using CompuGear.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -10,15 +11,18 @@ using Microsoft.Extensions.Logging;
 namespace CompuGear.Controllers
 {
 	[RequireHttps]
+	[AllowAnonymous]
 	public class AccountController(
 		CompuGearDbContext context,
 		IOtpService otpService,
 		IEmailService emailService,
+		IPasswordSecurityService passwordSecurity,
 		ILogger<AccountController> logger) : Controller
 	{
 		private readonly CompuGearDbContext _context = context;
 		private readonly IOtpService _otpService = otpService;
 		private readonly IEmailService _emailService = emailService;
+		private readonly IPasswordSecurityService _passwordSecurity = passwordSecurity;
 		private readonly ILogger<AccountController> _logger = logger;
 
 		[HttpGet]
@@ -217,8 +221,8 @@ namespace CompuGear.Controllers
 
 			if (!MeetsPasswordPolicy(model.NewPassword))
 			{
-				ModelState.AddModelError(nameof(model.NewPassword),
-					"Password must be at least 12 characters and include uppercase, lowercase, number, and special character.");
+				_passwordSecurity.IsStrongPassword(model.NewPassword, out var passwordError);
+				ModelState.AddModelError(nameof(model.NewPassword), passwordError);
 				return View(model);
 			}
 
@@ -236,11 +240,8 @@ namespace CompuGear.Controllers
 				return View(model);
 			}
 
-			var salt = Guid.NewGuid().ToString("N")[..16];
-			user.Salt = salt;
-			user.PasswordHash = Convert.ToBase64String(
-				SHA256.HashData(
-					Encoding.UTF8.GetBytes(model.NewPassword + salt)));
+			user.PasswordHash = _passwordSecurity.HashPassword(model.NewPassword);
+			user.Salt = string.Empty;
 			user.PasswordChangedAt = DateTime.UtcNow;
 			user.UpdatedAt = DateTime.UtcNow;
 
@@ -254,17 +255,16 @@ namespace CompuGear.Controllers
 
 		private static bool MeetsPasswordPolicy(string password)
 		{
-			if (string.IsNullOrWhiteSpace(password) || password.Length < 12)
+			if (string.IsNullOrWhiteSpace(password))
 			{
 				return false;
 			}
 
-			var hasUpper = password.Any(char.IsUpper);
-			var hasLower = password.Any(char.IsLower);
-			var hasDigit = password.Any(char.IsDigit);
-			var hasSpecial = password.Any(ch => !char.IsLetterOrDigit(ch));
-
-			return hasUpper && hasLower && hasDigit && hasSpecial;
+			return password.Length >= 12
+				&& password.Any(char.IsUpper)
+				&& password.Any(char.IsLower)
+				&& password.Any(char.IsDigit)
+				&& password.Any(ch => !char.IsLetterOrDigit(ch));
 		}
 	}
 }

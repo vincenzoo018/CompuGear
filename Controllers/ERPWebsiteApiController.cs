@@ -1,12 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using CompuGear.Data;
 using CompuGear.Models;
 using CompuGear.Services;
 using System.Text.Json;
-using System.Text;
-using System.Security.Cryptography;
 
 namespace CompuGear.Controllers
 {
@@ -17,11 +16,17 @@ namespace CompuGear.Controllers
     /// </summary>
     [Route("api/erpwebsite")]
     [ApiController]
-    public class ERPWebsiteApiController(CompuGearDbContext context, IPayMongoService payMongoService, IMemoryCache memoryCache) : ControllerBase
+    [AllowAnonymous]
+    public class ERPWebsiteApiController(
+        CompuGearDbContext context,
+        IPayMongoService payMongoService,
+        IMemoryCache memoryCache,
+        IPasswordSecurityService passwordSecurity) : ControllerBase
     {
         private readonly CompuGearDbContext _context = context;
         private readonly IPayMongoService _payMongoService = payMongoService;
         private readonly IMemoryCache _memoryCache = memoryCache;
+        private readonly IPasswordSecurityService _passwordSecurity = passwordSecurity;
 
         /// <summary>
         /// Process a new subscription from the public ERP website
@@ -48,8 +53,8 @@ namespace CompuGear.Controllers
                 if (string.IsNullOrWhiteSpace(request.AdminEmail))
                     return Ok(new { success = false, message = "Admin email is required." });
 
-                if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 8)
-                    return Ok(new { success = false, message = "Password must be at least 8 characters." });
+                if (!_passwordSecurity.IsStrongPassword(request.Password, out var passwordError))
+                    return Ok(new { success = false, message = passwordError });
 
                 if (!request.ContractAgreed)
                     return Ok(new { success = false, message = "You must agree to the Subscription Service Contract before proceeding." });
@@ -110,10 +115,7 @@ namespace CompuGear.Controllers
                     await _context.SaveChangesAsync();
 
                     // ===== 2. CREATE ADMIN USER (RoleId = 2 = Company Admin) =====
-                    var salt = Guid.NewGuid().ToString("N")[..16];
-                    var passwordHash = Convert.ToBase64String(
-                        SHA256.HashData(
-                            Encoding.UTF8.GetBytes(request.Password + salt)));
+                    var passwordHash = _passwordSecurity.HashPassword(request.Password);
 
                     adminUser = new User
                     {
@@ -123,7 +125,7 @@ namespace CompuGear.Controllers
                         LastName = request.LastName,
                         Phone = request.AdminPhone,
                         PasswordHash = passwordHash,
-                        Salt = salt,
+                        Salt = string.Empty,
                         RoleId = 2, // Company Admin - gets redirected to Admin Portal
                         CompanyId = company.CompanyId,
                         IsActive = true,
@@ -245,8 +247,8 @@ namespace CompuGear.Controllers
                 if (string.IsNullOrWhiteSpace(request.AdminEmail))
                     return Ok(new { success = false, message = "Admin email is required." });
 
-                if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 8)
-                    return Ok(new { success = false, message = "Password must be at least 8 characters." });
+                if (!_passwordSecurity.IsStrongPassword(request.Password, out var passwordError))
+                    return Ok(new { success = false, message = passwordError });
 
                 // Normalize plan name - accept Starter, Pro, Enterprise (case-insensitive)
                 var validPlans2 = new[] { "Starter", "Pro", "Enterprise" };
@@ -455,10 +457,7 @@ namespace CompuGear.Controllers
                     await _context.SaveChangesAsync();
 
                     // ===== 2. CREATE ADMIN USER =====
-                    var salt = Guid.NewGuid().ToString("N")[..16];
-                    var passwordHash = Convert.ToBase64String(
-                        SHA256.HashData(
-                            Encoding.UTF8.GetBytes(request.Password + salt)));
+                    var passwordHash = _passwordSecurity.HashPassword(request.Password);
 
                     adminUser = new User
                     {
@@ -468,7 +467,7 @@ namespace CompuGear.Controllers
                         LastName = request.LastName,
                         Phone = request.AdminPhone,
                         PasswordHash = passwordHash,
-                        Salt = salt,
+                        Salt = string.Empty,
                         RoleId = 2, // Company Admin
                         CompanyId = company.CompanyId,
                         IsActive = true,

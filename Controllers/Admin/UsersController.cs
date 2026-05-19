@@ -1,11 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using CompuGear.Data;
 using CompuGear.Models;
 using CompuGear.Services;
-using System.Text;
-using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 namespace CompuGear.Controllers.Admin
@@ -15,11 +14,18 @@ namespace CompuGear.Controllers.Admin
     /// RoleId: 1 - Super Admin, 2 - Company Admin
     /// Includes API endpoints for user management, roles, role access, and activity/audit logs.
     /// </summary>
-    public class UsersController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService) : Controller
+    [Authorize(Policy = "FirmMember")]
+    [AutoValidateAntiforgeryToken]
+    public class UsersController(
+        CompuGearDbContext context,
+        IConfiguration configuration,
+        IAuditService auditService,
+        IPasswordSecurityService passwordSecurity) : Controller
     {
         private readonly CompuGearDbContext _context = context;
         private readonly IConfiguration _configuration = configuration;
         private readonly IAuditService _auditService = auditService;
+        private readonly IPasswordSecurityService _passwordSecurity = passwordSecurity;
 
         // Authorization check - Admins for views, all authenticated staff for API
         public override void OnActionExecuting(ActionExecutingContext context)
@@ -68,9 +74,11 @@ namespace CompuGear.Controllers.Admin
 
         private static bool IsPasswordStrong(string password)
         {
-            return password.Length >= 12 &&
-                   password.Any(char.IsUpper) &&
-                   password.Any(ch => !char.IsLetterOrDigit(ch));
+            return password.Length >= 12
+                   && password.Any(char.IsUpper)
+                   && password.Any(char.IsLower)
+                   && password.Any(char.IsDigit)
+                   && password.Any(ch => !char.IsLetterOrDigit(ch));
         }
 
         private static bool TryNormalizePhone(string? phone, out string? normalizedPhone)
@@ -215,12 +223,10 @@ namespace CompuGear.Controllers.Admin
                 if (!string.IsNullOrEmpty(user.Password))
                 {
                     if (!IsPasswordStrong(user.Password))
-                        return BadRequest(new { success = false, message = "Password must be at least 12 characters and include at least one uppercase letter and one special character" });
+                        return BadRequest(new { success = false, message = "Password must be at least 12 characters and include uppercase, lowercase, number, and special character." });
 
-                    user.Salt = Guid.NewGuid().ToString("N")[..16];
-                    user.PasswordHash = Convert.ToBase64String(
-                        SHA256.HashData(
-                            Encoding.UTF8.GetBytes(user.Password + user.Salt)));
+                    user.PasswordHash = _passwordSecurity.HashPassword(user.Password);
+                    user.Salt = string.Empty;
                 }
                 else
                 {
@@ -294,12 +300,10 @@ namespace CompuGear.Controllers.Admin
                 if (!string.IsNullOrEmpty(user.Password))
                 {
                     if (!IsPasswordStrong(user.Password))
-                        return BadRequest(new { success = false, message = "Password must be at least 12 characters and include at least one uppercase letter and one special character" });
+                        return BadRequest(new { success = false, message = "Password must be at least 12 characters and include uppercase, lowercase, number, and special character." });
 
-                    existing.Salt = Guid.NewGuid().ToString("N")[..16];
-                    existing.PasswordHash = Convert.ToBase64String(
-                        SHA256.HashData(
-                            Encoding.UTF8.GetBytes(user.Password + existing.Salt)));
+                    existing.PasswordHash = _passwordSecurity.HashPassword(user.Password);
+                    existing.Salt = string.Empty;
                     existing.PasswordChangedAt = DateTime.UtcNow;
                 }
                 await _context.SaveChangesAsync();

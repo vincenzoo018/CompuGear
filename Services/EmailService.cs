@@ -9,6 +9,7 @@ namespace CompuGear.Services
 	public interface IEmailService
 	{
 		Task SendOtpAsync(string recipientEmail, string otpCode, DateTimeOffset expirationTimeUtc);
+		Task SendLoginOtpAsync(string recipientEmail, string otpCode, DateTimeOffset expirationTimeUtc);
 	}
 
 	public sealed class EmailService(
@@ -22,6 +23,31 @@ namespace CompuGear.Services
 
 		public async Task SendOtpAsync(string recipientEmail, string otpCode, DateTimeOffset expirationTimeUtc)
 		{
+			await SendOtpCoreAsync(
+				recipientEmail,
+				otpCode,
+				expirationTimeUtc,
+				"CompuGear Password Recovery OTP",
+				BuildPasswordResetOtpEmailHtml);
+		}
+
+		public async Task SendLoginOtpAsync(string recipientEmail, string otpCode, DateTimeOffset expirationTimeUtc)
+		{
+			await SendOtpCoreAsync(
+				recipientEmail,
+				otpCode,
+				expirationTimeUtc,
+				"CompuGear Login Verification OTP",
+				BuildLoginOtpEmailHtml);
+		}
+
+		private async Task SendOtpCoreAsync(
+			string recipientEmail,
+			string otpCode,
+			DateTimeOffset expirationTimeUtc,
+			string subject,
+			Func<string, DateTimeOffset, string> emailBodyBuilder)
+		{
 			var config = ValidateAndGetConfiguration();
 			var recipient = (recipientEmail ?? string.Empty).Trim();
 
@@ -33,9 +59,9 @@ namespace CompuGear.Services
 			using var message = new MailMessage
 			{
 				From = new MailAddress(config.FromEmail, config.DisplayName),
-				Subject = "CompuGear Password Recovery OTP",
+				Subject = subject,
 				IsBodyHtml = true,
-				Body = BuildOtpEmailHtml(otpCode, expirationTimeUtc)
+				Body = emailBodyBuilder(otpCode, expirationTimeUtc)
 			};
 
 			message.To.Add(recipient);
@@ -80,36 +106,16 @@ namespace CompuGear.Services
 				: _smtpOptions.Host.Trim();
 
 			var port = _smtpOptions.Port <= 0 ? 587 : _smtpOptions.Port;
-			var fromEmail = (_smtpOptions.FromEmail ?? string.Empty).Trim();
-			var appPassword = NormalizeSecret(_smtpOptions.AppPassword);
+			var fromEmail = ResolveFromEmail();
+			var appPassword = ResolveAppPassword();
 			var displayName = string.IsNullOrWhiteSpace(_smtpOptions.DisplayName)
 				? "CompuGear Security"
 				: _smtpOptions.DisplayName.Trim();
 
-			if (IsPlaceholder(fromEmail))
-			{
-				fromEmail = (_configuration["GmailSmtp:FromEmail"] ?? string.Empty).Trim();
-			}
-
-			if (IsPlaceholder(appPassword))
-			{
-				appPassword = NormalizeSecret(_configuration["GmailSmtp:AppPassword"]);
-			}
-
-			if (IsPlaceholder(fromEmail))
-			{
-				fromEmail = (Environment.GetEnvironmentVariable("GMAIL_SMTP_FROM_EMAIL") ?? string.Empty).Trim();
-			}
-
-			if (IsPlaceholder(appPassword))
-			{
-				appPassword = NormalizeSecret(Environment.GetEnvironmentVariable("GMAIL_SMTP_APP_PASSWORD"));
-			}
-
 			if (IsPlaceholder(fromEmail) || IsPlaceholder(appPassword))
 			{
 				throw new InvalidOperationException(
-					"Gmail SMTP is not configured. Set GmailSmtp:FromEmail and GmailSmtp:AppPassword in appsettings/user-secrets, or set GMAIL_SMTP_FROM_EMAIL and GMAIL_SMTP_APP_PASSWORD environment variables.");
+					"Gmail SMTP is not configured. Set GmailSmtp:FromEmail and GmailSmtp:AppPassword in appsettings/user-secrets, or set environment variables like GmailSmtp__FromEmail/GmailSmtp__AppPassword (ASP.NET Core style) or GMAIL_SMTP_FROM_EMAIL/GMAIL_SMTP_APP_PASSWORD.");
 			}
 
 			return new ResolvedSmtpConfiguration
@@ -122,7 +128,87 @@ namespace CompuGear.Services
 			};
 		}
 
-		private static string BuildOtpEmailHtml(string otpCode, DateTimeOffset expirationTimeUtc)
+		private string ResolveFromEmail()
+		{
+			var fromEmail = (_smtpOptions.FromEmail ?? string.Empty).Trim();
+			if (!IsPlaceholder(fromEmail))
+			{
+				return fromEmail;
+			}
+
+			fromEmail = ResolveFromConfiguration(
+				NormalizePlainText,
+				"GmailSmtp:FromEmail",
+				"GmailSmtp__FromEmail",
+				"GMAIL_SMTP_FROM_EMAIL");
+			if (!IsPlaceholder(fromEmail))
+			{
+				return fromEmail;
+			}
+
+			return ResolveFromEnvironment(
+				NormalizePlainText,
+				"GmailSmtp__FromEmail",
+				"GmailSmtp:FromEmail",
+				"GMAIL_SMTP_FROM_EMAIL");
+		}
+
+		private string ResolveAppPassword()
+		{
+			var appPassword = NormalizeSecret(_smtpOptions.AppPassword);
+			if (!IsPlaceholder(appPassword))
+			{
+				return appPassword;
+			}
+
+			appPassword = ResolveFromConfiguration(
+				NormalizeSecret,
+				"GmailSmtp:AppPassword",
+				"GmailSmtp__AppPassword",
+				"GMAIL_SMTP_APP_PASSWORD",
+				"GMAIL_SMTP_PASSWORD");
+			if (!IsPlaceholder(appPassword))
+			{
+				return appPassword;
+			}
+
+			return ResolveFromEnvironment(
+				NormalizeSecret,
+				"GmailSmtp__AppPassword",
+				"GmailSmtp:AppPassword",
+				"GMAIL_SMTP_APP_PASSWORD",
+				"GMAIL_SMTP_PASSWORD");
+		}
+
+		private string ResolveFromConfiguration(Func<string?, string> normalize, params string[] keys)
+		{
+			foreach (var key in keys)
+			{
+				var value = normalize(_configuration[key]);
+				if (!IsPlaceholder(value))
+				{
+					return value;
+				}
+			}
+
+			return string.Empty;
+		}
+
+		private static string ResolveFromEnvironment(Func<string?, string> normalize, params string[] names)
+		{
+			foreach (var name in names)
+			{
+				var value = normalize(Environment.GetEnvironmentVariable(name));
+				if (!IsPlaceholder(value))
+				{
+					return value;
+				}
+			}
+
+			return string.Empty;
+		}
+
+		private static string BuildPasswordResetOtpEmailHtml(string otpCode, DateTimeOffset expirationTimeUtc)
 		{
 			var expiresLocalText = expirationTimeUtc.ToLocalTime().ToString("yyyy-MM-dd hh:mm tt");
 			var safeOtp = WebUtility.HtmlEncode(otpCode);
@@ -134,6 +220,23 @@ namespace CompuGear.Services
 					<p style='font-size:30px;font-weight:700;letter-spacing:4px;margin:16px 0;color:#0f766e;'>{safeOtp}</p>
 					<p>This OTP expires in <strong>5 minutes</strong> (until {expiresLocalText}).</p>
 					<p>If you did not request this, please ignore this email.</p>
+					<hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0;' />
+					<p style='font-size:12px;color:#6b7280;'>For your security, do not share this code with anyone.</p>
+				</div>";
+		}
+
+		private static string BuildLoginOtpEmailHtml(string otpCode, DateTimeOffset expirationTimeUtc)
+		{
+			var expiresLocalText = expirationTimeUtc.ToLocalTime().ToString("yyyy-MM-dd hh:mm tt");
+			var safeOtp = WebUtility.HtmlEncode(otpCode);
+
+			return $@"
+				<div style='font-family:Segoe UI,Arial,sans-serif;line-height:1.5;color:#1f2937;'>
+					<h2 style='margin-bottom:8px;'>CompuGear Login Verification</h2>
+					<p>A login attempt was made on your account. Enter this one-time password (OTP) to continue:</p>
+					<p style='font-size:30px;font-weight:700;letter-spacing:4px;margin:16px 0;color:#0f766e;'>{safeOtp}</p>
+					<p>This OTP expires in <strong>10 minutes</strong> (until {expiresLocalText}).</p>
+					<p>If this wasn't you, change your password immediately and contact support.</p>
 					<hr style='border:none;border-top:1px solid #e5e7eb;margin:20px 0;' />
 					<p style='font-size:12px;color:#6b7280;'>For your security, do not share this code with anyone.</p>
 				</div>";
@@ -154,6 +257,11 @@ namespace CompuGear.Services
 		private static string NormalizeSecret(string? secret)
 		{
 			return (secret ?? string.Empty).Replace(" ", string.Empty).Trim();
+		}
+
+		private static string NormalizePlainText(string? value)
+		{
+			return (value ?? string.Empty).Trim();
 		}
 	}
 

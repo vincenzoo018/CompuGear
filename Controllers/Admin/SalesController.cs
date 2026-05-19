@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using CompuGear.Data;
@@ -6,6 +7,7 @@ using CompuGear.Models;
 using CompuGear.Services;
 using System.Text.Json;
 using System.Text;
+using System.ComponentModel.DataAnnotations;
 
 namespace CompuGear.Controllers.Admin
 {
@@ -13,6 +15,8 @@ namespace CompuGear.Controllers.Admin
     /// Sales Controller for Admin - Uses Views/Admin/Sales folder
     /// RoleId: 1 - Super Admin, 2 - Company Admin
     /// </summary>
+    [Authorize(Policy = "FirmMember")]
+    [AutoValidateAntiforgeryToken]
     public class SalesController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService) : Controller
     {
         private readonly CompuGearDbContext _context = context;
@@ -447,7 +451,17 @@ namespace CompuGear.Controllers.Admin
                 {
                     try
                     {
-                        var paymongoSecretKey = _configuration["PayMongo:SecretKey"] ?? "sk_test_SakyRyg4R6hXeni4x5EaNUow";
+                        var paymongoSecretKey = (_configuration["PayMongo:SecretKey"] ?? string.Empty).Trim();
+                        if (string.IsNullOrWhiteSpace(paymongoSecretKey))
+                        {
+                            return Ok(new
+                            {
+                                success = true,
+                                message = "Order approved and invoice generated. PayMongo checkout is not configured.",
+                                paymongoError = true
+                            });
+                        }
+
                         using var httpClient = new HttpClient();
                         var authToken = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{paymongoSecretKey}:"));
                         httpClient.DefaultRequestHeaders.Add("Authorization", $"Basic {authToken}");
@@ -653,7 +667,46 @@ namespace CompuGear.Controllers.Admin
         {
             try
             {
+                if (lead == null)
+                    return BadRequest(new { success = false, message = "Invalid lead payload." });
+
+                lead.FirstName = lead.FirstName?.Trim() ?? string.Empty;
+                lead.LastName = lead.LastName?.Trim() ?? string.Empty;
+                lead.Email = lead.Email?.Trim();
+                lead.Phone = lead.Phone?.Trim();
+                lead.CompanyName = lead.CompanyName?.Trim();
+                lead.Source = lead.Source?.Trim();
+                lead.Status = string.IsNullOrWhiteSpace(lead.Status) ? "New" : lead.Status.Trim();
+                lead.Priority = string.IsNullOrWhiteSpace(lead.Priority) ? "Medium" : lead.Priority.Trim();
+
+                if (string.IsNullOrWhiteSpace(lead.FirstName) || string.IsNullOrWhiteSpace(lead.LastName))
+                    return BadRequest(new { success = false, message = "First name and last name are required." });
+
+                if (!string.IsNullOrWhiteSpace(lead.Email) && !new EmailAddressAttribute().IsValid(lead.Email))
+                    return BadRequest(new { success = false, message = "A valid lead email is required." });
+
+                if (!string.IsNullOrEmpty(lead.Phone) && (!lead.Phone.All(char.IsDigit) || lead.Phone.Length != 11))
+                    return BadRequest(new { success = false, message = "Phone number must be exactly 11 digits." });
+
                 var companyId = GetCompanyId();
+
+                if (!string.IsNullOrWhiteSpace(lead.Email))
+                {
+                    var normalizedEmail = lead.Email.ToLowerInvariant();
+                    var duplicateLeadExists = await _context.Leads.AnyAsync(l =>
+                        l.Email != null
+                        && l.Email.ToLower() == normalizedEmail
+                        && (companyId == null || l.CompanyId == companyId));
+                    if (duplicateLeadExists)
+                        return BadRequest(new { success = false, message = "A lead with this email already exists." });
+
+                    var existingCustomerExists = await _context.Customers.AnyAsync(c =>
+                        c.Email.ToLower() == normalizedEmail
+                        && (companyId == null || c.CompanyId == companyId));
+                    if (existingCustomerExists)
+                        return BadRequest(new { success = false, message = "This email already belongs to an existing customer." });
+                }
+
                 lead.CompanyId = companyId;
                 lead.LeadCode = $"LEAD-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
                 lead.CreatedAt = DateTime.UtcNow;
@@ -676,6 +729,9 @@ namespace CompuGear.Controllers.Admin
         {
             try
             {
+                if (lead == null)
+                    return BadRequest(new { success = false, message = "Invalid lead payload." });
+
                 var companyId = GetCompanyId();
                 var existing = await _context.Leads.FindAsync(id);
                 if (existing == null) return NotFound();
@@ -684,14 +740,48 @@ namespace CompuGear.Controllers.Admin
                 if (existing.CompanyId == null && companyId != null)
                     existing.CompanyId = companyId;
 
-                existing.FirstName = lead.FirstName;
-                existing.LastName = lead.LastName;
-                existing.Email = lead.Email;
-                existing.Phone = lead.Phone;
-                existing.CompanyName = lead.CompanyName;
-                existing.Source = lead.Source;
-                existing.Status = lead.Status;
-                existing.Priority = lead.Priority;
+                var firstName = lead.FirstName?.Trim() ?? string.Empty;
+                var lastName = lead.LastName?.Trim() ?? string.Empty;
+                var email = lead.Email?.Trim();
+                var phone = lead.Phone?.Trim();
+
+                if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
+                    return BadRequest(new { success = false, message = "First name and last name are required." });
+
+                if (!string.IsNullOrWhiteSpace(email) && !new EmailAddressAttribute().IsValid(email))
+                    return BadRequest(new { success = false, message = "A valid lead email is required." });
+
+                if (!string.IsNullOrEmpty(phone) && (!phone.All(char.IsDigit) || phone.Length != 11))
+                    return BadRequest(new { success = false, message = "Phone number must be exactly 11 digits." });
+
+                if (!string.IsNullOrWhiteSpace(email))
+                {
+                    var normalizedEmail = email.ToLowerInvariant();
+                    var duplicateLeadExists = await _context.Leads.AnyAsync(l =>
+                        l.LeadId != id
+                        && l.Email != null
+                        && l.Email.ToLower() == normalizedEmail
+                        && (companyId == null || l.CompanyId == companyId));
+                    if (duplicateLeadExists)
+                        return BadRequest(new { success = false, message = "A lead with this email already exists." });
+
+                    var customerCollision = await _context.Customers.AnyAsync(c =>
+                        c.Email.ToLower() == normalizedEmail
+                        && (companyId == null || c.CompanyId == companyId));
+                    if (customerCollision)
+                        return BadRequest(new { success = false, message = "This email already belongs to an existing customer." });
+                }
+
+                existing.FirstName = firstName;
+                existing.LastName = lastName;
+                existing.Email = email;
+                existing.Phone = phone;
+                existing.CompanyName = lead.CompanyName?.Trim();
+                existing.Source = lead.Source?.Trim();
+                if (!string.IsNullOrWhiteSpace(lead.Status))
+                    existing.Status = lead.Status.Trim();
+                if (!string.IsNullOrWhiteSpace(lead.Priority))
+                    existing.Priority = lead.Priority.Trim();
                 existing.EstimatedValue = lead.EstimatedValue;
                 existing.Notes = lead.Notes;
                 existing.UpdatedAt = DateTime.UtcNow;
@@ -716,12 +806,41 @@ namespace CompuGear.Controllers.Admin
                 if (lead == null) return NotFound();
                 if (companyId != null && lead.CompanyId != null && lead.CompanyId != companyId) return NotFound();
 
+                if (lead.IsConverted)
+                    return BadRequest(new { success = false, message = "Lead is already converted." });
+
+                var leadEmail = (lead.Email ?? string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(leadEmail) || !new EmailAddressAttribute().IsValid(leadEmail))
+                    return BadRequest(new { success = false, message = "Lead must have a valid email before conversion." });
+
+                var normalizedLeadEmail = leadEmail.ToLowerInvariant();
+                var existingCustomer = await _context.Customers.FirstOrDefaultAsync(c =>
+                    c.Email.ToLower() == normalizedLeadEmail
+                    && (companyId == null || c.CompanyId == companyId));
+
+                if (existingCustomer != null)
+                {
+                    lead.IsConverted = true;
+                    lead.ConvertedCustomerId = existingCustomer.CustomerId;
+                    lead.ConvertedAt = DateTime.UtcNow;
+                    lead.Status = "Won";
+                    lead.UpdatedAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "Lead matched an existing customer and was marked as converted.",
+                        customerId = existingCustomer.CustomerId
+                    });
+                }
+
                 var customer = new Customer
                 {
                     CustomerCode = $"CUST-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}",
                     FirstName = lead.FirstName,
                     LastName = lead.LastName,
-                    Email = lead.Email ?? "",
+                    Email = leadEmail,
                     Phone = lead.Phone,
                     CompanyName = lead.CompanyName,
                     Status = "Active",

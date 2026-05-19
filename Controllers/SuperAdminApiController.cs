@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using CompuGear.Data;
 using CompuGear.Models;
-using System.Text;
-using System.Security.Cryptography;
+using CompuGear.Services;
+using System.ComponentModel.DataAnnotations;
 
 namespace CompuGear.Controllers
 {
@@ -14,10 +15,16 @@ namespace CompuGear.Controllers
     /// </summary>
     [Route("api/superadmin")]
     [ApiController]
-    public class SuperAdminApiController(CompuGearDbContext context, IMemoryCache cache) : ControllerBase
+    [Authorize(Policy = "SuperAdminOnly")]
+    [AutoValidateAntiforgeryToken]
+    public class SuperAdminApiController(
+        CompuGearDbContext context,
+        IMemoryCache cache,
+        IPasswordSecurityService passwordSecurity) : ControllerBase
     {
         private readonly CompuGearDbContext _context = context;
         private readonly IMemoryCache _cache = cache;
+        private readonly IPasswordSecurityService _passwordSecurity = passwordSecurity;
 
         private bool IsSuperAdmin()
         {
@@ -631,17 +638,23 @@ namespace CompuGear.Controllers
         {
             if (!IsSuperAdmin()) return Unauthorized();
 
-            if (string.IsNullOrEmpty(user.Email) || string.IsNullOrEmpty(user.Password))
+            var normalizedEmail = (user.Email ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(normalizedEmail) || string.IsNullOrEmpty(user.Password))
                 return BadRequest(new { message = "Email and password are required" });
 
-            if (await _context.Users.AnyAsync(u => u.Email == user.Email))
+            if (!new EmailAddressAttribute().IsValid(normalizedEmail))
+                return BadRequest(new { message = "A valid email is required" });
+
+            if (!_passwordSecurity.IsStrongPassword(user.Password, out var passwordError))
+                return BadRequest(new { message = passwordError });
+
+            var emailLower = normalizedEmail.ToLowerInvariant();
+            if (await _context.Users.AnyAsync(u => u.Email.ToLower() == emailLower))
                 return BadRequest(new { message = "Email already exists" });
 
-            var salt = Guid.NewGuid().ToString("N")[..16];
-            user.Salt = salt;
-            user.PasswordHash = Convert.ToBase64String(
-                SHA256.HashData(
-                    Encoding.UTF8.GetBytes(user.Password + salt)));
+            user.Email = normalizedEmail;
+            user.PasswordHash = _passwordSecurity.HashPassword(user.Password);
+            user.Salt = string.Empty;
             user.Username = user.Email.Split('@')[0] + DateTime.Now.Ticks.ToString()[10..];
             user.IsActive = true;
             user.IsEmailVerified = true;
@@ -663,9 +676,28 @@ namespace CompuGear.Controllers
             var existing = await _context.Users.FindAsync(id);
             if (existing == null) return NotFound();
 
+            var normalizedEmail = (user.Email ?? string.Empty).Trim();
+            if (!string.IsNullOrWhiteSpace(normalizedEmail))
+            {
+                if (!new EmailAddressAttribute().IsValid(normalizedEmail))
+                    return BadRequest(new { success = false, message = "A valid email is required" });
+
+                var emailLower = normalizedEmail.ToLowerInvariant();
+                var duplicateEmailExists = await _context.Users.AnyAsync(u =>
+                    u.UserId != id && u.Email.ToLower() == emailLower);
+                if (duplicateEmailExists)
+                    return BadRequest(new { success = false, message = "Email already exists" });
+            }
+
+            if (!string.IsNullOrWhiteSpace(user.Password)
+                && !_passwordSecurity.IsStrongPassword(user.Password, out var passwordError))
+            {
+                return BadRequest(new { success = false, message = passwordError });
+            }
+
             existing.FirstName = user.FirstName ?? existing.FirstName;
             existing.LastName = user.LastName ?? existing.LastName;
-            existing.Email = user.Email ?? existing.Email;
+            existing.Email = string.IsNullOrWhiteSpace(normalizedEmail) ? existing.Email : normalizedEmail;
             existing.Phone = user.Phone ?? existing.Phone;
             existing.RoleId = user.RoleId > 0 ? user.RoleId : existing.RoleId;
             existing.CompanyId = user.CompanyId ?? existing.CompanyId;
@@ -675,11 +707,9 @@ namespace CompuGear.Controllers
 
             if (!string.IsNullOrEmpty(user.Password))
             {
-                var salt = existing.Salt ?? Guid.NewGuid().ToString("N")[..16];
-                existing.Salt = salt;
-                existing.PasswordHash = Convert.ToBase64String(
-                    SHA256.HashData(
-                        Encoding.UTF8.GetBytes(user.Password + salt)));
+                existing.PasswordHash = _passwordSecurity.HashPassword(user.Password);
+                existing.Salt = string.Empty;
+                existing.PasswordChangedAt = DateTime.UtcNow;
             }
 
             await _context.SaveChangesAsync();

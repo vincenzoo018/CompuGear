@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using CompuGear.Data;
 using CompuGear.Models;
 using CompuGear.Services;
+using System.ComponentModel.DataAnnotations;
 
 namespace CompuGear.Controllers.Admin
 {
@@ -11,6 +13,8 @@ namespace CompuGear.Controllers.Admin
     /// Customers Controller for Admin - Uses Views/Admin/Customers folder
     /// RoleId: 1 - Super Admin, 2 - Company Admin
     /// </summary>
+    [Authorize(Policy = "FirmMember")]
+    [AutoValidateAntiforgeryToken]
     public class CustomersController(CompuGearDbContext context, IConfiguration configuration, IAuditService auditService) : Controller
     {
         private readonly CompuGearDbContext _context = context;
@@ -149,7 +153,42 @@ namespace CompuGear.Controllers.Admin
         {
             try
             {
+                if (customer == null)
+                    return BadRequest(new { success = false, message = "Invalid customer payload." });
+
+                customer.FirstName = customer.FirstName?.Trim() ?? string.Empty;
+                customer.LastName = customer.LastName?.Trim() ?? string.Empty;
+                customer.Email = customer.Email?.Trim() ?? string.Empty;
+                customer.Phone = customer.Phone?.Trim() ?? string.Empty;
+                customer.CompanyName = customer.CompanyName?.Trim();
+                customer.BillingAddress = customer.BillingAddress?.Trim();
+                customer.BillingCity = customer.BillingCity?.Trim();
+                customer.BillingState = customer.BillingState?.Trim();
+                customer.BillingZipCode = customer.BillingZipCode?.Trim();
+                customer.BillingCountry = customer.BillingCountry?.Trim();
+
+                if (string.IsNullOrWhiteSpace(customer.FirstName) || string.IsNullOrWhiteSpace(customer.LastName))
+                    return BadRequest(new { success = false, message = "First name and last name are required." });
+
+                if (string.IsNullOrWhiteSpace(customer.Email) || !new EmailAddressAttribute().IsValid(customer.Email))
+                    return BadRequest(new { success = false, message = "A valid email address is required." });
+
+                if (!string.IsNullOrEmpty(customer.Phone) && (!customer.Phone.All(char.IsDigit) || customer.Phone.Length != 11))
+                    return BadRequest(new { success = false, message = "Phone number must be exactly 11 digits." });
+
                 var companyId = GetCompanyId();
+                var normalizedEmail = customer.Email.ToLowerInvariant();
+
+                var duplicateCustomerExists = await _context.Customers.AnyAsync(c =>
+                    c.Email.ToLower() == normalizedEmail
+                    && (companyId == null || c.CompanyId == companyId));
+                if (duplicateCustomerExists)
+                    return BadRequest(new { success = false, message = "A customer with this email already exists." });
+
+                var duplicateUserExists = await _context.Users.AnyAsync(u => u.Email.ToLower() == normalizedEmail);
+                if (duplicateUserExists)
+                    return BadRequest(new { success = false, message = "A user account with this email already exists." });
+
                 customer.CompanyId = companyId;
                 customer.CustomerCode = $"CUST-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
                 customer.CreatedAt = DateTime.UtcNow;
@@ -176,6 +215,9 @@ namespace CompuGear.Controllers.Admin
         {
             try
             {
+                if (customer == null)
+                    return BadRequest(new { success = false, message = "Invalid customer payload." });
+
                 var companyId = GetCompanyId();
                 var existing = await _context.Customers.FindAsync(id);
                 if (existing == null) return NotFound();
@@ -185,24 +227,52 @@ namespace CompuGear.Controllers.Admin
                 if (existing.CompanyId == null && companyId != null)
                     existing.CompanyId = companyId;
 
-                existing.FirstName = customer.FirstName;
-                existing.LastName = customer.LastName;
-                existing.Email = customer.Email;
-                existing.Phone = customer.Phone;
+                var firstName = customer.FirstName?.Trim() ?? string.Empty;
+                var lastName = customer.LastName?.Trim() ?? string.Empty;
+                var email = customer.Email?.Trim() ?? string.Empty;
+                var phone = customer.Phone?.Trim() ?? string.Empty;
+
+                if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
+                    return BadRequest(new { success = false, message = "First name and last name are required." });
+
+                if (string.IsNullOrWhiteSpace(email) || !new EmailAddressAttribute().IsValid(email))
+                    return BadRequest(new { success = false, message = "A valid email address is required." });
+
+                if (!string.IsNullOrEmpty(phone) && (!phone.All(char.IsDigit) || phone.Length != 11))
+                    return BadRequest(new { success = false, message = "Phone number must be exactly 11 digits." });
+
+                var normalizedEmail = email.ToLowerInvariant();
+                var duplicateCustomerExists = await _context.Customers.AnyAsync(c =>
+                    c.CustomerId != id
+                    && c.Email.ToLower() == normalizedEmail
+                    && (companyId == null || c.CompanyId == companyId));
+                if (duplicateCustomerExists)
+                    return BadRequest(new { success = false, message = "A customer with this email already exists." });
+
+                var duplicateUserExists = await _context.Users.AnyAsync(u => u.Email.ToLower() == normalizedEmail);
+                if (duplicateUserExists && !string.Equals(existing.Email, email, StringComparison.OrdinalIgnoreCase))
+                    return BadRequest(new { success = false, message = "A user account with this email already exists." });
+
+                existing.FirstName = firstName;
+                existing.LastName = lastName;
+                existing.Email = email;
+                existing.Phone = phone;
                 existing.CategoryId = customer.CategoryId;
-                existing.BillingAddress = customer.BillingAddress;
-                existing.BillingCity = customer.BillingCity;
-                existing.BillingState = customer.BillingState;
-                existing.BillingZipCode = customer.BillingZipCode;
-                existing.BillingCountry = customer.BillingCountry;
-                existing.CompanyName = customer.CompanyName;
+                existing.BillingAddress = customer.BillingAddress?.Trim();
+                existing.BillingCity = customer.BillingCity?.Trim();
+                existing.BillingState = customer.BillingState?.Trim();
+                existing.BillingZipCode = customer.BillingZipCode?.Trim();
+                existing.BillingCountry = customer.BillingCountry?.Trim();
+                existing.CompanyName = customer.CompanyName?.Trim();
                 existing.CreditLimit = customer.CreditLimit;
                 existing.Notes = customer.Notes;
                 existing.UpdatedAt = DateTime.UtcNow;
 
                 // Update status if provided (Active/Inactive)
                 if (!string.IsNullOrEmpty(customer.Status))
-                    existing.Status = customer.Status;
+                    existing.Status = string.Equals(customer.Status.Trim(), "Inactive", StringComparison.OrdinalIgnoreCase)
+                        ? "Inactive"
+                        : "Active";
 
                 await _context.SaveChangesAsync();
                 return Ok(new { success = true, message = "Customer updated successfully" });

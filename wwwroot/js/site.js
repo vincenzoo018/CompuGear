@@ -1,5 +1,59 @@
 ﻿// CompuGear CRM - JavaScript
 
+// Automatically attach CSRF header for same-origin unsafe requests.
+(function () {
+    if (typeof window === 'undefined' || typeof window.fetch !== 'function') {
+        return;
+    }
+
+    const unsafeMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+    const originalFetch = window.fetch.bind(window);
+
+    function getCsrfToken() {
+        const tokenCookie = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('XSRF-TOKEN='));
+        return tokenCookie ? decodeURIComponent(tokenCookie.split('=')[1]) : '';
+    }
+
+    function isSameOrigin(input) {
+        const requestUrl = typeof input === 'string'
+            ? new URL(input, window.location.origin)
+            : new URL(input.url, window.location.origin);
+        return requestUrl.origin === window.location.origin;
+    }
+
+    window.fetch = function (input, init) {
+        try {
+            if (!isSameOrigin(input)) {
+                return originalFetch(input, init);
+            }
+        } catch {
+            return originalFetch(input, init);
+        }
+
+        const method = (init?.method ?? (input instanceof Request ? input.method : 'GET')).toUpperCase();
+        const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
+
+        if (unsafeMethods.has(method) && !headers.has('X-CSRF-TOKEN')) {
+            const csrfToken = getCsrfToken();
+            if (csrfToken) {
+                headers.set('X-CSRF-TOKEN', csrfToken);
+            }
+        }
+
+        if (init) {
+            return originalFetch(input, { ...init, headers });
+        }
+
+        if (input instanceof Request) {
+            return originalFetch(new Request(input, { headers }));
+        }
+
+        return originalFetch(input, { headers });
+    };
+})();
+
 // =====================================================
 // Sidebar State Restoration (runs immediately, no flicker)
 // =====================================================

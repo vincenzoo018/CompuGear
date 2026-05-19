@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using CompuGear.Data;
 using CompuGear.Models;
 using CompuGear.Services;
-using System.Text;
-using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -13,12 +13,26 @@ namespace CompuGear.Controllers
     /// <summary>
     /// Authentication Controller for Customer and User Login/Register
     /// </summary>
-    public class AuthController(CompuGearDbContext context, IAuditService auditService, IConfiguration configuration, IHttpClientFactory httpClientFactory) : Controller
+    [AutoValidateAntiforgeryToken]
+    public class AuthController(
+        CompuGearDbContext context,
+        IAuditService auditService,
+        ILogger<AuthController> logger,
+        IConfiguration configuration,
+        IHttpClientFactory httpClientFactory,
+        IOtpService otpService,
+        IEmailService emailService,
+        IPasswordSecurityService passwordSecurity) : Controller
     {
         private readonly CompuGearDbContext _context = context;
         private readonly IAuditService _auditService = auditService;
+        private readonly ILogger<AuthController> _logger = logger;
         private readonly IConfiguration _configuration = configuration;
         private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+        private readonly IOtpService _otpService = otpService;
+        private readonly IEmailService _emailService = emailService;
+        private readonly IPasswordSecurityService _passwordSecurity = passwordSecurity;
+        private const string PendingLoginUserIdKey = "PendingLoginUserId";
         private static readonly HashSet<string> AllowedRegistrationAddresses = new(StringComparer.OrdinalIgnoreCase)
         {
             "Quezon City, Metro Manila",
@@ -32,6 +46,7 @@ namespace CompuGear.Controllers
         };
 
         // Debug: Check current session (useful for troubleshooting)
+        [Authorize]
         [HttpGet]
         public IActionResult CheckSession()
         {
@@ -65,6 +80,7 @@ namespace CompuGear.Controllers
         }
 
         // Debug: Update user role (for testing purposes)
+        [Authorize(Policy = "SuperAdminOnly")]
         [HttpGet]
         public async Task<IActionResult> SetUserRole(string email, int roleId)
         {
@@ -102,6 +118,7 @@ namespace CompuGear.Controllers
         }
 
         // Login Page
+        [AllowAnonymous]
         public IActionResult Login()
         {
             // If already logged in, redirect based on role
@@ -124,6 +141,7 @@ namespace CompuGear.Controllers
         }
 
         // Register Page
+        [AllowAnonymous]
         public IActionResult Register()
         {
             // If already logged in, redirect based on role
@@ -161,6 +179,8 @@ namespace CompuGear.Controllers
         }
 
         // Process Login
+        [AllowAnonymous]
+        [IgnoreAntiforgeryToken]
         [HttpPost]
         public async Task<IActionResult> ProcessLogin([FromBody] LoginRequest request)
         {
@@ -186,128 +206,344 @@ namespace CompuGear.Controllers
                 }
 
                 var loginInput = request.Email.Trim();
+                ClearPendingLoginSession();
 
-                // First, try to authenticate as a User (staff member) - match by email or username
-                var user = await _context.Users
-                    .Include(u => u.Role)
-                    .Include(u => u.Company)
-                    .FirstOrDefaultAsync(u => (u.Email == loginInput || u.Username == loginInput) && u.IsActive);
-
-                if (user != null)
+                var user = await ResolveUserForLoginAsync(loginInput);
+                if (user == null)
                 {
-                    // Verify password using the stored salt
-                    var hashedPassword = Convert.ToBase64String(
-                        SHA256.HashData(
-                            Encoding.UTF8.GetBytes(request.Password + user.Salt)));
+                    await TryLogLoginAsync(0, request.Email, false, "Invalid credentials");
+                    return Json(new { success = false, message = "Invalid email/username or password. Please check your credentials and try again." });
+                }
 
-                    if (user.PasswordHash == hashedPassword)
+                if (!user.IsActive)
+                {
+                    await TryLogLoginAsync(user.UserId, user.Email, false, "Account is inactive");
+                    return Json(new { success = false, message = "This account is inactive or permanently locked. Contact admin for reactivation." });
+                }
+
+                if (user.RoleId == 7)
+                {
+                    var activeCustomerExists = await _context.Customers.AnyAsync(c =>
+                        ((c.UserId.HasValue && c.UserId == user.UserId) || c.Email == user.Email)
+                        && c.Status == "Active");
+                    if (!activeCustomerExists)
                     {
-                        // Update last login
-                        user.LastLoginAt = DateTime.UtcNow;
-                        await _context.SaveChangesAsync();
-
-                        // Set session for user
-                        HttpContext.Session.SetInt32("UserId", user.UserId);
-                        HttpContext.Session.SetString("UserName", user.FullName);
-                        HttpContext.Session.SetString("UserEmail", user.Email);
-                        HttpContext.Session.SetInt32("RoleId", user.RoleId);
-                        HttpContext.Session.SetString("RoleName", user.Role?.RoleName ?? "User");
-                        if (user.CompanyId.HasValue)
-                        {
-                            HttpContext.Session.SetInt32("CompanyId", user.CompanyId.Value);
-                            if (user.Company != null)
-                            {
-                                HttpContext.Session.SetString("CompanyName", user.Company.CompanyName);
-                            }
-                        }
-
-                        // If user is a Customer (RoleId = 7), also set customer session
-                        if (user.RoleId == 7)
-                        {
-                            var customer = await _context.Customers.FirstOrDefaultAsync(c => c.Email == user.Email);
-                            if (customer != null)
-                            {
-                                HttpContext.Session.SetInt32("CustomerId", customer.CustomerId);
-                                HttpContext.Session.SetString("CustomerName", customer.FullName);
-                                HttpContext.Session.SetString("CustomerEmail", customer.Email);
-                                // Ensure CompanyId is set from Customer record if not already set from User
-                                if (!user.CompanyId.HasValue && customer.CompanyId.HasValue)
-                                {
-                                    HttpContext.Session.SetInt32("CompanyId", customer.CompanyId.Value);
-                                }
-                            }
-                            await _auditService.LogLoginAsync(user.UserId, user.FullName, true);
-                            return Json(new { success = true, message = "Login successful", redirectUrl = "/CustomerPortal/Index" });
-                        }
-
-                        // Redirect based on role
-                        var redirectUrl = user.RoleId switch
-                        {
-                            1 => "/SuperAdmin/Index", // Super Admin -> Super Admin Portal
-                            2 => "/Home/Index", // Company Admin -> Admin Portal
-                            3 => "/SalesStaff/Index", // Sales Staff -> Sales Portal
-                            4 => "/SupportStaff/Index", // Customer Support -> Support Portal
-                            5 => "/MarketingStaff/Index", // Marketing Staff -> Marketing Portal
-                            6 => "/BillingStaff/Index", // Accounting & Billing -> Billing Portal
-                            7 => "/CustomerPortal/Index", // Customer -> Customer Portal
-                            8 => "/InventoryStaff/Index", // Inventory Staff -> Inventory Portal
-                            _ => "/Home/Index"
-                        };
-
-                        await _auditService.LogLoginAsync(user.UserId, user.FullName, true);
-                        return Json(new { success = true, message = "Login successful", redirectUrl });
+                        await TryLogLoginAsync(user.UserId, user.Email, false, "Customer account inactive");
+                        return Json(new { success = false, message = "Customer account is inactive. Contact support for assistance." });
                     }
                 }
 
-                // If not found as User, try to find as Customer (by email or username match)
-                var customer2 = await _context.Customers
-                    .FirstOrDefaultAsync(c => c.Email == loginInput && c.Status == "Active");
-
-                if (customer2 != null)
+                if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.UtcNow)
                 {
-                    // Find associated user account for password verification
-                    var customerUser = await _context.Users
-                        .FirstOrDefaultAsync(u => u.Email == loginInput || u.Username == loginInput);
-
-                    if (customerUser != null)
-                    {
-                        var hashedPassword = Convert.ToBase64String(
-                            SHA256.HashData(
-                                Encoding.UTF8.GetBytes(request.Password + customerUser.Salt)));
-
-                        if (customerUser.PasswordHash == hashedPassword)
-                        {
-                            // Set session
-                            HttpContext.Session.SetInt32("CustomerId", customer2.CustomerId);
-                            HttpContext.Session.SetString("CustomerName", customer2.FullName);
-                            HttpContext.Session.SetString("CustomerEmail", customer2.Email);
-                            HttpContext.Session.SetInt32("UserId", customerUser.UserId);
-                            HttpContext.Session.SetInt32("RoleId", 7); // Customer role
-                            HttpContext.Session.SetString("RoleName", "Customer");
-                            if (customer2.CompanyId.HasValue)
-                            {
-                                HttpContext.Session.SetInt32("CompanyId", customer2.CompanyId.Value);
-                            }
-                            else if (customerUser.CompanyId.HasValue)
-                            {
-                                HttpContext.Session.SetInt32("CompanyId", customerUser.CompanyId.Value);
-                            }
-
-                            await _auditService.LogLoginAsync(customerUser.UserId, customer2.FullName, true);
-                            return Json(new { success = true, message = "Login successful", redirectUrl = "/CustomerPortal/Index" });
-                        }
-                    }
+                    var minutesLeft = Math.Max(1, (int)Math.Ceiling((user.LockoutEnd.Value - DateTime.UtcNow).TotalMinutes));
+                    await TryLogLoginAsync(user.UserId, user.Email, false, "Temporary lockout active");
+                    return Json(new { success = false, message = $"Account is temporarily locked. Try again in {minutesLeft} minute(s)." });
                 }
 
-                await _auditService.LogLoginAsync(0, request.Email, false, "Invalid credentials");
-                return Json(new { success = false, message = "Invalid email/username or password. Please check your credentials and try again." });
+                var verify = _passwordSecurity.VerifyPassword(request.Password, user.PasswordHash, user.Salt);
+                if (!verify.Success)
+                {
+                    return await RegisterFailedLoginAsync(user, loginInput);
+                }
+
+                if (verify.NeedsRehash)
+                {
+                    user.PasswordHash = _passwordSecurity.HashPassword(request.Password);
+                    user.Salt = string.Empty;
+                    user.PasswordChangedAt ??= DateTime.UtcNow;
+                    user.UpdatedAt = DateTime.UtcNow;
+                    await _context.SaveChangesAsync();
+                }
+
+                var loginOtpEnabled = _configuration.GetValue("Security:LoginOtpEnabled", false);
+                if (!loginOtpEnabled)
+                {
+                    var redirectUrl = await CompleteLoginAsync(user);
+                    return Json(new { success = true, message = "Login successful", redirectUrl });
+                }
+
+                var otpIssue = _otpService.GenerateLoginOtp(user.Email);
+                if (!otpIssue.Success || string.IsNullOrWhiteSpace(otpIssue.OtpCode))
+                {
+                    var redirectUrl = await CompleteLoginAsync(user);
+                    return Json(new { success = true, message = "Login successful", redirectUrl });
+                }
+
+                if (!otpIssue.ExpirationTimeUtc.HasValue)
+                {
+                    return Json(new { success = false, message = "Unable to generate OTP at this time. Please try again." });
+                }
+
+                var otpCode = otpIssue.OtpCode!;
+                var otpExpiry = otpIssue.ExpirationTimeUtc.Value;
+
+                try
+                {
+                    await _emailService.SendLoginOtpAsync(user.Email, otpCode, otpExpiry);
+                }
+                catch
+                {
+                    _otpService.ClearOtp(user.Email);
+                    var redirectUrl = await CompleteLoginAsync(user);
+                    return Json(new { success = true, message = "Login successful", redirectUrl });
+                }
+
+                HttpContext.Session.SetInt32(PendingLoginUserIdKey, user.UserId);
+                return Json(new
+                {
+                    success = true,
+                    requiresOtp = true,
+                    message = $"A verification code was sent to {MaskEmail(user.Email)}. Enter it to continue."
+                });
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Login failed for {Email}", request?.Email ?? "unknown");
                 var loginIdentifier = request?.Email ?? "unknown";
-                await _auditService.LogLoginAsync(0, loginIdentifier, false, ex.Message);
+                try { await TryLogLoginAsync(0, loginIdentifier, false, ex.Message); } catch { /* ignore audit failure */ }
                 return Json(new { success = false, message = "An error occurred. Please try again later." });
             }
+        }
+
+        [AllowAnonymous]
+        [IgnoreAntiforgeryToken]
+        [HttpPost]
+        public async Task<IActionResult> VerifyLoginOtp([FromBody] VerifyLoginOtpRequest request)
+        {
+            try
+            {
+                if (request == null || string.IsNullOrWhiteSpace(request.OtpCode))
+                {
+                    return Json(new { success = false, message = "OTP code is required." });
+                }
+
+                var pendingUserId = HttpContext.Session.GetInt32(PendingLoginUserIdKey);
+                if (!pendingUserId.HasValue)
+                {
+                    return Json(new { success = false, message = "Login session expired. Please login again." });
+                }
+
+                var user = await _context.Users
+                    .Include(u => u.Role)
+                    .Include(u => u.Company)
+                    .FirstOrDefaultAsync(u => u.UserId == pendingUserId.Value);
+
+                if (user == null || !user.IsActive)
+                {
+                    ClearPendingLoginSession();
+                    return Json(new { success = false, message = "Account is inactive or unavailable. Please login again." });
+                }
+
+                if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.UtcNow)
+                {
+                    var minutesLeft = Math.Max(1, (int)Math.Ceiling((user.LockoutEnd.Value - DateTime.UtcNow).TotalMinutes));
+                    return Json(new { success = false, message = $"Account is temporarily locked. Try again in {minutesLeft} minute(s)." });
+                }
+
+                var verification = _otpService.VerifyLoginOtp(user.Email, request.OtpCode);
+                if (!verification.Success)
+                {
+                    if (verification.FailureReason is OtpVerificationFailureReason.ExpiredOtp or OtpVerificationFailureReason.TooManyAttempts)
+                    {
+                        ClearPendingLoginSession();
+                    }
+
+                    var message = verification.FailureReason switch
+                    {
+                        OtpVerificationFailureReason.ExpiredOtp => "OTP expired. Please login again to request a new code.",
+                        OtpVerificationFailureReason.TooManyAttempts => "Too many incorrect OTP attempts. Please login again.",
+                        _ => "Invalid OTP. Please try again."
+                    };
+
+                    return Json(new { success = false, message });
+                }
+
+                ClearPendingLoginSession();
+                var redirectUrl = await CompleteLoginAsync(user);
+                return Json(new { success = true, message = "Login successful", redirectUrl });
+            }
+            catch (Exception ex)
+            {
+                await TryLogLoginAsync(0, "otp_verification", false, ex.Message);
+                return Json(new { success = false, message = "Unable to verify OTP. Please try again." });
+            }
+        }
+
+        private async Task<User?> ResolveUserForLoginAsync(string loginInput)
+        {
+            var user = await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Company)
+                .FirstOrDefaultAsync(u => u.Email == loginInput || u.Username == loginInput);
+            if (user != null)
+            {
+                return user;
+            }
+
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.Email == loginInput && c.Status == "Active");
+            if (customer == null)
+            {
+                return null;
+            }
+
+            return await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Company)
+                .FirstOrDefaultAsync(u =>
+                    (customer.UserId.HasValue && u.UserId == customer.UserId.Value)
+                    || u.Email == loginInput
+                    || u.Username == loginInput);
+        }
+
+        private async Task<IActionResult> RegisterFailedLoginAsync(User user, string loginIdentifier)
+        {
+            user.FailedLoginAttempts += 1;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            string message;
+            if (user.FailedLoginAttempts >= 7)
+            {
+                user.IsActive = false;
+                user.LockoutEnd = null;
+                message = "Your account has been permanently locked due to repeated failed attempts. Contact admin to reactivate it.";
+            }
+            else if (user.FailedLoginAttempts == 6)
+            {
+                user.LockoutEnd = DateTime.UtcNow.AddMinutes(10);
+                message = "Too many failed attempts. Your account is locked for 10 minutes.";
+            }
+            else if (user.FailedLoginAttempts == 5)
+            {
+                user.LockoutEnd = DateTime.UtcNow.AddMinutes(5);
+                message = "Too many failed attempts. Your account is locked for 5 minutes.";
+            }
+            else
+            {
+                var remaining = 5 - user.FailedLoginAttempts;
+                message = $"Invalid email/username or password. You have {remaining} attempt(s) remaining before temporary lockout.";
+            }
+
+            await _context.SaveChangesAsync();
+            await TryLogLoginAsync(user.UserId, loginIdentifier, false, message);
+            return Json(new { success = false, message });
+        }
+
+        private async Task<string> CompleteLoginAsync(User user)
+        {
+            user.LastLoginAt = DateTime.UtcNow;
+            user.FailedLoginAttempts = 0;
+            user.LockoutEnd = null;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            HttpContext.Session.SetInt32("UserId", user.UserId);
+            HttpContext.Session.SetString("UserName", user.FullName);
+            HttpContext.Session.SetString("UserEmail", user.Email);
+            HttpContext.Session.SetInt32("RoleId", user.RoleId);
+            HttpContext.Session.SetString("RoleName", user.Role?.RoleName ?? "User");
+
+            if (user.CompanyId.HasValue)
+            {
+                HttpContext.Session.SetInt32("CompanyId", user.CompanyId.Value);
+                if (user.Company != null)
+                {
+                    HttpContext.Session.SetString("CompanyName", user.Company.CompanyName);
+                }
+            }
+
+            if (user.RoleId == 7)
+            {
+                var customer = await _context.Customers.FirstOrDefaultAsync(c =>
+                    (c.UserId.HasValue && c.UserId == user.UserId) || c.Email == user.Email);
+
+                if (customer != null)
+                {
+                    HttpContext.Session.SetInt32("CustomerId", customer.CustomerId);
+                    HttpContext.Session.SetString("CustomerName", customer.FullName);
+                    HttpContext.Session.SetString("CustomerEmail", customer.Email);
+
+                    if (!user.CompanyId.HasValue && customer.CompanyId.HasValue)
+                    {
+                        HttpContext.Session.SetInt32("CompanyId", customer.CompanyId.Value);
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            await TryLogLoginAsync(user.UserId, user.FullName, true);
+
+            return GetRedirectUrl(user.RoleId);
+        }
+
+        private void ClearPendingLoginSession()
+        {
+            HttpContext.Session.Remove(PendingLoginUserIdKey);
+        }
+
+        private async Task TryLogLoginAsync(int userId, string userName, bool success, string? reason = null)
+        {
+            try
+            {
+                await _auditService.LogLoginAsync(userId, userName, success, reason);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogWarning(ex, "Login audit logging failed for {UserName}", userName);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Login audit logging failed for {UserName}", userName);
+            }
+        }
+
+        private async Task TryLogLogoutAsync(int userId, string userName)
+        {
+            try
+            {
+                await _auditService.LogLogoutAsync(userId, userName);
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogWarning(ex, "Logout audit logging failed for {UserName}", userName);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Logout audit logging failed for {UserName}", userName);
+            }
+        }
+
+        private static string MaskEmail(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email) || !email.Contains('@'))
+            {
+                return "your email";
+            }
+
+            var parts = email.Split('@');
+            var name = parts[0];
+            if (name.Length <= 2)
+            {
+                return $"***@{parts[1]}";
+            }
+
+            return $"{name[0]}***{name[^1]}@{parts[1]}";
+        }
+
+        private string GetRedirectUrl(int roleId)
+        {
+            var fallback = Url.Action("Index", "Home") ?? "/Home/Index";
+            return roleId switch
+            {
+                1 => Url.Action("Index", "SuperAdmin"),
+                2 => Url.Action("Index", "Home"),
+                3 => Url.Action("Index", "SalesStaff"),
+                4 => Url.Action("Index", "SupportStaff"),
+                5 => Url.Action("Index", "MarketingStaff"),
+                6 => Url.Action("Index", "BillingStaff"),
+                7 => Url.Action("Index", "CustomerPortal"),
+                8 => Url.Action("Index", "InventoryStaff"),
+                _ => fallback
+            } ?? fallback;
         }
 
         private async Task<(bool Success, string Message)> VerifyRecaptchaAsync(
@@ -409,6 +645,7 @@ namespace CompuGear.Controllers
         }
 
         // Process Registration
+        [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> ProcessRegister([FromBody] RegisterRequest request)
         {
@@ -478,26 +715,9 @@ namespace CompuGear.Controllers
                 {
                     return Json(new { success = false, message = "An account with this email already exists" });
                 }
-                // Validate password complexity: min 12 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special
-                if (request.Password.Length < 12)
+                if (!_passwordSecurity.IsStrongPassword(request.Password, out var passwordError))
                 {
-                    return Json(new { success = false, message = "Password must be at least 12 characters long" });
-                }
-                if (!request.Password.Any(char.IsUpper))
-                {
-                    return Json(new { success = false, message = "Password must contain at least one uppercase letter" });
-                }
-                if (!request.Password.Any(char.IsLower))
-                {
-                    return Json(new { success = false, message = "Password must contain at least one lowercase letter" });
-                }
-                if (!request.Password.Any(char.IsDigit))
-                {
-                    return Json(new { success = false, message = "Password must contain at least one number" });
-                }
-                if (!request.Password.Any(c => !char.IsLetterOrDigit(c)))
-                {
-                    return Json(new { success = false, message = "Password must contain at least one special character" });
+                    return Json(new { success = false, message = passwordError });
                 }
 
                 if (request.Password != request.ConfirmPassword)
@@ -506,7 +726,6 @@ namespace CompuGear.Controllers
                 }
 
                 // Create user account first
-                var salt = Guid.NewGuid().ToString("N")[..16];
                 var user = new User
                 {
                     Username = request.Email.Split('@')[0] + DateTime.Now.Ticks.ToString()[10..],
@@ -514,13 +733,12 @@ namespace CompuGear.Controllers
                     FirstName = request.FirstName,
                     LastName = request.LastName,
                     Phone = request.Phone,
-                    PasswordHash = Convert.ToBase64String(
-                        SHA256.HashData(
-                            Encoding.UTF8.GetBytes(request.Password + salt))),
-                    Salt = salt,
+                    PasswordHash = _passwordSecurity.HashPassword(request.Password),
+                    Salt = string.Empty,
                     RoleId = 7, // Customer role
                     IsActive = true,
                     IsEmailVerified = true,
+                    PasswordChangedAt = DateTime.UtcNow,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -568,6 +786,7 @@ namespace CompuGear.Controllers
         }
 
         // Logout
+        [Authorize]
         public async Task<IActionResult> Logout()
         {
             var userId = HttpContext.Session.GetInt32("UserId") ?? 0;
@@ -575,7 +794,7 @@ namespace CompuGear.Controllers
 
             if (userId > 0)
             {
-                await _auditService.LogLogoutAsync(userId, userName);
+                await TryLogLogoutAsync(userId, userName);
             }
 
             HttpContext.Session.Clear();
@@ -583,25 +802,18 @@ namespace CompuGear.Controllers
         }
 
         // One-time: Reset all user passwords to a default value
+        [Authorize(Policy = "SuperAdminOnly")]
         [HttpPost]
-        public async Task<IActionResult> ResetAllPasswords([FromBody] ResetAllPasswordsRequest request)
+        public async Task<IActionResult> ResetAllPasswords()
         {
-            if (string.IsNullOrEmpty(request?.AdminKey) || request.AdminKey != "CompuGear2024ResetKey")
-            {
-                return Json(new { success = false, message = "Unauthorized" });
-            }
-
             var defaultPassword = "Password123!";
             var users = await _context.Users.ToListAsync();
             int count = 0;
 
             foreach (var user in users)
             {
-                var salt = Guid.NewGuid().ToString("N")[..16];
-                user.Salt = salt;
-                user.PasswordHash = Convert.ToBase64String(
-                    SHA256.HashData(
-                        Encoding.UTF8.GetBytes(defaultPassword + salt)));
+                user.PasswordHash = _passwordSecurity.HashPassword(defaultPassword);
+                user.Salt = string.Empty;
                 user.UpdatedAt = DateTime.UtcNow;
                 count++;
             }
@@ -653,8 +865,8 @@ namespace CompuGear.Controllers
         public string RecaptchaToken { get; set; } = string.Empty;
     }
 
-    public class ResetAllPasswordsRequest
+    public class VerifyLoginOtpRequest
     {
-        public string AdminKey { get; set; } = string.Empty;
+        public string OtpCode { get; set; } = string.Empty;
     }
 }

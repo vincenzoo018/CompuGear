@@ -10,6 +10,8 @@ namespace CompuGear.Services
 		OtpIssueResult GenerateOtp(string email);
 		OtpIssueResult ResendOtp(string email);
 		OtpVerificationResult VerifyOtp(string email, string otpCode);
+		OtpIssueResult GenerateLoginOtp(string email);
+		OtpVerificationResult VerifyLoginOtp(string email, string otpCode);
 		int GetResendCooldownSeconds(string email);
 		bool CanResetPassword(string email);
 		void ClearOtp(string email);
@@ -23,11 +25,36 @@ namespace CompuGear.Services
 		private readonly PasswordHasher<string> _passwordHasher = new();
 
 		private const int MaxAttempts = 5;
-		private static readonly TimeSpan OtpLifetime = TimeSpan.FromMinutes(5);
+		private static readonly TimeSpan OtpLifetime = TimeSpan.FromMinutes(10);
 		private static readonly TimeSpan ResendCooldown = TimeSpan.FromSeconds(45);
 		private static readonly TimeSpan ResetAuthorizationLifetime = TimeSpan.FromMinutes(10);
 
 		public OtpIssueResult GenerateOtp(string email)
+		{
+			return GenerateOtpInternal(email, OtpPurpose.PasswordReset);
+		}
+
+		public OtpIssueResult ResendOtp(string email)
+		{
+			return GenerateOtpInternal(email, OtpPurpose.PasswordReset);
+		}
+
+		public OtpVerificationResult VerifyOtp(string email, string otpCode)
+		{
+			return VerifyOtpInternal(email, otpCode, OtpPurpose.PasswordReset);
+		}
+
+		public OtpIssueResult GenerateLoginOtp(string email)
+		{
+			return GenerateOtpInternal(email, OtpPurpose.Login);
+		}
+
+		public OtpVerificationResult VerifyLoginOtp(string email, string otpCode)
+		{
+			return VerifyOtpInternal(email, otpCode, OtpPurpose.Login);
+		}
+
+		private OtpIssueResult GenerateOtpInternal(string email, OtpPurpose purpose)
 		{
 			var normalizedEmail = NormalizeEmail(email);
 			if (string.IsNullOrWhiteSpace(normalizedEmail))
@@ -40,7 +67,7 @@ namespace CompuGear.Services
 				};
 			}
 
-			var otpKey = BuildOtpCacheKey(normalizedEmail);
+			var otpKey = BuildOtpCacheKey(normalizedEmail, purpose);
 			if (_memoryCache.TryGetValue<OtpCacheRecord>(otpKey, out var existingRecord) && existingRecord != null)
 			{
 				var secondsRemaining = GetRemainingCooldownSeconds(existingRecord.LastSentAtUtc);
@@ -56,15 +83,10 @@ namespace CompuGear.Services
 				}
 			}
 
-			return CreateAndStoreOtp(normalizedEmail);
+			return CreateAndStoreOtp(normalizedEmail, purpose);
 		}
 
-		public OtpIssueResult ResendOtp(string email)
-		{
-			return GenerateOtp(email);
-		}
-
-		public OtpVerificationResult VerifyOtp(string email, string otpCode)
+		private OtpVerificationResult VerifyOtpInternal(string email, string otpCode, OtpPurpose purpose)
 		{
 			var normalizedEmail = NormalizeEmail(email);
 			if (string.IsNullOrWhiteSpace(normalizedEmail) || string.IsNullOrWhiteSpace(otpCode))
@@ -77,14 +99,14 @@ namespace CompuGear.Services
 				};
 			}
 
-			var otpKey = BuildOtpCacheKey(normalizedEmail);
+			var otpKey = BuildOtpCacheKey(normalizedEmail, purpose);
 			if (!_memoryCache.TryGetValue<OtpCacheRecord>(otpKey, out var otpRecord) || otpRecord == null)
 			{
 				return new OtpVerificationResult
 				{
 					Success = false,
 					FailureReason = OtpVerificationFailureReason.ExpiredOtp,
-					Message = "OTP expired. Please request a new one."
+					Message = "OTP expired. Please request a new OTP."
 				};
 			}
 
@@ -116,19 +138,22 @@ namespace CompuGear.Services
 			{
 				_memoryCache.Remove(otpKey);
 
-				var resetTicket = new ResetTicketCacheRecord
+				if (purpose == OtpPurpose.PasswordReset)
 				{
-					VerifiedAtUtc = now,
-					ExpirationTimeUtc = now.Add(ResetAuthorizationLifetime)
-				};
-
-				_memoryCache.Set(
-					BuildResetTicketCacheKey(normalizedEmail),
-					resetTicket,
-					new MemoryCacheEntryOptions
+					var resetTicket = new ResetTicketCacheRecord
 					{
-						AbsoluteExpiration = resetTicket.ExpirationTimeUtc
-					});
+						VerifiedAtUtc = now,
+						ExpirationTimeUtc = now.Add(ResetAuthorizationLifetime)
+					};
+
+					_memoryCache.Set(
+						BuildResetTicketCacheKey(normalizedEmail),
+						resetTicket,
+						new MemoryCacheEntryOptions
+						{
+							AbsoluteExpiration = resetTicket.ExpirationTimeUtc
+						});
+				}
 
 				return new OtpVerificationResult
 				{
@@ -179,7 +204,7 @@ namespace CompuGear.Services
 				return 0;
 			}
 
-			if (!_memoryCache.TryGetValue<OtpCacheRecord>(BuildOtpCacheKey(normalizedEmail), out var otpRecord) || otpRecord == null)
+			if (!_memoryCache.TryGetValue<OtpCacheRecord>(BuildOtpCacheKey(normalizedEmail, OtpPurpose.PasswordReset), out var otpRecord) || otpRecord == null)
 			{
 				return 0;
 			}
@@ -218,7 +243,7 @@ namespace CompuGear.Services
 				return;
 			}
 
-			_memoryCache.Remove(BuildOtpCacheKey(normalizedEmail));
+			_memoryCache.Remove(BuildOtpCacheKey(normalizedEmail, OtpPurpose.PasswordReset));
 		}
 
 		public void ConsumeResetAuthorization(string email)
@@ -229,7 +254,8 @@ namespace CompuGear.Services
 				return;
 			}
 
-			_memoryCache.Remove(BuildOtpCacheKey(normalizedEmail));
+			_memoryCache.Remove(BuildOtpCacheKey(normalizedEmail, OtpPurpose.PasswordReset));
+			_memoryCache.Remove(BuildOtpCacheKey(normalizedEmail, OtpPurpose.Login));
 			_memoryCache.Remove(BuildResetTicketCacheKey(normalizedEmail));
 		}
 
@@ -238,7 +264,7 @@ namespace CompuGear.Services
 			return (email ?? string.Empty).Trim().ToLowerInvariant();
 		}
 
-		private OtpIssueResult CreateAndStoreOtp(string normalizedEmail)
+		private OtpIssueResult CreateAndStoreOtp(string normalizedEmail, OtpPurpose purpose)
 		{
 			var otpCode = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
 			var now = DateTimeOffset.UtcNow;
@@ -253,14 +279,17 @@ namespace CompuGear.Services
 			};
 
 			_memoryCache.Set(
-				BuildOtpCacheKey(normalizedEmail),
+				BuildOtpCacheKey(normalizedEmail, purpose),
 				otpRecord,
 				new MemoryCacheEntryOptions
 				{
 					AbsoluteExpiration = otpRecord.ExpirationTimeUtc
 				});
 
-			_memoryCache.Remove(BuildResetTicketCacheKey(normalizedEmail));
+			if (purpose == OtpPurpose.PasswordReset)
+			{
+				_memoryCache.Remove(BuildResetTicketCacheKey(normalizedEmail));
+			}
 
 			return new OtpIssueResult
 			{
@@ -280,9 +309,9 @@ namespace CompuGear.Services
 				: 0;
 		}
 
-		private static string BuildOtpCacheKey(string normalizedEmail)
+		private static string BuildOtpCacheKey(string normalizedEmail, OtpPurpose purpose)
 		{
-			return $"otp:{BuildStableHash(normalizedEmail)}";
+			return $"otp:{purpose.ToString().ToLowerInvariant()}:{BuildStableHash(normalizedEmail)}";
 		}
 
 		private static string BuildResetTicketCacheKey(string normalizedEmail)
@@ -342,5 +371,11 @@ namespace CompuGear.Services
 		InvalidOtp,
 		ExpiredOtp,
 		TooManyAttempts
+	}
+
+	public enum OtpPurpose
+	{
+		PasswordReset,
+		Login
 	}
 }

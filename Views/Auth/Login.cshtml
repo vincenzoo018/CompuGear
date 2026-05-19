@@ -707,6 +707,26 @@
             successAlert.classList.add('show');
         }
 
+        function getCsrfToken() {
+            const tokenCookie = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('XSRF-TOKEN='));
+            return tokenCookie ? decodeURIComponent(tokenCookie.split('=')[1]) : '';
+        }
+
+        async function readJsonResponse(response, fallbackMessage) {
+            const body = await response.text();
+            if (!body) {
+                throw new Error(fallbackMessage);
+            }
+
+            try {
+                return JSON.parse(body);
+            } catch {
+                throw new Error(fallbackMessage);
+            }
+        }
+
         async function handleLogin(event) {
             event.preventDefault();
             
@@ -717,6 +737,9 @@
             const recaptchaEnabled = @recaptchaEnabled.ToString().ToLowerInvariant();
             const recaptchaVersion = '@recaptchaVersion';
             const recaptchaAction = '@recaptchaAction';
+            const processLoginUrl = '@(Url.Action("ProcessLogin", "Auth") ?? "/Auth/ProcessLogin")';
+            const verifyLoginOtpUrl = '@(Url.Action("VerifyLoginOtp", "Auth") ?? "/Auth/VerifyLoginOtp")';
+            const defaultCustomerPortalUrl = '@(Url.Action("Index", "CustomerPortal") ?? "/CustomerPortal/Index")';
             let recaptchaToken = '';
             
             if (!email || !password) {
@@ -756,10 +779,11 @@
             loginBtn.disabled = true;
 
             try {
-                const response = await fetch('/Auth/ProcessLogin', {
+                const response = await fetch(processLoginUrl, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': getCsrfToken()
                     },
                     body: JSON.stringify({
                         email: email,
@@ -769,12 +793,45 @@
                     })
                 });
 
-                const result = await response.json();
+                const result = await readJsonResponse(response, 'Login request failed. Please try again.');
 
                 if (result.success) {
+                    if (result.requiresOtp) {
+                        const otpCode = prompt('Enter the 6-digit OTP sent to your email:');
+                        if (!otpCode) {
+                            showError('OTP is required to complete login.');
+                            loginBtn.classList.remove('loading');
+                            loginBtn.disabled = false;
+                            return;
+                        }
+
+                        const otpResponse = await fetch(verifyLoginOtpUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': getCsrfToken()
+                            },
+                            body: JSON.stringify({ otpCode: otpCode.trim() })
+                        });
+
+                        const otpResult = await readJsonResponse(otpResponse, 'OTP verification failed. Please login again.');
+                        if (!otpResult.success) {
+                            showError(otpResult.message || 'Invalid OTP. Please login again.');
+                            loginBtn.classList.remove('loading');
+                            loginBtn.disabled = false;
+                            return;
+                        }
+
+                        showSuccess(otpResult.message || 'Login successful');
+                        setTimeout(() => {
+                            window.location.href = otpResult.redirectUrl || defaultCustomerPortalUrl;
+                        }, 800);
+                        return;
+                    }
+
                     showSuccess(result.message);
                     setTimeout(() => {
-                        window.location.href = result.redirectUrl || '/CustomerPortal/Index';
+                        window.location.href = result.redirectUrl || defaultCustomerPortalUrl;
                     }, 1000);
                 } else {
                     showError(result.message || 'Login failed. Please try again.');
@@ -785,7 +842,10 @@
                     loginBtn.disabled = false;
                 }
             } catch (error) {
-                showError('An error occurred. Please try again.');
+                const message = (error && typeof error === 'object' && 'message' in error)
+                    ? String(error.message)
+                    : 'An error occurred. Please try again.';
+                showError(message);
                 if (recaptchaEnabled && recaptchaVersion === 'v2' && typeof grecaptcha !== 'undefined') {
                     grecaptcha.reset();
                 }

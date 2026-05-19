@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CompuGear.Controllers
 {
     /// <summary>
     /// ERPWebsite Controller - Public-facing website for CompuGear ERP subscriptions
     /// </summary>
+    [AllowAnonymous]
     public class ERPWebsiteController : Controller
     {
         // Landing Page

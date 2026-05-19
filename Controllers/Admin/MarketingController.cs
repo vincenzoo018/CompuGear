@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 using CompuGear.Data;
@@ -11,6 +12,8 @@ namespace CompuGear.Controllers.Admin
     /// Marketing Controller for Admin - Uses Views/Admin/Marketing folder
     /// RoleId: 1 - Super Admin, 2 - Company Admin, 5 - Marketing Staff
     /// </summary>
+    [Authorize(Policy = "FirmMember")]
+    [AutoValidateAntiforgeryToken]
     public class MarketingController(CompuGearDbContext context, IWebHostEnvironment environment, IConfiguration configuration, IAuditService auditService) : Controller
     {
         private readonly CompuGearDbContext _context = context;
@@ -19,6 +22,14 @@ namespace CompuGear.Controllers.Admin
         private readonly IAuditService _auditService = auditService;
 
         private static readonly string[] AllowedImageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+        private static readonly HashSet<string> AllowedImageMimeTypes = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp"
+        };
+        private const long MaxImageUploadBytes = 5 * 1024 * 1024;
 
         // Authorization check - Admins for views, all authenticated staff for API
         public override void OnActionExecuting(ActionExecutingContext context)
@@ -252,13 +263,9 @@ namespace CompuGear.Controllers.Admin
         {
             try
             {
-                if (file == null || file.Length == 0)
-                    return Json(new { success = false, message = "No file uploaded" });
-
-                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-                
-                if (!AllowedImageExtensions.Contains(extension))
-                    return Json(new { success = false, message = "Invalid file type. Allowed: jpg, jpeg, png, gif, webp" });
+                var validationError = ValidateImageUpload(file);
+                if (validationError != null)
+                    return Json(new { success = false, message = validationError });
 
                 // Create promotions folder if it doesn't exist
                 var uploadsFolder = Path.Combine(_environment.WebRootPath, "images", "promotions");
@@ -266,13 +273,12 @@ namespace CompuGear.Controllers.Admin
                     Directory.CreateDirectory(uploadsFolder);
 
                 // Generate unique filename
+                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
                 var fileName = $"promo_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString()[..8]}{extension}";
                 var filePath = Path.Combine(uploadsFolder, fileName);
 
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await file.CopyToAsync(stream);
-                }
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await file.CopyToAsync(stream);
 
                 var imageUrl = $"/images/promotions/{fileName}";
                 return Json(new { success = true, imageUrl });
@@ -289,25 +295,20 @@ namespace CompuGear.Controllers.Admin
         {
             try
             {
-                if (file == null || file.Length == 0)
-                    return Json(new { success = false, message = "No file uploaded" });
-
-                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-                
-                if (!AllowedImageExtensions.Contains(extension))
-                    return Json(new { success = false, message = "Invalid file type" });
+                var validationError = ValidateImageUpload(file);
+                if (validationError != null)
+                    return Json(new { success = false, message = validationError });
 
                 var uploadsFolder = Path.Combine(_environment.WebRootPath, "images", "campaigns");
                 if (!Directory.Exists(uploadsFolder))
                     Directory.CreateDirectory(uploadsFolder);
 
+                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
                 var fileName = $"campaign_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString()[..8]}{extension}";
                 var filePath = Path.Combine(uploadsFolder, fileName);
 
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await file.CopyToAsync(stream);
-                }
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await file.CopyToAsync(stream);
 
                 var imageUrl = $"/images/campaigns/{fileName}";
                 return Json(new { success = true, imageUrl });
@@ -319,6 +320,24 @@ namespace CompuGear.Controllers.Admin
         }
 
         #endregion
+
+        private static string? ValidateImageUpload(IFormFile? file)
+        {
+            if (file == null || file.Length == 0)
+                return "No file uploaded.";
+
+            if (file.Length > MaxImageUploadBytes)
+                return "File size exceeds 5MB limit.";
+
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!AllowedImageExtensions.Contains(extension))
+                return "Invalid file type. Allowed: jpg, jpeg, png, gif, webp.";
+
+            if (string.IsNullOrWhiteSpace(file.ContentType) || !AllowedImageMimeTypes.Contains(file.ContentType))
+                return "Invalid file content type.";
+
+            return null;
+        }
 
         #region API Endpoints - Campaigns
 

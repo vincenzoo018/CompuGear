@@ -1,4 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Http;
 using CompuGear.Models;
@@ -42,6 +45,31 @@ builder.Services.AddMemoryCache();
 builder.Services.Configure<GmailSmtpOptions>(builder.Configuration.GetSection("GmailSmtp"));
 builder.Services.AddSingleton<IOtpService, OtpService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddSingleton<IPasswordSecurityService, PasswordSecurityService>();
+
+builder.Services.AddAuthentication("SessionAuth")
+    .AddScheme<AuthenticationSchemeOptions, SessionAuthenticationHandler>("SessionAuth", _ => { });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+
+    options.AddPolicy("SuperAdminOnly", policy => policy.RequireClaim("role_id", "1"));
+    options.AddPolicy("AdminOnly", policy => policy.RequireClaim("role_id", "1", "2"));
+    options.AddPolicy("FirmMember", policy => policy.RequireClaim("role_id", "2", "3", "4", "5", "6", "8"));
+    options.AddPolicy("ClientOnly", policy => policy.RequireClaim("role_id", "7"));
+});
+
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-CSRF-TOKEN";
+    options.Cookie.Name = "XSRF-TOKEN";
+    options.Cookie.HttpOnly = false;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+});
 
 // Add response compression
 builder.Services.AddResponseCompression(options =>
@@ -63,7 +91,7 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromMinutes(30);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 });
 
 var app = builder.Build();
@@ -93,6 +121,27 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseSession();
+app.Use(async (context, next) =>
+{
+    if (HttpMethods.IsGet(context.Request.Method) && !context.Request.Path.StartsWithSegments("/api"))
+    {
+        var antiforgery = context.RequestServices.GetRequiredService<IAntiforgery>();
+        var tokenSet = antiforgery.GetAndStoreTokens(context);
+        if (!string.IsNullOrWhiteSpace(tokenSet.RequestToken))
+        {
+            context.Response.Cookies.Append("XSRF-TOKEN", tokenSet.RequestToken, new CookieOptions
+            {
+                HttpOnly = false,
+                Secure = context.Request.IsHttps,
+                SameSite = SameSiteMode.Strict,
+                IsEssential = true
+            });
+        }
+    }
+
+    await next();
+});
+app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<ActivityAuditMiddleware>();
 
@@ -111,11 +160,8 @@ async Task ResetAllPasswordsAsync(CompuGearDbContext context)
         var users = await context.Users.ToListAsync();
         foreach (var user in users)
         {
-            var salt = Guid.NewGuid().ToString("N")[..16];
-            user.Salt = salt;
-            user.PasswordHash = Convert.ToBase64String(
-                SHA256.HashData(
-                    Encoding.UTF8.GetBytes(defaultPassword + salt)));
+            user.PasswordHash = HashPasswordPbkdf2(defaultPassword);
+            user.Salt = string.Empty;
             user.UpdatedAt = DateTime.UtcNow;
         }
         await context.SaveChangesAsync();
@@ -132,10 +178,7 @@ async Task SeedTestUsersAsync(CompuGearDbContext context)
 {
     try
     {
-        var salt = "CompuGearSalt2024";
-        var passwordHash = Convert.ToBase64String(
-            SHA256.HashData(
-                Encoding.UTF8.GetBytes("password123" + salt)));
+        var passwordHash = HashPasswordPbkdf2("password123");
 
         var usersToSeed = new List<(string username, string email, string firstName, string lastName, int roleId)>
         {
@@ -157,7 +200,7 @@ async Task SeedTestUsersAsync(CompuGearDbContext context)
             {
                 // Update existing user with correct hash and role
                 existingUser.PasswordHash = passwordHash;
-                existingUser.Salt = salt;
+                existingUser.Salt = string.Empty;
                 existingUser.RoleId = roleId;
                 existingUser.IsActive = true;
                 existingUser.IsEmailVerified = true;
@@ -172,7 +215,7 @@ async Task SeedTestUsersAsync(CompuGearDbContext context)
                     // Update existing user with correct email and hash
                     existingByUsername.Email = email;
                     existingByUsername.PasswordHash = passwordHash;
-                    existingByUsername.Salt = salt;
+                    existingByUsername.Salt = string.Empty;
                     existingByUsername.RoleId = roleId;
                     existingByUsername.IsActive = true;
                     existingByUsername.IsEmailVerified = true;
@@ -186,7 +229,7 @@ async Task SeedTestUsersAsync(CompuGearDbContext context)
                         Username = username,
                         Email = email,
                         PasswordHash = passwordHash,
-                        Salt = salt,
+                        Salt = string.Empty,
                         FirstName = firstName,
                         LastName = lastName,
                         RoleId = roleId,
@@ -209,6 +252,23 @@ async Task SeedTestUsersAsync(CompuGearDbContext context)
         Console.WriteLine($"? User seeding skipped: {ex.Message}");
         // Don't throw - just log and continue
     }
+}
+
+static string HashPasswordPbkdf2(string password)
+{
+    const int iterations = 120_000;
+    const int saltSize = 16;
+    const int keySize = 32;
+
+    var saltBytes = RandomNumberGenerator.GetBytes(saltSize);
+    var hashBytes = Rfc2898DeriveBytes.Pbkdf2(
+        password,
+        saltBytes,
+        iterations,
+        HashAlgorithmName.SHA256,
+        keySize);
+
+    return $"PBKDF2${iterations}${Convert.ToBase64String(saltBytes)}${Convert.ToBase64String(hashBytes)}";
 }
 
 // Seed comprehensive sample data for development/demo

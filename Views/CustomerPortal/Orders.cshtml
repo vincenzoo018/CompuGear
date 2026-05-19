@@ -1,7 +1,7 @@
-    
-    @{
+@{
     ViewData["Title"] = "My Orders";
     Layout = "~/Views/Shared/_CustomerLayout.cshtml";
+    var googleMapsApiKey = ViewData["GoogleMapsApiKey"]?.ToString() ?? string.Empty;
 }
 
 <style>
@@ -928,7 +928,10 @@
 </div>
 
 @section Scripts {
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAppyyZwTguVFsOgqXF8PPjBg4uoGvtnCs&v=weekly&libraries=geometry,places&callback=initMapsReady" async defer></script>
+@if (!string.IsNullOrWhiteSpace(googleMapsApiKey))
+{
+<script src="https://maps.googleapis.com/maps/api/js?key=@googleMapsApiKey&v=weekly&libraries=geometry,places&callback=initMapsReady" async defer></script>
+}
 <script>
     const productIcons = ['🖥️', '⌨️', '🖱️', '🎧', '💾', '🎮', '📱', '🔌', '💻', '🖨️'];
     let allOrders = [];

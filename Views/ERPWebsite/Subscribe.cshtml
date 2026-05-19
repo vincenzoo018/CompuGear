@@ -355,8 +355,8 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Password <span class="required">*</span></label>
-                        <input type="password" id="password" placeholder="Min 8 characters" required>
-                        <div class="error-msg" id="passwordError">Password must be at least 8 characters</div>
+                        <input type="password" id="password" placeholder="Min 12 chars, mixed complexity" required>
+                        <div class="error-msg" id="passwordError">Password must be at least 12 characters and include uppercase, lowercase, number, and special character</div>
                     </div>
                     <div class="form-group">
                         <label>Confirm Password <span class="required">*</span></label>
@@ -790,7 +790,15 @@
             if (!firstName) { showError('firstNameError', 'First name is required'); valid = false; }
             if (!lastName) { showError('lastNameError', 'Last name is required'); valid = false; }
             if (!adminEmail || !adminEmail.includes('@@')) { showError('adminEmailError', 'Valid email is required'); valid = false; }
-            if (password.length < 8) { showError('passwordError', 'Password must be at least 8 characters'); valid = false; }
+            const passwordErrors = [
+                [password.length >= 12, 'Password must be at least 12 characters'],
+                [/[A-Z]/.test(password), 'Password must include at least one uppercase letter'],
+                [/[a-z]/.test(password), 'Password must include at least one lowercase letter'],
+                [/[0-9]/.test(password), 'Password must include at least one number'],
+                [/[^A-Za-z0-9]/.test(password), 'Password must include at least one special character']
+            ];
+            const failedPasswordRule = passwordErrors.find(rule => !rule[0]);
+            if (failedPasswordRule) { showError('passwordError', failedPasswordRule[1]); valid = false; }
             if (password !== confirmPassword) { showError('confirmPasswordError', 'Passwords do not match'); valid = false; }
             if (!selectedModuleCodes.length) { showError('modulesError', 'Please select at least one module'); valid = false; }
             const agreeContract = document.getElementById('agreeContract').checked;

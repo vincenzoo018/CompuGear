@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using CompuGear.Data;
 using CompuGear.Models;
+using CompuGear.Services;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text;
@@ -13,15 +15,23 @@ namespace CompuGear.Controllers
     /// Customer Portal Controller - For Customer-facing pages
     /// Handles customer dashboard, products, orders, support, and promotions
     /// </summary>
-    public class CustomerPortalController(CompuGearDbContext context, IConfiguration configuration) : Controller
+    [Authorize(Policy = "ClientOnly")]
+    [AutoValidateAntiforgeryToken]
+    public class CustomerPortalController(
+        CompuGearDbContext context,
+        IConfiguration configuration,
+        IPasswordSecurityService passwordSecurity) : Controller
     {
         private readonly CompuGearDbContext _context = context;
         private readonly IConfiguration _configuration = configuration;
+        private readonly IPasswordSecurityService _passwordSecurity = passwordSecurity;
 
         private static readonly string[] ProcessingStatuses = ["Processing", "Shipped", "Out for Delivery", "Delivered"];
         private static readonly string[] ShippedStatuses = ["Shipped", "Out for Delivery", "Delivered"];
         private static readonly string[] OutForDeliveryStatuses = ["Out for Delivery", "Delivered"];
         private static readonly string[] PaymentMethodsAllowed = ["card", "gcash", "grab_pay", "paymaya"];
+        private static readonly string[] AllowedTicketAttachmentExtensions = [".jpg", ".jpeg", ".png", ".pdf", ".doc", ".docx", ".txt"];
+        private static readonly string[] AllowedTicketAttachmentMimePrefixes = ["image/", "application/pdf", "text/plain"];
 
         // Helper method to get current customer
         private async Task<Customer?> GetCurrentCustomerAsync()
@@ -72,6 +82,7 @@ namespace CompuGear.Controllers
         public IActionResult Orders()
         {
             ViewData["Title"] = "My Orders";
+            ViewData["GoogleMapsApiKey"] = (_configuration["GoogleMaps:ApiKey"] ?? string.Empty).Trim();
             return View();
         }
 
@@ -854,7 +865,11 @@ namespace CompuGear.Controllers
             }
 
             // ===== Online payment (card, gcash, grab_pay, paymaya) via PayMongo =====
-            var paymongoSecretKey = _configuration["PayMongo:SecretKey"] ?? "sk_test_SakyRyg4R6hXeni4x5EaNUow";
+            var paymongoSecretKey = (_configuration["PayMongo:SecretKey"] ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(paymongoSecretKey))
+            {
+                return Json(new { success = false, message = "Payment gateway is not configured. Please contact support." });
+            }
             string? paymentIntentId = null;
 
             try
@@ -1009,9 +1024,14 @@ namespace CompuGear.Controllers
             // Check payment status with PayMongo
             if (!string.IsNullOrEmpty(order.PaymentReference))
             {
+                var paymongoSecretKey = (_configuration["PayMongo:SecretKey"] ?? string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(paymongoSecretKey))
+                {
+                    return RedirectToAction("Orders");
+                }
+
                 try
                 {
-                    var paymongoSecretKey = _configuration["PayMongo:SecretKey"] ?? "sk_test_SakyRyg4R6hXeni4x5EaNUow";
                     using var httpClient = new HttpClient();
                     var authToken = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{paymongoSecretKey}:"));
                     httpClient.DefaultRequestHeaders.Add("Authorization", $"Basic {authToken}");
@@ -2201,29 +2221,16 @@ namespace CompuGear.Controllers
             if (user == null)
                 return Json(new { success = false, message = "User account not found" });
 
-            // Verify current password using salt-based hash (matches AuthController logic)
-            var currentHash = Convert.ToBase64String(
-                SHA256.HashData(
-                    Encoding.UTF8.GetBytes(model.CurrentPassword + (user.Salt ?? ""))));
-            if (user.PasswordHash != currentHash)
+            var verify = _passwordSecurity.VerifyPassword(model.CurrentPassword, user.PasswordHash, user.Salt);
+            if (!verify.Success)
                 return Json(new { success = false, message = "Current password is incorrect" });
 
-            // Validate new password: min 12 chars, 1 uppercase, 1 number, 1 special character
-            if (string.IsNullOrWhiteSpace(model.NewPassword) || model.NewPassword.Length < 12)
-                return Json(new { success = false, message = "New password must be at least 12 characters" });
-            if (!model.NewPassword.Any(char.IsUpper))
-                return Json(new { success = false, message = "Password must contain at least one uppercase letter" });
-            if (!model.NewPassword.Any(char.IsDigit))
-                return Json(new { success = false, message = "Password must contain at least one number" });
-            if (!model.NewPassword.Any(c => !char.IsLetterOrDigit(c)))
-                return Json(new { success = false, message = "Password must contain at least one special character" });
+            if (!_passwordSecurity.IsStrongPassword(model.NewPassword, out var passwordError))
+                return Json(new { success = false, message = passwordError });
 
-            // Generate new salt and hash
-            var newSalt = Guid.NewGuid().ToString("N")[..16];
-            user.PasswordHash = Convert.ToBase64String(
-                SHA256.HashData(
-                    Encoding.UTF8.GetBytes(model.NewPassword + newSalt)));
-            user.Salt = newSalt;
+            user.PasswordHash = _passwordSecurity.HashPassword(model.NewPassword);
+            user.Salt = string.Empty;
+            user.PasswordChangedAt = DateTime.UtcNow;
             user.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
@@ -2692,8 +2699,14 @@ namespace CompuGear.Controllers
             List<IFormFile>? attachments)
         {
             var customer = await GetCurrentCustomerAsync();
+            if (customer == null)
+                return Json(new { success = false, message = "Please log in to create a ticket." });
+
             var customerId = customer?.CustomerId;
             var companyId = GetPortalCompanyId();
+
+            if (string.IsNullOrWhiteSpace(subject) || string.IsNullOrWhiteSpace(description))
+                return Json(new { success = false, message = "Subject and description are required." });
 
             var ticketCount = await _context.SupportTickets.CountAsync() + 1;
             var ticketNumber = $"TKT-{DateTime.Now:yyyy}-{ticketCount:D4}";
@@ -2728,7 +2741,23 @@ namespace CompuGear.Controllers
 
                 foreach (var file in attachments.Take(5))
                 {
-                    if (file.Length > 10 * 1024 * 1024) continue; // Skip files > 10MB
+                    if (file.Length <= 0)
+                        return Json(new { success = false, message = "Attachment contains an empty file." });
+
+                    if (file.Length > 10 * 1024 * 1024)
+                        return Json(new { success = false, message = "Attachment exceeds 10MB limit." });
+
+                    var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                    if (!AllowedTicketAttachmentExtensions.Contains(extension))
+                        return Json(new { success = false, message = $"Unsupported attachment type: {extension}" });
+
+                    var contentType = (file.ContentType ?? string.Empty).Trim().ToLowerInvariant();
+                    var allowedMime = AllowedTicketAttachmentMimePrefixes.Any(prefix =>
+                        prefix.EndsWith('/')
+                            ? contentType.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+                            : string.Equals(contentType, prefix, StringComparison.OrdinalIgnoreCase));
+                    if (!allowedMime)
+                        return Json(new { success = false, message = "Attachment MIME type is not allowed." });
 
                     var safeFileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
                     var filePath = Path.Combine(uploadsDir, safeFileName);

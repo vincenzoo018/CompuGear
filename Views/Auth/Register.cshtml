@@ -866,6 +866,13 @@
             input.value = (input.value || '').replace(/\D/g, '').slice(0, 11);
         }
 
+        function getCsrfToken() {
+            const tokenCookie = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('XSRF-TOKEN='));
+            return tokenCookie ? decodeURIComponent(tokenCookie.split('=')[1]) : '';
+        }
+
         function showAlert(type, message) {
             const alertEl = document.getElementById(type === 'error' ? 'alertError' : 'alertSuccess');
             const otherAlert = document.getElementById(type === 'error' ? 'alertSuccess' : 'alertError');
@@ -971,7 +978,8 @@
                 const response = await fetch('/Auth/ProcessRegister', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': getCsrfToken()
                     },
                     body: JSON.stringify({
                         firstName: document.getElementById('firstName').value,
